@@ -25,14 +25,8 @@
 
 .uber-mobile-action-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-}
-
-@media (max-width: 380px) {
-  .uber-mobile-action-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .staff-overview-status-banner {
@@ -58,8 +52,8 @@
 }
 
 .staff-overview-status-banner--warn {
-  background: #f2f8ff;
-  border-color: #c8ddff;
+  background: var(--uber-surface, #f6f6f6);
+  border-color: var(--uber-border, #d4d4d4);
 }
 
 .staff-overview-status-banner-dot {
@@ -67,11 +61,11 @@
   height: 10px;
   border-radius: 999px;
   flex-shrink: 0;
-  background: #0e8345;
+  background: var(--uber-text, #000000);
 }
 
 .staff-overview-status-banner--warn .staff-overview-status-banner-dot {
-  background: #276ef1;
+  background: var(--uber-text, #000000);
 }
 
 .staff-overview-status-banner-copy {
@@ -1196,11 +1190,11 @@ body[data-surface="desktop"] .staff-overview-pro-hub.uber-direct-home-hub {
 }
 
 .staff-overview-pro .staff-overview-status-banner-dot {
-  background: #0e8345;
+  background: var(--overview-cta-text, #ffffff);
 }
 
 .staff-overview-pro .staff-overview-status-banner--warn .staff-overview-status-banner-dot {
-  background: #ffc043;
+  background: var(--overview-cta-text, #ffffff);
 }
 
 .staff-overview-pro .staff-overview-status-banner:not(:disabled):hover {
@@ -1237,7 +1231,11 @@ body[data-surface="desktop"] .staff-overview-pro-hub.uber-direct-home-hub {
 }
 
 .staff-overview-mobile-app .staff-overview-pro-title {
-  font-size: 24px;
+  display: none;
+}
+
+.staff-overview-mobile-app .staff-overview-pro-kicker {
+  font-size: 12px;
 }
 
 .staff-overview-mobile-app .staff-overview-pro-focus {
@@ -1282,6 +1280,31 @@ body[data-surface="desktop"] .staff-overview-pro-hub.uber-direct-home-hub {
 .staff-overview-mobile-app .staff-overview-status-banner[role='status'] .staff-overview-status-banner-sub,
 .staff-overview-mobile-app .staff-overview-status-banner--ok .staff-overview-status-banner-sub {
   color: var(--uber-text-muted, #767676) !important;
+}
+
+.staff-overview-mobile-app .staff-overview-status-banner--warn {
+  background: var(--uber-surface, #f6f6f6) !important;
+  border: 1px solid var(--uber-border, #d4d4d4) !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+}
+
+.staff-overview-mobile-app .staff-overview-status-banner--warn .staff-overview-status-banner-title {
+  color: var(--uber-text, #000000) !important;
+}
+
+.staff-overview-mobile-app .staff-overview-status-banner--warn .staff-overview-status-banner-sub,
+.staff-overview-mobile-app .staff-overview-status-banner--warn .staff-overview-status-banner-chevron {
+  color: var(--uber-text-muted, #767676) !important;
+}
+
+.staff-overview-mobile-app .staff-overview-status-banner--warn .staff-overview-status-banner-dot {
+  background: var(--uber-text, #000000) !important;
+}
+
+html.theme-dark .staff-overview-mobile-app .staff-overview-status-banner--warn {
+  background: #161616 !important;
+  border-color: #2a2a2a !important;
 }
 
 .staff-overview-mobile-app .staff-overview-pro-kpi-card {

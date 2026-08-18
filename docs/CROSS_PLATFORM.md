@@ -32,7 +32,7 @@ Guardr ships **three independent applications**, not one responsive layout. See
 
 | Device | Primary users | Application | UI behavior |
 |--------|---------------|-------------|-------------|
-| Phone | Guards, clients | Classic mobile shell (`GuardrDrawerShell`) | Hamburger drawer sidebar + sticky bottom footer tabs + More sheet; scrollable content pane |
+| Phone | Guards, clients | Mobile app shell (`MobileAppShell`) | Bottom tabs + More sheet + account sheet; scrollable canvas |
 | Tablet | Staff, guards, clients | `TabletAppShell` | Persistent labelled rail + quick-switch strip, master/detail split views, docked side panels, persistent inspector, 44px targets |
 | Desktop / Chromebook | Staff, clients, admin | `DesktopAppShell` | Permanent grouped sidebar, top bar breadcrumb, data tables, command palette (`Cmd/Ctrl+K`), `Alt+1..9` shortcuts, resizable panels, drag-and-drop, status bar, 32px targets |
 | PWA standalone | All | mobile or tablet | Never the desktop application — an installed shell is touch-first by definition |
@@ -142,7 +142,7 @@ src/styles/app-pwa.css                  — PWA welcome + auth-sheet overrides (
 src/styles/app-native.css               — APK welcome + auth-sheet safe areas
 ```
 
-Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`** with **`resolveMobilityChrome(viewSurface)`** — independent layouts per cell (mobile drawer, tablet persistent rail, desktop workspace). PWA/native deltas via `data-shell` + `uber-mobility.css`.
+Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`SurfaceAppShell`**, which lazy-loads `MobileAppShell`, `TabletAppShell`, or `DesktopAppShell`. PWA/native deltas via `data-shell` + `uber-mobility.css`.
 
 ### Base Web mobility platform (`/platforms` Phase 2)
 

@@ -121,7 +121,7 @@ test.describe('surface resolution', () => {
   });
 
   test('surface chrome never leaks across device types', async ({ page }) => {
-    // Mobile keeps the classic drawer + bottom nav; tablet owns the rail;
+    // Mobile owns the tab bar + sheets; tablet owns the rail;
     // desktop owns the sidebar, status bar, and command palette.
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
@@ -194,8 +194,6 @@ test.describe('surface resolution', () => {
     await page.setViewportSize(VIEWPORTS.phone);
     await page.goto('/?ui=mobile');
     await waitForSurface(page, 'mobile');
-    // Preview/mobile kit path; classic GuardrDrawerShell uses inline overflow:auto
-    // on .mobility-content-inner once a signed-in role shell mounts.
     expect(await measure('sfm-shell-canvas')).toMatch(/auto|scroll/);
   });
 });

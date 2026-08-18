@@ -46,6 +46,13 @@ export interface AccountMenuProps {
   onChangeTheme?: (mode: ThemeMode) => void;
   /** Guardr Direct desktop — black circle avatar only, no chevron. */
   triggerVariant?: 'default' | 'uber-direct';
+  /**
+   * How the menu is presented. `sheet` renders the panel inline (no trigger,
+   * no floating portal) so the mobile shell can host it in a bottom sheet.
+   */
+  presentation?: 'menu' | 'sheet';
+  /** Fired after any action that should dismiss the host overlay. */
+  onDismiss?: () => void;
 }
 
 export function AccountMenu({
@@ -66,6 +73,8 @@ export function AccountMenu({
   themeMode,
   onChangeTheme,
   triggerVariant = 'default',
+  presentation = 'menu',
+  onDismiss,
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
   const [menuView, setMenuView] = useState<'main' | 'notifications'>('main');
@@ -108,7 +117,10 @@ export function AccountMenu({
     };
   }, [open]);
 
-  const close = () => setOpen(false);
+  const close = () => {
+    setOpen(false);
+    onDismiss?.();
+  };
 
   const openNotifications = () => {
     setMenuView('notifications');
@@ -137,6 +149,102 @@ export function AccountMenu({
     close();
     onSignOut();
   };
+
+  if (presentation === 'sheet') {
+    return (
+      <div className="sfm-account" role="menu">
+        {menuView === 'notifications' && showNotifications ? (
+          <>
+            <button type="button" className="sfm-account-back" onClick={backToMainMenu}>
+              <ChevronLeft size={20} strokeWidth={2.25} aria-hidden />
+              Account
+            </button>
+            <NotificationInboxSection
+              notifications={notifications}
+              onMarkAllRead={onMarkAllNotificationsRead!}
+              onNotificationClick={onNotificationClick!}
+              onNavigate={close}
+              embedded
+            />
+          </>
+        ) : (
+          <>
+            <div className="sfm-account-identity">
+              <ProfileAvatar src={avatarUrl} name={userName} size="lg" />
+              <div className="sfm-account-identity-text">
+                <p className="sfm-account-name">{userName}</p>
+                {userSubtitle ? <p className="sfm-account-sub">{userSubtitle}</p> : null}
+              </div>
+            </div>
+            {themeMode && onChangeTheme ? (
+              <div className="sfm-account-theme">
+                <ThemeToggle value={themeMode} onChange={onChangeTheme} size="md" className="w-full justify-center" />
+              </div>
+            ) : null}
+            <div className="sfm-account-group">
+              {!hideProfile ? (
+                <button type="button" role="menuitem" className="sfm-account-row" onClick={handleProfile}>
+                  <User size={20} strokeWidth={1.75} aria-hidden />
+                  <span>Profile</span>
+                </button>
+              ) : null}
+              {showNotifications ? (
+                <button type="button" role="menuitem" className="sfm-account-row" onClick={openNotifications}>
+                  <Bell size={20} strokeWidth={1.75} aria-hidden />
+                  <span className="sfm-account-row-label">Notifications</span>
+                  {unread > 0 ? (
+                    <span className="sfm-account-count">{unread > 99 ? '99+' : unread}</span>
+                  ) : null}
+                </button>
+              ) : null}
+              <button type="button" role="menuitem" className="sfm-account-row" onClick={handleSettings}>
+                <Settings size={20} strokeWidth={1.75} aria-hidden />
+                <span>Settings</span>
+              </button>
+            </div>
+            {extraLinks.length > 0 ? (
+              <div className="sfm-account-group">
+                {extraLinks.map((link) => (
+                  <button
+                    key={link.label}
+                    type="button"
+                    role="menuitem"
+                    className="sfm-account-row"
+                    data-active={link.active ? 'true' : undefined}
+                    onClick={() => {
+                      link.onClick();
+                      close();
+                    }}
+                  >
+                    <link.icon size={20} strokeWidth={1.75} aria-hidden />
+                    <span>{link.label}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <div className="sfm-account-group">
+              {onOpenDownload ? (
+                <button type="button" role="menuitem" className="sfm-account-row" onClick={handleDownload}>
+                  <Download size={20} strokeWidth={1.75} aria-hidden />
+                  <span>{installMenuLabel}</span>
+                </button>
+              ) : null}
+              <button
+                type="button"
+                role="menuitem"
+                className="sfm-account-row sfm-account-row--danger"
+                onClick={handleSignOut}
+              >
+                <LogOut size={20} strokeWidth={1.75} aria-hidden />
+                <span>Sign out</span>
+              </button>
+            </div>
+            {footer ? <div className="sfm-account-footer">{footer}</div> : null}
+          </>
+        )}
+      </div>
+    );
+  }
 
   const menuPanel = open ? (
     <div

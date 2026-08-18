@@ -274,40 +274,40 @@ export function MobilityLandingHero({ formFactor, onNavigateToAuth, heroVisual }
         </Block>
       </Block>
 
-      {/* Primary CTAs */}
-      <Block display="flex" flexDirection={isMobile ? 'column' : 'row'} gridGap="scale400">
-        <GuardrButton
-          kind="primary"
-          onClick={goClient}
-          overrides={{
-            BaseButton: {
-              style: {
-                borderRadius: isTablet ? '10px' : '8px',
-                minHeight: isTablet ? '46px' : undefined,
-                minWidth: isMobile ? undefined : '160px',
-                width: isMobile ? '100%' : undefined,
+      {/* Phone CTAs live in the sticky landing dock so thumbs can always reach them. */}
+      {!isMobile ? (
+        <Block display="flex" flexDirection="row" gridGap="scale400">
+          <GuardrButton
+            kind="primary"
+            onClick={goClient}
+            overrides={{
+              BaseButton: {
+                style: {
+                  borderRadius: isTablet ? '10px' : '8px',
+                  minHeight: isTablet ? '46px' : undefined,
+                  minWidth: '160px',
+                },
               },
-            },
-          }}
-        >
-          Post a job
-        </GuardrButton>
-        <GuardrButton
-          kind="secondary"
-          onClick={goGuard}
-          overrides={{
-            BaseButton: {
-              style: {
-                borderRadius: isTablet ? '10px' : '8px',
-                minHeight: isTablet ? '46px' : undefined,
-                width: isMobile ? '100%' : undefined,
+            }}
+          >
+            Post a job
+          </GuardrButton>
+          <GuardrButton
+            kind="secondary"
+            onClick={goGuard}
+            overrides={{
+              BaseButton: {
+                style: {
+                  borderRadius: isTablet ? '10px' : '8px',
+                  minHeight: isTablet ? '46px' : undefined,
+                },
               },
-            },
-          }}
-        >
-          Find work as a guard
-        </GuardrButton>
-      </Block>
+            }}
+          >
+            Find work as a guard
+          </GuardrButton>
+        </Block>
+      ) : null}
 
       <Block marginTop="scale400">
         <button type="button" className="uber-landing-text-link" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>

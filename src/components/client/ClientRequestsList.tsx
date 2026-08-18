@@ -25,7 +25,7 @@ import { isJobMissed, JOB_TALLY_LABELS, splitCompletedAndMissed } from '../../li
 import { formatTimeUntilShift } from '../../lib/shiftCountdown';
 import {
   JobsScreenHero,
-  JOBS_PIE_COLORS,
+  jobsPieColorsForSurface,
 } from '../jobs/JobsScreenHero';
 import type { JobsPieSegment } from '../jobs/JobsShiftPieChart';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
@@ -218,25 +218,25 @@ export function ClientRequestsList({
     [openJobs.length, scheduledJobs.length, completedJobs.length, missedJobs.length]
   );
 
-  const pieSegments = useMemo<JobsPieSegment[]>(
-    () => [
-      { id: 'open', label: JOB_TALLY_LABELS.open, value: tallies.open, color: JOBS_PIE_COLORS.open },
+  const pieSegments = useMemo<JobsPieSegment[]>(() => {
+    const colors = jobsPieColorsForSurface(formFactor === 'mobile');
+    return [
+      { id: 'open', label: JOB_TALLY_LABELS.open, value: tallies.open, color: colors.open },
       {
         id: 'scheduled',
         label: JOB_TALLY_LABELS.scheduled,
         value: tallies.scheduled,
-        color: JOBS_PIE_COLORS.scheduled,
+        color: colors.scheduled,
       },
       {
         id: 'completed',
         label: JOB_TALLY_LABELS.completed,
         value: tallies.completed,
-        color: JOBS_PIE_COLORS.completed,
+        color: colors.completed,
       },
-      { id: 'missed', label: JOB_TALLY_LABELS.missed, value: tallies.missed, color: JOBS_PIE_COLORS.missed },
-    ],
-    [tallies]
-  );
+      { id: 'missed', label: JOB_TALLY_LABELS.missed, value: tallies.missed, color: colors.missed },
+    ];
+  }, [formFactor, tallies]);
 
   const tabOptions = useMemo(
     () => [

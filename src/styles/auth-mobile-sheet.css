@@ -196,8 +196,18 @@ html.theme-dark .auth-sheet-panel {
 
 .auth-sheet-fields .uber-input,
 .auth-sheet-fields .uber-select {
-  min-height: 48px;
-  border-radius: 10px;
+  min-height: 52px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.auth-sheet-fields input,
+.auth-sheet-fields select,
+.auth-sheet-fields textarea,
+.auth-experience--mobile-page input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+.auth-experience--mobile-page select,
+.auth-experience--mobile-page textarea {
+  font-size: 16px !important;
 }
 
 .auth-sheet-submit {

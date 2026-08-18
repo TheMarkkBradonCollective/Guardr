@@ -193,8 +193,8 @@ Reference targets: **Guardr Direct** (desktop web) and **mobile app** (mobile PW
 
 ### Shell entry points
 
-- Guard / client: `RoleAppShell` → `GuardrDrawerShell`
-- Staff: `DesktopStaffAdminShell` → `GuardrDrawerShell`
+- Guard / client: `RoleAppShell` → `SurfaceAppShell` (`MobileAppShell` / `TabletAppShell` / `DesktopAppShell`)
+- Staff: `DesktopStaffAdminShell` → `SurfaceAppShell`
 - Content inside shell: prefer `WorkbenchPage` / `WorkbenchSplit` on desktop; `AppScreen` card stacks migrating to workbench zones on mobile
 
 ### Next migration targets (content inside shell)
