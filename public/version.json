@@ -6,9 +6,9 @@
     "versionCode": 229,
     "url": "/guardr.apk",
     "downloadName": "guardr-v1.0.129.apk",
-    "fileSize": 85565580,
-    "sha256": "52f12fc52cfb1949a590d782216ef458f4a15d69705423872039c1e75f4a3ca0",
+    "fileSize": 93551798,
+    "sha256": "41041688fb0193cdc9ecf03c66b7ee8148e5272dbcd44fbe05af2798bf0e72ea",
     "releaseNotes": "Full platform release: CI-built sideload APK and Play AAB; web + PWA alignment for Aug 18 session (roster tabs, staff activation, client credentials, SQL catch-up)."
   },
-  "updatedAt": "2026-08-18T15:22:06.502Z"
+  "updatedAt": "2026-08-18T15:28:30.269Z"
 }
