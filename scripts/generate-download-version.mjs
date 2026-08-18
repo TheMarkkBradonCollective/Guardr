@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.125':
+    'Mobile hamburger drawer for all roles (guard, client, staff); notification bell and profile on the header right; map pages keep the shell header visible; three-surface UI sculpt (mobile, tablet, desktop ops layouts).',
   '1.0.124':
     'Personal vs Business client accounts (who hires and pays); separate platform fee tables by account and guard type; posted job prices stay frozen when fees change; staff ID bounce without photos; client credential library.',
   '1.0.123':
