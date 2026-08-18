@@ -3,6 +3,7 @@
  */
 
 import { clientDisplayName } from '../clientType';
+import { parseAuthorizedContacts } from '../clientAuthorizedContacts';
 import { supabase } from '../supabase';
 import { verifyAccountPassword } from '../accountPasswords';
 import { hashPassword, isPasswordHash, verifyPasswordHash } from './passwordHash';
@@ -109,6 +110,7 @@ function clientFromRow(row: Record<string, unknown>): Client {
     password: typeof row.password === 'string' ? row.password : undefined,
     mustChangePassword: row.must_change_password === true,
     passwordHash: typeof row.password_hash === 'string' ? row.password_hash : undefined,
+    authorizedContacts: parseAuthorizedContacts(row.authorized_contacts),
   };
 }
 

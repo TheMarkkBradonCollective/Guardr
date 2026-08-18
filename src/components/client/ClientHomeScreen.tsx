@@ -23,6 +23,7 @@ import {
 import { AppButton } from '../ui/AppButton';
 import { AccentIcon, MutedIcon, QuickActionTile } from '../baseui/dashboard';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
+import { useClientCapabilities } from './ClientCapabilitiesContext';
 import {
   Shield,
   Calendar,
@@ -36,6 +37,7 @@ import {
   ChevronRight,
   Radio,
 } from 'lucide-react';
+import type { ClientHomeQuickActionId } from '../../lib/clientCapabilities';
 
 export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'requests' | 'guards' | 'messages' | 'map' | 'locations' | 'invoices';
 
@@ -52,14 +54,14 @@ interface ClientHomeScreenProps {
   onViewGuard?: (guard: SecurityGuard) => void;
 }
 
-const QUICK_ACTIONS: { id: ClientHomeAction; icon: typeof Shield; label: string; sub: string }[] = [
-  { id: 'request', icon: Plus, label: 'Post job', sub: 'Open to guards' },
-  { id: 'guards', icon: Users, label: 'Browse guards', sub: 'Resumes & licenses' },
-  { id: 'locations', icon: Map, label: 'My Locations', sub: 'Saved sites & risk' },
-  { id: 'schedule', icon: Calendar, label: 'Schedule', sub: 'Plan ahead' },
-  { id: 'recurring', icon: Building2, label: 'Multi-guard site', sub: 'Construction & events' },
-  { id: 'reports', icon: FileText, label: 'Reports', sub: 'Activity & incidents' },
-];
+const QUICK_ACTION_ICONS: Record<ClientHomeQuickActionId, typeof Shield> = {
+  request: Plus,
+  guards: Users,
+  locations: Map,
+  schedule: Calendar,
+  recurring: Building2,
+  reports: FileText,
+};
 
 const REPORT_TYPE_LABEL: Record<ClientReportCard['type'], string> = {
   incident: 'Incident report',
@@ -105,6 +107,8 @@ export function ClientHomeScreen({
 }: ClientHomeScreenProps) {
   const upcoming = getUpcomingCoverage(requests);
   const liveJobs = useMemo(() => getClientLiveJobs(requests), [requests]);
+  const caps = useClientCapabilities();
+  const quickActions = caps.homeQuickActions;
   const openRequestCount = requests.filter(
     (r) => r.status === 'open' || r.status === 'accepted' || r.status === 'pending-review'
   ).length;
@@ -248,7 +252,7 @@ export function ClientHomeScreen({
             </div>
             <div className="flex flex-col sm:flex-row gap-2 mt-4">
               <AppButton type="button" variant="primary" size="sm" fullWidth onClick={() => runAction('request')}>
-                Post job offer
+                {caps.isPersonal ? 'Request security' : 'Post job offer'}
               </AppButton>
               <AppButton type="button" variant="outline" size="sm" fullWidth onClick={() => runAction('map')}>
                 <span className="inline-flex items-center justify-center gap-1.5">
@@ -262,7 +266,7 @@ export function ClientHomeScreen({
       </div>
 
       <AppDashboardZone title="At a glance" className="!mb-4">
-        <AppMetricStrip className="app-metric-strip--count-2">
+        <AppMetricStrip className={`app-metric-strip--count-${caps.has('staffing-coverage') ? '3' : '2'}`}>
           <AppMetricCell
             label="Open jobs"
             value={openRequestCount}
@@ -276,15 +280,24 @@ export function ClientHomeScreen({
             sub="Upcoming shifts"
             onClick={() => runAction('requests')}
           />
+          {caps.has('staffing-coverage') ? (
+            <AppMetricCell
+              label="Coverage"
+              value={coverage.activeAssignments}
+              sub="Guards on duty"
+              onClick={() => runAction('map')}
+              accent={coverage.activeAssignments > 0}
+            />
+          ) : null}
         </AppMetricStrip>
       </AppDashboardZone>
 
       <AppDashboardZone title="Quick actions">
         <div className="client-home-quick-grid px-5 pb-1">
-          {QUICK_ACTIONS.map((action) => (
+          {quickActions.map((action) => (
             <QuickActionTile
               key={action.id}
-              icon={action.icon}
+              icon={QUICK_ACTION_ICONS[action.id]}
               label={action.label}
               sub={action.sub}
               primary={action.id === 'request'}
@@ -296,7 +309,7 @@ export function ClientHomeScreen({
       </AppDashboardZone>
 
       {recentGuards.length > 0 && onHireGuard && (
-        <AppDashboardZone title="Your guards" actionLabel="Browse all" onAction={() => runAction('guards')}>
+        <AppDashboardZone title={caps.isPersonal ? 'Your guards' : 'Your guards'} actionLabel={caps.isPersonal ? 'View all' : 'Browse all'} onAction={() => runAction('guards')}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 px-5 pb-1">
             {recentGuards.slice(0, 6).map((guard) => (
               <div
@@ -364,6 +377,7 @@ export function ClientHomeScreen({
         )}
       </AppDashboardZone>
 
+      {caps.has('reporting') ? (
       <AppDashboardZone
         title="Recent reports"
         actionLabel={recentReports.length > 0 ? 'View all' : undefined}
@@ -385,6 +399,7 @@ export function ClientHomeScreen({
           </div>
         )}
       </AppDashboardZone>
+      ) : null}
     </AppScreen>
   );
 }

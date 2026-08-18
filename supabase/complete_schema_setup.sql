@@ -240,6 +240,7 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS prior_security_provider TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS special_requirements TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS default_assignment_mode TEXT DEFAULT 'client-approve';
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS client_type TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS authorized_contacts JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 UPDATE clients
 SET client_type = 'business'

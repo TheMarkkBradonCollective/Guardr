@@ -7,6 +7,7 @@ import {
   locationStatusLabel,
   newClientLocationDraft,
 } from '../../lib/clientLocations';
+import { useClientCapabilities } from './ClientCapabilitiesContext';
 import { browsableSharedLocations, isLocationListed } from '../../lib/jobLocations';
 import { DEFAULT_CALIFORNIA_CITY, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
@@ -28,12 +29,14 @@ export function ClientLocationsPanel({
   onSave,
 }: ClientLocationsPanelProps) {
   const { formFactor } = useDevice();
+  const caps = useClientCapabilities();
   const selectableClientCities = getSelectableCityNamesForClients();
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [state, setState] = useState(DEFAULT_CALIFORNIA_CITY);
   const [riskLevel, setRiskLevel] = useState<LocationRiskLevel>('medium');
   const [listed, setListed] = useState(true);
+  const [siteInstructions, setSiteInstructions] = useState('');
   const [saving, setSaving] = useState(false);
 
   const mine = activeClientLocations(locations, client.id);
@@ -46,19 +49,30 @@ export function ClientLocationsPanel({
   );
   const trusted = canClientSetLocationRisk(client);
 
+  const atLocationLimit =
+    caps.maxSavedLocations != null && mine.length >= caps.maxSavedLocations;
+
   const handleAdd = async () => {
-    if (!name.trim() || address.trim().length < 4) return;
+    if (!name.trim() || address.trim().length < 4 || atLocationLimit) return;
     setSaving(true);
     try {
       const draft = newClientLocationDraft(
         client.id,
-        { name, address, state: formatCityLabel(state), riskLevel, listed },
+        {
+          name,
+          address,
+          state: formatCityLabel(state),
+          riskLevel,
+          listed: caps.has('multiple-sites') ? listed : false,
+          siteInstructions: caps.has('site-requirements') ? siteInstructions : undefined,
+        },
         client
       );
       await onSave(draft);
       setName('');
       setAddress('');
       setListed(true);
+      setSiteInstructions('');
     } finally {
       setSaving(false);
     }
@@ -72,16 +86,19 @@ export function ClientLocationsPanel({
     <div className={formFactor === 'desktop' ? 'adm-locations-panel' : 'space-y-5'}>
       {formFactor !== 'desktop' ? (
         <div>
-          <h3 className="text-lg font-bold tracking-tight">My Locations</h3>
+          <h3 className="text-lg font-bold tracking-tight">
+            {caps.isPersonal ? 'My places' : 'Sites'}
+          </h3>
           <p className="text-sm text-brand-text-muted mt-1">
-            Scroll familiar sites from approved jobs, save your own, or mark a site private so only staff
-            can manage it — other clients will not see it to reuse.
+            {caps.isPersonal
+              ? 'Save home, event venues, and other personal locations you hire coverage for.'
+              : 'Manage multiple sites, keep location notes, and mark a site private so only staff can reuse it.'}
             {trusted ? ' As a trusted client you set risk level directly.' : null}
           </p>
         </div>
       ) : null}
 
-      {familiar.length > 0 && (
+      {caps.has('multiple-sites') && familiar.length > 0 && (
         <div className="space-y-2">
           <p className="uber-label">Familiar locations</p>
           <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
@@ -106,7 +123,7 @@ export function ClientLocationsPanel({
 
       {mine.length > 0 && (
         <div className="space-y-2">
-          <p className="uber-label">Your saved sites</p>
+          <p className="uber-label">{caps.isPersonal ? 'Saved locations' : 'Your saved sites'}</p>
           {mine.map((loc) => (
             <div key={loc.id} className="wf-list-card">
               <div className="flex items-start gap-3">
@@ -118,6 +135,7 @@ export function ClientLocationsPanel({
                     Risk: {loc.riskLevel} · {locationStatusLabel(loc.status)}
                     {loc.listed === false ? ' · Private' : ''}
                   </p>
+                  {caps.has('multiple-sites') ? (
                   <label className="mt-2 flex items-center gap-2 text-xs text-brand-text">
                     <input
                       type="checkbox"
@@ -126,6 +144,7 @@ export function ClientLocationsPanel({
                     />
                     Do not list (private)
                   </label>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -136,11 +155,11 @@ export function ClientLocationsPanel({
       <div className="staff-mgmt-section space-y-3">
         <p className="staff-mgmt-section-title flex items-center gap-2">
           <Plus className="w-4 h-4" />
-          Add location
+          Add {caps.isPersonal ? 'location' : 'site'}
         </p>
         <input
           className="uber-input rounded-xl"
-          placeholder="Site name"
+          placeholder={caps.isPersonal ? 'Place name (home, venue, etc.)' : 'Site name'}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -155,6 +174,14 @@ export function ClientLocationsPanel({
             <option key={city} value={city}>{city}</option>
           ))}
         </select>
+        {caps.has('site-requirements') ? (
+          <textarea
+            className="uber-input rounded-xl min-h-[88px]"
+            placeholder="Site-specific requirements — access, post notes, who to call on site…"
+            value={siteInstructions}
+            onChange={(e) => setSiteInstructions(e.target.value)}
+          />
+        ) : null}
         {trusted && (
           <div className="segmented-control segmented-control-full">
             {LOCATION_RISK_OPTIONS.map((opt) => (
@@ -171,6 +198,7 @@ export function ClientLocationsPanel({
             ))}
           </div>
         )}
+        {caps.has('multiple-sites') ? (
         <label className="flex items-start gap-2 text-sm text-brand-text">
           <input
             type="checkbox"
@@ -180,13 +208,20 @@ export function ClientLocationsPanel({
           />
           <span>Do not list — keep this site private (staff can still manage it).</span>
         </label>
+        ) : null}
+        {atLocationLimit ? (
+          <p className="text-sm text-brand-text-muted">
+            Personal accounts can save up to {caps.maxSavedLocations} locations. Remove one or use a business
+            account for multiple sites.
+          </p>
+        ) : null}
         <button
           type="button"
-          disabled={saving || !name.trim() || address.trim().length < 4}
+          disabled={saving || atLocationLimit || !name.trim() || address.trim().length < 4}
           onClick={() => void handleAdd()}
           className="uber-btn-primary w-full"
         >
-          {saving ? 'Saving…' : 'Save location'}
+          {saving ? 'Saving…' : caps.isPersonal ? 'Save location' : 'Save site'}
         </button>
       </div>
     </div>

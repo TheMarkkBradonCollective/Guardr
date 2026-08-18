@@ -45,6 +45,8 @@ import { showAppToast } from '../ui/AppToast';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
+import { useClientCapabilities } from './ClientCapabilitiesContext';
+import { clampClientGuardsNeeded } from '../../lib/clientCapabilities';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -78,33 +80,39 @@ export function RequestSecurityFlow({
   defaultAssignmentMode = 'client-approve',
 }: RequestSecurityFlowProps) {
   const { formFactor } = useDevice();
+  const caps = useClientCapabilities();
+  const allowRecurring = caps.has('recurring-schedules');
+  const allowMultiGuard = caps.has('multi-guard-requests');
+  const maxGuards = caps.maxGuardsPerRequest;
+  const effectivePreset: RequestFlowPreset =
+    preset === 'recurring' && !allowRecurring ? 'schedule' : preset;
   const selectableClientCities = getSelectableCityNamesForClients();
   const defaultStart = useMemo(() => {
-    if (preset === 'schedule' || preset === 'recurring') {
+    if (effectivePreset === 'schedule' || effectivePreset === 'recurring') {
       const d = new Date();
       d.setDate(d.getDate() + 1);
       d.setHours(18, 0, 0, 0);
       return toDatetimeLocal(d);
     }
     return getDefaultShiftStart();
-  }, [preset]);
+  }, [effectivePreset]);
 
   const [step, setStep] = useState<FlowStep>(1);
   const [serviceSkipped, setServiceSkipped] = useState(false);
   const [serviceId, setServiceId] = useState<ClientServiceId>(
-    preset === 'recurring' ? 'construction' : 'standing-guard'
+    effectivePreset === 'recurring' ? 'construction' : 'standing-guard'
   );
   const [address, setAddress] = useState('');
   const [jobState, setJobState] = useState<string>(DEFAULT_CALIFORNIA_CITY);
   const [siteName, setSiteName] = useState('');
   const [startDate, setStartDate] = useState(defaultStart);
-  const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, preset === 'recurring' ? 12 : 8));
+  const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, effectivePreset === 'recurring' ? 12 : 8));
   const [scheduleType, setScheduleType] = useState<'one-time' | 'recurring'>(
-    preset === 'recurring' ? 'recurring' : 'one-time'
+    effectivePreset === 'recurring' ? 'recurring' : 'one-time'
   );
   const [recurringEndDate, setRecurringEndDate] = useState('');
   const [recurringDays, setRecurringDays] = useState<number[]>([]);
-  const [guardsNeeded, setGuardsNeeded] = useState(preset === 'recurring' ? 2 : 1);
+  const [guardsNeeded, setGuardsNeeded] = useState(effectivePreset === 'recurring' ? 2 : 1);
   const [customGuards, setCustomGuards] = useState('');
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
@@ -118,7 +126,7 @@ export function RequestSecurityFlow({
   const [agreementFeeConfig, setAgreementFeeConfig] = useState<AgreementPlatformFeeConfig | undefined>();
   const [openingMessage, setOpeningMessage] = useState('');
   const [jobTitle, setJobTitle] = useState(() => serviceDefaultTitle(
-    preset === 'recurring' ? 'construction' : 'standing-guard'
+    effectivePreset === 'recurring' ? 'construction' : 'standing-guard'
   ));
   const [jobTitleTouched, setJobTitleTouched] = useState(false);
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
@@ -153,9 +161,10 @@ export function RequestSecurityFlow({
     });
   }, [guards, favoriteGuardIds, startDate, endDate]);
 
-  const effectiveGuards = customGuards
-    ? Math.min(50, Math.max(1, parseInt(customGuards, 10) || 1))
-    : guardsNeeded;
+  const effectiveGuards = clampClientGuardsNeeded(
+    customGuards ? parseInt(customGuards, 10) || 1 : guardsNeeded,
+    caps.clientType
+  );
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
   const billing = computeJobBilling(
@@ -260,12 +269,13 @@ export function RequestSecurityFlow({
       guardsNeeded: selectedFavoriteGuardId ? 1 : effectiveGuards,
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
-      scheduleType,
+      scheduleType: allowRecurring ? scheduleType : 'one-time',
       recurringEndDate:
-        scheduleType === 'recurring' && recurringEndDate
+        allowRecurring && scheduleType === 'recurring' && recurringEndDate
           ? new Date(`${recurringEndDate}T23:59:59`).toISOString()
           : undefined,
-      recurringDays: scheduleType === 'recurring' && recurringDays.length ? recurringDays : undefined,
+      recurringDays:
+        allowRecurring && scheduleType === 'recurring' && recurringDays.length ? recurringDays : undefined,
       assignmentMode,
       minYearsExperience: minYearsExperience > 0 ? minYearsExperience : undefined,
       clientLocationId: selectedLocationId ?? undefined,
@@ -508,6 +518,7 @@ export function RequestSecurityFlow({
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">When?</h2>
             </div>
+            {allowRecurring ? (
             <div className="segmented-control segmented-control-full">
               <button
                 type="button"
@@ -528,6 +539,11 @@ export function RequestSecurityFlow({
                 Recurring coverage
               </button>
             </div>
+            ) : (
+              <p className="text-sm text-brand-text-muted font-medium">
+                Schedule a one-time service. Recurring site coverage is available on business accounts.
+              </p>
+            )}
             {scheduleType === 'recurring' && (
               <div className="space-y-4 rounded-2xl border border-brand-border p-4">
                 <div>
@@ -647,14 +663,16 @@ export function RequestSecurityFlow({
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">How many guards?</h2>
               <p className="text-sm text-brand-text-muted mt-2 font-medium">
-                Trusted guards with a standing crew of this size or larger get priority notification when the job goes live.
+                {allowMultiGuard
+                  ? 'Trusted guards with a standing crew of this size or larger get priority notification when the job goes live.'
+                  : 'Personal requests cover you, a private event, or personal protection — up to four guards.'}
               </p>
             </div>
             {/* Disable count picker when a favourite is selected (direct = 1 guard) */}
             {!selectedFavoriteGuardId && (
               <>
                 <div className="segmented-control segmented-control-full">
-                  {GUARD_COUNT_PRESETS.map((n) => (
+                  {GUARD_COUNT_PRESETS.filter((n) => n <= maxGuards).map((n) => (
                     <button
                       key={n}
                       type="button"
@@ -667,18 +685,20 @@ export function RequestSecurityFlow({
                     </button>
                   ))}
                 </div>
+                {allowMultiGuard ? (
                 <div>
                   <label className="uber-label block mb-1.5">Custom</label>
                   <input
                     type="number"
                     min={1}
-                    max={50}
-                    placeholder="Enter count (max 50)..."
+                    max={maxGuards}
+                    placeholder={`Enter count (max ${maxGuards})...`}
                     value={customGuards}
                     onChange={(e) => setCustomGuards(e.target.value)}
                     className="uber-input rounded-xl"
                   />
                 </div>
+                ) : null}
               </>
             )}
 

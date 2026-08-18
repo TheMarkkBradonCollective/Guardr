@@ -94,8 +94,11 @@ import {
   clientWorkspaceLabel,
   normalizeClientType,
 } from './lib/clientType';
+import { resolveAllowedClientView } from './lib/clientCapabilities';
+import { parseAuthorizedContacts } from './lib/clientAuthorizedContacts';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
+import { ClientCapabilitiesProvider } from './components/client/ClientCapabilitiesContext';
 import { AccountMenu, type AccountMenuNotificationProps } from './components/layouts/AccountMenu';
 import { ClientDashboard } from './components/ClientDashboard';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from './lib/messagesChrome';
@@ -932,7 +935,11 @@ export default function App() {
 
   const applyAppRoute = (route: AppRoute) => {
     if (route.clientView) {
-      setClientViewState(route.clientView);
+      const currentClientType =
+        currentUser?.role === 'client'
+          ? clients.find((c) => c.id === currentUser.id)?.clientType
+          : undefined;
+      setClientViewState(resolveAllowedClientView(route.clientView, currentClientType) as ClientView);
     }
     if (route.guardTab) {
       const tab = route.guardTab === 'guardChat' ? 'messages' : route.guardTab;
@@ -1000,7 +1007,11 @@ export default function App() {
   };
 
   const setClientView = (view: ClientView) => {
-    const resolvedView = view;
+    const currentClientType =
+      currentUser?.role === 'client'
+        ? clients.find((c) => c.id === currentUser.id)?.clientType
+        : undefined;
+    const resolvedView = resolveAllowedClientView(view, currentClientType) as ClientView;
     setClientViewState(resolvedView);
     const nextGuardId = resolvedView === 'guards' ? clientGuardId ?? undefined : undefined;
     const nextDirectId = resolvedView === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
@@ -2617,6 +2628,7 @@ export default function App() {
         favoriteGuardIds: Array.isArray(c.favorite_guard_ids) ? (c.favorite_guard_ids as string[]) : [],
         defaultAssignmentMode:
           c.default_assignment_mode === 'first-to-accept' ? 'first-to-accept' : 'client-approve',
+        authorizedContacts: parseAuthorizedContacts(c.authorized_contacts),
       };
       }));
 
@@ -5661,6 +5673,7 @@ export default function App() {
               phone: payload.phone,
               companyName: payload.companyName ?? c.companyName,
               avatar: payload.avatar !== undefined ? payload.avatar : c.avatar,
+              authorizedContacts: payload.authorizedContacts ?? c.authorizedContacts,
               ...(clearRevision
                 ? { applicationRevisionRequestedAt: undefined, applicationRevisionNote: undefined }
                 : {}),
@@ -5678,12 +5691,19 @@ export default function App() {
         company_name: payload.companyName ?? '',
       };
       if (payload.avatar !== undefined) clientUpdate.avatar = payload.avatar;
+      if (payload.authorizedContacts) {
+        clientUpdate.authorized_contacts = payload.authorizedContacts;
+      }
       if (clearRevision) {
         clientUpdate.application_revision_requested_at = null;
         clientUpdate.application_revision_note = null;
       }
       beginLocalMutation();
-      const { error } = await supabase.from('clients').update(clientUpdate).eq('id', clientId);
+      let { error } = await supabase.from('clients').update(clientUpdate).eq('id', clientId);
+      if (error && 'authorized_contacts' in clientUpdate && /authorized_contacts/i.test(error.message ?? '')) {
+        delete clientUpdate.authorized_contacts;
+        ({ error } = await supabase.from('clients').update(clientUpdate).eq('id', clientId));
+      }
       if (error) {
         setClients((prev) => prev.map((c) => (c.id === clientId ? previous : c)));
         console.error('Client profile update error:', error);
@@ -13110,22 +13130,23 @@ export default function App() {
       approved: clientRecord?.approved,
     });
     const handleClientNavigate = (view: ClientView) => {
+      const allowedView = resolveAllowedClientView(view, clientRecord?.clientType) as ClientView;
       if (
         clientAccountPending &&
-        view !== 'home' &&
-        view !== 'profile' &&
-        view !== 'settings' &&
-        view !== 'messages' &&
-        view !== 'support' &&
-        view !== 'guide' &&
-        view !== 'support-compose' &&
-        view !== 'support-report' &&
-        view !== 'invoices'
+        allowedView !== 'home' &&
+        allowedView !== 'profile' &&
+        allowedView !== 'settings' &&
+        allowedView !== 'messages' &&
+        allowedView !== 'support' &&
+        allowedView !== 'guide' &&
+        allowedView !== 'support-compose' &&
+        allowedView !== 'support-report' &&
+        allowedView !== 'invoices'
       ) {
         setClientView('home');
         return;
       }
-      setClientView(view);
+      setClientView(allowedView);
     };
 
     const clientInvoicesBadge = unpaidClientInvoices(clientInvoices, currentUser.id).length;
@@ -13193,6 +13214,7 @@ export default function App() {
     return (
       <>
         {marketplaceLegalGate}
+        <ClientCapabilitiesProvider clientType={clientRecord?.clientType}>
         <ClientAppLayout
           currentUser={currentUser}
           companyName={
@@ -13342,6 +13364,7 @@ export default function App() {
             />
           )}
         </ClientAppLayout>
+        </ClientCapabilitiesProvider>
         {passwordChangeOverlay}
         {tutorialOverlay}
         <InstallPrompt />

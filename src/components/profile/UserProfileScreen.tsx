@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Client, Certification, GuardInsurancePolicy, PlatformRole, SecurityGuard, SessionUser } from '../../types';
+import { Client, ClientAuthorizedContact, Certification, GuardInsurancePolicy, PlatformRole, SecurityGuard, SessionUser } from '../../types';
 import { isStaffRole, ROLE_LABELS } from '../../lib/permissions';
 import { getGuardDisplayStatus, GUARD_STATUS_LABELS } from '../../lib/guardQualification';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
@@ -41,6 +41,7 @@ import {
 } from './GuardIdentityVerificationPanel';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 import { normalizeClientType } from '../../lib/clientType';
+import { ClientAuthorizedContactsSection } from '../client/ClientAuthorizedContactsSection';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
@@ -54,6 +55,7 @@ export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   avatar?: string;
   badgeNumber?: string;
   personalEmail?: string;
+  authorizedContacts?: ClientAuthorizedContact[];
 }
 
 interface UserProfileScreenProps {
@@ -131,6 +133,9 @@ export function UserProfileScreen({
     specialties: guard?.specialties ?? [],
   });
   const [companyName, setCompanyName] = useState(client?.companyName ?? currentUser.clientName ?? '');
+  const [authorizedContacts, setAuthorizedContacts] = useState<ClientAuthorizedContact[]>(
+    client?.authorizedContacts ?? []
+  );
   const [hourlyRate, setHourlyRate] = useState(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
   const [resume, setResume] = useState<GuardResumeSavePayload>({
     headline: guard?.headline ?? '',
@@ -170,6 +175,7 @@ export function UserProfileScreen({
       specialties: guard?.specialties ?? [],
     });
     setCompanyName(client?.companyName ?? currentUser.clientName ?? '');
+    setAuthorizedContacts(client?.authorizedContacts ?? []);
     setHourlyRate(String(guard?.hourlyRateRequirement ?? currentUser.hourlyRate ?? ''));
     setResume({
       headline: guard?.headline ?? '',
@@ -203,7 +209,7 @@ export function UserProfileScreen({
       avatar: avatarOverride ?? avatar,
     };
     if (isClient) {
-      return { ...base, companyName: companyName.trim() };
+      return { ...base, companyName: companyName.trim(), authorizedContacts };
     }
     if (isStaffAccount) {
       return {
@@ -517,6 +523,14 @@ export function UserProfileScreen({
           editing={applicationFieldsEditable}
           type="tel"
         />
+        {isClient && client ? (
+          <ClientAuthorizedContactsSection
+            client={client}
+            contacts={authorizedContacts}
+            editing={editing}
+            onChange={setAuthorizedContacts}
+          />
+        ) : null}
         {isStaffAccount && (
           <StaffProfileSection
             member={{
