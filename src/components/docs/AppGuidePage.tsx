@@ -6,6 +6,7 @@ import {
   BookOpen,
   Building2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Crown,
   LayoutGrid,
@@ -575,6 +576,55 @@ export function AppGuidePage({
             )
           }
         />
+      </StaffOpsPageShell>
+    );
+  }
+
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell className="staff-mgmt-panel staff-roster-panel sft-guide">
+        <div
+          className="tablet-split-panel"
+          data-selected={activeSection ? 'true' : undefined}
+        >
+          <div className="split-list-pane">
+            <GuideHub
+              variant="desktop"
+              sections={ALL_SECTIONS}
+              tabs={tabs}
+              initialAudience={
+                initialAudience && initialAudience !== 'all' && initialAudience !== 'staff'
+                  ? initialAudience
+                  : 'all'
+              }
+              highlightAudience={highlightAudience}
+              activeSectionId={activeSection?.id ?? null}
+              onSelect={handleSelect}
+              tutorialAvailable={tutorialAvailable}
+              tutorialCompleted={tutorialCompleted}
+              tutorialActive={tutorialActive}
+              onStartTutorial={onStartTutorial}
+            />
+          </div>
+          <div className="split-detail-pane">
+            {activeSection ? (
+              <>
+                <div className="tablet-split-back">
+                  <button type="button" className="sft-icon-btn" onClick={handleBack} aria-label="Back to list">
+                    <ChevronLeft size={22} strokeWidth={2.25} aria-hidden />
+                  </button>
+                  <span className="tablet-split-back-title">Back to list</span>
+                </div>
+                <SectionDetail section={activeSection} onBack={handleBack} variant="desktop" />
+              </>
+            ) : (
+              <div className="sft-empty">
+                <p className="sft-empty-title">Select a guide section</p>
+                <p className="sft-empty-message">Choose a topic from the list to read workflows, permissions, and how Guardr works.</p>
+              </div>
+            )}
+          </div>
+        </div>
       </StaffOpsPageShell>
     );
   }

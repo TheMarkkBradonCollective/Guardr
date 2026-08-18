@@ -41,6 +41,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { useLayoutFormFactor } from '../../surfaces';
 
 interface GuardDirectoryScreenProps {
   guards: SecurityGuard[];
@@ -87,6 +88,8 @@ export function GuardDirectoryScreen({
   requests = [],
   onRequestGuard,
 }: GuardDirectoryScreenProps) {
+  const formFactor = useLayoutFormFactor();
+  const isTablet = formFactor === 'tablet';
   const [filters, setFilters] = useState<GuardDirectoryFilters>(DEFAULT_GUARD_FILTERS);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -142,11 +145,11 @@ export function GuardDirectoryScreen({
   const currentSort = SORT_OPTIONS.find((s) => s.id === filters.sortBy) ?? SORT_OPTIONS[0];
 
   return (
-    <AppScreen>
-      {onBack && <AppSubScreenHeader title="Find Guards" onBack={onBack} backLabel="Home" />}
+    <AppScreen className={isTablet ? 'sft-directory h-full min-h-0' : undefined}>
+      {onBack && !isTablet && <AppSubScreenHeader title="Find Guards" onBack={onBack} backLabel="Home" />}
 
       {/* ── Search + filter bar ───────────────────────────────────── */}
-      <div className="px-4 pb-3 pt-2 space-y-2 border-b border-brand-border sticky top-0 z-20 bg-brand-bg">
+      <div className={isTablet ? 'sft-directory-toolbar' : 'px-4 pb-3 pt-2 space-y-2 border-b border-brand-border sticky top-0 z-20 bg-brand-bg'}>
         <div className="flex gap-2 items-center">
           <div className="flex-1">
             <WfSearchBar
@@ -404,7 +407,7 @@ export function GuardDirectoryScreen({
       )}
 
       {/* ── Guard list ────────────────────────────────────────────── */}
-      <AppSection title="Guards">
+      <AppSection title="Guards" className={isTablet ? 'sft-directory-results' : undefined}>
         {filtered.length === 0 ? (
           <GuardEmptyState
             filters={filters}

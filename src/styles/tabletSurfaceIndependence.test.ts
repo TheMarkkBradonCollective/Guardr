@@ -41,5 +41,10 @@ describe('tablet CSS independence', () => {
     assert.ok(css.includes('.sft-request-fields'));
     assert.ok(css.includes('.sft-request-flow-actions'));
     assert.ok(css.includes('.client-home-tablet-command'));
+    assert.ok(css.includes('.sft-directory'));
+    assert.ok(css.includes('.sft-guard-profile'));
+    assert.ok(css.includes('.sft-reports'));
+    assert.ok(css.includes('.staff-analytics-tablet-canvas'));
+    assert.ok(css.includes('.sft-dev-notes-grid'));
   });
 });
