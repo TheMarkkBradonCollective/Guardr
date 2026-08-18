@@ -2268,10 +2268,16 @@ html.theme-light .guardr-map-container .leaflet-tile-pane {
   white-space: nowrap;
 }
 
+/* Anchor map controls without a full-bleed hit target — inset:0 overlays have
+   blocked shell chrome taps on some Android WebViews even with pointer-events:none. */
 .map-filter-stepper {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   z-index: 1003;
+  width: 0;
+  height: 0;
+  overflow: visible;
   pointer-events: none;
 }
 

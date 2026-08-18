@@ -115,77 +115,77 @@ export function MobileAppShell({
       data-bleed={bleed ? 'true' : undefined}
     >
       {!hideChrome ? (
-        headerOverride ? (
-          <div className="sfm-shell-header sfm-shell-header--custom">{headerOverride}</div>
-        ) : (
-          <header className="sfm-shell-header">
-            {onBack ? (
-              <button type="button" className="sfm-icon-btn" onClick={onBack} aria-label="Back">
-                <ChevronLeft size={24} strokeWidth={2.25} aria-hidden />
-              </button>
-            ) : showDrawer ? (
-              <button
-                type="button"
-                className="sfm-icon-btn"
-                onClick={() => setDrawerOpen(true)}
-                aria-label="Open menu"
-                aria-expanded={drawerOpen}
-              >
-                <Menu size={22} strokeWidth={2.25} aria-hidden />
-              </button>
-            ) : (
-              <span className="sfm-shell-head-spacer" aria-hidden />
-            )}
-
-            <h1 className="sfm-shell-title">{title}</h1>
-
-            <div className="sfm-shell-actions">
-              {notifications}
-              {showNotificationBell ? (
-                <button
-                  type="button"
-                  className="sfm-icon-btn sfm-noti-btn"
-                  onClick={() => openAccountSheet('notifications')}
-                  aria-label={
-                    notificationUnread > 0
-                      ? `Notifications, ${notificationUnread} unread`
-                      : 'Notifications'
-                  }
-                >
-                  <Bell size={20} strokeWidth={2.25} aria-hidden />
-                  {notificationUnread > 0 ? (
-                    <span className="sfm-noti-badge">
-                      {notificationUnread > 9 ? '9+' : notificationUnread}
-                    </span>
-                  ) : null}
+        <div className="sfm-shell-chrome">
+          {headerOverride ? (
+            <div className="sfm-shell-header sfm-shell-header--custom">{headerOverride}</div>
+          ) : (
+            <header className="sfm-shell-header">
+              {onBack ? (
+                <button type="button" className="sfm-icon-btn" onClick={onBack} aria-label="Back">
+                  <ChevronLeft size={24} strokeWidth={2.25} aria-hidden />
                 </button>
-              ) : null}
-              {identity && accountMenu ? (
-                <button
-                  type="button"
-                  className="sfm-shell-identity sfm-shell-identity--header"
-                  onClick={() => openAccountSheet('main')}
-                  aria-label="Account"
-                >
-                  {identity}
-                </button>
-              ) : accountMenu ? (
+              ) : showDrawer ? (
                 <button
                   type="button"
                   className="sfm-icon-btn"
-                  onClick={() => openAccountSheet('main')}
-                  aria-label="Account menu"
+                  onClick={() => setDrawerOpen(true)}
+                  aria-label="Open menu"
+                  aria-expanded={drawerOpen}
                 >
-                  <Bell size={20} strokeWidth={2.25} aria-hidden />
+                  <Menu size={22} strokeWidth={2.25} aria-hidden />
                 </button>
-              ) : null}
-            </div>
-          </header>
-        )
-      ) : null}
+              ) : (
+                <span className="sfm-shell-head-spacer" aria-hidden />
+              )}
 
-      {headerExtension && !hideChrome ? (
-        <div className="sfm-shell-extension">{headerExtension}</div>
+              <h1 className="sfm-shell-title">{title}</h1>
+
+              <div className="sfm-shell-actions">
+                {notifications}
+                {showNotificationBell ? (
+                  <button
+                    type="button"
+                    className="sfm-icon-btn sfm-noti-btn"
+                    onClick={() => openAccountSheet('notifications')}
+                    aria-label={
+                      notificationUnread > 0
+                        ? `Notifications, ${notificationUnread} unread`
+                        : 'Notifications'
+                    }
+                  >
+                    <Bell size={20} strokeWidth={2.25} aria-hidden />
+                    {notificationUnread > 0 ? (
+                      <span className="sfm-noti-badge">
+                        {notificationUnread > 9 ? '9+' : notificationUnread}
+                      </span>
+                    ) : null}
+                  </button>
+                ) : null}
+                {identity && accountMenu ? (
+                  <button
+                    type="button"
+                    className="sfm-shell-identity sfm-shell-identity--header"
+                    onClick={() => openAccountSheet('main')}
+                    aria-label="Account"
+                  >
+                    {identity}
+                  </button>
+                ) : accountMenu ? (
+                  <button
+                    type="button"
+                    className="sfm-icon-btn"
+                    onClick={() => openAccountSheet('main')}
+                    aria-label="Account menu"
+                  >
+                    <Bell size={20} strokeWidth={2.25} aria-hidden />
+                  </button>
+                ) : null}
+              </div>
+            </header>
+          )}
+
+          {headerExtension ? <div className="sfm-shell-extension">{headerExtension}</div> : null}
+        </div>
       ) : null}
 
       <main className="sfm-shell-canvas" data-bleed={bleed ? 'true' : undefined}>
