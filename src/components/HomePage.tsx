@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ThemeMode } from '../lib/platform/theme';
-import { useDevice } from '../lib/platform';
+import { useSurface } from '../surfaces/SurfaceProvider';
 import type { LegalPageId } from '../lib/legalContent';
 import type { CompanyPublicDocument } from '../lib/companyPlacard';
 import { DesktopLandingPage } from './landing/desktop/DesktopLandingPage';
@@ -21,13 +21,13 @@ interface HomePageProps {
 }
 
 export function HomePage(props: HomePageProps) {
-  const { formFactor } = useDevice();
+  const { surface } = useSurface();
 
-  if (formFactor === 'desktop') {
+  if (surface === 'desktop') {
     return <DesktopLandingPage {...props} />;
   }
 
-  if (formFactor === 'tablet') {
+  if (surface === 'tablet') {
     return <TabletLandingPage {...props} formFactor="tablet" />;
   }
 
