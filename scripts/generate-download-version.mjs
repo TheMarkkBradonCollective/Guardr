@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.128':
+    'Consolidated Supabase SQL catch-up snippet for Aug 18 session (client types, credentials, staff ID bounce).',
   '1.0.127':
     'Staff activation fixes: approved hires locked to activation; management stays approved until Profile ID upload; client credential library moved to Permissions; Android APK+AAB CI.',
   '1.0.126':

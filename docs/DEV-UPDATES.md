@@ -3,13 +3,32 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Tuesday, August 18, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.127**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.128**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
 The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | What shipped |` tables under dated `## Weekday, Month D, YYYY` headings (and from `**Activity:**` / `### Title (h:mm AM)` lines). Every `/update` must add those Time rows from git commit times, bump **Last updated**, fill Guide gaps for what shipped, and refresh **Quick reference by date**. Changelog-only entries without times do not light up the cloud.
+
+---
+
+## Tuesday, August 18, 2026 — /update → v1.0.128
+
+| Time | What shipped |
+|------|----------------|
+| 3:15 PM | Add consolidated Aug 18 session SQL catch-up snippet |
+| 3:18 PM | Release v1.0.128-beta — version bump, PWA cache |
+| 3:19 PM | Land v1.0.128 on `main` |
+
+**Shipped**
+- **`supabase/snippets/20260818_full_session_update.sql`** — one-shot Supabase script for client_type, authorized_contacts, client credentials, `client_credential_rules`, staff ID bounce, and staff active→approved demotion
+
+**SQL to run**
+- `supabase/snippets/20260818_full_session_update.sql` (or individual migrations under `supabase/migrations/202608180*.sql`)
+
+**Release verification**
+- Lint, test (**697**), build green
 
 ---
 
@@ -1199,6 +1218,7 @@ Bringing this to investors — needed every workflow working, every button, ever
 | **Jul 15** | 4+ | Production audit, back button, Guide rename → v1.0.45 |
 | **Aug 11** | 20+ | User manuals, staff 50% revenue share, v1.0.115–122 |
 | **Aug 14** | 10+ | /update v1.0.123 — fieldtest chat, message delete, Google Play prep |
+| **Aug 18** | 22+ | /update v1.0.128 — consolidated Aug 18 Supabase SQL catch-up snippet |
 | **Aug 18** | 20+ | /update v1.0.127 — staff activation lock, management Profile ID, client credentials fix, staff ID demotion SQL |
 | **Aug 18** | 14+ | /update v1.0.126 — staff roster category tabs, Management page, status sub-filters, APK + AAB release pipeline |
 | **Aug 18** | 9+ | /update v1.0.124 — Personal vs Business clients, dual fee tables, frozen prices, staff ID bounce, client credential library |

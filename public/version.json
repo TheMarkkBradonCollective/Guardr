@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.127-beta",
+  "webVersion": "1.0.128-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.127",
-    "versionCode": 227,
+    "version": "1.0.128",
+    "versionCode": 228,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.127.apk",
+    "downloadName": "guardr-v1.0.128.apk",
     "fileSize": 85565580,
     "sha256": "52f12fc52cfb1949a590d782216ef458f4a15d69705423872039c1e75f4a3ca0",
-    "releaseNotes": "Staff activation fixes: approved hires locked to activation; management stays approved until Profile ID upload; client credential library moved to Permissions; Android APK+AAB CI."
+    "releaseNotes": "Consolidated Supabase SQL catch-up snippet for Aug 18 session (client types, credentials, staff ID bounce)."
   },
-  "updatedAt": "2026-08-18T15:09:02.170Z"
+  "updatedAt": "2026-08-18T15:18:14.404Z"
 }
