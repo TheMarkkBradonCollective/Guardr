@@ -5,7 +5,7 @@ import { MarkdownDoc } from './MarkdownDoc';
 import { AppScreen, AppScreenTitle } from '../ui/app/AppPrimitives';
 import { StaffOpsPageShell } from '../staff/StaffOpsPageShell';
 import { WorkbenchSplit } from '../baseui/layout/WorkbenchLayout';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 
 const SUMMARY_HEADING = '## Quick reference by date';
 
@@ -93,7 +93,7 @@ function DevActivityGrid({ grid, variant = 'mobile' }: { grid: number[][]; varia
 }
 
 export function DevNotesPage() {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const isDesktop = formFactor === 'desktop';
   const activityGrid = useMemo(() => parseDevActivityGrid(devNotesMarkdown), []);
   const { beforeSummary, summary, afterSummary } = useMemo(

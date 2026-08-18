@@ -1,5 +1,6 @@
 import React from 'react';
-import { isWideFormFactor, useDevice } from '../../../lib/platform';
+import { isWideFormFactor } from '../../../lib/platform';
+import { useLayoutFormFactor } from '../../../surfaces';
 import { AppItemCardStack } from './AppPrimitives';
 import { WorkbenchEmpty, WorkbenchSplit } from '../../baseui/layout/WorkbenchLayout';
 
@@ -27,7 +28,7 @@ export function useSplitListDetail(
   selectedId: string | null,
   mobilePresentation: ListDetailMobilePresentation = 'inline'
 ) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const desktopView = formFactor === 'desktop';
   const splitView = formFactor === 'tablet';
   const wideView = isWideFormFactor(formFactor);

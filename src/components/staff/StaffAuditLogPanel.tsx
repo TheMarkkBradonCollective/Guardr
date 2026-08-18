@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollText, RefreshCw } from 'lucide-react';
 import { loadAuditLog, formatAuditActionLabel, type AuditLogEntry } from '../../lib/auditLog';
 import { useAuditLogRealtime } from '../../lib/useAuditLogRealtime';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
@@ -45,7 +45,7 @@ function AuditLogCard({ entry }: { entry: AuditLogEntry }) {
 }
 
 export function StaffAuditLogPanel() {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [entries, setEntries] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDevice } from '../../../lib/platform';
+import { useLayoutFormFactor } from '../../../surfaces';
 import { AppScreen } from '../../ui/app/AppPrimitives';
 
 /** Desktop admin page wrapper — replaces AppScreen inside adm-app on desktop. */
@@ -31,7 +31,7 @@ export function ResponsivePage({
   screenClassName?: string;
   'data-tour'?: string;
 }) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   if (formFactor === 'desktop') {
     return (
       <DesktopPage className={className} data-tour={dataTour}>
@@ -58,7 +58,7 @@ export function ResponsiveFormPage({
   subtitle?: string;
   className?: string;
 }) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   if (formFactor === 'desktop') {
     return (
       <div className={`adm-form-page ${className}`.trim()}>
@@ -85,7 +85,7 @@ export function ResponsiveProfilePage({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   if (formFactor === 'desktop') {
     return (
       <div className={`adm-profile-page ${className}`.trim()}>

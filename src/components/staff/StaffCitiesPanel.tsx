@@ -24,7 +24,7 @@ import {
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import {
   WorkbenchEmpty,
   WorkbenchSplit,
@@ -241,7 +241,7 @@ export function StaffCitiesPanel({
   onUpdateCity,
   onAssignCityManager,
 }: StaffCitiesPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<CityMarketStatusFilter>('all');
   const [sort, setSort] = useState<CityMarketSort>('name-asc');

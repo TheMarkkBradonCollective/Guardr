@@ -1,6 +1,6 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { AppEmptyState } from '../ui/app/AppPrimitives';
 
 interface MessagesHubLayoutProps {
@@ -39,7 +39,7 @@ export function MessagesHubLayout({
   emptyDetailHint = 'Choose a chat from your inbox to view messages',
   shellInboxHeader = false,
 }: MessagesHubLayoutProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const splitView = formFactor === 'tablet';
   const desktopView = formFactor === 'desktop';
   const inboxHeader = shellInboxHeader ? null : header;

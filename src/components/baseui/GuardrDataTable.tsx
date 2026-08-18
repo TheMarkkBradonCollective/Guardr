@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 
 /** Below this container width a table stops being readable and becomes cards. */
 const CARD_BREAKPOINT_PX = 720;
@@ -87,7 +87,7 @@ export function GuardrDataTable<T>({
   layout = 'auto',
 }: GuardrDataTableProps<T>) {
   const [sort, setSort] = useState<SortState>(null);
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [measureRef, containerWidth] = useContainerWidth<HTMLElement>();
   // Cards win whenever the table would have to scroll sideways — phones
   // always, and any narrow container (tablet portrait, split panes).

@@ -53,7 +53,7 @@ import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffCredentialAddForGuardForm } from './StaffCredentialAddForGuardForm';
 import type { AddCertificationResult } from '../../lib/certUniqueness';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
@@ -202,7 +202,7 @@ export function StaffCredentials({
   onRejectClientCredential,
   onOpenClientProfile,
 }: StaffCredentialsProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [audienceFilter, setAudienceFilter] = useState<CredentialAudienceFilter>('all');
   const [filter, setFilter] = useState<CredentialStatusFilter>('all');
   const showStaffBadge = Boolean(currentUserRole && isExecutiveOpsRole(currentUserRole));

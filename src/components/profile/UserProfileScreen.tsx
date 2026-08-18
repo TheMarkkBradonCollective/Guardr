@@ -30,7 +30,7 @@ import { StaffTimesheetsPanel } from '../staff/StaffTimesheetsPanel';
 import type { PlatformSettings } from '../../lib/platformSettings';
 import type { SecurityRequest } from '../../types';
 import { ResponsivePage, ResponsiveProfilePage } from '../layouts/desktop/DesktopPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { PersonNameFields } from './PersonNameFields';
 import { formatPersonName, personNameFromPayload, resolvePersonNameParts } from '../../lib/personName';
 import { StaffProfileSection, type StaffProfilePayload } from './StaffProfileSection';
@@ -108,7 +108,7 @@ export function UserProfileScreen({
   platformSettings,
   onSubmitClientCredential,
 }: UserProfileScreenProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [editing, setEditing] = useState(false);
   const [profileTab, setProfileTab] = useState<GuardProfileTab>('profile');
   const [staffProfileTab, setStaffProfileTab] = useState<StaffProfileTab>('profile');

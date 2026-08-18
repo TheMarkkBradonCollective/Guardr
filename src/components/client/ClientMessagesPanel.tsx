@@ -32,7 +32,7 @@ import {
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge } from '../ui/wireframe';
 import { Briefcase, FileText, LifeBuoy, MessageCircle, MessagesSquare } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { guardForRequest } from '../../lib/clientShift';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 
@@ -114,7 +114,7 @@ export function ClientMessagesPanel({
   shellHeaderTrailing,
   scope = 'messages',
 }: ClientMessagesPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
 
   const [activeView, setActiveView] = useState<ActiveView>(() => {

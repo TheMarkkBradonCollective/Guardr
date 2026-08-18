@@ -19,7 +19,7 @@ import { StaffJobApprovalSettings } from './StaffJobApprovalSettings';
 import type { PlatformSettings } from '../../lib/platformSettings';
 import { canManageStaffPermissions } from '../../lib/permissions';
 import type { StaffPermissionsPatch } from './StaffPermissionsPanel';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
@@ -79,7 +79,7 @@ export function StaffClientsPanel({
   onOpenJob,
   onAddClient,
 }: StaffClientsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [pageTab, setPageTab] = useState<ClientsPageTab>('roster');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ClientRosterFilter>('all');

@@ -28,7 +28,7 @@ import {
 import { DEFAULT_CALIFORNIA_CITY, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import {
   WorkbenchEmpty,
   WorkbenchSplit,
@@ -92,7 +92,7 @@ export function StaffLocationsPanel({
   clientLocations,
   onSave,
 }: StaffLocationsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const canManage = canReviewJobRequests(currentUser);
   const hideTrigger = formFactor === 'desktop';
   const selectableCities = getSelectableCityNamesForClients();

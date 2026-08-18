@@ -26,7 +26,7 @@ import {
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import type { StaffGuardDetailTab } from '../../lib/appNavigation';
 import type { PerformanceFactorId } from '../../lib/guardPerformanceFactorDetail';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
@@ -166,7 +166,7 @@ export function StaffGuardsPanel({
   onOpenGuardCredential,
   onAddGuard,
 }: StaffGuardsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<GuardRosterFilter>('all');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);

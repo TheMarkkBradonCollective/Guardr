@@ -14,7 +14,7 @@ import {
 } from '../ui/app/AppPrimitives';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { ClipboardList, Clock, CheckCircle2, Plus, AlertTriangle } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { ClientRequestsDesktop } from './ClientRequestsDesktop';
 import {
   isJobScheduleLocked,
@@ -154,7 +154,7 @@ export function ClientRequestsList({
   onAcceptPriceOffer,
   onRequestReplacement,
 }: ClientRequestsListProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const billingSettings = crewSettings ?? teamLeadSettings;
   const [activeTab, setActiveTabState] = useState<JobTab>(initialJobTab);
   const [editingId, setEditingId] = useState<string | null>(null);

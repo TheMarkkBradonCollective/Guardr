@@ -4,7 +4,7 @@ import { PlatformSettings } from '../../lib/platformSettings';
 import { GuardrCard } from '../baseui/GuardrCard';
 import { WorkbenchCardTitle } from '../baseui/layout/WorkbenchLayout';
 import { AppFormSection } from '../ui/app/AppPrimitives';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 
 interface StaffJobApprovalSettingsProps {
   currentUser: SessionUser;
@@ -70,7 +70,7 @@ export function StaffJobApprovalSettings({
   onPersistSettings,
   embedded = false,
 }: StaffJobApprovalSettingsProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const fields = (
     <ApprovalRulesFields
       platformSettings={platformSettings}
