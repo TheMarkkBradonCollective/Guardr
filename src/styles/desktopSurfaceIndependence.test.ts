@@ -10,7 +10,6 @@ const DESKTOP_STYLE_FILES = [
   'desktop-app.css',
   'desktop-auth.css',
   'desktop-workspace.css',
-  'desktop-landing.css',
   'gr-direct-desktop.css',
 ];
 
@@ -29,7 +28,7 @@ describe('desktop CSS independence', () => {
         `${file} must not key desktop look off view-surface (PWA can be wide and still tablet)`,
       );
       assert.ok(
-        css.includes('data-surface="desktop"') || css.includes("data-surface='desktop'") || file === 'desktop-landing.css',
+        css.includes('data-surface="desktop"') || css.includes("data-surface='desktop'"),
         `${file} should scope rules to the desktop surface`,
       );
     }

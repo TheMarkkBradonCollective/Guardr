@@ -1,4 +1,4 @@
-name: Android APK
+name: Android AAB
 
 on:
   workflow_dispatch:
@@ -7,15 +7,17 @@ on:
     paths:
       - 'android/**'
       - 'capacitor.config.ts'
-      - 'scripts/build-android-apk.mjs'
+      - 'scripts/build-android-play.mjs'
+      - 'scripts/build-android-common.mjs'
       - 'scripts/write-google-services.mjs'
+      - 'scripts/write-keystore.mjs'
       - 'src/**'
       - 'public/**'
       - 'package.json'
       - 'package-lock.json'
 
 jobs:
-  build-apk:
+  build-aab:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,12 +47,19 @@ jobs:
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
+      - name: Write Play upload keystore
+        run: node scripts/write-keystore.mjs
+        env:
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
       - name: APK parity audit (pre-build)
         run: npm run apk:audit
         continue-on-error: true
 
-      - name: Build APK
-        run: npm run android:apk
+      - name: Build AAB
+        run: npm run android:aab
         env:
           VITE_APP_URL: https://www.guardr.co
           # Omit placeholder Supabase values — client falls back to production keys when unset/invalid.
@@ -60,11 +69,11 @@ jobs:
       - name: APK parity audit (post-build)
         run: npm run apk:audit
 
-      - name: Upload APK artifact
+      - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: guardr-android-apk
+          name: guardr-android-aab
           path: |
-            android/app/build/outputs/apk/sideload/release/app-sideload-release.apk
-            public/download/guardr.apk
+            android/app/build/outputs/bundle/playRelease/app-play-release.aab
+            dist/play-store/guardr-play-release.aab
           if-no-files-found: error

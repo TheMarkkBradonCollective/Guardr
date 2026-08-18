@@ -2,9 +2,7 @@ import React from 'react';
 import type { ThemeMode } from '../lib/platform/theme';
 import type { LegalPageId } from '../lib/legalContent';
 import type { CompanyPublicDocument } from '../lib/companyPlacard';
-import { DesktopLandingPage } from './landing/desktop/DesktopLandingPage';
-import { MobileLandingPage } from './landing/mobile/MobileLandingPage';
-import { TabletLandingPage } from './landing/tablet/TabletLandingPage';
+import { MobilityStyleLandingPage } from './landing/mobility/MobilityStyleLandingPage';
 import { useSurfaceKind } from '../surfaces';
 
 import type { AuthViewRole } from '../lib/appNavigation';
@@ -20,17 +18,8 @@ interface HomePageProps {
   companyPlacardDocuments?: CompanyPublicDocument[];
 }
 
-/** Public homepage — one dedicated landing per surface, never a scaled copy. */
+/** Public homepage — one mobility landing with per-surface layout tuning. */
 export function HomePage(props: HomePageProps) {
   const surface = useSurfaceKind();
-
-  if (surface === 'desktop') {
-    return <DesktopLandingPage {...props} />;
-  }
-
-  if (surface === 'tablet') {
-    return <TabletLandingPage {...props} formFactor="tablet" />;
-  }
-
-  return <MobileLandingPage {...props} formFactor="mobile" />;
+  return <MobilityStyleLandingPage {...props} formFactor={surface} />;
 }

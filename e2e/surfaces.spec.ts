@@ -150,6 +150,15 @@ test.describe('surface resolution', () => {
     await expect(page.locator('.dsk-landing-nav')).toHaveCount(0);
   });
 
+  test('desktop landing uses the merged mobility homepage pattern', async ({ page }) => {
+    await page.setViewportSize(VIEWPORTS.desktop);
+    await page.goto('/');
+    await waitForSurface(page, 'desktop');
+    await expect(page.locator('.uber-style-landing--desktop')).toHaveCount(1);
+    await expect(page.locator('.uber-style-landing--mobile, .uber-style-landing--tablet')).toHaveCount(0);
+    await expect(page.locator('.dsk-landing-nav')).toHaveCount(0);
+  });
+
   test('a 1100px landscape width stays on the tablet app, not desktop', async ({ page }) => {
     // Tailwind's lg floor is 1024px, so formFactor would be desktop here. The
     // tablet application owns 744–1179px and must keep its own landing + tokens.

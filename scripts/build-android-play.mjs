@@ -8,12 +8,15 @@
  *   android/app/build/outputs/bundle/playRelease/app-play-release.aab
  */
 import { copyFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { GRADLE, prepareAndroidWebBuild, ROOT, run } from './build-android-common.mjs';
+import { isReleaseKeystoreConfigured, writeKeystoreFromEnv } from './write-keystore.mjs';
+
+console.log('→ Writing Play upload keystore (if configured)…');
+await writeKeystoreFromEnv();
 
 const keystoreProperties = path.join(ROOT, 'android/keystore.properties');
-if (!existsSync(keystoreProperties)) {
+if (!isReleaseKeystoreConfigured()) {
   console.error('\n✗ android/keystore.properties is missing.');
   console.error('  1. Copy android/keystore.properties.example → android/keystore.properties');
   console.error('  2. Generate an upload keystore (see docs/GOOGLE-PLAY.md)');
