@@ -32,16 +32,23 @@ Guardr ships **three independent applications**, not one responsive layout. See
 
 | Device | Primary users | Application | UI behavior |
 |--------|---------------|-------------|-------------|
-| Phone | Guards, clients | Classic mobile shell (`GuardrDrawerShell`) | Hamburger drawer sidebar + sticky bottom footer tabs + More sheet; scrollable content pane |
+| Phone | Guards, clients | `MobileAppShell` | Fixed bottom tabs + More sheet; account is a sheet; collapsing page titles; 48px targets |
 | Tablet | Staff, guards, clients | `TabletAppShell` | Persistent labelled rail + quick-switch strip, master/detail split views, docked side panels, persistent inspector, 44px targets |
 | Desktop / Chromebook | Staff, clients, admin | `DesktopAppShell` | Permanent grouped sidebar, top bar breadcrumb, data tables, command palette (`Cmd/Ctrl+K`), `Alt+1..9` shortcuts, resizable panels, drag-and-drop, status bar, 32px targets |
 | PWA standalone | All | mobile or tablet | Never the desktop application — an installed shell is touch-first by definition |
 | Native APK | All | mobile or tablet | Capacitor shell; native safe areas; haptics |
 
 Which application loads is decided **only** in `src/surfaces/surfaceKind.ts` and
-published via `useSurface()` / `body[data-surface]`. Boundaries are 744px (mobile →
-tablet) and 1180px (tablet → desktop); installed PWA/APK shells and touch-only
-devices never resolve to desktop. Override with `?ui=mobile|tablet|desktop`.
+published via `useSurface()` / `body[data-surface]`. Width floors are 744px
+(mobile → tablet) and 1180px (tablet → desktop). `formFactor` /
+`body[data-form-factor]` uses the same floors (`FORM_FACTOR_BOUNDS`) so a 13"
+laptop is not labelled desktop while the tablet application is mounted.
+Installed PWA/APK shells and touch-only devices never resolve to desktop.
+Override with `?ui=mobile|tablet|desktop`.
+
+Desktop look-and-feel CSS targets `body[data-surface="desktop"]` only. Do not
+reuse `data-form-factor="desktop"` or `data-view-surface="browser-desktop"` for
+chrome that must stay off tablet and mobile.
 
 Each shell is a separate lazy chunk, so a phone never downloads the desktop data
 table or command palette.
@@ -117,7 +124,7 @@ src/styles/platform-optimizations.css — per-surface + per-tier CSS
 |---------|-----------|-------|
 | `browser-desktop` | `DesktopLandingPage` | Base Web split editorial + preview |
 | `browser-tablet` | `TabletLandingPage` | Touch-first 2-column landing (not scaled desktop) |
-| `browser-mobile` | `MobileLandingPage` | Thumb-first landing + fixed CTA bar |
+| `browser-mobile` | `MobileLandingPage` | Thumb-first landing: stacked role cards, snap-scroll chips, sticky Get started dock |
 | `pwa-mobile`, `pwa-tablet` | `AppHomeScreen` + `AuthPage` (sheet over welcome) | Glass dock, “Installed” badge, accent hero copy |
 | `native-mobile`, `native-tablet` | `AppHomeScreen` + `AuthPage` (sheet over welcome) | Solid dock, safe-area padding, native press feedback |
 
@@ -135,7 +142,7 @@ src/styles/app-pwa.css                  — PWA welcome + auth-sheet overrides (
 src/styles/app-native.css               — APK welcome + auth-sheet safe areas
 ```
 
-Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`GuardrDrawerShell`** with **`resolveMobilityChrome(viewSurface)`** — independent layouts per cell (mobile drawer, tablet persistent rail, desktop workspace). PWA/native deltas via `data-shell` + `uber-mobility.css`.
+Signed-in chrome (`RoleAppShell`, `StaffOpsLayout`) uses **`SurfaceAppShell`**: `MobileAppShell` (bottom tabs + sheets), `TabletAppShell` (persistent rail), `DesktopAppShell` (sidebar workspace). PWA/native deltas via `data-shell` + `uber-mobility.css`.
 
 ### Base Web mobility platform (`/platforms` Phase 2)
 

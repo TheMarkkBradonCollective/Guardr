@@ -112,9 +112,39 @@ export function staffNeedsCredentialCompletion(member: SecurityGuard): boolean {
   return isStaffAccountPreActive(member);
 }
 
-/** Existing active staff who must re-complete ID verification. */
+/**
+ * Existing active staff who must re-complete ID verification.
+ * New pending or approved hires stay on Staff activation, not reactivation.
+ */
 export function staffNeedsIdReactivation(member: SecurityGuard): boolean {
-  return Boolean(member.isStaff && isStaffUserStatusActive(member) && !governmentIdEffectivelyVerified(member));
+  return Boolean(
+    member.isStaff && isStaffUserStatusActive(member) && !governmentIdEffectivelyVerified(member)
+  );
+}
+
+export function getStaffRosterStatusLabel(member: SecurityGuard): string {
+  const status = getGuardUserStatus(member);
+  if (status === 'pending') return 'Pending approval';
+  if (status === 'suspended') return 'Suspended';
+  if (status === 'blocked') return 'Blocked';
+  if (status === 'active' && governmentIdEffectivelyVerified(member)) return 'Active';
+  return 'Inactive';
+}
+
+export function staffHasApplicationIntake(member: SecurityGuard): boolean {
+  return Boolean(
+    member.phone?.trim() ||
+      member.firstName?.trim() ||
+      member.lastName?.trim() ||
+      member.bio?.trim() ||
+      member.summary?.trim() ||
+      member.about?.trim() ||
+      member.yearsExperience != null ||
+      member.availabilityNotes?.trim() ||
+      member.referredBy?.trim() ||
+      (member.specialties?.length ?? 0) > 0 ||
+      (member.managedCities?.length ?? 0) > 0
+  );
 }
 
 export function staffActivationProgress(member: SecurityGuard): {

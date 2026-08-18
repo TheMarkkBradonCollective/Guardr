@@ -1,7 +1,10 @@
 import React from 'react';
-import { isWideFormFactor, useDevice } from '../../../lib/platform';
+import { ChevronLeft } from 'lucide-react';
+import { useMediaQuery } from '../../../lib/platform';
 import { AppItemCardStack } from './AppPrimitives';
-import { WorkbenchEmpty, WorkbenchSplit } from '../../baseui/layout/WorkbenchLayout';
+import { WorkbenchEmpty } from '../../baseui/layout/WorkbenchLayout';
+import { useSurfaceKind } from '../../../surfaces';
+import { DesktopPanelGroup } from '../../../surfaces/desktop/kit/DesktopPanels';
 
 export type ListDetailMobilePresentation = 'inline' | 'page';
 
@@ -27,12 +30,11 @@ export function useSplitListDetail(
   selectedId: string | null,
   mobilePresentation: ListDetailMobilePresentation = 'inline'
 ) {
-  const { formFactor } = useDevice();
-  const desktopView = formFactor === 'desktop';
-  const splitView = formFactor === 'tablet';
-  const wideView = isWideFormFactor(formFactor);
+  const surface = useSurfaceKind();
+  const desktopView = surface === 'desktop';
+  const splitView = surface === 'tablet';
   const showDetailOnly =
-    mobilePresentation === 'page' && Boolean(selectedId && !wideView);
+    mobilePresentation === 'page' && Boolean(selectedId && surface === 'mobile');
 
   return { splitView, desktopView, showDetailOnly };
 }
@@ -51,12 +53,15 @@ export function ListDetailLayout<T>({
   mobilePresentation = 'inline',
 }: ListDetailLayoutProps<T>) {
   const { splitView, desktopView, showDetailOnly } = useSplitListDetail(selectedId, mobilePresentation);
+  const portrait = useMediaQuery('(orientation: portrait)');
 
+  const allowAutoSelect = autoSelectFirst && (desktopView || (splitView && !portrait));
   const resolvedSelectedId =
-    selectedId ??
-    ((splitView || desktopView) && autoSelectFirst && items.length > 0 ? getItemId(items[0]) : null);
+    selectedId ?? (allowAutoSelect && items.length > 0 ? getItemId(items[0]) : null);
 
   const selected = items.find((item) => getItemId(item) === resolvedSelectedId) ?? null;
+  const hasSelection = selected != null;
+  const closeDetail = () => onSelectId(null);
 
   const handleSelect = (id: string) => {
     if (mobilePresentation === 'inline' && !splitView && !desktopView && id === selectedId) {
@@ -66,35 +71,37 @@ export function ListDetailLayout<T>({
     onSelectId(id);
   };
 
+  const list = (
+    <AppItemCardStack>
+      {items.map((item) => {
+        const id = getItemId(item);
+        const isSelected = resolvedSelectedId === id;
+        return (
+          <React.Fragment key={id}>
+            {renderItem(item, isSelected, () => handleSelect(id))}
+          </React.Fragment>
+        );
+      })}
+    </AppItemCardStack>
+  );
+
   if (desktopView) {
     return (
-      <WorkbenchSplit
-        list={
-          <div className={listScrollClassName}>
-            <AppItemCardStack>
-              {items.map((item) => {
-                const id = getItemId(item);
-                const isSelected = resolvedSelectedId === id;
-                return (
-                  <React.Fragment key={id}>
-                    {renderItem(item, isSelected, () => handleSelect(id))}
-                  </React.Fragment>
-                );
-              })}
-            </AppItemCardStack>
-          </div>
-        }
-        detail={
-          selected
-            ? <div className={detailClassName}>{renderDetail(selected)}</div>
-            : emptyDetail ?? <WorkbenchEmpty message="Select an item to view details" variant="detail" />
-        }
-      />
+      <div className="h-full min-h-[60vh]">
+        <DesktopPanelGroup
+          primary={<div className={listScrollClassName}>{list}</div>}
+          secondary={
+            selected
+              ? <div className={detailClassName}>{renderDetail(selected)}</div>
+              : emptyDetail ?? <WorkbenchEmpty message="Select an item to view details" variant="detail" />
+          }
+          storageKey="list-detail"
+        />
+      </div>
     );
   }
 
   if (splitView) {
-    // Tablet: full-page scroll — drop nested max-height / overflow scroll classes.
     const tabletListScrollClassName = listScrollClassName
       .split(/\s+/)
       .filter(
@@ -108,29 +115,31 @@ export function ListDetailLayout<T>({
       .join(' ');
 
     return (
-      <div className="tablet-split-panel">
-        <div className={`split-list-pane ${tabletListScrollClassName}`}>
-          <AppItemCardStack>
-            {items.map((item) => {
-              const id = getItemId(item);
-              const isSelected = resolvedSelectedId === id;
-              return (
-                <React.Fragment key={id}>
-                  {renderItem(item, isSelected, () => handleSelect(id))}
-                </React.Fragment>
-              );
-            })}
-          </AppItemCardStack>
-        </div>
+      <div
+        className="tablet-split-panel"
+        data-selected={hasSelection ? 'true' : undefined}
+        data-orientation={portrait ? 'portrait' : 'landscape'}
+      >
+        <div className={`split-list-pane ${tabletListScrollClassName}`}>{list}</div>
         <div className={`split-detail-pane min-h-0 ${detailClassName}`}>
-          {selected ? renderDetail(selected) : emptyDetail}
+          {hasSelection && portrait ? (
+            <div className="tablet-split-back">
+              <button type="button" className="sft-icon-btn" onClick={closeDetail} aria-label="Back to list">
+                <ChevronLeft size={22} strokeWidth={2.25} aria-hidden />
+              </button>
+              <span className="tablet-split-back-title">Back to list</span>
+            </div>
+          ) : null}
+          {selected
+            ? renderDetail(selected, portrait ? { onBack: closeDetail } : undefined)
+            : emptyDetail}
         </div>
       </div>
     );
   }
 
   if (showDetailOnly && selected) {
-    return renderDetail(selected, { onBack: () => onSelectId(null) });
+    return renderDetail(selected, { onBack: closeDetail });
   }
 
   return (

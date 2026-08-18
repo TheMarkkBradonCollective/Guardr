@@ -29,7 +29,7 @@ import { GuardContractViolationsList } from './GuardContractViolationsList';
 import { GuardPerformanceRewards } from './GuardPerformanceRewards';
 import { AppScreen } from '../ui/app/AppPrimitives';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchEmpty, WorkbenchFlatSplit } from '../baseui/layout/WorkbenchLayout';
 
 export type PerformanceViewTab = 'overall' | WorkModality;
@@ -75,7 +75,7 @@ export function GuardPerformanceScreen({
   onPerformanceFactorChange,
   onDisputeShiftAuditViolation,
 }: GuardPerformanceScreenProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [activeTab, setActiveTab] = useState<PerformanceViewTab>('overall');
   const performanceTabOptions = React.useMemo(
     () => performanceTabOptionsForGuard(guard),

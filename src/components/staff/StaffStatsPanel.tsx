@@ -21,7 +21,7 @@ import {
 } from '../../lib/staffGuardEligibility';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { PerformanceTierProgressBars } from './overview/PerformanceTierProgressBars';
 
@@ -164,7 +164,7 @@ function GuardTable({
   onOpenGuard?: (guardId: string) => void;
   showSelect?: boolean;
 }) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
 
   if (formFactor === 'desktop') {
     return (
@@ -324,7 +324,7 @@ export function StaffStatsPanel({
   onOpenGuard,
   onOpenViolations,
 }: StaffStatsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [tab, setTab] = useState<StatsTab>('overview');
   const [sortKey, setSortKey] = useState<StaffGuardStatSortKey>('rating-desc');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

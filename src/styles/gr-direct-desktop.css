@@ -3,7 +3,7 @@
    Black top bar · grey canvas · white panels · collapsible labelled sidebar
    ═══════════════════════════════════════════════════════════════════════════ */
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] {
   background: var(--uber-bg, #ffffff);
 }
 
@@ -322,12 +322,12 @@ html.theme-dark .uber-app-shell[data-uber-direct='true'] .uber-workbench-tab--ac
 
 /* ─── Sidebar ─────────────────────────────────────────────────────────────── */
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar {
   background: var(--uber-bg, #ffffff) !important;
   border-right: 1px solid var(--uber-border, #eeeeee) !important;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar {
   background: #101010 !important;
   border-right-color: #2b2b2b !important;
 }
@@ -370,7 +370,7 @@ html.theme-dark .uber-direct-sidebar-toggle:focus-visible {
   outline-color: #ffffff;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-brand {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-brand {
   border-bottom: none !important;
   padding-top: 28px !important;
   padding-bottom: 20px !important;
@@ -378,7 +378,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   padding-right: 24px !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-wordmark {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-wordmark {
   font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1.25rem;
   font-weight: 800;
@@ -387,11 +387,11 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   color: var(--uber-text, #000000);
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-wordmark {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-wordmark {
   color: #ffffff;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta-wrap {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta-wrap {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -399,7 +399,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   flex-shrink: 0;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -419,20 +419,20 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   transition: opacity 120ms ease, transform 120ms ease;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta:hover {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta:hover {
   opacity: 0.88;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta:active {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta:active {
   transform: scale(0.98);
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-cta {
   background: #ffffff;
   color: #000000;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -440,7 +440,7 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   padding-bottom: 8px;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer {
   margin-top: 0;
   padding: 10px 12px 12px;
   border-top: 1px solid var(--uber-border, #eeeeee);
@@ -448,44 +448,44 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   flex-shrink: 0;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer {
   border-top-color: #2b2b2b;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link--primary {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link--primary {
   background: #1f1f1f;
   color: #ffffff;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link:not(.uber-direct-sidebar-footer-link--primary) {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link:not(.uber-direct-sidebar-footer-link--primary) {
   color: rgba(255, 255, 255, 0.55);
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link:hover {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link:hover {
   color: #ffffff;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer a,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer button {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer a,
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-footer button {
   color: var(--uber-text-muted, #6b6b6b);
   font-size: 12px;
 }
 
 /* Side nav — Guardr Direct pills + section labels */
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav [data-baseweb="side-nav"] {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav [data-baseweb="side-nav"] {
   padding: 0 12px;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav li {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav li {
   list-style: none;
   background: transparent !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav li:hover {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav li:hover {
   background: transparent !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a {
   border-radius: 8px !important;
   margin: 1px 0 !important;
   padding-left: 12px !important;
@@ -497,68 +497,68 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   background: transparent !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a > * {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a > * {
   background: transparent !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] {
   background: #000000 !important;
   color: #ffffff !important;
   font-weight: 600 !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] *,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] *,
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
   color: #ffffff !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
   stroke: #ffffff !important;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] {
   background: #ffffff !important;
   color: #000000 !important;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] *,
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] *,
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
   color: #000000 !important;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"] svg {
   stroke: #000000 !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:hover:not([aria-current="page"]):not([aria-disabled="true"]) {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:hover:not([aria-current="page"]):not([aria-disabled="true"]) {
   background: #eeeeee !important;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:not([aria-current="page"]):not([aria-disabled="true"]) {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:not([aria-current="page"]):not([aria-disabled="true"]) {
   color: #ffffff !important;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:not([aria-current="page"]):not([aria-disabled="true"]) svg {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:not([aria-current="page"]):not([aria-disabled="true"]) svg {
   color: #ffffff !important;
   stroke: #ffffff !important;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:hover:not([aria-current="page"]):not([aria-disabled="true"]) {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a:hover:not([aria-current="page"]):not([aria-disabled="true"]) {
   background: #2b2b2b !important;
   color: #ffffff !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"]:hover {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"]:hover {
   background: #000000 !important;
   opacity: 0.92;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"]:hover {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"]:hover {
   background: #ffffff !important;
   opacity: 0.92;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-disabled="true"] {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-disabled="true"] {
   background: transparent !important;
   font-size: 10px !important;
   font-weight: 700 !important;
@@ -573,29 +573,29 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   opacity: 1 !important;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-disabled="true"] {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-disabled="true"] {
   color: rgba(255, 255, 255, 0.45) !important;
 }
 
 /* ─── Main content pane ───────────────────────────────────────────────────── */
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-content-pane {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-content-pane {
   background: var(--uber-bg-secondary, #f6f6f6);
   min-width: 0;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-content-pane {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-content-pane {
   background: #0a0a0a;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-page-header {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-page-header {
   background: var(--uber-bg, #ffffff) !important;
   border-bottom: 1px solid var(--uber-border, #eeeeee) !important;
   padding: 28px 40px 24px !important;
   flex-shrink: 0;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-page-title {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-page-title {
   font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 32px;
   font-weight: 700;
@@ -605,100 +605,100 @@ body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .ub
   margin: 0;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content {
   background: var(--uber-bg-secondary, #f6f6f6) !important;
 }
 
-html.theme-dark body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content {
+html.theme-dark body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content {
   background: #0a0a0a !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-content-inner {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-content-inner {
   padding: 32px 40px 48px !important;
   max-width: none !important;
   width: 100%;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content[data-page-band='true'] .uber-direct-content-inner {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-shell-content[data-page-band='true'] .uber-direct-content-inner {
   padding-top: 20px !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-content-inner--bleed {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-content-inner--bleed {
   padding: 0 !important;
 }
 
 /* Gray canvas — workbench shell is transparent; white cards float on top */
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-workspace {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench,
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .mobility-workspace {
   background: transparent !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-detail,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-list,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .staff-overview-desktop-grid {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-detail,
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-list,
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .staff-overview-desktop-grid {
   background: var(--uber-bg, #ffffff) !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-lead {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-lead {
   font-size: 14px;
   line-height: 1.45;
   color: var(--uber-text-muted, #6b6b6b);
   margin: 0 0 16px;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-split {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-split {
   border: 1px solid var(--uber-border, #eeeeee);
   border-radius: 12px;
   overflow: hidden;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-detail {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-detail {
   border-left: 1px solid var(--uber-border, #eeeeee);
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .guardr-card,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-panel {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .guardr-card,
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-panel {
   background: var(--uber-bg, #ffffff);
   border: 1px solid var(--uber-border, #eeeeee);
   border-radius: 12px;
   box-shadow: none;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-panel--padded {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-panel--padded {
   padding: 24px;
 }
 
 /* Page titles live in sidebar nav — hide in-page eyebrow/toolbar copy on desktop */
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-eyebrow,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-subtitle {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-eyebrow,
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-subtitle {
   display: none;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-toolbar {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-toolbar {
   padding-top: 0;
   padding-bottom: 0;
   min-height: 0;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-toolbar:not(:has(> div:nth-child(2) > *)) {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-toolbar:not(:has(> div:nth-child(2) > *)) {
   display: none;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-toolbar:has(> div:nth-child(2) > *) {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-workbench-toolbar:has(> div:nth-child(2) > *) {
   padding-bottom: 12px;
 }
 
 /* Nested sidebar sub-items */
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[href$="requests-today"],
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[href$="requests-future"],
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[href$="requests-past"] {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[href$="requests-today"],
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[href$="requests-future"],
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[href$="requests-past"] {
   min-height: 36px !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   color: var(--uber-text-muted, #6b6b6b) !important;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"][href*="requests-"] {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-nav a[aria-current="page"][href*="requests-"] {
   color: var(--uber-text, #000000) !important;
   font-weight: 600 !important;
 }
@@ -813,8 +813,8 @@ html.theme-dark .uber-direct-sidebar-footer-link--primary {
 }
 
 /* Desktop sidebar footer — readable text, not 44px touch bands. */
-body[data-view-surface$="-desktop"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link,
-body[data-view-surface$="-desktop"] .mobility-drawer-footer .uber-direct-sidebar-footer-link {
+body[data-surface="desktop"] .uber-direct-sidebar-footer .uber-direct-sidebar-footer-link,
+body[data-surface="desktop"] .mobility-drawer-footer .uber-direct-sidebar-footer-link {
   min-height: 0;
 }
 
@@ -1020,32 +1020,32 @@ body[data-view-surface$="-desktop"] .mobility-drawer-footer .uber-direct-sidebar
 }
 
 /* Signed-in desktop — desktop workspace black product bar */
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header {
   background: #000000;
   border-bottom-color: #000000;
   color: #ffffff;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-context,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-wordmark,
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-product {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-context,
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-wordmark,
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-product {
   color: #ffffff;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-toggle {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-toggle {
   color: #ffffff;
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-toggle:hover {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-toggle:hover {
   background: rgba(255, 255, 255, 0.12);
 }
 
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-toggle:focus-visible {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-sidebar-toggle:focus-visible {
   outline-color: #ffffff;
 }
 
 /* Shield mark reads on black; invert dark wordmark assets if used */
-body[data-view-surface$="-desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-brand .guardr-logo--opaque {
+body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-top-header-brand .guardr-logo--opaque {
   filter: none;
 }
 
@@ -1207,7 +1207,7 @@ html.theme-dark .uber-direct-header-avatar {
   flex-shrink: 0;
 }
 
-body[data-form-factor="desktop"] .page-shell.auth-experience.dsk-auth .dsk-auth-split {
+body[data-surface="desktop"] .page-shell.auth-experience.dsk-auth .dsk-auth-split {
   flex: 1;
   min-height: 0;
 }

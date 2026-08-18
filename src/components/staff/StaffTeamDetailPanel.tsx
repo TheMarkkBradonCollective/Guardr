@@ -36,6 +36,7 @@ import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
 import { showAppToast } from '../ui/AppToast';
 import { ArrowLeft, Mail, Phone } from 'lucide-react';
 import { getStaffDisplayName } from '../../lib/staffProfile';
+import { getStaffRosterStatusLabel } from '../../lib/staffAccountActivation';
 import {
   nextFinanceDeskBadgeNumberForChange,
   nextStaffBadgeNumberForRoleChange,
@@ -120,8 +121,10 @@ export function StaffTeamDetailPanel({
   onStaffTeamTabChange,
   onBack,
 }: StaffTeamDetailPanelProps) {
-  const accountStatus = member.userStatus || 'active';
+  const accountStatus = member.userStatus || 'pending';
   const isPending = accountStatus === 'pending';
+  const isInactive = accountStatus === 'approved';
+  const rosterStatusLabel = getStaffRosterStatusLabel(member);
   const [role, setRole] = useState<StaffRole | ''>(member.staffRole || '');
   const [sideRoleFinance, setSideRoleFinance] = useState(member.sideRole === 'Finance');
   const [roleMsg, setRoleMsg] = useState('');
@@ -365,6 +368,7 @@ export function StaffTeamDetailPanel({
             {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
             <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
             {isPending && <WfBadge tone="warning">Pending Director approval</WfBadge>}
+            {isInactive && <WfBadge>Inactive</WfBadge>}
           </div>
           <div className="staff-profile-contact-row mt-3">
             <a href={`mailto:${member.email}`} className="staff-profile-contact-link">
@@ -397,7 +401,7 @@ export function StaffTeamDetailPanel({
             </div>
             <div>
               <p className="wf-metric-label">Account</p>
-              <p className="wf-metric-value capitalize">{accountStatus}</p>
+              <p className="wf-metric-value">{rosterStatusLabel}</p>
             </div>
             {memberManagedCities.length > 0 && (
               <div className="col-span-2">
@@ -511,10 +515,11 @@ export function StaffTeamDetailPanel({
         </section>
       )}
 
-      {isPending && (
+      {(isPending || isInactive) && (
         <>
           <StaffStaffApplicationSummary member={member} />
-          {(canApproveStaffAccounts && (onApproveStaffAccount || onRejectStaffAccount)) ? (
+          {isPending &&
+            (canApproveStaffAccounts && (onApproveStaffAccount || onRejectStaffAccount) ? (
             <section className="staff-detail-section space-y-2">
               <h3 className="text-sm font-semibold">Application review</h3>
               <div className="app-action-row--equal">
@@ -547,7 +552,7 @@ export function StaffTeamDetailPanel({
                 Only Directors and Founders can approve or deny staff applications.
               </p>
             </section>
-          )}
+          ))}
         </>
       )}
 

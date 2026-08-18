@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 
 export function FinanceSettingsSaveRow({
@@ -19,7 +19,7 @@ export function FinanceSettingsSaveRow({
   onSave: () => void;
   onDiscard: () => void;
 }) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
 
   if (formFactor === 'desktop') {
     return (

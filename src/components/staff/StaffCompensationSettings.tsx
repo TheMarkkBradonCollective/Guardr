@@ -12,7 +12,7 @@ import {
   type StaffRoleCompensationRule,
 } from '../../lib/staffCompensation';
 import { AppFormSection } from '../ui/app/AppPrimitives';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { StaffMgmtSection } from './StaffMgmtSection';
 import { FinanceSettingsSaveRow } from './staffFinanceSettingsControls';
 
@@ -27,7 +27,7 @@ export function StaffCompensationSettings({
   platformSettings,
   onUpdatePlatformSettings,
 }: StaffCompensationSettingsProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const canEditCompensation = canManageStaffCompensation(currentUser);
   const canEditHourlyRates = canEditStaffHourlyPayRates(currentUser);
   const [compDraft, setCompDraft] = useState<StaffCompensationConfig>(

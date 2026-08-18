@@ -8,7 +8,7 @@ import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSearchBar } from '../ui/wireframe';
 import { useStaffShellCreateRegistration } from './StaffShellCreateContext';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import {
   StaffGuardCredentialAddWizard,
   type StaffCredentialAddWizardSheetMeta,
@@ -60,7 +60,7 @@ export function StaffCredentialAddForGuardForm({
   onCredentialAdded,
 }: StaffCredentialAddForGuardFormProps) {
   const [open, setOpen] = useState(false);
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const hideTrigger = formFactor === 'desktop';
   const [flowStep, setFlowStep] = useState<FlowStep>('credential');
   const [guardSearch, setGuardSearch] = useState('');

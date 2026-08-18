@@ -8,7 +8,8 @@ import { getClientRehireableGuards } from '../lib/guardDirectory';
 import { buildIncidentReportViews } from '../lib/incidentReports';
 import { ClientHomeScreen, ClientHomeAction } from './client/ClientHomeScreen';
 import { ClientHomeDesktop } from './client/ClientHomeDesktop';
-import { useDevice } from '../lib/platform';
+import { useMediaQuery } from '../lib/platform';
+import { useLayoutFormFactor } from '../surfaces';
 import { isClientAccountPending } from '../lib/accountStatus';
 import type { ClientPaymentGates, PlatformSettings } from '../lib/platformSettings';
 import type { PlatformFeeConfig } from '../lib/payments';
@@ -271,7 +272,8 @@ export function ClientDashboard({
     onDirectRequestGuardIdChange?.(guard?.id ?? null);
   };
   const accountPending = isClientAccountPending({ accountStatus, approved });
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
+  const tabletPortrait = useMediaQuery('(orientation: portrait)');
 
   useEffect(() => {
     if (activeView) setView(activeView);
@@ -550,6 +552,54 @@ export function ClientDashboard({
               )
             }
           />
+        </>,
+        'client-guards',
+      );
+    }
+    if (formFactor === 'tablet') {
+      return page(
+        'guards',
+        <>
+          {tutorialDemoBanner}
+          <div
+            className="tablet-split-panel"
+            data-selected={selectedGuard ? 'true' : undefined}
+            data-orientation={tabletPortrait ? 'portrait' : 'landscape'}
+          >
+            <div className="split-list-pane">
+              <GuardDirectoryScreen
+                guards={guards}
+                onSelectGuard={setSelectedGuard}
+                favoriteGuardIds={favoriteGuardIds}
+                onToggleFavorite={onToggleFavoriteGuard}
+                clientId={clientId}
+                requests={requests}
+                onRequestGuard={startDirectGuardRequest}
+              />
+            </div>
+            <div className="split-detail-pane">
+              {selectedGuard ? (
+                <GuardProfileScreen
+                  guard={selectedGuard}
+                  clientId={clientId}
+                  requests={requests}
+                  platformRequests={platformRequests}
+                  onBack={() => setSelectedGuard(null)}
+                  onRequestGuard={startDirectGuardRequest}
+                  jobChatThreads={jobChatThreads}
+                  currentUser={currentUser}
+                  onSendJobChatMessage={onSendJobChatMessage}
+                  onOpenJobChat={onOpenJobChat ?? openMessages}
+                  isFavorite={favoriteGuardIds.includes(selectedGuard.id)}
+                  onToggleFavorite={
+                    onToggleFavoriteGuard ? () => onToggleFavoriteGuard(selectedGuard.id) : undefined
+                  }
+                />
+              ) : (
+                <p className="sft-split-empty">Select a guard or team to view profile and hire options</p>
+              )}
+            </div>
+          </div>
         </>,
         'client-guards',
       );

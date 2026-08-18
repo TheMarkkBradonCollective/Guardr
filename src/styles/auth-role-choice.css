@@ -140,23 +140,23 @@ html.theme-dark .auth-role-choice-option:focus-visible {
 }
 
 @media (min-width: 1024px) {
-  .auth-role-choice-page .uber-direct-top-header-inner {
+  body.sf-desktop .auth-role-choice-page .uber-direct-top-header-inner {
     padding-left: max(2.5rem, env(safe-area-inset-left, 0px));
     padding-right: max(2.5rem, env(safe-area-inset-right, 0px));
   }
 
-  .auth-role-choice-hero,
-  .auth-role-choice-options {
+  body.sf-desktop .auth-role-choice-hero,
+  body.sf-desktop .auth-role-choice-options {
     padding-left: max(2.5rem, env(safe-area-inset-left, 0px));
     padding-right: max(2.5rem, env(safe-area-inset-right, 0px));
   }
 
-  .auth-role-choice-options {
+  body.sf-desktop .auth-role-choice-options {
     padding-top: 48px;
     padding-bottom: 64px;
   }
 
-  .auth-role-choice-options-grid {
+  body.sf-desktop .auth-role-choice-options-grid {
     align-items: start;
   }
 }

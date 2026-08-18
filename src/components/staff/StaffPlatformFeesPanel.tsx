@@ -8,7 +8,7 @@ import {
 import { PlatformSettings } from '../../lib/platformSettings';
 import { hasExecutivePaymentControls } from '../../lib/permissions';
 import { AppFormSection } from '../ui/app/AppPrimitives';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
@@ -26,7 +26,7 @@ export function StaffPlatformFeesPanel({
   platformSettings,
   onUpdatePlatformSettings,
 }: StaffPlatformFeesPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const canEditFees = hasExecutivePaymentControls(currentUser);
   const [scheduleDraft, setScheduleDraft] = useState<ClientPlatformFeeSchedules>(
     platformSettings.clientFeeSchedules,

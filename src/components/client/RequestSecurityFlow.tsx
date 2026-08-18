@@ -43,7 +43,7 @@ import { OpenContractRateStep } from '../jobs/OpenContractRateStep';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { showAppToast } from '../ui/AppToast';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { useClientCapabilities } from './ClientCapabilitiesContext';
 import { clampClientGuardsNeeded } from '../../lib/clientCapabilities';
@@ -90,7 +90,7 @@ export function RequestSecurityFlow({
   clientRecord,
   clientCredentialRules,
 }: RequestSecurityFlowProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const caps = useClientCapabilities();
   const allowMultiGuard = caps.has('multi-guard-requests');
   const maxGuards = caps.maxGuardsPerRequest;

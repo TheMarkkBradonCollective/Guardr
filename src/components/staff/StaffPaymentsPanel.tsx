@@ -14,7 +14,7 @@ import { staffJobMoneySummary } from '../../lib/paymentDisplay';
 import { Download } from 'lucide-react';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSectionHeader } from '../ui/wireframe';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import {
@@ -178,7 +178,7 @@ export function StaffPaymentsPanel({
   onMakeOvertimeGuardPayoutAvailable,
   onCompletePayoutInvoice,
 }: StaffPaymentsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const showGuardPayments = canManagePayments;
   const summary = paymentPipelineSummary(requests);
   const financials = useMemo(() => computeOperationalFinancials(requests), [requests]);

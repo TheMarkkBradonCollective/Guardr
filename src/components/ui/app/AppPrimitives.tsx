@@ -7,6 +7,7 @@ import { DashboardHero, DashboardZone, MetricCell, MetricStrip } from '../../bas
 import { GuardrSegmented } from '../../baseui/GuardrSegmented';
 import { formControlOverrides, inputOverrides, textareaOverrides } from '../../baseui/primitives/fieldStyles';
 import { AppButton } from '../AppButton';
+import { useLayoutFormFactor } from '../../../surfaces';
 
 /** Shared type for reply-to context (also exported from ChatThreadPanel) */
 export type ChatReplyContext = { senderName: string; body: string };
@@ -544,13 +545,16 @@ export function AppChatHeader({
   /** Optional leading avatar element displayed between back button and title */
   avatar?: React.ReactNode;
 }) {
+  const formFactor = useLayoutFormFactor();
+  const hideBack = hideBackOnDesktop && formFactor === 'desktop';
+
   return (
     <div className="app-chat-header app-chat-header--with-back-label">
       {onBack ? (
         <button
           type="button"
           onClick={onBack}
-          className={`app-subscreen-back ${hideBackOnDesktop ? 'lg:hidden' : ''}`}
+          className={`app-subscreen-back ${hideBack ? 'hidden' : ''}`}
         >
           <ArrowLeft className="w-4 h-4" aria-hidden />
           {formatBackToLabel(backLabel)}

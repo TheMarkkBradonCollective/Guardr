@@ -67,6 +67,7 @@ export {
   OnTablet,
   SurfaceProvider,
   SurfaceSwitch,
+  useLayoutFormFactor,
   useSurface,
   useSurfaceDesign,
   useSurfaceKind,

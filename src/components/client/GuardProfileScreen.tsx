@@ -34,7 +34,7 @@ import {
   computeGuardSkillRatings,
 } from '../../lib/guardPerformance';
 import { AppScreen, AppSubScreenHeader } from '../ui/app/AppPrimitives';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { DashboardHero, MetricCell, MetricStrip } from '../baseui/dashboard';
 import { AppButton } from '../ui/AppButton';
 import { GuardrTag } from '../baseui/GuardrTag';
@@ -93,7 +93,7 @@ export function GuardProfileScreen({
   isFavorite = false,
   onToggleFavorite,
 }: GuardProfileScreenProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const [profileTab, setProfileTab] = useState<GuardProfileTab>('profile');
   const history = useMemo(
     () => getGuardHistoryWithClient(guard.id, clientId, requests),

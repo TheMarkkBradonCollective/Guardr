@@ -2,7 +2,7 @@ import React from 'react';
 import type { JobType, SecurityGuard } from '../../types';
 import { GuardJobPreferencesPanel } from './GuardJobPreferencesPanel';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchBody, WorkbenchPage, WorkbenchPanel } from '../baseui/layout/WorkbenchLayout';
 
 interface GuardPreferencesScreenProps {
@@ -16,7 +16,7 @@ export function GuardPreferencesScreen({
   onSaveJobPreferences,
   onCompleteJobTypeOnboarding,
 }: GuardPreferencesScreenProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
 
   if (!onSaveJobPreferences || !onCompleteJobTypeOnboarding) {
     return null;

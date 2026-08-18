@@ -68,6 +68,29 @@ describe('buildApplicationFeed', () => {
     assert.equal(guardItem?.statusLabel, APPLICATION_FEED_STATUS_LABELS.approved);
   });
 
+  it('includes pre-approved staff applications without an audit log', () => {
+    const staffMember = {
+      id: 's-preapproved',
+      name: 'Jordan Ops',
+      email: 'jordan@guardr.test',
+      badgeNumber: 'SUP-00012',
+      isStaff: true,
+      staffRole: 'Support',
+      userStatus: 'approved',
+      phone: '555-0144',
+      bio: 'Manually added application',
+      yearsExperience: 6,
+      availabilityNotes: 'Nights',
+      certifications: [],
+    } as SecurityGuard;
+    const feed = buildApplicationFeed([staffMember], []);
+    const item = feed.find((entry) => entry.id === 's-preapproved');
+    assert.ok(item);
+    assert.equal(item?.status, 'approved');
+    assert.equal(item?.statusLabel, APPLICATION_FEED_STATUS_LABELS.approved);
+    assert.equal(item?.queue, 'applications');
+  });
+
   it('counts staff-provisioned pending applications', () => {
     const count = countPendingAccountSignupApplications(
       [staffProvisionedGuard()],

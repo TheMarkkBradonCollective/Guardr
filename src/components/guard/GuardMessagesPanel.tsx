@@ -27,7 +27,7 @@ import { ChatThreadPanel, type ChatBubbleMessage } from '../messaging/ChatThread
 import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { MessagesQuickActions } from '../messaging/MessagesQuickActions';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import {
   AppChatHeader,
   AppEmptyState,
@@ -113,7 +113,7 @@ export function GuardMessagesPanel({
   shellHeaderTrailing,
   scope = 'messages',
 }: GuardMessagesPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
   const [activeView, setActiveView] = useState<ActiveView>(() => {
     if (initialJobChatOpen && initialJobChatRequestId) {

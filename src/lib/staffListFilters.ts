@@ -7,6 +7,7 @@ import {
   isGuardAccountPending,
   isStaffAccountPending,
 } from './accountStatus';
+import { staffNeedsIdReactivation } from './staffAccountActivation';
 import type { ApprovalFeedItem } from './staffApprovalsFeed';
 import {
   CREDENTIAL_PENDING_UPLOAD_LABEL,
@@ -27,7 +28,7 @@ export type GuardRosterFilter = 'pending' | 'activated' | 'active' | 'all';
 
 export type ClientRosterFilter = 'pending' | 'active' | 'suspended' | 'all';
 
-export type StaffTeamFilter = 'pending' | 'active' | 'suspended' | 'all';
+export type StaffTeamFilter = 'pending' | 'inactive' | 'active' | 'suspended' | 'all';
 
 export function isCredentialFeedItemOpen(item: ApprovalFeedItem): boolean {
   return item.status === 'pending' || item.status === 'in_review';
@@ -131,8 +132,10 @@ export function matchesStaffTeamFilter(member: SecurityGuard, filter: StaffTeamF
       return true;
     case 'pending':
       return isStaffAccountPending(member);
+    case 'inactive':
+      return status === 'approved' || staffNeedsIdReactivation(member);
     case 'active':
-      return status === 'active';
+      return status === 'active' && !staffNeedsIdReactivation(member);
     case 'suspended':
       return status === 'suspended' || status === 'blocked';
   }

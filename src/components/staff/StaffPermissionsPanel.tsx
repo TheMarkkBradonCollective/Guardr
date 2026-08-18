@@ -15,7 +15,7 @@ import {
 import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 
 export type StaffPermissionsPatch = Pick<
@@ -134,7 +134,7 @@ export function StaffPermissionsPanel({
   platformSettings,
   onUpdateStaffPermissions,
 }: StaffPermissionsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const canEdit = canManageStaffPermissions(currentUser);
   const isDesktop = formFactor === 'desktop';
   const [activeRole, setActiveRole] = useState<StaffRole>('Moderator');

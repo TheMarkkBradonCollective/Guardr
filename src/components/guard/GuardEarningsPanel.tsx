@@ -10,7 +10,7 @@ import { formatShiftRange } from '../../lib/dates';
 import { AppEmptyState, AppList, AppListRow, AppScreen } from '../ui/app/AppPrimitives';
 import { AppButton } from '../ui/AppButton';
 import { CreditCard, DollarSign, Link2, Loader2 } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { GuardEarningsDesktop } from './GuardEarningsDesktop';
 
 interface GuardEarningsPanelProps {
@@ -45,7 +45,7 @@ export function GuardEarningsPanel({
   openStripeInvoices = 0,
   payments = [],
 }: GuardEarningsPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const paymentByJobId = useMemo(
     () => new Map(payments.map((p) => [p.jobId, p])),
     [payments]

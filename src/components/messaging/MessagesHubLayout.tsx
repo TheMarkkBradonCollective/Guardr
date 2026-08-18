@@ -1,7 +1,8 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
-import { useDevice } from '../../lib/platform';
+import { useMediaQuery } from '../../lib/platform';
 import { AppEmptyState } from '../ui/app/AppPrimitives';
+import { useSurfaceKind } from '../../surfaces';
 
 interface MessagesHubLayoutProps {
   header?: React.ReactNode;
@@ -39,9 +40,10 @@ export function MessagesHubLayout({
   emptyDetailHint = 'Choose a chat from your inbox to view messages',
   shellInboxHeader = false,
 }: MessagesHubLayoutProps) {
-  const { formFactor } = useDevice();
-  const splitView = formFactor === 'tablet';
-  const desktopView = formFactor === 'desktop';
+  const surface = useSurfaceKind();
+  const splitView = surface === 'tablet';
+  const desktopView = surface === 'desktop';
+  const portrait = useMediaQuery('(orientation: portrait)');
   const inboxHeader = shellInboxHeader ? null : header;
 
   const emptyDetail = (
@@ -74,7 +76,11 @@ export function MessagesHubLayout({
 
   if (splitView) {
     return (
-      <div className="app-messages-split h-full min-h-0">
+      <div
+        className="app-messages-split h-full min-h-0"
+        data-selected={hasSelection ? 'true' : undefined}
+        data-orientation={portrait ? 'portrait' : 'landscape'}
+      >
         <div className="app-messages-split-list flex flex-col min-h-0">
           {inboxHeader ? <div className="flex-shrink-0">{inboxHeader}</div> : null}
           <div className="flex-1 min-h-0 overflow-y-auto">{list}</div>

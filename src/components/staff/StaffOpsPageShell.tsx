@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchBody, WorkbenchPage, WorkbenchPanel } from '../baseui/layout/WorkbenchLayout';
 
 interface StaffOpsPageShellProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -7,14 +7,21 @@ interface StaffOpsPageShellProps extends React.HTMLAttributes<HTMLDivElement> {
   toolbar?: React.ReactNode;
 }
 
-/** Desktop admin workbench wrapper for Operations nav pages (jobs, guards, clients, etc.). */
+/**
+ * Operations page canvas.
+ *
+ * Each application owns this wrapper: desktop gets the dense workbench, tablet
+ * gets a split-friendly touch canvas, and mobile keeps the stacked field shell.
+ * Tablet must not reuse the phone class names — those pull in bottom-nav
+ * offsets and single-column bleed that do not belong on a persistent rail.
+ */
 export function StaffOpsPageShell({
   children,
   toolbar,
   className = '',
   ...rest
 }: StaffOpsPageShellProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
 
   if (formFactor === 'desktop') {
     return (
@@ -24,6 +31,18 @@ export function StaffOpsPageShell({
           <WorkbenchBody className="uber-ops-page-body">{children}</WorkbenchBody>
         </WorkbenchPanel>
       </WorkbenchPage>
+    );
+  }
+
+  if (formFactor === 'tablet') {
+    return (
+      <div
+        className={`staff-ops-tablet-shell animate-fade-in flex flex-col min-w-0 h-full min-h-0 ${className}`.trim()}
+        {...rest}
+      >
+        {toolbar ? <div className="staff-ops-tablet-toolbar shrink-0">{toolbar}</div> : null}
+        <div className="staff-ops-tablet-body min-w-0 min-h-0 flex-1 flex flex-col">{children}</div>
+      </div>
     );
   }
 

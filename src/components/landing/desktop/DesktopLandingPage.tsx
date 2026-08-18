@@ -1,13 +1,9 @@
 /**
- * Desktop landing — exact mobility homepage homepage pattern.
+ * Desktop landing — operations-centre marketing for pointer displays.
  *
- * Layout:
- *   Black sticky nav bar (wordmark + links left, Log in + Sign up right)
- *   Split hero: left white panel (tabs + bold heading + role cards),
- *               right full-bleed photo that fills remaining viewport
- *   Explore section: wide card grid
- *   Account login band
- *   Footer
+ * Independent of the mobility (mobile/tablet) homepage: a dense top bar, an
+ * editorial column beside a live workspace preview, four-across explore cards,
+ * and hover affordances. Never a scaled copy of the phone or tablet landing.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -39,6 +35,7 @@ import { CompanyPublicPlacard } from '../../public/CompanyPublicPlacard';
 import { LandingAppDownloads } from '../LandingAppDownloads';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
 import { resolveAppDownloadPageUrl } from '../../../lib/siteConfig';
+import { DesktopLandingHeroPreview } from './DesktopLandingHeroPreview';
 
 interface DesktopLandingPageProps {
   onNavigateToAuth: (role?: 'guard' | 'client', mode?: 'sign-in' | 'sign-up') => void;
@@ -229,27 +226,12 @@ function DesktopNav({
   );
 }
 
-// ─── Hero photo placeholder ───────────────────────────────────────────────────
+// ─── Workspace preview ────────────────────────────────────────────────────────
 
-function HeroPhoto() {
+function HeroPreview() {
   return (
-    <div className="dsk-hero-photo" aria-hidden>
-      {/* Premium gradient replacing real photo */}
-      <div className="dsk-hero-photo-overlay" />
-      <div className="dsk-hero-photo-people">
-        {/* Guard silhouettes (SVG shapes) */}
-        <div className="dsk-hero-figure dsk-hero-figure--main">
-          <div className="dsk-hero-figure-body" />
-          <div className="dsk-hero-figure-head" />
-          <div className="dsk-hero-figure-badge">
-            <Shield size={14} color="#fff" />
-          </div>
-        </div>
-        <div className="dsk-hero-figure dsk-hero-figure--back">
-          <div className="dsk-hero-figure-body" />
-          <div className="dsk-hero-figure-head" />
-        </div>
-      </div>
+    <div className="dsk-hero-preview" aria-hidden>
+      <DesktopLandingHeroPreview />
     </div>
   );
 }
@@ -272,8 +254,8 @@ function DesktopHero({
 
   const content = {
     client: {
-      heading: <>Protect your sites<br />the right way</>,
-      sub: 'Post shifts, review licensed guards, and manage live security operations from one platform.',
+      heading: <>Run live coverage<br />from one workbench</>,
+      sub: 'Post shifts, review licensed guards, and manage security operations from a desktop command centre — not a phone layout stretched wide.',
       cta: 'Post a job',
       link: 'Learn more about client coverage',
       cards: [
@@ -282,8 +264,8 @@ function DesktopHero({
       ],
     },
     guard: {
-      heading: <>Get in the field<br />and get paid</>,
-      sub: 'Browse open security shifts near you as an independent contractor — not Guardr employment.',
+      heading: <>Pick your shifts<br />on a real operations desk</>,
+      sub: 'Browse open security work as an independent contractor, then manage jobs, messages, and payouts in a dense desktop workspace.',
       cta: 'Join the marketplace',
       link: 'Learn more about guard marketplace work',
       cards: [
@@ -318,6 +300,7 @@ function DesktopHero({
 
         {/* Heading */}
         <h1 className="dsk-hero-heading">{tab.heading}</h1>
+        <p className="dsk-hero-sub">{tab.sub}</p>
 
         {/* Sub-role cards — like Base Web Drive/Ride cards */}
         <div className="dsk-hero-role-cards">
@@ -358,13 +341,36 @@ function DesktopHero({
         </div>
       </div>
 
-      {/* Right: full-bleed photo */}
-      <HeroPhoto />
+      {/* Right: operations workspace preview — not the mobility photo panel */}
+      <HeroPreview />
     </section>
   );
 }
 
-// ─── Explore section ──────────────────────────────────────────────────────────
+function OpsStrip() {
+  return (
+    <section className="dsk-ops-strip" aria-label="Operations highlights">
+      <div className="dsk-ops-strip-inner">
+        <div className="dsk-ops-stat">
+          <span className="dsk-ops-stat-value">Cmd/Ctrl+K</span>
+          <span className="dsk-ops-stat-label">Command palette</span>
+        </div>
+        <div className="dsk-ops-stat">
+          <span className="dsk-ops-stat-value">Split panels</span>
+          <span className="dsk-ops-stat-label">List, detail, inspector</span>
+        </div>
+        <div className="dsk-ops-stat">
+          <span className="dsk-ops-stat-value">Dense tables</span>
+          <span className="dsk-ops-stat-label">Keyboard + hover actions</span>
+        </div>
+        <div className="dsk-ops-stat">
+          <span className="dsk-ops-stat-value">Status bar</span>
+          <span className="dsk-ops-stat-label">Connection · workspace</span>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 const EXPLORE_CARDS = [
   {
@@ -530,7 +536,7 @@ function DesktopFooter({ onOpenLegal }: { onOpenLegal: (page: LegalPageId) => vo
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-/** Desktop browser landing — full mobility homepage split-hero layout. */
+/** Desktop browser landing — operations-centre marketing, not a mobility clone. */
 export function DesktopLandingPage({
   onNavigateToAuth,
   onOpenLegal,
@@ -545,6 +551,7 @@ export function DesktopLandingPage({
         onOpenLegal={onOpenLegal}
       />
       <DesktopHero onNavigateToAuth={onNavigateToAuth} />
+      <OpsStrip />
       <ExploreSection onNavigateToAuth={onNavigateToAuth} />
       <LoginBand onNavigateToAuth={onNavigateToAuth} />
       <div className="dsk-section-inner" style={{ padding: '48px 0' }}>

@@ -3,7 +3,7 @@ import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
 import { ArrowRight, Briefcase, Building2, Shield, User } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
-import { useDevice } from '../../lib/platform';
+import { useSurfaceKind } from '../../surfaces';
 import type { AuthSignupPick, AuthViewRole } from '../../lib/appNavigation';
 import type { ClientType } from '../../types';
 import { DirectTopHeader } from '../baseui/layout/DirectTopHeader';
@@ -255,8 +255,8 @@ export function AuthRoleChoicePage({
   onBack,
 }: AuthRoleChoicePageProps) {
   const [, theme] = useStyletron();
-  const { formFactor } = useDevice();
-  const factor = formFactor === 'tablet' ? 'tablet' : formFactor === 'desktop' ? 'desktop' : 'mobile';
+  const surface = useSurfaceKind();
+  const factor = surface === 'tablet' ? 'tablet' : surface === 'desktop' ? 'desktop' : 'mobile';
   const isMobile = factor === 'mobile';
   const copyKey = mode === 'sign-in' ? 'sign-in' : signupStep;
   const copy = COPY[copyKey];
@@ -292,8 +292,8 @@ export function AuthRoleChoicePage({
     <Block
       minHeight="100dvh"
       height="100dvh"
-      className="auth-role-choice-page"
-      data-landing-factor={formFactor}
+      className={`auth-role-choice-page${factor === 'tablet' ? ' auth-role-choice-page--tablet' : ''}`}
+      data-landing-factor={surface}
       data-signup-step={mode === 'sign-up' ? signupStep : 'sign-in'}
       backgroundColor="backgroundPrimary"
       display="flex"
@@ -311,7 +311,9 @@ export function AuthRoleChoicePage({
             margin="0 auto"
             width="100%"
             display="grid"
-            gridTemplateColumns={isMobile ? '1fr' : ['1fr', '1fr', '1fr 1fr']}
+            gridTemplateColumns={
+              isMobile ? '1fr' : factor === 'tablet' ? 'minmax(0, 1.15fr) minmax(14rem, 0.85fr)' : ['1fr', '1fr', '1fr 1fr']
+            }
             gridGap="scale1000"
             alignItems="center"
           >
@@ -339,7 +341,11 @@ export function AuthRoleChoicePage({
                 $style={{
                   fontFamily: HEADING_FONT,
                   fontWeight: 700,
-                  fontSize: isMobile ? 'clamp(2rem, 7vw, 2.5rem)' : 'clamp(2.5rem, 4vw, 3.25rem)',
+                  fontSize: isMobile
+                    ? 'clamp(2rem, 7vw, 2.5rem)'
+                    : factor === 'tablet'
+                      ? 'clamp(2.2rem, 4.2vw, 2.85rem)'
+                      : 'clamp(2.5rem, 4vw, 3.25rem)',
                   lineHeight: 1.05,
                   letterSpacing: '-0.03em',
                   color: theme.colors.contentPrimary,

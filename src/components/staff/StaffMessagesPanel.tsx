@@ -28,7 +28,7 @@ import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { AppChatHeader, AppEmptyState, AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from '../../lib/messagesChrome';
 import {
   Briefcase,
@@ -117,7 +117,7 @@ export function StaffMessagesPanel({
   onDetailOpenChange,
   onMessagesChromeChange,
 }: StaffMessagesPanelProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const splitView = formFactor === 'tablet' || formFactor === 'desktop';
   const [selection, setSelection] = useState<StaffMessageSelection | null>(() => {
     if (initialJobChatRequestId) return { kind: 'job', requestId: initialJobChatRequestId };

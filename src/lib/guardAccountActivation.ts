@@ -41,6 +41,7 @@ import {
   isGuardUserStatusActive,
   GUARD_USER_STATUS_LABELS,
 } from './accountStatus';
+import { getStaffRosterStatusLabel } from './staffAccountActivation';
 
 export const MARKETPLACE_ELIGIBILITY_LABEL = 'Marketplace eligibility';
 
@@ -411,15 +412,18 @@ export type GuardRosterAccountBadge = {
 export function getGuardRosterAccountBadges(guard: SecurityGuard): GuardRosterAccountBadge[] {
   if (guard.isStaff) {
     const status = getGuardUserStatus(guard);
+    const label = getStaffRosterStatusLabel(guard);
     return [
       {
-        label: GUARD_USER_STATUS_LABELS[status],
+        label,
         tone:
-          status === 'active'
+          status === 'active' && label === 'Active'
             ? 'success'
             : status === 'suspended' || status === 'blocked'
               ? 'danger'
-              : 'default',
+              : status === 'pending'
+                ? 'warning'
+                : 'default',
       },
     ];
   }

@@ -305,26 +305,26 @@ html.theme-dark .uber-stat-chip--active {
   flex-wrap: wrap;
 }
 
-body[data-form-factor="desktop"] .staff-overview-desktop-command .staff-overview-pro-kpi,
-body[data-view-surface$="-desktop"] .staff-overview-desktop-command .staff-overview-pro-kpi {
+body[data-surface="desktop"] .staff-overview-desktop-command .staff-overview-pro-kpi,
+body[data-surface="desktop"] .staff-overview-desktop-command .staff-overview-pro-kpi {
   display: none;
 }
 
-body[data-form-factor="desktop"] .staff-overview-desktop-command .staff-overview-visual-grid,
-body[data-view-surface$="-desktop"] .staff-overview-desktop-command .staff-overview-visual-grid {
+body[data-surface="desktop"] .staff-overview-desktop-command .staff-overview-visual-grid,
+body[data-surface="desktop"] .staff-overview-desktop-command .staff-overview-visual-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-body[data-form-factor="desktop"] .staff-overview-desktop-command .staff-overview-visual-card,
-body[data-view-surface$="-desktop"] .staff-overview-desktop-command .staff-overview-visual-card {
+body[data-surface="desktop"] .staff-overview-desktop-command .staff-overview-visual-card,
+body[data-surface="desktop"] .staff-overview-desktop-command .staff-overview-visual-card {
   border: 1px solid var(--uber-border, #eeeeee);
   border-radius: 10px;
   padding: 14px 16px;
   background: var(--uber-bg, #ffffff);
 }
 
-body[data-form-factor="desktop"] .staff-overview-desktop-command .overview-pie-layout--lg .overview-pie,
-body[data-view-surface$="-desktop"] .staff-overview-desktop-command .overview-pie-layout--lg .overview-pie {
+body[data-surface="desktop"] .staff-overview-desktop-command .overview-pie-layout--lg .overview-pie,
+body[data-surface="desktop"] .staff-overview-desktop-command .overview-pie-layout--lg .overview-pie {
   width: 9.5rem;
   height: 9.5rem;
 }

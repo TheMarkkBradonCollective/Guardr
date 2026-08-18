@@ -41,7 +41,9 @@ When the checklist is ready, your account moves to **active** automatically (`pe
 
 Until active, you stay on the staff pending/activation experience — finish ID and Stripe rather than using full ops tools.
 
-**Already active, missing ID photos:** you see **Staff reactivation**. Ops access is restricted until you upload ID and a Director verifies it. Founder accounts can still open the console so someone can review IDs.
+**Already active, missing ID photos:** you see **Staff reactivation** and your roster status is **Inactive**. Ops access stays restricted until you upload ID and a Director verifies it. Founder accounts can still open the console so someone can review IDs.
+
+**Newly approved (never active):** you see **Staff activation** — finish government ID and Stripe. Roster status is **Inactive** until those steps complete.
 
 ### A3. After you are active
 
@@ -374,7 +376,7 @@ Client posts → Admin+ reviews job offer → Open
 | Guard credentials uploaded | Administrator+ (verify) |
 | Client credentials uploaded | Administrator+ (Credentials → Clients) |
 | Staff applicant pending | Director (app + ID) |
-| Active staff missing ID photos | Staff uploads; Director verifies — ops stay restricted until then |
+| Staff with pending or missing ID | Staff uploads; Director verifies — roster shows Inactive; ops stay restricted until then |
 | Job offer pending review | Administrator+ |
 | Guard applied to marketplace job | **Client** |
 | Self-audit photos submitted | **Client** confirm |

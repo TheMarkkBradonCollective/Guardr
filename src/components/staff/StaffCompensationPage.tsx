@@ -2,7 +2,7 @@ import React from 'react';
 import { SecurityGuard, SecurityRequest, SessionUser } from '../../types';
 import { PlatformSettings } from '../../lib/platformSettings';
 import { canAccessFinancialControls } from '../../lib/permissions';
-import { useDevice } from '../../lib/platform';
+import { useLayoutFormFactor } from '../../surfaces';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { StaffCompensationSection } from './StaffCompensationPanel';
@@ -23,7 +23,7 @@ export function StaffCompensationPage({
   platformSettings,
   onUpdatePlatformSettings,
 }: StaffCompensationPageProps) {
-  const { formFactor } = useDevice();
+  const formFactor = useLayoutFormFactor();
   const showPayRules = canAccessFinancialControls(currentUser);
 
   const payouts = (

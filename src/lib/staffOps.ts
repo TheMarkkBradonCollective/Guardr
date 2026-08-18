@@ -106,7 +106,7 @@ export function staffSectionFromApprovalQueue(queue?: ApprovalQueueId | null): S
     case 'accounts':
       return 'applications';
     case 'staff-accounts':
-      return 'team';
+      return 'applications';
     case 'applications':
     case 'all':
     default:
@@ -648,7 +648,7 @@ export function buildOverviewActionQueue(
       title: 'Approve staff onboarding',
       description: 'Review administrator-submitted staff accounts before they can sign in',
       count: pendingStaffAccounts,
-      section: 'team',
+      section: 'applications',
       tone: 'urgent',
     });
   }
@@ -1067,6 +1067,10 @@ export function resolveOverviewActionSelection(
       if (guard) return { guardId: guard.id };
       const client = getPendingClientAccounts(ctx.clients)[0];
       return { clientId: client?.id ?? null };
+    }
+    case 'pending-staff-accounts': {
+      const staffMember = ctx.guards.find((g) => g.isStaff && g.userStatus === 'pending');
+      return { guardId: staffMember?.id ?? null };
     }
     case 'pending-certs': {
       const selection = resolveFirstPendingCredentialSelection(ctx.guards);

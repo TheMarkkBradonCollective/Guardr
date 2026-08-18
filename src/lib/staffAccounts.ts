@@ -58,7 +58,9 @@ export type StaffRow = {
   id_revision_history?: unknown;
 };
 
-function bounceStaffIdVerificationStatus(row: StaffRow): GuardIdVerificationStatus {
+function bounceStaffIdVerificationStatus(
+  row: Pick<StaffRow, 'id_verification_status' | 'id_front_url' | 'id_back_url' | 'id_selfie_url'>,
+): GuardIdVerificationStatus {
   const stored =
     row.id_verification_status === 'pending' ||
     row.id_verification_status === 'verified' ||
@@ -86,6 +88,30 @@ function normalizeStaffUserStatus(raw: unknown): GuardUserStatus {
     return status;
   }
   return 'pending';
+}
+
+/**
+ * SQL helper: active staff without a real verified ID are stored as approved /
+ * inactive. Founder stays active so someone can still review IDs. Newly approved
+ * hires keep Staff activation; only remaining `active` rows missing ID see reactivation.
+ */
+export function bounceUnverifiedStaffUserStatus(
+  row: Pick<
+    StaffRow,
+    | 'user_status'
+    | 'staff_role'
+    | 'id_verification_status'
+    | 'id_front_url'
+    | 'id_back_url'
+    | 'id_selfie_url'
+  >,
+): GuardUserStatus {
+  const status = normalizeStaffUserStatus(row.user_status);
+  if (status !== 'active') return status;
+  if (row.staff_role === 'Founder') return status;
+  const idStatus = bounceStaffIdVerificationStatus(row);
+  if (idStatus === 'verified') return status;
+  return 'approved';
 }
 
 export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
