@@ -600,10 +600,12 @@ export function GuardrDrawerShell({
             marginRight="auto"
             overflow={bleed ? 'hidden' : 'auto'}
             padding={contentPadding}
+            data-bleed={bleed ? 'true' : undefined}
             overrides={{
               Block: {
                 style: {
                   overscrollBehavior: 'contain',
+                  WebkitOverflowScrolling: 'touch',
                 },
               },
             }}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, Circle, User } from 'lucide-react';
+import { Bell, ChevronLeft, Circle, Menu } from 'lucide-react';
 import { buildMobileNavigation, type SurfaceDestination } from '../surfaceNavigation';
 import { MobileBottomTabs } from './kit/MobileBottomTabs';
 import { MobileSheet } from './kit/MobileSheet';
@@ -24,7 +24,6 @@ export function MobileAppShell({
   notifications,
   accountMenu,
   identity,
-  navFooter,
   headerOverride,
   headerExtension,
   hideChrome = false,
@@ -82,22 +81,32 @@ export function MobileAppShell({
               >
                 {identity}
               </button>
-            ) : accountMenu ? (
+            ) : (
               <button
                 type="button"
                 className="sfm-icon-btn"
-                onClick={() => setAccountOpen(true)}
-                aria-label="Account"
+                onClick={() => setMoreOpen(true)}
+                aria-label="Open menu"
               >
-                <User size={22} strokeWidth={2.25} aria-hidden />
+                <Menu size={22} strokeWidth={2.25} aria-hidden />
               </button>
-            ) : (
-              <span className="sfm-shell-head-spacer" aria-hidden />
             )}
 
             <h1 className="sfm-shell-title">{title}</h1>
 
-            <div className="sfm-shell-actions">{notifications}</div>
+            <div className="sfm-shell-actions">
+              {notifications}
+              {accountMenu ? (
+                <button
+                  type="button"
+                  className="sfm-icon-btn"
+                  onClick={() => setAccountOpen(true)}
+                  aria-label="Account menu"
+                >
+                  <Bell size={20} strokeWidth={2.25} aria-hidden />
+                </button>
+              ) : null}
+            </div>
           </header>
         )
       ) : null}
@@ -159,12 +168,11 @@ export function MobileAppShell({
               </div>
             </section>
           ) : null}
-          {navFooter ? <div className="sfm-more-footer">{navFooter}</div> : null}
         </div>
       </MobileSheet>
 
       <MobileSheet
-        open={accountOpen && Boolean(accountMenu)}
+        open={accountOpen}
         onClose={() => setAccountOpen(false)}
         title="Account"
         snapPoints={['peek', 'half']}

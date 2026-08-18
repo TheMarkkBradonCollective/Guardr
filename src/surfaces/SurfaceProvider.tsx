@@ -46,9 +46,9 @@ function applySurfaceToDocument(surface: SurfaceKind, forced: boolean): void {
   document.body.classList.toggle('sf-tablet', surface === 'tablet');
   document.body.classList.toggle('sf-desktop', surface === 'desktop');
 
-  // Classic view-surface CSS keys off data-view-surface. Keep that attribute in
+  // Classic mobile drawer CSS keys off data-view-surface. Keep that attribute in
   // lockstep with the surface router (including ?ui= overrides on a wider viewport)
-  // so PWA/native shell styles still attach to the correct form factor.
+  // so the restored phone chrome still gets its styles.
   const existing = document.body.dataset.viewSurface;
   if (existing) {
     const shell = existing.split('-')[0] || 'browser';

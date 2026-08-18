@@ -290,6 +290,70 @@ html.theme-dark .uber-landing-trust-item svg { color: #fff; }
 
 .uber-style-landing--mobile .uber-landing-hero { padding-bottom: 24px; }
 
+/* Phone landing — same page as tablet, tuned so it fits and scrolls. */
+.uber-style-landing--mobile {
+  overflow-x: clip;
+  padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+}
+
+.uber-style-landing--mobile .uber-landing-nav {
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+}
+
+.uber-style-landing--mobile .uber-landing-menu-btn,
+.uber-style-landing--mobile .uber-landing-nav-link,
+.uber-style-landing--mobile .uber-landing-signup-pill {
+  min-height: 44px;
+}
+
+.uber-style-landing--mobile .uber-landing-mobile-menu-item {
+  min-height: 48px;
+}
+
+.uber-style-landing--mobile .uber-landing-trust-strip > div {
+  display: flex;
+  flex-wrap: nowrap !important;
+  gap: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.uber-style-landing--mobile .uber-landing-trust-strip > div::-webkit-scrollbar {
+  display: none;
+}
+
+.uber-style-landing--mobile .uber-landing-trust-item {
+  flex-shrink: 0;
+}
+
+.uber-style-landing--mobile .uber-landing-explore-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.uber-style-landing--mobile .uber-landing-explore-card:hover {
+  transform: none;
+}
+
+.uber-style-landing--mobile .uber-landing-explore-card:active {
+  transform: scale(0.98);
+}
+
+.uber-style-landing--mobile .uber-landing-footer {
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .uber-style-landing--mobile .uber-landing-hero {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+}
+
 @media screen and (min-width: 768px) and (max-width: 1023px) {
   .uber-landing-hero { padding-block: 48px 40px; }
 }
