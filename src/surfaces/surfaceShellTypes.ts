@@ -69,8 +69,8 @@ export interface SurfaceShellProps {
   commands?: SurfaceCommand[];
 
   /**
-   * Mobile primary navigation model. Guards/clients use thumb tabs; staff uses a
-   * hamburger drawer because the ops catalog is too large for a bottom bar.
+   * Mobile primary navigation model. All signed-in roles use the hamburger
+   * drawer; bottom tabs remain available via `tabs` for QA overrides only.
    */
   mobilePrimaryNav?: 'tabs' | 'drawer';
 }

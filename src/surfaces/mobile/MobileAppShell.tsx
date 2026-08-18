@@ -18,10 +18,8 @@ function readAccountMenuProps(accountMenu: SurfaceShellProps['accountMenu']): Ac
 /**
  * The mobile application shell.
  *
- * Default: 56px header, scrolling canvas, fixed bottom tabs + More sheet.
- * Drawer mode (`mobilePrimaryNav="drawer"`): hamburger opens a left sidebar with
- * every destination grouped by section — used for staff ops where the catalog
- * is too large for a bottom bar.
+ * Default: 56px header, scrolling canvas, hamburger drawer with every destination
+ * grouped by section. Bottom tabs are legacy (`mobilePrimaryNav="tabs"`).
  */
 export function MobileAppShell({
   title,
@@ -40,7 +38,7 @@ export function MobileAppShell({
   hidePrimaryNav = false,
   bleed = false,
   onBack,
-  mobilePrimaryNav = 'tabs',
+  mobilePrimaryNav = 'drawer',
   primaryAction,
 }: MobileAppShellProps) {
   const useDrawerNav = mobilePrimaryNav === 'drawer';
