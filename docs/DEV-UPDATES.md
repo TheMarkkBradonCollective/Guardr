@@ -32,6 +32,8 @@ One client system: **Personal** vs **Business** is who hires and pays — not ho
 | 9:55 AM | Update Guide, Dev notes, manuals, and /update activity-cloud checklist |
 | 9:57 AM | Merge #976 onto the v1.0.124 /update branch |
 | 9:58 AM | Release v1.0.124-beta — version bump, PWA cache, download notes |
+| 10:00 AM | Land v1.0.124 on `main` |
+| 10:01 AM | Fix sideload APK signing so CI can build 1.0.124 |
 
 **Shipped**
 - **Signup** — three doors: I need security / I want to work → Personal vs Business → licensed guard vs Apply to work at Guardr
@@ -41,6 +43,7 @@ One client system: **Personal** vs **Business** is who hires and pays — not ho
 - **Client credential library** — always-required government ID (personal) or authorized-representative ID (business); other licenses stay library-only unless Required For is set. Staff **Credentials → Clients** tab + library editor (Manager+). Posting a job blocks until required creds for that client type + job type are verified
 - **v1.0.124** (build **224**) web + PWA version alignment
 - PWA service worker cache bust: `guardr-cache-v1-0-124-beta`
+- **APK CI** — sideload release uses flavor `signingConfig` (debug) instead of writing the read-only `variant.signingConfig` (AGP 8)
 
 **SQL to run**
 - `supabase/migrations/20260818010000_client_account_kind.sql`
