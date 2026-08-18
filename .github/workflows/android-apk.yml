@@ -49,22 +49,14 @@ jobs:
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
-      - name: Write Play upload keystore
-        run: node scripts/write-keystore.mjs
-        env:
-          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-
       - name: APK parity audit (pre-build)
         run: npm run apk:audit
         continue-on-error: true
 
-      - name: Build APK and AAB
-        run: npm run android:release
+      - name: Build APK
+        run: npm run android:apk
         env:
           VITE_APP_URL: https://www.guardr.co
-          # Omit placeholder Supabase values — client falls back to production keys when unset/invalid.
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
@@ -80,7 +72,26 @@ jobs:
             public/download/guardr.apk
           if-no-files-found: error
 
+      - name: Write Play upload keystore
+        run: node scripts/write-keystore.mjs
+        env:
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Build AAB
+        if: env.ANDROID_KEYSTORE_READY == 'true'
+        run: npm run android:aab
+        env:
+          VITE_APP_URL: https://www.guardr.co
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
       - name: Upload AAB artifact
+        if: env.ANDROID_KEYSTORE_READY == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: guardr-android-aab
@@ -88,3 +99,12 @@ jobs:
             android/app/build/outputs/bundle/playRelease/app-play-release.aab
             dist/play-store/guardr-play-release.aab
           if-no-files-found: error
+
+      - name: Note missing Play keystore
+        if: env.ANDROID_KEYSTORE_READY != 'true'
+        run: |
+          echo "::warning::ANDROID_UPLOAD_KEYSTORE_BASE64 is not set — APK was built but AAB was skipped."
+          echo "Add Play upload keystore secrets to build and upload the AAB artifact."
+
+    env:
+      ANDROID_KEYSTORE_READY: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' }}
