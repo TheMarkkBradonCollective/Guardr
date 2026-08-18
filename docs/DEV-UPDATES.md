@@ -52,7 +52,7 @@ One client system: **Personal** vs **Business** is who hires and pays — not ho
 - Guide, Dev notes, user manuals (Quick Start / Client / Guard / Staff), and `/update` always refresh Guide + dates + activity-cloud Time tables
 
 **Release verification**
-- Lint, test, build (this /update)
+- Lint, test (**676**), build green
 
 ---
 
