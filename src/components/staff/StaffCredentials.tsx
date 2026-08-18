@@ -3,6 +3,7 @@ import { Check, ChevronRight, RefreshCw, Search, ShieldCheck, X } from 'lucide-r
 import { Certification, Client, SecurityGuard } from '../../types';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
+  guardIdForCredentialFeedItem,
   buildStaffApprovalsFeed,
   filterApprovalsFeedByQueue,
   findFeedItem,
@@ -27,8 +28,8 @@ import {
   type CredentialStatusFilter,
   type CredentialAudienceFilter,
 } from '../../lib/staffListFilters';
-import { isExecutiveOpsRole } from '../../lib/permissions';
-import type { PlatformRole } from '../../types';
+import { isExecutiveOpsRole, isStaffMemberVisibleToViewer } from '../../lib/permissions';
+import type { PlatformRole, SessionUser } from '../../types';
 import { certDisplayName } from '../../lib/certCatalog';
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { resolveInsuranceStatus } from '../../lib/guardInsurance';
@@ -64,6 +65,7 @@ import {
 interface StaffCredentialsProps {
   guards: SecurityGuard[];
   clients?: Client[];
+  currentUser: SessionUser;
   clientCredentialRules?: ClientCredentialRuleOverride[];
   onUpdateClientCredentialRules?: (rules: ClientCredentialRuleOverride[]) => void | Promise<void>;
   canVerifyCredentials: boolean;
@@ -178,6 +180,7 @@ export function StaffCredentials({
   clientCredentialRules = [],
   onUpdateClientCredentialRules,
   canVerifyCredentials,
+  currentUser,
   currentUserRole,
   initialItemId = null,
   initialGuardId = null,
@@ -235,9 +238,15 @@ export function StaffCredentials({
 
   const visibleFeed = useMemo(() => {
     return displayCredentialFeed
+      .filter((item) => {
+        const guardId = guardIdForCredentialFeedItem(item, guards);
+        if (!guardId) return true;
+        const member = guards.find((guard) => guard.id === guardId);
+        return isStaffMemberVisibleToViewer(currentUser, member);
+      })
       .filter((item) => matchesCredentialAudienceFilter(item, audienceFilter, guards))
       .filter((item) => matchesCredentialStatusFilter(item, filter));
-  }, [displayCredentialFeed, audienceFilter, filter, guards]);
+  }, [displayCredentialFeed, audienceFilter, filter, guards, currentUser]);
 
   const filteredFeed = useMemo(() => {
     return visibleFeed.filter((item) => approvalFeedItemMatchesSearch(item, search));
@@ -626,7 +635,7 @@ export function StaffCredentials({
     const guard = context.kind === 'client-credential' ? null : context.guard;
     const profileLink = guard
       ? guard.isStaff
-        ? onOpenStaffProfile
+        ? onOpenStaffProfile && isStaffMemberVisibleToViewer(currentUser, guard)
           ? () => onOpenStaffProfile(guard.id)
           : undefined
         : onOpenGuardProfile

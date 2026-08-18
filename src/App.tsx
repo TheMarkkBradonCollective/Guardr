@@ -37,7 +37,7 @@ import {
   UserNotification,
   ClientType,
 } from './types';
-import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, isFounder, canAssignStaffRole, canAssignStaffSideRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides, resolvePlatformRole, staffSectionForStaffMember } from './lib/permissions';
+import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, isFounder, canAssignStaffRole, canAssignStaffSideRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides, resolvePlatformRole, staffSectionForStaffMember, isStaffMemberVisibleToViewer } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
 import {
   createIncidentReportDetail,
@@ -1634,7 +1634,22 @@ export default function App() {
 
   const setStaffTeamId = (teamId: string | null) => {
     const member = teamId ? guards.find((guard) => guard.id === teamId) : undefined;
-    const section = member ? staffSectionForStaffMember(member) : staffSection === 'management' ? 'management' : 'team';
+    if (member && currentUser && !isStaffMemberVisibleToViewer(currentUser, member)) {
+      setStaffTeamIdState(null);
+      syncAppRoute(
+        buildAppRoute({
+          role: 'staff',
+          staffSection: staffSection === 'management' ? 'overview' : staffSection,
+          staffTeamId: undefined,
+        })
+      );
+      return;
+    }
+    const section = member
+      ? staffSectionForStaffMember(member, currentUser ?? undefined)
+      : staffSection === 'management'
+        ? 'management'
+        : 'team';
     if (currentUser && isStaffRole(currentUser.role) && teamId) {
       emitStaffTravelAction({ section, label: `team:${teamId}` });
     }

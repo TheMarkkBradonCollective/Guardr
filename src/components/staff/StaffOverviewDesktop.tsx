@@ -27,7 +27,7 @@ import {
   filterOverviewMetrics,
   getStaffOverviewConfig,
 } from '../../lib/staffOverviewConfig';
-import { isStaffRole } from '../../lib/permissions';
+import { canViewManagementRoster, isStaffRole } from '../../lib/permissions';
 import { useLayoutFormFactor } from '../../surfaces';
 import { PlatformRole, Client, SecurityGuard, SecurityRequest } from '../../types';
 import {
@@ -164,12 +164,20 @@ export function StaffOverviewDesktop({
     healthPieSegments,
   } = useOverviewData(stats, requests, guards, clients, actionItems, staffRole);
 
-  const hubItems = useMemo(
-    () => buildStaffOverviewHubItems(config.quickLinkSections, onNavigate),
-    [config.quickLinkSections, onNavigate],
+  const quickLinkSections = useMemo(
+    () =>
+      config.quickLinkSections.filter(
+        (section) => section !== 'management' || canViewManagementRoster({ role: staffRole }),
+      ),
+    [config.quickLinkSections, staffRole],
   );
 
-  const quickGridItems = config.quickLinkSections.map((section) => {
+  const hubItems = useMemo(
+    () => buildStaffOverviewHubItems(quickLinkSections, onNavigate),
+    [quickLinkSections, onNavigate],
+  );
+
+  const quickGridItems = quickLinkSections.map((section) => {
     const meta = QUICK_LINK_META[section];
     return {
       id: section,
@@ -181,7 +189,7 @@ export function StaffOverviewDesktop({
     };
   });
 
-  const quickLinks = config.quickLinkSections.map((section) => {
+  const quickLinks = quickLinkSections.map((section) => {
     const meta = QUICK_LINK_META[section];
     return {
       id: section,

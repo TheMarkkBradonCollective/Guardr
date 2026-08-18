@@ -342,9 +342,24 @@ export function canViewManagementRoster(user: Pick<SessionUser, 'role'>): boolea
   return rank !== null && rank >= staffRoleRank('Manager');
 }
 
+/** Whether the viewer may see this staff member outside their own profile. */
+export function isStaffMemberVisibleToViewer(
+  viewer: Pick<SessionUser, 'role' | 'id'>,
+  member: Pick<SecurityGuard, 'isStaff' | 'staffRole'> & { id?: string } | null | undefined,
+): boolean {
+  if (!member?.isStaff) return true;
+  if (member.id && member.id === viewer.id) return true;
+  if (isManagementStaffMember(member)) return canViewManagementRoster(viewer);
+  return true;
+}
+
 export function staffSectionForStaffMember(
-  member: Pick<SecurityGuard, 'isStaff' | 'staffRole'>,
+  member: Pick<SecurityGuard, 'isStaff' | 'staffRole'> & { id?: string },
+  viewer?: Pick<SessionUser, 'role' | 'id'>,
 ): 'team' | 'management' {
+  if (viewer && !isStaffMemberVisibleToViewer(viewer, member)) {
+    return 'team';
+  }
   return isManagementStaffMember(member) ? 'management' : 'team';
 }
 

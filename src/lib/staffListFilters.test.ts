@@ -25,7 +25,7 @@ import {
   matchesStaffTeamFilter,
   matchesStaffTierFilter,
 } from './staffListFilters';
-import { isManagementStaffMember, isOperationsStaffMember } from './permissions';
+import { isManagementStaffMember, isOperationsStaffMember, isStaffMemberVisibleToViewer } from './permissions';
 import { computeGuardArmedStatus } from './guardArmedStatus';
 
 describe('staffListFilters', () => {
@@ -217,6 +217,16 @@ describe('staffListFilters', () => {
     assert.equal(matchesStaffTierFilter(manager, 'management'), true);
     assert.equal(isOperationsStaffMember(financeOnly), true);
     assert.equal(isManagementStaffMember(manager), true);
+  });
+
+  it('hides management profiles from staff below Manager', () => {
+    const manager = { id: 's-mgr', isStaff: true, staffRole: 'Manager' } as SecurityGuard;
+    const supportViewer = { id: 'viewer', role: 'support' as const };
+    const managerViewer = { id: 'viewer-mgr', role: 'manager' as const };
+
+    assert.equal(isStaffMemberVisibleToViewer(supportViewer, manager), false);
+    assert.equal(isStaffMemberVisibleToViewer(managerViewer, manager), true);
+    assert.equal(isStaffMemberVisibleToViewer({ id: 's-mgr', role: 'manager' }, manager), true);
   });
 
   it('filters client and staff roster tabs', () => {

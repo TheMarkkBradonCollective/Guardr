@@ -44,6 +44,7 @@ import {
   canViewManagementRoster,
   canViewStats,
   canViewViolations,
+  isStaffMemberVisibleToViewer,
   isStaffRole,
   isFinanceDeskOnly,
   staffSectionForStaffMember,
@@ -551,7 +552,8 @@ export function StaffDashboard({
 
   const openStaffProfile = (staffId: string) => {
     const member = guards.find((guard) => guard.id === staffId);
-    navigateSection(member ? staffSectionForStaffMember(member) : 'team', { teamId: staffId });
+    if (!member || !isStaffMemberVisibleToViewer(currentUser, member)) return;
+    navigateSection(staffSectionForStaffMember(member, currentUser), { teamId: staffId });
   };
 
   const renderStaffTeamPanel = (tier: 'operations' | 'management') => (
@@ -651,6 +653,16 @@ export function StaffDashboard({
   const showMessages = canAccessStaffMessages(currentUser);
   const showSupportInbox = canAccessSupportInbox(currentUser);
   const actorStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
+
+  useEffect(() => {
+    if (!selectedTeamId) return;
+    const member = guards.find((guard) => guard.id === selectedTeamId);
+    if (!member || isStaffMemberVisibleToViewer(currentUser, member)) return;
+    setSelectedTeamId(null);
+    if (section === 'management') {
+      navigateSection('overview');
+    }
+  }, [selectedTeamId, guards, currentUser, section]);
 
   useEffect(() => {
     const accessFlags = {
@@ -871,6 +883,7 @@ export function StaffDashboard({
       case 'applications':
         return (
           <StaffApplications
+            currentUser={currentUser}
             guards={guards}
             clients={clients}
             canApproveGuardAccounts={canApproveGuardAccounts}
@@ -917,6 +930,7 @@ export function StaffDashboard({
             clientCredentialRules={platformSettings.clientCredentialRules}
             onUpdateClientCredentialRules={onUpdateClientCredentialRules}
             canVerifyCredentials={canVerifyGuardCredentials}
+            currentUser={currentUser}
             currentUserRole={currentUser.role}
             initialItemId={selectedCredentialItemId}
             initialGuardId={selectedGuardId}

@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Client,
   SecurityGuard,
+  SessionUser,
 } from '../../types';
+import { isStaffMemberVisibleToViewer } from '../../lib/permissions';
 import { loadAuditLog } from '../../lib/auditLog';
 import {
   buildApplicationFeed,
@@ -48,6 +50,7 @@ interface ApplicationListEntry {
 }
 
 interface StaffApplicationsProps {
+  currentUser: SessionUser;
   guards: SecurityGuard[];
   clients: Client[];
   canApproveGuardAccounts?: boolean;
@@ -251,6 +254,7 @@ function ApplicationReviewMeta({ item }: { item?: ApprovalFeedItem }) {
 }
 
 export function StaffApplications({
+  currentUser,
   guards,
   clients,
   canApproveGuardAccounts = false,
@@ -336,12 +340,17 @@ export function StaffApplications({
 
   const visibleEntries = useMemo(() => {
     return applicationEntries
+      .filter((entry) => {
+        if (entry.kind !== 'staff') return true;
+        const member = guards.find((guard) => guard.id === entry.item.id && guard.isStaff);
+        return isStaffMemberVisibleToViewer(currentUser, member);
+      })
       .filter((entry) => matchesApplicationKindFilter(entry.kind, kindFilter))
       .filter((entry) =>
         matchesApplicationStatusFilter(entry.item, statusFilter, guards, clients)
       )
       .filter((entry) => applicationFeedItemMatchesSearch(entry.item, search));
-  }, [applicationEntries, kindFilter, statusFilter, guards, clients, search]);
+  }, [applicationEntries, kindFilter, statusFilter, guards, clients, search, currentUser]);
 
   const activeEntry = activeItemKey ? feedByKey.get(activeItemKey) ?? null : null;
 
@@ -425,7 +434,9 @@ export function StaffApplications({
             canReview={canApproveStaffAccounts}
             onApproveStaffAccount={canApproveStaffAccounts ? onApproveStaffAccount : undefined}
             onRejectStaffAccount={canApproveStaffAccounts ? onRejectStaffAccount : undefined}
-            onOpenStaffProfile={onOpenStaffProfile}
+            onOpenStaffProfile={
+              isStaffMemberVisibleToViewer(currentUser, member) ? onOpenStaffProfile : undefined
+            }
           />
         </div>
       );
