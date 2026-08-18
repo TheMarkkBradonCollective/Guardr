@@ -142,19 +142,9 @@ async function run() {
         const url = `${BASE}/${role}/${route}?ui=mobile`;
         try {
           await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-          // The loading screen mounts a tick after DOMContentLoaded, so wait for
-          // the app to render before treating its absence as "finished".
-          await page
-            .waitForFunction(
-              () => {
-                const root = document.getElementById('root');
-                if (!root || root.childElementCount === 0) return false;
-                return !document.querySelector('[aria-label="Loading Guardr"]');
-              },
-              null,
-              { timeout: 45_000 },
-            )
-            .catch(() => {});
+          const loading = page.getByRole('status', { name: 'Loading Guardr' });
+          await loading.waitFor({ state: 'attached', timeout: 15_000 }).catch(() => {});
+          await loading.waitFor({ state: 'hidden', timeout: 45_000 }).catch(() => {});
           await page.waitForTimeout(1800);
           const file = path.join(OUT, `${role}-${theme}-${route}.png`);
           await page.screenshot({ path: file });
