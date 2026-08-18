@@ -556,3 +556,365 @@ body.sf-tablet .wf-list-card:active,
 body.sf-tablet .sft-btn:active:not(:disabled) {
   transform: scale(0.98);
 }
+
+/* ── Page canvas (not a stretched phone screen) ──────────────────────────── */
+
+body.sf-tablet .sft-page,
+body.sf-tablet .app-screen--tablet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  padding: 18px var(--sf-gutter, 24px) var(--sf-gutter, 24px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+body.sf-tablet .app-screen--tablet.uber-jobs-screen,
+body.sf-tablet .app-screen--tablet.h-full {
+  padding: 0;
+  overflow: hidden;
+}
+
+body.sf-tablet .sft-form-page-kicker {
+  margin: 0 0 16px;
+  color: var(--sf-ink-secondary, #5c5c5c);
+  font-size: var(--sf-type-label, 13px);
+}
+
+body.sf-tablet .sft-form-page-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+  align-content: start;
+}
+
+body.sf-tablet .sft-form-page-body > .app-form-section,
+body.sf-tablet .sft-form-page-body > .app-error-banner,
+body.sf-tablet .sft-form-page-body > [data-full-width='true'] {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .sft-profile-page {
+  display: grid;
+  grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: var(--sf-radius-surface, 16px);
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .sft-profile-sidebar {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+  border-right: 1px solid var(--sf-line, #e2e2e2);
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .sft-profile-main,
+body.sf-tablet .sft-profile-sections {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 18px 24px;
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .sft-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+body.sf-tablet .sft-settings-grid > [class*='fullWidth'],
+body.sf-tablet .sft-settings-grid > .staff-mgmt-section[data-full-width='true'] {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .sft-jobs-toolbar {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px var(--sf-gutter, 24px);
+  border-bottom: 1px solid var(--sf-line, #e2e2e2);
+  background: var(--sf-paper, #ffffff);
+}
+
+/* Two-column fields on stacked forms that still use the mobile substrate */
+body.sf-tablet .staff-payment-settings-scroll,
+body.sf-tablet .app-form-section,
+body.sf-tablet .settings-section,
+body.sf-tablet .guard-form-shell .space-y-4,
+body.sf-tablet .client-form-shell form,
+body.sf-tablet .sft-shell-canvas .app-profile-screen .space-y-4 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+body.sf-tablet .app-form-section > .app-form-section-title,
+body.sf-tablet .settings-section > .settings-section-head,
+body.sf-tablet .staff-payment-settings-scroll > p,
+body.sf-tablet .staff-payment-settings-scroll > .segmented-control,
+body.sf-tablet .app-form-section > .app-error-banner {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .client-form-shell,
+body.sf-tablet .guard-form-shell {
+  max-width: none;
+  margin-inline: 0;
+  padding: 18px var(--sf-gutter, 24px) 32px;
+}
+
+body.sf-tablet .client-form-shell .fixed.bottom-\[calc\(3\.5rem\+env\(safe-area-inset-bottom\,0px\)\)\],
+body.sf-tablet .uber-form-wizard-actions,
+body.sf-tablet .client-form-shell [class*='bottom-[calc'] {
+  position: sticky;
+  bottom: 0;
+  left: auto;
+  right: auto;
+  z-index: 2;
+  padding: 12px 0 8px;
+  background: var(--sf-paper, #ffffff);
+  border-top: 1px solid var(--sf-line, #e2e2e2);
+}
+
+/* Metrics and finance summaries use the canvas, not a phone stack */
+body.sf-tablet .staff-payments-summary,
+body.sf-tablet .staff-payment-summary,
+body.sf-tablet .staff-payments-tablet .staff-payments-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body.sf-tablet .staff-payments-attention,
+body.sf-tablet .staff-payments-export {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .guard-pay-actions-grid,
+body.sf-tablet .guard-tiered-screen .guard-pay-actions-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.sf-tablet .staff-stats-mobile-head {
+  display: none;
+}
+
+body.sf-tablet .staff-stats-mobile {
+  padding: 0;
+}
+
+body.sf-tablet .app-inbox-row-chevron {
+  display: none;
+}
+
+body.sf-tablet .uber-job-row[data-selected='true'],
+body.sf-tablet .app-item-card[data-selected='true'],
+body.sf-tablet .app-list-row[data-selected='true'] {
+  background: var(--sf-paper-sunken, #f6f6f6);
+  box-shadow: inset 3px 0 0 var(--sf-accent, #000);
+}
+
+/* Tables stay readable — never shrink into unusable desktop density */
+body.sf-tablet table,
+body.sf-tablet .uber-workbench-table,
+body.sf-tablet .guardr-data-table {
+  min-width: 36rem;
+}
+
+body.sf-tablet .staff-ops-tablet-body,
+body.sf-tablet .sft-shell-canvas {
+  overflow-x: hidden;
+}
+
+body.sf-tablet .staff-ops-tablet-body .uber-workbench-table-wrap,
+body.sf-tablet .sft-page .uber-workbench-table-wrap,
+body.sf-tablet .app-screen--tablet .overflow-x-auto {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Maps: canvas + docked inspector, not a phone bottom sheet ───────────── */
+
+body.sf-tablet .staff-map-layout,
+body.sf-tablet .guard-map-layout,
+body.sf-tablet .client-map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 26rem);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .staff-map-layout .guardr-map-root,
+body.sf-tablet .guard-map-layout .guardr-map-root,
+body.sf-tablet .client-map-layout .guardr-map-root {
+  grid-column: 1;
+  grid-row: 1;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+}
+
+body.sf-tablet .sft-map-inspector,
+body.sf-tablet .staff-map-layout .desktop-map-inspector,
+body.sf-tablet .guard-map-layout .desktop-map-inspector,
+body.sf-tablet .client-map-layout .desktop-map-inspector,
+body.sf-tablet .staff-map-layout .map-browse-dock--desktop,
+body.sf-tablet .guard-map-layout .map-browse-dock--desktop,
+body.sf-tablet .client-map-layout .map-browse-dock--desktop {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  width: auto;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--sf-line, #e2e2e2);
+  border-right: none;
+  background: var(--sf-paper, #ffffff);
+  box-shadow: none;
+  z-index: 2;
+}
+
+body.sf-tablet .sft-map-inspector .desktop-map-inspector-body,
+body.sf-tablet .sft-map-inspector .guard-scroll-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 20px;
+}
+
+body.sf-tablet .sft-map-inspector .desktop-map-inspector-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: var(--sf-target, 44px);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--sf-line, #e2e2e2);
+}
+
+body.sf-tablet .sft-map-inspector .uber-map-inspector-close,
+body.sf-tablet .sft-map-inspector button[aria-label='Close'] {
+  width: var(--sf-target, 44px);
+  height: var(--sf-target, 44px);
+}
+
+body.sf-tablet .map-pin-filter-stepper,
+body.sf-tablet .staff-map-layout .map-pin-filters,
+body.sf-tablet .guard-map-layout .map-zoom-controls {
+  z-index: 3;
+}
+
+@media (orientation: portrait) {
+  body.sf-tablet .sft-form-page-body,
+  body.sf-tablet .sft-settings-grid,
+  body.sf-tablet .staff-payments-summary,
+  body.sf-tablet .staff-payment-settings-scroll,
+  body.sf-tablet .app-form-section,
+  body.sf-tablet .settings-section {
+    grid-template-columns: 1fr;
+  }
+
+  body.sf-tablet .sft-profile-page {
+    grid-template-columns: 1fr;
+  }
+
+  body.sf-tablet .sft-profile-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--sf-line, #e2e2e2);
+    max-height: 42vh;
+  }
+
+  body.sf-tablet .staff-map-layout,
+  body.sf-tablet .guard-map-layout,
+  body.sf-tablet .client-map-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(16rem, 42vh);
+  }
+
+  body.sf-tablet .sft-map-inspector,
+  body.sf-tablet .staff-map-layout .desktop-map-inspector,
+  body.sf-tablet .guard-map-layout .desktop-map-inspector,
+  body.sf-tablet .client-map-layout .desktop-map-inspector,
+  body.sf-tablet .staff-map-layout .map-browse-dock--desktop {
+    grid-column: 1;
+    grid-row: 2;
+    border-left: none;
+    border-top: 1px solid var(--sf-line, #e2e2e2);
+  }
+}
+
+@media (orientation: landscape) {
+  body.sf-tablet .staff-payments-summary,
+  body.sf-tablet .staff-payment-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.sf-tablet .app-metric-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Dark mode — same structure, inverted paper/ink, not a color invert */
+html.theme-dark body.sf-tablet .sft-profile-page,
+html.theme-dark body.sf-tablet .sft-settings-grid .staff-mgmt-section,
+html.theme-dark body.sf-tablet .sft-map-inspector,
+html.theme-dark body.sf-tablet .auth-experience--tablet .auth-form-page-form {
+  background: var(--sf-paper-raised, #161616);
+  border-color: var(--sf-line, #2a2a2a);
+}
+
+html.theme-dark body.sf-tablet .sft-profile-main,
+html.theme-dark body.sf-tablet .sft-shell-canvas {
+  background: var(--sf-paper-sunken, #000000);
+}
+
+html.theme-dark body.sf-tablet .uber-job-row[data-selected='true'],
+html.theme-dark body.sf-tablet .app-item-card[data-selected='true'] {
+  background: var(--sf-paper-muted, #202020);
+}
+
+/* Overflow safety for operational lists and payment cards */
+body.sf-tablet .staff-detail-pane,
+body.sf-tablet .split-detail-pane,
+body.sf-tablet .staff-payments-panel,
+body.sf-tablet .job-payment-row,
+body.sf-tablet .adm-cities-page {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+body.sf-tablet .job-payment-row,
+body.sf-tablet .staff-payout-invoice-row {
+  min-width: 0;
+}
+
+body.sf-tablet input,
+body.sf-tablet select,
+body.sf-tablet textarea,
+body.sf-tablet .uber-input,
+body.sf-tablet .uber-select {
+  max-width: 100%;
+}

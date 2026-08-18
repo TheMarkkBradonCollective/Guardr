@@ -1,5 +1,6 @@
 import React from 'react';
 import { prefersMobileGestureUi, useDevice } from '../../lib/platform';
+import { useSurfaceKind } from '../../surfaces';
 
 export type MapBrowseChipVariant =
   | 'upcoming'
@@ -86,17 +87,19 @@ export function MapBrowseDock({
   leading,
 }: MapBrowseDockProps) {
   const { viewSurface } = useDevice();
+  const surface = useSurfaceKind();
   const gestureUi = prefersMobileGestureUi(viewSurface);
+  const tabletDock = surface === 'tablet';
 
   if (selectedId) return null;
 
-  // Map-first on mobile/PWA/APK: full-bleed canvas; jobs via pins + offer sheet only.
-  if (gestureUi) return null;
+  // Map-first on phones: full-bleed canvas; jobs via pins + offer sheet only.
+  if (gestureUi && !tabletDock) return null;
 
-  // Website desktop: side inspector list.
+  // Website desktop and tablet: persistent job list beside the map.
   return (
     <aside
-      className="desktop-map-inspector dsk-map-inspector map-browse-dock--desktop"
+      className={`desktop-map-inspector dsk-map-inspector map-browse-dock--desktop${tabletDock ? ' sft-map-inspector' : ''}`}
       aria-label="Jobs on map"
     >
       <div className="desktop-map-inspector-header">

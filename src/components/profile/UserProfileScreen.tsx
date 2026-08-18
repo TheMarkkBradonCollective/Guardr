@@ -608,10 +608,10 @@ export function UserProfileScreen({
     </>
   );
 
-  if (formFactor === 'desktop') {
+  if (formFactor !== 'mobile') {
     return (
       <ResponsiveProfilePage sidebar={profileSidebar}>
-        <div className="adm-profile-sections">{profileBody}</div>
+        <div className={formFactor === 'desktop' ? 'adm-profile-sections' : 'sft-profile-sections'}>{profileBody}</div>
       </ResponsiveProfilePage>
     );
   }

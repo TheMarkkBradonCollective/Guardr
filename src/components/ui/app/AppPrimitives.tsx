@@ -75,8 +75,15 @@ export function AppEmptyState({
 }
 
 export function AppScreen({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const formFactor = useLayoutFormFactor();
   return (
-    <Block as="div" className={`app-screen ${className}`} display="flex" flexDirection="column" minHeight={0}>
+    <Block
+      as="div"
+      className={`app-screen${formFactor === 'tablet' ? ' app-screen--tablet' : ''} ${className}`.trim()}
+      display="flex"
+      flexDirection="column"
+      minHeight={0}
+    >
       {children}
     </Block>
   );
@@ -546,7 +553,7 @@ export function AppChatHeader({
   avatar?: React.ReactNode;
 }) {
   const formFactor = useLayoutFormFactor();
-  const hideBack = hideBackOnDesktop && formFactor === 'desktop';
+  const hideBack = hideBackOnDesktop && formFactor !== 'mobile';
 
   return (
     <div className="app-chat-header app-chat-header--with-back-label">

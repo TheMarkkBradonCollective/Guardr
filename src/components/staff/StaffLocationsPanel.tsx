@@ -639,6 +639,52 @@ export function StaffLocationsPanel({
     );
   }
 
+  if (formFactor === 'tablet') {
+    return (
+      <StaffOpsPageShell
+        className="staff-roster-panel"
+        data-tour="staff-locations"
+        toolbar={
+          <>
+            <div className="staff-ops-cta-stack">
+              {!hideTrigger ? (
+                <button
+                  type="button"
+                  onClick={startCreate}
+                  className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add location
+                </button>
+              ) : null}
+            </div>
+            <WfSearchBar value={search} onChange={setSearch} placeholder="Search locations…" className="max-w-md" />
+            {filterTabs}
+          </>
+        }
+      >
+        <div
+          className="tablet-split-panel"
+          data-selected={creating || selected ? 'true' : undefined}
+        >
+          <div className="split-list-pane min-h-0">{list}</div>
+          <div className="split-detail-pane min-h-0">
+            {creating || selected ? (
+              editor
+            ) : (
+              <div className="sft-empty">
+                <p className="sft-empty-title">Select a location</p>
+                <p className="sft-empty-message">
+                  Choose a site to review quality-control details, or add a new location.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </StaffOpsPageShell>
+    );
+  }
+
   if (creating || selectedId) {
     return (
       <div className="space-y-4">
