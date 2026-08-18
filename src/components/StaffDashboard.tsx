@@ -907,6 +907,7 @@ export function StaffDashboard({
             initialSelectedId={selectedJobId}
             staffRole={currentUser.role}
             feeConfig={platformSettings.feeConfig}
+            feeSchedules={platformSettings.clientFeeSchedules}
           />
           </div>
         );

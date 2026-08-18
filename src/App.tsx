@@ -585,6 +585,7 @@ import {
 } from './lib/jobScheduleChange';
 import {
   clientPaymentGates,
+  feeConfigForClientJob,
   loadPlatformSettingsFromStorage,
   normalizePlatformSettings,
   platformAllowsStripe,
@@ -3521,6 +3522,14 @@ export default function App() {
     () => clientPaymentGates(platformSettings),
     [platformSettings]
   );
+
+  const clientTypeById = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const client of clients) {
+      map[client.id] = client.clientType ?? 'business';
+    }
+    return map;
+  }, [clients]);
 
   const companyPlacardPublicDocuments = useMemo(
     () =>
@@ -7697,11 +7706,12 @@ export default function App() {
     const pricingMode = newRequest.pricingMode ?? 'standard';
     const agreementFeeConfig =
       pricingMode === 'open_contract' ? newRequest.agreementFeeConfig : undefined;
+    const jobType = newRequest.type || 'event';
     const billing = computeJobBilling(
       hourlyRate,
       durationHours,
       newRequest.guardsNeeded || 1,
-      platformSettings.feeConfig,
+      feeConfigForClientJob(platformSettings, clientRecord?.clientType, jobType),
       agreementFeeConfig
     );
     const platformFeePerHour = newRequest.platformFeePerHour ?? billing.platformFeePerHour;
@@ -7784,7 +7794,7 @@ export default function App() {
       address,
       state: jobState,
       location,
-      type: newRequest.type || 'event',
+      type: jobType,
       armedRequired: newRequest.armedRequired || false,
       guardsNeeded: newRequest.guardsNeeded || 1,
       uniformRequirements: newRequest.uniformRequirements || '',
@@ -8076,8 +8086,10 @@ export default function App() {
       durationHours: input.durationHours,
       hourlyRate: input.hourlyRate,
       guardPay: input.guardPay,
-      platformFeePerHour:
-        resolvePlatformFeePerHour(input.hourlyRate, platformSettings.feeConfig),
+      platformFeePerHour: resolvePlatformFeePerHour(
+        input.hourlyRate,
+        feeConfigForClientJob(platformSettings, clientRecord.clientType, input.type)
+      ),
       estimatedPayout: input.estimatedPayout,
       status,
       paymentStatus: 'unpaid',
@@ -10327,11 +10339,16 @@ export default function App() {
       appToast('That offer is no longer available.', 'error');
       return;
     }
+    const jobClient = clients.find((c) => c.id === job.clientId);
     const billing = applyAgreedOfferToJobBilling({
       offer,
       durationHours: job.durationHours,
       guardsNeeded: job.guardsNeeded ?? 1,
-      globalFeeConfig: platformSettings.feeConfig,
+      globalFeeConfig: feeConfigForClientJob(
+        platformSettings,
+        jobClient?.clientType,
+        job.type
+      ),
     });
     const applicants = job.applicants.includes(guardId)
       ? job.applicants
@@ -13006,6 +13023,8 @@ export default function App() {
           onAcceptJob={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
           feeConfig={platformSettings.feeConfig}
+          feeSchedules={platformSettings.clientFeeSchedules}
+          clientTypeById={clientTypeById}
           onSubmitPriceOffer={(requestId, input) =>
             void handleSubmitPriceOffer(requestId, activeGuardId, input, 'guard')
           }

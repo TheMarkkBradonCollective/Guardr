@@ -20,8 +20,8 @@ import { browsableSharedLocations } from '../../lib/jobLocations';
 import type { AssignmentMode, ClientLocation, DifferentialPayRates, JobLocation } from '../../types';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
-import type { AgreementPlatformFeeConfig, PricingMode } from '../../types';
+import { computePlatformFee, computeJobBilling, resolveClientJobFeeConfig, type ClientPlatformFeeSchedules, type PlatformFeeConfig } from '../../lib/payments';
+import type { AgreementPlatformFeeConfig, ClientType, PricingMode } from '../../types';
 import { DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
@@ -55,6 +55,8 @@ export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 interface RequestSecurityFlowProps {
   preset?: RequestFlowPreset;
   feeConfig: PlatformFeeConfig;
+  feeSchedules?: ClientPlatformFeeSchedules;
+  clientType?: ClientType;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
   guards?: SecurityGuard[];
@@ -70,6 +72,8 @@ const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requi
 export function RequestSecurityFlow({
   preset = 'default',
   feeConfig,
+  feeSchedules,
+  clientType,
   onBack,
   onSubmit,
   guards = [],
@@ -165,11 +169,17 @@ export function RequestSecurityFlow({
   );
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
+  const resolvedFeeConfig = resolveClientJobFeeConfig(
+    feeSchedules,
+    clientType ?? caps.clientType,
+    serviceToJobType(serviceId),
+    feeConfig
+  );
   const billing = computeJobBilling(
     effectiveRate,
     durationHours,
     selectedFavoriteGuardId ? 1 : effectiveGuards,
-    feeConfig,
+    resolvedFeeConfig,
     pricingMode === 'open_contract' ? agreementFeeConfig : undefined
   );
   const platformFeePerHour = billing.platformFeePerHour;
@@ -759,7 +769,7 @@ export function RequestSecurityFlow({
         {step === 5 && (
           <div className="space-y-5">
             <OpenContractRateStep
-              feeConfig={feeConfig}
+              feeConfig={resolvedFeeConfig}
               durationHours={durationHours}
               guardsNeeded={selectedFavoriteGuardId ? 1 : effectiveGuards}
               pricingMode={pricingMode}

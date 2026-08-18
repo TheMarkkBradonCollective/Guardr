@@ -453,6 +453,8 @@ export function ClientDashboard({
       <RequestSecurityFlow
         preset={flowPreset}
         feeConfig={feeConfig}
+        feeSchedules={crewSettings?.clientFeeSchedules}
+        clientType={clientRecord?.clientType}
         guards={guards}
         favoriteGuardIds={favoriteGuardIds}
         clientLocations={clientLocations}
@@ -488,6 +490,8 @@ export function ClientDashboard({
       <DirectGuardRequestFlow
         guard={requestTargetGuard}
         feeConfig={feeConfig}
+        feeSchedules={crewSettings?.clientFeeSchedules}
+        clientType={clientRecord?.clientType}
         onBack={() => {
           setRequestTargetGuard(null);
           navigate('guards');

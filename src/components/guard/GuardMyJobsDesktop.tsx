@@ -7,6 +7,7 @@ import type { ScheduleJob } from '../../lib/guardSchedule';
 import type { GuardJobsBrowseTab } from '../../lib/guardJobsBrowse';
 import { JOB_TALLY_LABELS } from '../../lib/jobTallies';
 import { formatTimeUntilShift } from '../../lib/shiftCountdown';
+import { resolveClientJobFeeConfig } from '../../lib/payments';
 import { Briefcase, Map } from 'lucide-react';
 import { GuardJobDetailView } from './GuardJobDetailView';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
@@ -46,6 +47,8 @@ export interface GuardMyJobsDesktopProps {
   onAcceptInvite?: (jobId: string) => void | Promise<void>;
   onDeclineInvite?: (jobId: string) => void | Promise<void>;
   feeConfig?: import('../../lib/payments').PlatformFeeConfig;
+  feeSchedules?: import('../../lib/payments').ClientPlatformFeeSchedules;
+  clientTypeById?: Record<string, string>;
   onSubmitPriceOffer?: (
     jobId: string,
     input: {
@@ -89,6 +92,8 @@ export function GuardMyJobsDesktop({
   onAcceptInvite,
   onDeclineInvite,
   feeConfig,
+  feeSchedules,
+  clientTypeById,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
   onViewBriefing,
@@ -204,7 +209,12 @@ export function GuardMyJobsDesktop({
       : undefined,
     onAcceptInvite: onAcceptInvite ? () => void onAcceptInvite(job.id) : undefined,
     onDeclineInvite: onDeclineInvite ? () => void onDeclineInvite(job.id) : undefined,
-    feeConfig,
+    feeConfig: resolveClientJobFeeConfig(
+      feeSchedules,
+      job.clientId ? clientTypeById?.[job.clientId] : undefined,
+      job.type,
+      feeConfig
+    ),
     onSubmitPriceOffer: onSubmitPriceOffer
       ? (input: {
           hourlyRate: number;

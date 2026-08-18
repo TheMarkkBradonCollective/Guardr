@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SessionUser } from '../../types';
 import {
-  feePreviewRates,
-  platformFeeModelLabel,
-  resolvePlatformFeePerHour,
-  type PlatformFeeConfig,
-  type PlatformFeeModel,
+  normalizeClientPlatformFeeSchedules,
+  type ClientFeeAccountKind,
+  type ClientPlatformFeeSchedules,
 } from '../../lib/payments';
 import {
   PlatformSettings,
@@ -26,40 +24,12 @@ import { GuardrButton } from '../baseui/GuardrButton';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
 import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { PlatformFeeScheduleEditor } from './PlatformFeeScheduleEditor';
 
 interface StaffPaymentSettingsPanelProps {
   currentUser: SessionUser;
   platformSettings: PlatformSettings;
   onUpdatePlatformSettings?: (settings: PlatformSettings) => void | Promise<void>;
-}
-
-function FeePreviewTable({ config }: { config: PlatformFeeConfig }) {
-  const rates = feePreviewRates();
-  return (
-    <div className="adm-table-wrap staff-payment-settings-table rounded-lg border border-brand-border overflow-x-auto">
-      <table className="adm-table w-full text-sm min-w-[18rem]">
-        <thead>
-          <tr>
-            <th>Client rate</th>
-            <th>Platform fee</th>
-            <th>Guard receives</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rates.map((rate) => {
-            const fee = resolvePlatformFeePerHour(rate, config);
-            return (
-              <tr key={rate}>
-                <td>${rate}/hr</td>
-                <td className="font-medium text-brand-text">${fee}/hr</td>
-                <td>${Math.max(0, rate - fee)}/hr</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
 }
 
 function DesktopSettingsCard({
@@ -114,7 +84,10 @@ export function StaffPaymentSettingsPanel({
   const canEditFees = hasExecutivePaymentControls(currentUser);
   const canEditCompensation = canManageStaffCompensation(currentUser);
   const canEditHourlyRates = canEditStaffHourlyPayRates(currentUser);
-  const [feeDraft, setFeeDraft] = useState<PlatformFeeConfig>(platformSettings.feeConfig);
+  const [scheduleDraft, setScheduleDraft] = useState<ClientPlatformFeeSchedules>(
+    platformSettings.clientFeeSchedules,
+  );
+  const [feeAccountKind, setFeeAccountKind] = useState<ClientFeeAccountKind>('personal');
   const [savingFees, setSavingFees] = useState(false);
   const [compDraft, setCompDraft] = useState<StaffCompensationConfig>(
     normalizeStaffCompensationConfig(platformSettings.staffCompensation),
@@ -122,8 +95,8 @@ export function StaffPaymentSettingsPanel({
   const [savingCompensation, setSavingCompensation] = useState(false);
 
   useEffect(() => {
-    setFeeDraft(platformSettings.feeConfig);
-  }, [platformSettings.feeConfig]);
+    setScheduleDraft(platformSettings.clientFeeSchedules);
+  }, [platformSettings.clientFeeSchedules]);
 
   useEffect(() => {
     setCompDraft(normalizeStaffCompensationConfig(platformSettings.staffCompensation));
@@ -135,17 +108,26 @@ export function StaffPaymentSettingsPanel({
   );
 
   const feeDirty = useMemo(
-    () => JSON.stringify(feeDraft) !== JSON.stringify(platformSettings.feeConfig),
-    [feeDraft, platformSettings.feeConfig]
+    () => JSON.stringify(scheduleDraft) !== JSON.stringify(platformSettings.clientFeeSchedules),
+    [scheduleDraft, platformSettings.clientFeeSchedules]
   );
 
   const persistFeeConfig = async () => {
     if (!onUpdatePlatformSettings || !canEditFees) return;
     setSavingFees(true);
     try {
+      const nextSchedules = normalizeClientPlatformFeeSchedules(
+        scheduleDraft,
+        platformSettings.feeConfig
+      );
       await onUpdatePlatformSettings({
         ...platformSettings,
-        feeConfig: feeDraft,
+        clientFeeSchedules: nextSchedules,
+        feeConfig: {
+          model: nextSchedules.business.model,
+          flatFeePerHour: nextSchedules.business.flatFeePerHour,
+          percentRate: nextSchedules.business.percentRate,
+        },
         updatedAt: new Date().toISOString(),
       });
     } finally {
@@ -193,80 +175,46 @@ export function StaffPaymentSettingsPanel({
     }));
   };
 
-  const setFeeModel = (model: PlatformFeeModel) => {
-    setFeeDraft((prev) => ({ ...prev, model }));
-  };
-
   const platformFeesBody = (
     <div className="space-y-4 min-w-0">
       <p className="text-sm text-brand-text/70 leading-relaxed">
-        Platform fees are based on the client charge — either a flat dollar amount per hour or a percentage
-        of the hourly rate. Open-contract jobs can override these defaults per agreement.
+        Personal and business accounts have separate platform fee tables. Within each table, every guard
+        type can use the account default or its own rate. Open-contract jobs can still override these
+        defaults per agreement.
       </p>
 
-      <div className="grid grid-cols-1 gap-4 min-w-0">
-        <div className="min-w-0">
-          <label className="uber-label block mb-1">Fee type</label>
-          <select
-            className="uber-input w-full"
-            value={feeDraft.model}
-            onChange={(e) => setFeeModel(e.target.value as PlatformFeeModel)}
-            disabled={!canEditFees}
-          >
-            <option value="flat">Flat rate ($/hr)</option>
-            <option value="percent">Percentage of client charge</option>
-          </select>
-          <p className="text-xs text-brand-text/60 mt-1">{platformFeeModelLabel(feeDraft.model)}</p>
-        </div>
-
-        {feeDraft.model === 'flat' && (
-          <div className="min-w-0">
-            <label className="uber-label block mb-1">Fee per hour ($)</label>
-            <input
-              type="number"
-              min={0}
-              step={0.5}
-              value={feeDraft.flatFeePerHour}
-              onChange={(e) =>
-                setFeeDraft((prev) => ({
-                  ...prev,
-                  flatFeePerHour: Math.max(0, parseFloat(e.target.value) || 0),
-                }))
-              }
-              readOnly={!canEditFees}
-              className="uber-input w-full"
-            />
-          </div>
-        )}
-
-        {feeDraft.model === 'percent' && (
-          <div className="min-w-0">
-            <label className="uber-label block mb-1">Platform take (%)</label>
-            <input
-              type="number"
-              min={0}
-              max={50}
-              step={0.5}
-              value={Math.round(feeDraft.percentRate * 1000) / 10}
-              onChange={(e) =>
-                setFeeDraft((prev) => ({
-                  ...prev,
-                  percentRate: Math.min(0.5, Math.max(0, (parseFloat(e.target.value) || 0) / 100)),
-                }))
-              }
-              readOnly={!canEditFees}
-              className="uber-input w-full"
-            />
-          </div>
-        )}
+      <div className="segmented-control segmented-control-full">
+        <button
+          type="button"
+          className={`segmented-control-btn flex-1 py-3 text-sm ${
+            feeAccountKind === 'personal' ? 'segmented-control-btn-active' : ''
+          }`}
+          onClick={() => setFeeAccountKind('personal')}
+        >
+          Personal
+        </button>
+        <button
+          type="button"
+          className={`segmented-control-btn flex-1 py-3 text-sm ${
+            feeAccountKind === 'business' ? 'segmented-control-btn-active' : ''
+          }`}
+          onClick={() => setFeeAccountKind('business')}
+        >
+          Business
+        </button>
       </div>
 
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text/65 mb-2">
-          Preview at common client rates
-        </p>
-        <FeePreviewTable config={feeDraft} />
-      </div>
+      <PlatformFeeScheduleEditor
+        accountKind={feeAccountKind}
+        schedule={scheduleDraft[feeAccountKind]}
+        disabled={!canEditFees}
+        onChange={(next) =>
+          setScheduleDraft((prev) => ({
+            ...prev,
+            [feeAccountKind]: next,
+          }))
+        }
+      />
 
       {canEditFees ? (
         <div className="staff-payment-settings-actions">
@@ -284,7 +232,7 @@ export function StaffPaymentSettingsPanel({
                 <GuardrButton
                   kind="secondary"
                   size="compact"
-                  onClick={() => setFeeDraft(platformSettings.feeConfig)}
+                  onClick={() => setScheduleDraft(platformSettings.clientFeeSchedules)}
                 >
                   Discard changes
                 </GuardrButton>
@@ -303,7 +251,7 @@ export function StaffPaymentSettingsPanel({
                 <button
                   type="button"
                   className="staff-payment-settings-discard"
-                  onClick={() => setFeeDraft(platformSettings.feeConfig)}
+                  onClick={() => setScheduleDraft(platformSettings.clientFeeSchedules)}
                 >
                   Discard changes
                 </button>
@@ -486,7 +434,7 @@ export function StaffPaymentSettingsPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Finance"
-            subtitle="Platform fees and staff compensation defaults."
+            subtitle="Personal and business platform fees, plus staff compensation."
           />
         }
       >
