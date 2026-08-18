@@ -5,6 +5,7 @@ on:
   push:
     branches: [main, 'cursor/**']
     paths:
+      - '.github/workflows/android-apk.yml'
       - 'android/**'
       - 'capacitor.config.ts'
       - 'scripts/build-android-apk.mjs'
