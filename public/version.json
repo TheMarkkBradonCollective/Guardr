@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.123-beta",
+  "webVersion": "1.0.124-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.123",
-    "versionCode": 223,
+    "version": "1.0.124",
+    "versionCode": 224,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.123.apk",
+    "downloadName": "guardr-v1.0.124.apk",
     "fileSize": 69619009,
     "sha256": "5d93b4975971123219451830425e512f38a9268302fa8c6946aacda26919aaed",
-    "releaseNotes": "Fieldtest Staff chat start/end reports in plain English; Guardr-branded field-test operator; chat message delete (own messages + higher staff in group chats); Google Play release pipeline and printable manuals."
+    "releaseNotes": "Personal vs Business client accounts (who hires and pays); separate platform fee tables by account and guard type; posted job prices stay frozen when fees change; staff ID bounce without photos; client credential library."
   },
-  "updatedAt": "2026-08-14T02:55:19.172Z"
+  "updatedAt": "2026-08-18T09:57:47.770Z"
 }

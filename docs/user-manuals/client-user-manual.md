@@ -1,6 +1,6 @@
 # Guardr Client User Manual
 
-For businesses, venues, properties, and event organizers who need licensed security coverage.
+For **personal** and **business** clients who need licensed security coverage.
 
 ---
 
@@ -24,11 +24,14 @@ Guardr is operated by **Signature Security Specialist, LLC** as a **technology m
 
 ## 1. Account setup
 
-1. Go to [guardr.co](https://guardr.co) and choose **I need security for my site**.
-2. Create your client account and complete company/contact details under **Profile**.
-3. On **Home**, watch for **Account pending approval**.
-4. While pending you can use **Home**, **Profile**, **Messages**, and **Guide**. Most ops pages stay blocked until staff approve you.
-5. After approval, the full client workspace opens.
+1. Go to [guardr.co](https://guardr.co) and choose **I need security**.
+2. Choose **Personal** or **Business** — this is **who hires and pays**, not the type of location.
+   - **Personal:** you contract as yourself. You can still hire for a venue. Request, rebook, and schedule recurring coverage anytime.
+   - **Business:** a company, venue, or organization is the contracting party. Extra tools for sites, staffing, reporting, and team contacts. You can still post a private event.
+3. Complete profile details under **Profile**. Upload **Credentials** there (government-issued ID is always required).
+4. On **Home**, watch for **Account pending approval**.
+5. While pending you can use **Home**, **Profile**, **Messages**, and **Guide**. Most ops pages stay blocked until staff approve you.
+6. After approval, the full client workspace opens. Personal and business share one client system — business unlocks management tools.
 
 **Want a job at Guardr (ops/support)?** Use **Apply to work at Guardr** — not the client path.
 
@@ -39,27 +42,46 @@ Guardr is operated by **Signature Security Specialist, LLC** as a **technology m
 | Page | Purpose |
 |------|---------|
 | **Map** | Job geography, pins, live shift tracking |
-| **Home** | Status, quick actions, live coverage, reports shortcuts |
-| **Jobs** | Post/track jobs, pay, approve guards, confirm audits, overtime, ratings |
-| **Guards** | Browse profiles; send a direct request to one guard |
+| **Home** | Status, quick actions, live coverage. Personal: request / rebook / recurring. Business: post job / sites / reports |
+| **Jobs** | Post or request coverage, pay, approve guards, confirm audits, overtime, ratings |
+| **Guards** | Browse profiles; send a direct request or rebook |
 | **Messages** | Job chats and threads |
 | **Support** | Contact support, file a report, ticket history |
-| **Payments** | Invoices, payment history, pay when due |
-| **Profile** / **Settings** / **Guide** | Account details, preferences, help |
+| **Payments** / **Billing** | Invoices and payment history (personal: Payments; business: Billing) |
+| **Locations** / **Sites** | Saved places (personal: Locations; business: Sites) |
+| **Reports** | Activity and incidents — **business accounts only** |
+| **Profile** / **Settings** / **Guide** | Account details, **Credentials**, preferences, help |
 
 ---
 
 ## 3. Post a marketplace job
 
-Open work any qualified guard can apply to.
+Open work any qualified guard can apply to. Personal accounts call this **Request security**; business accounts call this **Post job**.
 
-1. **Home → Post job offer**, or **Jobs → + Post offer**.
+1. **Home → Post job / Request security**, or **Jobs → + Request security / + Post a job**.
 2. Enter site/title, address, schedule, requirements, instructions, and **hourly rate / billing**.
 3. On location: **Use current location** if you are on site, or enter address/coordinates manually.
 4. Review the summary → **Slide to post job offer**.
 5. Status starts as **Pending review** until staff approve the listing → then **Open**.
 
+Required client credentials for your account type and this job type must be **verified** before you can post. Upload them on **Profile → Credentials**.
+
 Staff review job offers from **Applications** / **Jobs**. If declined, update the job as instructed and resubmit when allowed.
+
+---
+
+## 3a. Credentials you may need
+
+**Profile → Credentials** is your credential library.
+
+| Always required | Who |
+|-----------------|-----|
+| Government-issued ID | Every **personal** client |
+| Government-issued ID (authorized representative) | Every **business** client |
+
+Other licenses and permits (alcohol, event, cannabis, business license, and so on) stay in the library until staff mark them **Required For** a job type. Alcohol licenses default to nightclub/bar jobs; event permits default to event job types.
+
+Each row shows **name → applicable to → required for → upload → expiration → verification status**.
 
 ---
 
@@ -103,9 +125,13 @@ Guardr's platform fee is embedded in the marketplace economics:
 | Party | Receives |
 |-------|----------|
 | **Guard (contractor)** | Hourly rate minus platform fee per hour |
-| **Guardr (platform)** | Platform fee per hour (default **$5/hr flat** unless settings or negotiation differ) |
+| **Guardr (platform)** | Platform fee per hour from the **Personal** or **Business** fee table for that guard type |
+
+Personal and business accounts have **separate** fee tables. Each table has an account default plus optional per-guard-type rates (Directors set these in **Payment settings**). Defaults start around **$5/hr** personal and **$6/hr** business, with higher takes on some job types (for example bodyguard / armed escort).
 
 You pay the **full hourly rate** you agreed to. The guard's pay is calculated from that rate minus the fee. This is **not** an extra line item on most client checkout screens — it is part of how the marketplace price is split.
+
+**Posted prices stay frozen.** Changing the live fee tables does **not** rewrite jobs that are already posted, approved, or under contract. Those jobs keep the platform fee and guard pay saved when they were created. Only a staff/open-contract recalculation rewrites a stored fee.
 
 ### 5.3 When you pay
 

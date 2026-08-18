@@ -89,7 +89,7 @@ This section explains **your** money as an independent contractor. Guardr collec
 
 ### 5.1 What you see vs what the client pays
 
-The client pays a **posted hourly rate** for the job. Guardr keeps a **platform fee** per hour; you receive the remainder as **guard pay**.
+The client pays a **posted hourly rate** for the job. Guardr keeps a **platform fee** per hour from the client's **Personal** or **Business** fee table (and that guard type); you receive the remainder as **guard pay**. The fee on a posted job stays frozen even if Directors later change the live tables.
 
 **Default example (platform settings may differ):**
 

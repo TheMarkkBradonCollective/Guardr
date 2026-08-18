@@ -38,7 +38,6 @@ export function staffCanEditCertification(
 export function staffCanSetGovernmentIdDocumentType(
   guard: Pick<SecurityGuard, 'userStatus' | 'isStaff' | 'idVerificationStatus' | 'idDocumentType'>
 ): boolean {
-  if (guard.isStaff) return false;
   if (getGuardUserStatus(guard) === 'blocked') return false;
   const status = getGuardIdVerificationStatus(guard);
   return status === 'pending' && guardGovIdNeedsDocumentTypeSelection(guard);

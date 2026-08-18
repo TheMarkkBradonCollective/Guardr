@@ -186,7 +186,7 @@ export const ROLE_LABELS: Record<PlatformRole, string> = {
 };
 
 export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
-  client: 'Individuals or businesses seeking security services.',
+  client: 'Individuals and businesses seeking security services.',
   guard: 'Independent licensed security professionals.',
   support: 'Handles support messages, reviews incident reports, and monitors platform activity.',
   moderator: 'Approves guard and client applications, monitors activity, and escalates issues.',

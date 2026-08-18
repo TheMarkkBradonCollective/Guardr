@@ -18,7 +18,7 @@ INSERT INTO staff (
   'active',
   '#FieldTestStaff2026',
   false,
-  'verified'
+  'not_submitted'
 )
 ON CONFLICT (email) DO UPDATE SET
   name = EXCLUDED.name,
@@ -26,5 +26,5 @@ ON CONFLICT (email) DO UPDATE SET
   user_status = EXCLUDED.user_status,
   password = EXCLUDED.password,
   must_change_password = false,
-  id_verification_status = 'verified',
+  id_verification_status = 'not_submitted',
   summary = EXCLUDED.summary;

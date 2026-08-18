@@ -19,7 +19,8 @@ Build the requested feature, page, component, or system **completely** using the
 - Support **desktop, tablet, and mobile** layouts where UI is added
 - Add PWA and APK considerations for installed-app surfaces
 - Run `npm run lint` and `npm test` before finishing
-- Update `docs/DEV-UPDATES.md` for user-visible changes
+- Update `docs/DEV-UPDATES.md` for user-visible changes: **Last updated**, release notes, and a `| Time | What shipped |` table from git times so the Dev notes activity cloud lights up
+- Update `docs/guardr-general-guide.md` (and user manuals) when behavior users or staff follow changed
 
 ## Work order
 

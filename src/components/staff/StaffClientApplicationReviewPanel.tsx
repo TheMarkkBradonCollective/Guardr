@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Client } from '../../types';
+import { clientTypeLabel, clientDisplayName } from '../../lib/clientType';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { Mail, Phone } from 'lucide-react';
@@ -31,7 +32,7 @@ export function StaffClientApplicationReviewPanel({
   const accountStatus = getClientAccountStatus(client);
   const isPending = accountStatus === 'pending';
   const isApproved = accountStatus === 'active';
-  const displayName = client.companyName || client.name;
+  const displayName = clientDisplayName(client);
   const statusTone = isPending ? 'warning' : accountStatus === 'suspended' ? 'danger' : 'success';
 
   const handleApproveClient = async () => {
@@ -107,6 +108,7 @@ export function StaffClientApplicationReviewPanel({
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
             <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
+            <WfBadge>{clientTypeLabel(client.clientType)}</WfBadge>
           </div>
         </div>
       </div>

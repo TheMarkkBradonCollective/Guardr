@@ -1,24 +1,29 @@
 # Guardr — Guide
 
+**Last updated:** Tuesday, August 18, 2026
+
 Guardr connects **clients** who need security coverage with **licensed guards** through an independent-contractor technology marketplace. Guardr staff **verify guard credentials** for marketplace eligibility — that is the platform's core compliance role. Guardr is not the employer, PPO, or staffing agency.
 
 This guide explains how Guardr works: which page to open, where actions appear, what button or slider to use, and what status changes after each step.
 
 Use it as the operating manual for the whole app:
 
-- **Clients** post jobs, choose guards, pay, confirm coverage, review reports, and contact support.
+- **Clients** hire as **Personal** (individual pays) or **Business** (company pays), post or request coverage, choose guards, pay, confirm coverage, and contact support. Both types are repeat clients.
 - **Guards** upload required credentials on the **activation screen** while their application is under review, become **active** after staff approve and verify credentials, then apply for work, head to jobs, complete self-audits, submit reports, and collect pay.
 - **Staff** (Moderator, Administrator, Director, Founder) each have defined responsibilities — see the role-specific guides below. Staff are **employees** of the platform operator (not independent contractors like guards).
 
 ### Signup paths (important)
 
+Signup is three screens: **I need security** vs **I want to work**, then Personal vs Business (if hiring), then licensed guard vs **Apply to work at Guardr** (if working).
+
 | Path | Who it's for | How to start |
 |------|--------------|--------------|
-| **Marketplace — Guard** | Licensed security professionals seeking field work | Homepage → **Become a guard** or auth → guard signup |
-| **Marketplace — Client** | Businesses or individuals needing coverage | Homepage → **Post a job** / **Client signup** |
-| **Work at Guardr — Staff** | Platform operations jobs (Moderator through Founder) | Homepage → **Work at Guardr** or auth → staff signup |
+| **Marketplace — Personal client** | You hire and pay as yourself. The job can still be at a venue. Request, rebook, and schedule recurring coverage. | Homepage → **I need security** → **Personal** |
+| **Marketplace — Business client** | A company, venue, or organization is the contracting party. Extra tools for sites, staffing, reporting, and team contacts. | Homepage → **I need security** → **Business** |
+| **Marketplace — Guard** | Licensed security professionals seeking field work as independent contractors | Homepage → **I want to work** → **I'm a licensed guard** |
+| **Work at Guardr — Staff** | Platform operations jobs (Support through Founder) | Homepage → **I want to work** → **Apply to work at Guardr** |
 
-Do **not** use guard or client signup if you are applying for a staff job — use **Work at Guardr** instead.
+Do **not** use guard or client signup if you are applying for a staff job — use **Apply to work at Guardr** instead. Personal vs Business is **who pays**, not the type of location.
 
 ### Where to open this guide
 
@@ -33,12 +38,12 @@ Do **not** use guard or client signup if you are applying for a staff job — us
 
 | Role | Main pages |
 |------|------------|
-| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Payments**, **Locations**, **Reports**, **Notifications**, **Settings**, **Profile**, **Guide** |
+| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Payments** (personal) or **Billing** (business), **Locations** / **Sites**, **Notifications**, **Settings**, **Profile**, **Guide**. **Reports** is a business-only tool. |
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff; **Guide** / PDF manuals available. **Map**, **Jobs**, **Payments**, and **Profile** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Payments**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
-| **Staff (pending)** | **Onboarding checklist** — upload government ID, connect Stripe for payouts; **Settings** (sign out). Ops pages blocked until **active**. |
+| **Staff (pending / reactivation)** | **Onboarding checklist** — upload government ID (front, back, selfie) and connect Stripe for payouts; **Settings** (sign out). Ops pages stay blocked until **active**. Existing active staff missing real ID photos see **Staff reactivation** until ID is verified. Founder can still open the console to review IDs. |
 | **Staff (active)** | Role-based sidebar — see **Staff role permissions**; **Profile → Timesheets** for clock in/out; Directors/Founders also use **Payments** for staff compensation |
 | **Administrator** | Moderator pages plus credential verification queues, **Disputes**, **Analytics**, partial **Settings** |
 | **Director** | Administrator pages plus **Payments**, **Staff** team management, full financial controls, **Dev notes** |
@@ -123,7 +128,7 @@ This section walks through Guardr from first sign-up to final payout — the sam
 
 | Who | What you do | What happens next |
 |-----|-------------|-------------------|
-| **Client** | Sign up → complete **Profile** → wait on **Home** ("Account pending approval") | Moderator+ approves from **Applications** |
+| **Client** | Sign up as **Personal** or **Business** → complete **Profile** (and required credentials) → wait on **Home** ("Account pending approval") | Moderator+ approves from **Applications** |
 | **Guard** | Sign up → land on **activation screen** ("Application under review") — upload five required credentials | Moderator+ **approves application** (`pending` → `approved`) |
 | **Staff** | Sign in with credentials provided by a Director or Founder | Full staff console opens per your role |
 
@@ -377,39 +382,79 @@ Issue or exception
 
 ## Client guide
 
+### Personal vs Business (one client system)
+
+`client_type` is **who is hiring and paying**, not the site type and not how often you book.
+
+| | **Personal** | **Business** |
+|--|--------------|--------------|
+| Who pays | You, as an individual | A company, venue, or organization |
+| Repeat use | Request, rebook, and schedule recurring coverage | Same, plus management tools |
+| Home shortcuts | Request security, rebook a guard, preferred locations, schedule, recurring security | Post job, browse guards, sites, schedule, multi-guard site, reports |
+| Guard count per request | Up to **4** | Up to **50** |
+| Extra tools | — | Multiple sites, staffing/rosters, reporting, team contacts, company documents, business billing |
+
+A personal client can still hire for a venue. A business can still post a private event. Contacts on the profile are the first team-access slice — Guardr does not invent a second login system for extra users.
+
 ### Client page map
 
 | Page | Where it is | What it is for |
 |------|-------------|----------------|
 | **Map** | Bottom navigation | Full-screen job geography — tap pins for details; active shift tracking |
-| **Home** | Bottom navigation | Quick actions, account status, live coverage shortcuts, reports shortcuts |
+| **Home** | Bottom navigation | Quick actions, account status, live coverage shortcuts; **Reports** shortcut is business-only |
 | **Messages** | Sidebar **Messages** group | Job chats and team threads |
 | **Support** | Sidebar **Messages** group | Contact support, file a report, view ticket threads |
-| **Guards** | Bottom navigation | Browse guard profiles and send direct requests |
-| **Jobs** | Bottom navigation | View posted jobs, pay, approve guards, confirm audits, approve overtime, rate guards |
-| **Payments** | Sidebar → **Payments** (Account group on phone) | View job invoices, download PDF, pay when staff mark invoice ready |
-| **Profile** | Account menu | Company/contact profile details |
+| **Guards** | Bottom navigation | Browse guard profiles and send direct requests (personal: rebook) |
+| **Jobs** | Bottom navigation | View posted jobs / requests, pay, approve guards, confirm audits, approve overtime, rate guards |
+| **Payments** / **Billing** | Sidebar → **Payments** (Account group on phone) | Invoices and payment history. Personal labels this **Payments**; business labels it **Billing** |
+| **Locations** / **Sites** | Account menu / More | Saved places. Personal: **Locations**; business: **Sites** |
+| **Reports** | Account menu / More | Activity and incident reporting — **business accounts only** |
+| **Profile** | Account menu | Personal or company/contact details plus the **Credentials** library |
 | **Guide** | Account menu | This guide |
 
 ### 1. Sign up, finish the profile, and wait for approval
 
-1. Create a **Client** account during sign-up.
-2. Complete the company profile and contact information from **Profile** in the account menu.
-3. Watch **Home** for the pending approval state:
+1. Choose **I need security**, then **Personal** or **Business** (who hires and pays).
+2. Complete profile details from **Profile** in the account menu.
+3. Upload required credentials on **Profile** (see **Client credentials** below). Government-issued ID is always required.
+4. Watch **Home** for the pending approval state:
    - A pending client sees **Account pending approval** on **Home**.
    - Most operational pages are blocked until staff approves the account.
    - While pending, clients can still use **Home**, **Profile**, **Messages**, and **Guide**.
-4. Staff approve the account from **Applications** or the **Clients** roster.
-5. After approval, the full client dashboard opens.
+5. Staff approve the account from **Applications** or the **Clients** roster.
+6. After approval, the full client dashboard opens. Personal and business share the same client workspace — business unlocks extra management tools.
+
+### Client credentials
+
+**Where:** Client **Profile → Credentials**. Staff review from **Credentials → Clients**.
+
+| Column | Meaning |
+|--------|---------|
+| **Credential Name** | Catalog item (government ID, alcohol license, event permit, and so on) |
+| **Applicable To** | Personal clients, business clients, or both |
+| **Required For** | Always required for that account type, required for specific job types, or library-only until staff sets Required For |
+| **Upload** | Photo/document of the credential |
+| **Expiration Date** | Optional expiry |
+| **Verification Status** | Pending upload, pending review, verified, rejected, expired |
+
+Always required:
+
+- **Personal** — Government-issued ID for the individual hiring Guardr
+- **Business** — Government-issued ID for the authorized representative
+
+Everything else stays in the library until an administrator sets **Required For** (defaults: alcohol licenses for nightclub/bar jobs; event / special-event permits for event job types). Posting or requesting coverage is blocked until required credentials for that **client type + job type** are verified.
+
+Staff (Manager+) edit the library from **Credentials → Clients**.
 
 ### 2. Post a marketplace job
 
-A marketplace job is open to qualified guards.
+A marketplace job is open to qualified guards. Personal accounts label this **Request security**; business accounts label it **Post job**.
 
 1. Open **Home**.
-2. Under quick actions, select **Post job offer**.
-   - You can also open **Jobs** and select **+ Post offer**.
-   - Home shortcuts like **Schedule** and **Multi-guard site** open the same posting flow with a preset.
+2. Under quick actions, select **Post job offer** / **Request security**.
+   - You can also open **Jobs** and select **+ Request security** (personal) or **+ Post a job** (business).
+   - Home shortcuts like **Schedule**, **Recurring security** (personal), or **Multi-guard site** (business) open the same posting flow with a preset.
+   - If required client credentials for that job type are not verified, posting is blocked until staff approve the uploads.
 3. On the **Post job offer** page, enter the job basics:
    - Site name or job title.
    - Address and state.
@@ -1225,6 +1270,10 @@ Staff who apply via **Work at Guardr** can **sign in while pending** and complet
 
 While **pending** or **approved** (checklist incomplete), only the onboarding checklist and **Settings** are available — not ops panels (**Jobs**, **Guards**, etc.).
 
+**Reactivation (existing active staff):** Government ID is only treated as verified when **front, back, and selfie** photos are on file. A status of verified with no photos is bounced to **pending upload**. Those staff stay in the Credentials queue and see **Staff reactivation** — ops access is restricted until ID is uploaded and a Director verifies it. **Founder** can still open the staff console so someone can review IDs (avoids a deadlock).
+
+New staff still use **Staff activation** copy. Auto-activation requires photos, not status alone.
+
 ---
 
 ### Incident reports
@@ -1272,10 +1321,11 @@ The Guards panel lists all field guard accounts. Staff can:
 
 The Clients panel lists all client accounts. Staff can:
 
-- Search and filter the client roster.
-- Open a client profile to view account status, jobs, and contact info.
+- Search and filter the client roster (Personal vs Business).
+- Open a client profile to view account status, jobs, contact info, and **credential** uploads.
 - Add a new client account (**Add client** button).
 - Approve, suspend, or restore client access.
+- Review client credentials (approve / reject) — the same items also appear in **Credentials → Clients**.
 
 #### Staff / Team panel
 
@@ -1310,9 +1360,15 @@ On phone, the Applications roster fits the viewport — scroll inside the list, 
 
 **Where:** Staff sidebar → **Credentials**
 
-Credential and COI verification queue — staff verify license photos, government ID, and training documents. Approve or reject each upload. Filter tabs: **All**, **Pending review**, **Pending upload**, **Verified**, and **Rejected**. Pending guards can also upload activation credentials from their application review screen.
+Credential verification queue for **guards, staff, and clients**. Approve or reject each upload. Audience tabs: **All**, **Staff**, **Guards**, **Clients**. Status tabs: **All**, **Pending review**, **Pending upload**, **Verified**, and **Rejected**.
 
-**Add credential** (Administrator+): On desktop, use **+ Add credential** in the sidebar; on mobile, use the toolbar button. Pick a credential type, choose a guard, then complete the upload wizard — credentials added by staff are saved as verified on the guard profile.
+**Staff government ID** always appears in this queue. Verified-without-photos shows as **Pending upload** until front, back, and selfie are on file.
+
+**Clients tab:** review client library uploads. Manager+ can open **Client credential library** to set Applicable To and Required For (which job types need which document). Personal government ID and business representative ID stay always-required.
+
+**Add credential** (Administrator+, **Guards** tab): On desktop, use **+ Add credential** in the sidebar; on mobile, use the toolbar button. Pick a credential type, choose a guard, then complete the upload wizard — credentials added by staff are saved as verified on the guard profile.
+
+Pending guards can also upload activation credentials from their application review screen.
 
 _Note: Guards apply directly to clients for marketplace jobs._
 
@@ -1340,9 +1396,9 @@ _Note: Guards apply directly to clients for marketplace jobs._
 **Payment settings** (Directors and Founders — sidebar → **Platform**):
 
 - **Payment methods** — Card (Stripe) and optional cash (Founder edits methods; Directors view)
-- **Platform fees** — flat $/hr or percentage model for new jobs
+- **Platform fees** — two schedules, **Personal** and **Business**. Each table has an account default plus optional per-guard-type rates (flat $/hr or percent)
 
-Platform fees are set globally in **Payment settings**. Open-contract jobs can override per agreement. Existing jobs keep their original fee.
+Live fee tables apply to **new jobs only**. Posted, approved, and contracted jobs keep the `platformFeePerHour` / `guardPay` already saved on that job. Open-contract jobs can still negotiate a different take on that specific agreement. Staff/open-contract recalculation is the only time an existing job's stored fee is rewritten.
 
 #### Incidents panel
 

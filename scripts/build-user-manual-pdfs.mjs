@@ -35,7 +35,7 @@ const MANUALS = [
     file: 'quick-start.md',
     pdf: 'Guardr-Quick-Start.pdf',
     title: 'Quick Start',
-    subtitle: 'Three doors — client, guard, or Apply to work at Guardr',
+    subtitle: 'I need security (Personal or Business), licensed guard, or Apply to work at Guardr',
     audience: 'New users',
   },
   {
@@ -43,7 +43,7 @@ const MANUALS = [
     pdf: 'Guardr-Client-User-Manual.pdf',
     title: 'Client User Manual',
     subtitle: 'Hire independent contractors, post jobs, pay, and confirm coverage',
-    audience: 'Businesses & property owners',
+    audience: 'Personal and business clients',
   },
   {
     file: 'guard-user-manual.md',

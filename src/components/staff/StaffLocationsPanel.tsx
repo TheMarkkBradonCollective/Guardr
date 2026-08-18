@@ -9,6 +9,7 @@ import type {
   SessionUser,
 } from '../../types';
 import { canReviewJobRequests } from '../../lib/permissions';
+import { clientDisplayName } from '../../lib/clientType';
 import {
   JOB_LOCATION_STATUS_LABELS,
   LOCATION_RISK_OPTIONS,
@@ -351,7 +352,7 @@ export function StaffLocationsPanel({
           </span>
           {createdByClient && (
             <span className="text-xs text-brand-text-muted">
-              First saved by {createdByClient.companyName || createdByClient.name}
+              First saved by {clientDisplayName(createdByClient)}
             </span>
           )}
         </div>

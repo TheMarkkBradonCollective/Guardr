@@ -7,6 +7,7 @@ import {
 } from '../../types';
 import type { ClientPaymentGates, PlatformSettings } from '../../lib/platformSettings';
 import type { PlatformFeeConfig } from '../../lib/payments';
+import { feeConfigFromJobSnapshot } from '../../lib/payments';
 import { isOpenContractPricing } from '../../lib/agreementPricing';
 import { PriceNegotiationPanel } from '../jobs/PriceNegotiationPanel';
 import { createCheckoutSession, createOvertimeCheckoutSession, createScheduleChangeCheckoutSession, createTipCheckoutSession } from '../../lib/stripeApi';
@@ -178,6 +179,7 @@ export function ClientJobActionsPanel({
   allRequests = [],
 }: ClientJobActionsPanelProps) {
   const billingSettings = crewSettings ?? teamLeadSettings;
+  const jobFeeConfig = feeConfigFromJobSnapshot(req);
   const hiredGuard = guards.find((g) => g.id === req.assignedGuardId);
   const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
   const awaitingClientGuard = isIndependentGuardPendingForClient(req);
@@ -416,7 +418,7 @@ export function ClientJobActionsPanel({
         {req.status === 'open' && (
           <div className="border-t border-brand-border pt-3 space-y-3 w-full">
             {isOpenContractPricing(req.pricingMode) &&
-              feeConfig &&
+              jobFeeConfig &&
               (pendingGuard ? [pendingGuard.id] : req.applicants).map((guardId) => {
                 const guard = guards.find((g) => g.id === guardId);
                 if (!guard) return null;
@@ -427,7 +429,7 @@ export function ClientJobActionsPanel({
                     guardId={guardId}
                     guardName={guard.name}
                     viewerRole="client"
-                    feeConfig={feeConfig}
+                    feeConfig={jobFeeConfig}
                     onSubmitOffer={
                       onSubmitPriceOffer
                         ? (input) => void onSubmitPriceOffer(req.id, guardId, input)

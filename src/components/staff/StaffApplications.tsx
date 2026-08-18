@@ -18,6 +18,7 @@ import {
 } from '../../lib/staffListFilters';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { AppBlockedAccessScreen } from '../ui/app/AppBlockedAccess';
+import { clientDisplayName } from '../../lib/clientType';
 import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { WfBadge, WfSearchBar } from '../ui/wireframe';
@@ -514,7 +515,7 @@ export function StaffApplications({
       return (
         <div className="app-full-page-detail animate-fade-in min-w-0 max-w-full">
           <AppSubScreenHeader
-            title={client.companyName || client.name}
+            title={clientDisplayName(client)}
             onBack={options.onBack}
             backLabel="Applications"
             hideTitle
@@ -527,7 +528,7 @@ export function StaffApplications({
     return (
       <div className="animate-fade-in">
         <div className="app-dashboard-zone-head !px-0 !mb-3">
-          <h2 className="app-dashboard-zone-title break-words">{client.companyName || client.name}</h2>
+          <h2 className="app-dashboard-zone-title break-words">{clientDisplayName(client)}</h2>
         </div>
         {detailBody}
       </div>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Briefcase, Clock, Search } from 'lucide-react';
 import { Client, PlatformRole, SecurityGuard, SecurityRequest } from '../../types';
-import type { PlatformFeeConfig } from '../../lib/payments';
+import type { ClientPlatformFeeSchedules, PlatformFeeConfig } from '../../lib/payments';
 import { formatShiftRange } from '../../lib/dates';
 import { useDevice } from '../../lib/platform';
 import { StatusChip } from '../baseui/StatusChip';
@@ -53,6 +53,7 @@ interface StaffJobsPanelProps {
   initialSelectedId?: string | null;
   staffRole?: PlatformRole;
   feeConfig: PlatformFeeConfig;
+  feeSchedules?: ClientPlatformFeeSchedules;
 }
 
 function hasPendingScheduleChange(req: SecurityRequest): boolean {
@@ -108,6 +109,7 @@ export function StaffJobsPanel({
   initialSelectedId = null,
   staffRole,
   feeConfig,
+  feeSchedules,
 }: StaffJobsPanelProps) {
   const { formFactor } = useDevice();
   const [search, setSearch] = useState('');
@@ -171,6 +173,7 @@ export function StaffJobsPanel({
         guards={guards}
         requests={requests}
         feeConfig={feeConfig}
+        feeSchedules={feeSchedules}
         onCreate={onCreateJob}
         onCreated={(jobId) => setSelectedId(jobId)}
       />

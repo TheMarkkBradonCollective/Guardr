@@ -4,6 +4,10 @@ import { isThemeMode } from './platform/theme';
 import { normalizeManagedCities } from './platformCities';
 import { parseGovIdRevisionHistory } from './govIdRevisionHistory';
 import type { GuardUserStatus } from './accountStatus';
+import {
+  bounceUnverifiedGovernmentIdStatus,
+  type GuardIdVerificationStatus,
+} from './guardIdentityVerification';
 import { normalizeStaffRole, normalizeStaffSideRole } from './permissions';
 
 export type StaffRow = {
@@ -53,6 +57,21 @@ export type StaffRow = {
   id_license_class?: string | null;
   id_revision_history?: unknown;
 };
+
+function bounceStaffIdVerificationStatus(row: StaffRow): GuardIdVerificationStatus {
+  const stored =
+    row.id_verification_status === 'pending' ||
+    row.id_verification_status === 'verified' ||
+    row.id_verification_status === 'rejected'
+      ? row.id_verification_status
+      : 'not_submitted';
+  return bounceUnverifiedGovernmentIdStatus({
+    idVerificationStatus: stored,
+    idFrontUrl: row.id_front_url ?? undefined,
+    idBackUrl: row.id_back_url ?? undefined,
+    idSelfieUrl: row.id_selfie_url ?? undefined,
+  });
+}
 
 function normalizeStaffUserStatus(raw: unknown): GuardUserStatus {
   if (typeof raw !== 'string') return 'pending';
@@ -116,12 +135,7 @@ export function mapStaffRowToSecurityGuard(row: StaffRow): SecurityGuard {
       : [],
     userStatus,
     stripeConnectAccountId: row.stripe_connect_account_id ?? undefined,
-    idVerificationStatus:
-      row.id_verification_status === 'pending' ||
-      row.id_verification_status === 'verified' ||
-      row.id_verification_status === 'rejected'
-        ? row.id_verification_status
-        : 'not_submitted',
+    idVerificationStatus: bounceStaffIdVerificationStatus(row),
     idState: row.id_state ?? undefined,
     idNumber: row.id_number ?? undefined,
     idExpiryDate: row.id_expiry_date ?? undefined,

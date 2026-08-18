@@ -29,6 +29,41 @@ test.describe('Guardr public pages', () => {
     await expect(page.getByRole('button', { name: /Log in as guard/i })).toBeVisible();
   });
 
+  test('sign-up uses three selection pages', async ({ page }) => {
+    await page.goto('/?auth=sign-up&pick=path');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: /I need security/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /I want to work/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /I need security/i }).click();
+    await expect(page.getByRole('heading', { name: /Who is hiring/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Personal/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Business/i })).toBeVisible();
+    await expect(page.getByText(/contracts and pays/i)).toBeVisible();
+
+    await page.goto('/?auth=sign-up&pick=work');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: /licensed guard/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Apply to work at Guardr/i })).toBeVisible();
+  });
+
+  test('personal client sign-up hides company fields', async ({ page }) => {
+    await page.goto('/?auth=sign-up&ar=client&ct=personal');
+    await waitForAppReady(page);
+    await expect(page.getByRole('heading', { name: /personal account/i })).toBeVisible();
+    await expect(page.getByText('Business name')).toHaveCount(0);
+    await expect(page.getByText('Business license / EIN')).toHaveCount(0);
+    await expect(page.getByText(/billed to you as an individual/i)).toBeVisible();
+  });
+
+  test('business client sign-up shows company fields', async ({ page }) => {
+    await page.goto('/?auth=sign-up&ar=client&ct=business');
+    await waitForAppReady(page);
+    await expect(page.getByRole('heading', { name: /business account/i })).toBeVisible();
+    await expect(page.getByText('Business name', { exact: true })).toBeVisible();
+    await expect(page.getByText(/billed to the business or organization/i)).toBeVisible();
+  });
+
   test('legal terms page is reachable', async ({ page }) => {
     await page.goto('/legal/terms');
     await waitForAppReady(page);

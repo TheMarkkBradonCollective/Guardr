@@ -1,6 +1,6 @@
 import type { SecurityRequest } from '../types';
 import { computeDurationHours } from './dates';
-import { computeJobBilling } from './payments';
+import { computeJobBilling, rebillJobFromSnapshot } from './payments';
 import type { PlatformFeeConfig } from '../../lib/platformFees';
 
 export type RecurrenceRule = 'daily' | 'weekly' | 'biweekly' | 'monthly';
@@ -20,6 +20,8 @@ export interface RecurringShiftTemplate {
   endTime: string;
   hourlyRate: number;
   guardsNeeded: number;
+  /** Frozen at contract time — later platform fee table changes must not rewrite this. */
+  platformFeePerHour?: number;
   uniformRequirements?: string;
   equipmentRequirements?: string;
   siteInstructions?: string;
@@ -74,7 +76,16 @@ export function generateJobFromTemplate(
   if (end <= start) end.setDate(end.getDate() + 1);
 
   const durationHours = computeDurationHours(start.toISOString(), end.toISOString());
-  const billing = computeJobBilling(template.hourlyRate, durationHours, template.guardsNeeded, feeConfig);
+  const billing =
+    template.platformFeePerHour != null
+      ? rebillJobFromSnapshot(
+          {
+            hourlyRate: template.hourlyRate,
+            platformFeePerHour: template.platformFeePerHour,
+          },
+          { durationHours, guardsNeeded: template.guardsNeeded }
+        )
+      : computeJobBilling(template.hourlyRate, durationHours, template.guardsNeeded, feeConfig);
 
   return {
     id: `req-recur-${template.id}-${start.getTime()}`,

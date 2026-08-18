@@ -1,6 +1,11 @@
 import {
-  DEFAULT_PLATFORM_FEE_CONFIG,
+  DEFAULT_CLIENT_FEE_SCHEDULES,
+  feeConfigJsonWithSchedules,
+  normalizeClientPlatformFeeSchedules,
   normalizePlatformFeeConfig,
+  parseFeeSchedulesFromFeeConfigJson,
+  resolveClientJobFeeConfig,
+  type ClientPlatformFeeSchedules,
   type PlatformFeeConfig,
 } from '../../lib/platformFees';
 import type { StaffRolePermissionOverrides } from './permissions';
@@ -9,14 +14,29 @@ import {
   normalizeStaffCompensationConfig,
   type StaffCompensationConfig,
 } from './staffCompensation';
+import {
+  parseClientCredentialRuleOverrides,
+  type ClientCredentialRuleOverride,
+} from './clientCredentialCatalog';
 
 export type {
   AgreementPlatformFeeConfig,
+  ClientPlatformFeeSchedule,
+  ClientPlatformFeeSchedules,
   PlatformFeeConfig,
+  PlatformFeeGuardType,
   PlatformFeeModel,
   PlatformFeeTier,
 } from '../../lib/platformFees';
-export { DEFAULT_PLATFORM_FEE_CONFIG, TIERED_PLATFORM_FEE_PRESET } from '../../lib/platformFees';
+export {
+  DEFAULT_CLIENT_FEE_SCHEDULES,
+  DEFAULT_PLATFORM_FEE_CONFIG,
+  PLATFORM_FEE_GUARD_TYPES,
+  PLATFORM_FEE_GUARD_TYPE_LABELS,
+  TIERED_PLATFORM_FEE_PRESET,
+  feeGuardTypeFromJobType,
+  resolveClientJobFeeConfig,
+} from '../../lib/platformFees';
 
 export type JobReviewMode = 'staff-all' | 'trusted-auto' | 'none';
 
@@ -39,6 +59,8 @@ export interface PlatformSettings {
   paymentStripeEnabled: boolean;
   paymentSquareEnabled: boolean;
   feeConfig: PlatformFeeConfig;
+  /** Personal vs business fee tables, each with per-guard-type rates. */
+  clientFeeSchedules: ClientPlatformFeeSchedules;
   /** Job posting review policy */
   jobReviewMode?: JobReviewMode;
   /** When true, trusted clients auto-publish jobs with valid coordinates */
@@ -72,13 +94,23 @@ export interface PlatformSettings {
   teamLeadBonusPlatformSharePercent?: number;
   /** Staff revenue-share compensation — % of collected platform fees per role. */
   staffCompensation?: StaffCompensationConfig;
+  /** Admin overrides for the client credential library (applicable to / required for). */
+  clientCredentialRules?: ClientCredentialRuleOverride[];
   updatedAt?: string;
 }
 
 export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   paymentStripeEnabled: true,
   paymentSquareEnabled: false,
-  feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
+  feeConfig: {
+    model: DEFAULT_CLIENT_FEE_SCHEDULES.business.model,
+    flatFeePerHour: DEFAULT_CLIENT_FEE_SCHEDULES.business.flatFeePerHour,
+    percentRate: DEFAULT_CLIENT_FEE_SCHEDULES.business.percentRate,
+  },
+  clientFeeSchedules: {
+    personal: { ...DEFAULT_CLIENT_FEE_SCHEDULES.personal, byGuardType: { ...DEFAULT_CLIENT_FEE_SCHEDULES.personal.byGuardType } },
+    business: { ...DEFAULT_CLIENT_FEE_SCHEDULES.business, byGuardType: { ...DEFAULT_CLIENT_FEE_SCHEDULES.business.byGuardType } },
+  },
   autoStripePayoutEnabled: true,
   autoStripePayoutDelayHours: 48,
   verifiedGuardSelfServe: true,
@@ -93,6 +125,7 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   teamLeadBonusClientSharePercent: 100,
   teamLeadBonusPlatformSharePercent: 0,
   staffCompensation: { ...DEFAULT_STAFF_COMPENSATION_CONFIG },
+  clientCredentialRules: [],
 };
 
 const STORAGE_KEY = 'guardr_platform_settings';
@@ -190,6 +223,9 @@ export function normalizePlatformSettings(
     paymentStripeEnabled: stripe,
     paymentSquareEnabled: square,
     feeConfig: normalizePlatformFeeConfig(input.feeConfig),
+    clientFeeSchedules: input.clientFeeSchedules
+      ? normalizeClientPlatformFeeSchedules(input.clientFeeSchedules, input.feeConfig)
+      : normalizeClientPlatformFeeSchedules(undefined, input.feeConfig),
     autoStripePayoutEnabled: input.autoStripePayoutEnabled ?? true,
     autoStripePayoutDelayHours: input.autoStripePayoutDelayHours ?? 48,
     verifiedGuardSelfServe: input.verifiedGuardSelfServe ?? true,
@@ -207,6 +243,7 @@ export function normalizePlatformSettings(
     staffCompensation: normalizeStaffCompensationConfig(
       input.staffCompensation ?? DEFAULT_STAFF_COMPENSATION_CONFIG,
     ),
+    clientCredentialRules: parseClientCredentialRuleOverrides(input.clientCredentialRules),
     updatedAt: input.updatedAt ?? new Date().toISOString(),
   };
 }
@@ -214,7 +251,16 @@ export function normalizePlatformSettings(
 export function loadPlatformSettingsFromStorage(): PlatformSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_PLATFORM_SETTINGS, feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG } };
+    if (!raw) {
+      return {
+        ...DEFAULT_PLATFORM_SETTINGS,
+        feeConfig: { ...DEFAULT_PLATFORM_SETTINGS.feeConfig },
+        clientFeeSchedules: normalizeClientPlatformFeeSchedules(
+          DEFAULT_CLIENT_FEE_SCHEDULES,
+          DEFAULT_PLATFORM_SETTINGS.feeConfig
+        ),
+      };
+    }
     const parsed = JSON.parse(raw) as Partial<PlatformSettings> & { paymentCashEnabled?: boolean };
     if (parsed.paymentCashEnabled != null && parsed.paymentSquareEnabled == null) {
       parsed.paymentSquareEnabled = false;
@@ -223,11 +269,10 @@ export function loadPlatformSettingsFromStorage(): PlatformSettings {
     return (
       normalizePlatformSettings(parsed) ?? {
         ...DEFAULT_PLATFORM_SETTINGS,
-        feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
       }
     );
   } catch {
-    return { ...DEFAULT_PLATFORM_SETTINGS, feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG } };
+    return { ...DEFAULT_PLATFORM_SETTINGS };
   }
 }
 
@@ -262,15 +307,19 @@ export function platformSettingsFromDbRow(row: {
   company_placard_public_enabled?: boolean | null;
   staff_role_permissions?: unknown;
   staff_compensation_config?: unknown;
+  client_credential_rules?: unknown;
   updated_at?: string | null;
 }): PlatformSettings {
+  const feeConfig = normalizePlatformFeeConfig(
+    row.fee_config as Partial<PlatformFeeConfig> | null | undefined
+  );
+  const nestedSchedules = parseFeeSchedulesFromFeeConfigJson(row.fee_config, feeConfig);
   return (
     normalizePlatformSettings({
       paymentStripeEnabled: row.payment_stripe_enabled ?? true,
       paymentSquareEnabled: row.payment_square_enabled ?? false,
-      feeConfig: normalizePlatformFeeConfig(
-        row.fee_config as Partial<PlatformFeeConfig> | null | undefined
-      ),
+      feeConfig,
+      clientFeeSchedules: nestedSchedules,
       ownerMessage: row.owner_message ?? undefined,
       ownerMessageUpdatedAt: row.owner_message_updated_at ?? undefined,
       directorMessage: row.director_message ?? undefined,
@@ -300,10 +349,10 @@ export function platformSettingsFromDbRow(row: {
         (row.staff_compensation_config as StaffCompensationConfig | null | undefined) ??
           DEFAULT_STAFF_COMPENSATION_CONFIG,
       ),
+      clientCredentialRules: parseClientCredentialRuleOverrides(row.client_credential_rules),
       updatedAt: row.updated_at ?? undefined,
     }) ?? {
       ...DEFAULT_PLATFORM_SETTINGS,
-      feeConfig: { ...DEFAULT_PLATFORM_FEE_CONFIG },
     }
   );
 }
@@ -314,7 +363,7 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     payment_cash_enabled: false,
     payment_stripe_enabled: settings.paymentStripeEnabled,
     payment_square_enabled: settings.paymentSquareEnabled,
-    fee_config: settings.feeConfig,
+    fee_config: feeConfigJsonWithSchedules(settings.feeConfig, settings.clientFeeSchedules),
     owner_message: settings.ownerMessage ?? null,
     owner_message_updated_at: settings.ownerMessageUpdatedAt ?? null,
     director_message: settings.directorMessage ?? null,
@@ -330,6 +379,7 @@ export function platformSettingsToDbRow(settings: PlatformSettings) {
     company_placard_public_enabled: settings.companyPlacardPublicEnabled ?? true,
     staff_role_permissions: settings.staffRolePermissions ?? null,
     staff_compensation_config: settings.staffCompensation ?? DEFAULT_STAFF_COMPENSATION_CONFIG,
+    client_credential_rules: settings.clientCredentialRules ?? [],
     team_lead_bonus_per_guard_per_hour:
       settings.crewTeamPayBumpPerHour ?? settings.teamLeadBonusPerGuardPerHour ?? 1,
     team_lead_bonus_client_share_percent: 100,
@@ -348,4 +398,17 @@ export function clientPaymentGates(settings: PlatformSettings): ClientPaymentGat
     allowStripe: platformAllowsStripe(settings),
     allowSquare: platformAllowsSquare(settings),
   };
+}
+
+export function feeConfigForClientJob(
+  settings: PlatformSettings,
+  clientType?: 'personal' | 'business' | string | null,
+  jobType?: string | null
+): PlatformFeeConfig {
+  return resolveClientJobFeeConfig(
+    settings.clientFeeSchedules,
+    clientType,
+    jobType,
+    settings.feeConfig
+  );
 }

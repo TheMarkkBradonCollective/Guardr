@@ -20,8 +20,8 @@ import { browsableSharedLocations } from '../../lib/jobLocations';
 import type { AssignmentMode, ClientLocation, DifferentialPayRates, JobLocation } from '../../types';
 import { computeDurationHours, formatDuration, getDefaultShiftEnd, getDefaultShiftStart, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computePlatformFee, computeJobBilling, type PlatformFeeConfig } from '../../lib/payments';
-import type { AgreementPlatformFeeConfig, PricingMode } from '../../types';
+import { computePlatformFee, computeJobBilling, resolveClientJobFeeConfig, type ClientPlatformFeeSchedules, type PlatformFeeConfig } from '../../lib/payments';
+import type { AgreementPlatformFeeConfig, ClientType, PricingMode } from '../../types';
 import { DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
@@ -45,6 +45,11 @@ import { showAppToast } from '../ui/AppToast';
 import { ResponsivePage } from '../layouts/desktop/DesktopPageShell';
 import { useDevice } from '../../lib/platform';
 import { GuardrButton } from '../baseui/GuardrButton';
+import { useClientCapabilities } from './ClientCapabilitiesContext';
+import { clampClientGuardsNeeded } from '../../lib/clientCapabilities';
+import { clientJobCredentialBlocker } from '../../lib/clientCredentials';
+import type { Client } from '../../types';
+import type { ClientCredentialRuleOverride } from '../../lib/clientCredentialCatalog';
 
 type FlowStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -53,6 +58,8 @@ export type RequestFlowPreset = 'default' | 'schedule' | 'recurring';
 interface RequestSecurityFlowProps {
   preset?: RequestFlowPreset;
   feeConfig: PlatformFeeConfig;
+  feeSchedules?: ClientPlatformFeeSchedules;
+  clientType?: ClientType;
   onBack: () => void;
   onSubmit: (req: Partial<SecurityRequest>) => void;
   guards?: SecurityGuard[];
@@ -61,6 +68,8 @@ interface RequestSecurityFlowProps {
   jobLocations?: JobLocation[];
   clientId?: string;
   defaultAssignmentMode?: AssignmentMode;
+  clientRecord?: Client;
+  clientCredentialRules?: ClientCredentialRuleOverride[];
 }
 
 const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requirements', 'Post orders', 'Site briefing', 'Review'];
@@ -68,6 +77,8 @@ const STEP_LABELS = ['Service', 'Location', 'Schedule', 'Guards', 'Rate', 'Requi
 export function RequestSecurityFlow({
   preset = 'default',
   feeConfig,
+  feeSchedules,
+  clientType,
   onBack,
   onSubmit,
   guards = [],
@@ -76,35 +87,43 @@ export function RequestSecurityFlow({
   jobLocations = [],
   clientId,
   defaultAssignmentMode = 'client-approve',
+  clientRecord,
+  clientCredentialRules,
 }: RequestSecurityFlowProps) {
   const { formFactor } = useDevice();
+  const caps = useClientCapabilities();
+  const allowMultiGuard = caps.has('multi-guard-requests');
+  const maxGuards = caps.maxGuardsPerRequest;
+  const effectivePreset: RequestFlowPreset = preset;
   const selectableClientCities = getSelectableCityNamesForClients();
   const defaultStart = useMemo(() => {
-    if (preset === 'schedule' || preset === 'recurring') {
+    if (effectivePreset === 'schedule' || effectivePreset === 'recurring') {
       const d = new Date();
       d.setDate(d.getDate() + 1);
       d.setHours(18, 0, 0, 0);
       return toDatetimeLocal(d);
     }
     return getDefaultShiftStart();
-  }, [preset]);
+  }, [effectivePreset]);
 
+  const recurringService: ClientServiceId =
+    effectivePreset === 'recurring' && allowMultiGuard ? 'construction' : 'standing-guard';
   const [step, setStep] = useState<FlowStep>(1);
   const [serviceSkipped, setServiceSkipped] = useState(false);
-  const [serviceId, setServiceId] = useState<ClientServiceId>(
-    preset === 'recurring' ? 'construction' : 'standing-guard'
-  );
+  const [serviceId, setServiceId] = useState<ClientServiceId>(recurringService);
   const [address, setAddress] = useState('');
   const [jobState, setJobState] = useState<string>(DEFAULT_CALIFORNIA_CITY);
   const [siteName, setSiteName] = useState('');
   const [startDate, setStartDate] = useState(defaultStart);
-  const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, preset === 'recurring' ? 12 : 8));
+  const [endDate, setEndDate] = useState(() => getDefaultShiftEnd(defaultStart, effectivePreset === 'recurring' ? 12 : 8));
   const [scheduleType, setScheduleType] = useState<'one-time' | 'recurring'>(
-    preset === 'recurring' ? 'recurring' : 'one-time'
+    effectivePreset === 'recurring' ? 'recurring' : 'one-time'
   );
   const [recurringEndDate, setRecurringEndDate] = useState('');
   const [recurringDays, setRecurringDays] = useState<number[]>([]);
-  const [guardsNeeded, setGuardsNeeded] = useState(preset === 'recurring' ? 2 : 1);
+  const [guardsNeeded, setGuardsNeeded] = useState(
+    effectivePreset === 'recurring' && allowMultiGuard ? 2 : 1
+  );
   const [customGuards, setCustomGuards] = useState('');
   const [hourlyRate, setHourlyRate] = useState(30);
   const [customRate, setCustomRate] = useState('');
@@ -117,9 +136,7 @@ export function RequestSecurityFlow({
   const [pricingMode, setPricingMode] = useState<PricingMode>('standard');
   const [agreementFeeConfig, setAgreementFeeConfig] = useState<AgreementPlatformFeeConfig | undefined>();
   const [openingMessage, setOpeningMessage] = useState('');
-  const [jobTitle, setJobTitle] = useState(() => serviceDefaultTitle(
-    preset === 'recurring' ? 'construction' : 'standing-guard'
-  ));
+  const [jobTitle, setJobTitle] = useState(() => serviceDefaultTitle(recurringService));
   const [jobTitleTouched, setJobTitleTouched] = useState(false);
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   const [minGuardQualification, setMinGuardQualification] = useState<MinGuardQualification>('pending');
@@ -153,16 +170,23 @@ export function RequestSecurityFlow({
     });
   }, [guards, favoriteGuardIds, startDate, endDate]);
 
-  const effectiveGuards = customGuards
-    ? Math.min(50, Math.max(1, parseInt(customGuards, 10) || 1))
-    : guardsNeeded;
+  const effectiveGuards = clampClientGuardsNeeded(
+    customGuards ? parseInt(customGuards, 10) || 1 : guardsNeeded,
+    caps.clientType
+  );
   const effectiveRate = customRate ? Math.max(20, parseInt(customRate, 10) || 30) : hourlyRate;
   const durationHours = computeDurationHours(startDate, endDate);
+  const resolvedFeeConfig = resolveClientJobFeeConfig(
+    feeSchedules,
+    clientType ?? caps.clientType,
+    serviceToJobType(serviceId),
+    feeConfig
+  );
   const billing = computeJobBilling(
     effectiveRate,
     durationHours,
     selectedFavoriteGuardId ? 1 : effectiveGuards,
-    feeConfig,
+    resolvedFeeConfig,
     pricingMode === 'open_contract' ? agreementFeeConfig : undefined
   );
   const platformFeePerHour = billing.platformFeePerHour;
@@ -246,6 +270,14 @@ export function RequestSecurityFlow({
     if (scheduleError) {
       showAppToast(scheduleError, { tone: 'error' });
       return;
+    }
+    const jobType = serviceToJobType(serviceId);
+    if (clientRecord) {
+      const credentialBlocker = clientJobCredentialBlocker(clientRecord, jobType, clientCredentialRules);
+      if (credentialBlocker) {
+        showAppToast(credentialBlocker, { tone: 'error' });
+        return;
+      }
     }
     const { latitude: submitLatitude, longitude: submitLongitude } = resolveCoordsForSubmit();
     onSubmit({
@@ -647,14 +679,16 @@ export function RequestSecurityFlow({
             <div>
               <h2 className="text-3xl font-black tracking-[-0.04em] leading-tight">How many guards?</h2>
               <p className="text-sm text-brand-text-muted mt-2 font-medium">
-                Trusted guards with a standing crew of this size or larger get priority notification when the job goes live.
+                {allowMultiGuard
+                  ? 'Trusted guards with a standing crew of this size or larger get priority notification when the job goes live.'
+                  : 'Choose how many guards you need for this request. You can request again whenever you need coverage.'}
               </p>
             </div>
             {/* Disable count picker when a favourite is selected (direct = 1 guard) */}
             {!selectedFavoriteGuardId && (
               <>
                 <div className="segmented-control segmented-control-full">
-                  {GUARD_COUNT_PRESETS.map((n) => (
+                  {GUARD_COUNT_PRESETS.filter((n) => n <= maxGuards).map((n) => (
                     <button
                       key={n}
                       type="button"
@@ -667,18 +701,20 @@ export function RequestSecurityFlow({
                     </button>
                   ))}
                 </div>
+                {allowMultiGuard ? (
                 <div>
                   <label className="uber-label block mb-1.5">Custom</label>
                   <input
                     type="number"
                     min={1}
-                    max={50}
-                    placeholder="Enter count (max 50)..."
+                    max={maxGuards}
+                    placeholder={`Enter count (max ${maxGuards})...`}
                     value={customGuards}
                     onChange={(e) => setCustomGuards(e.target.value)}
                     className="uber-input rounded-xl"
                   />
                 </div>
+                ) : null}
               </>
             )}
 
@@ -748,7 +784,7 @@ export function RequestSecurityFlow({
         {step === 5 && (
           <div className="space-y-5">
             <OpenContractRateStep
-              feeConfig={feeConfig}
+              feeConfig={resolvedFeeConfig}
               durationHours={durationHours}
               guardsNeeded={selectedFavoriteGuardId ? 1 : effectiveGuards}
               pricingMode={pricingMode}

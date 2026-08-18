@@ -12,6 +12,7 @@ export function AuthFormHeader({
   hideBadge = false,
   center = false,
   variant = 'page',
+  clientKind,
 }: {
   role: 'guard' | 'client' | 'staff';
   isSignUp: boolean;
@@ -19,14 +20,21 @@ export function AuthFormHeader({
   hideBadge?: boolean;
   center?: boolean;
   variant?: 'page' | 'sheet' | 'desktop' | 'role-choice';
+  clientKind?: 'personal' | 'business';
 }) {
+  const isPersonalClient = role === 'client' && clientKind === 'personal';
+  const isBusinessClient = role === 'client' && clientKind === 'business';
   const sheetTitle = isSignUp ? 'Create account' : 'Sign in';
   const pageTitle = isSignUp
     ? role === 'guard'
       ? 'Create your guard account'
       : role === 'staff'
         ? 'Create your staff account'
-        : 'Create your client account'
+        : isPersonalClient
+          ? 'Create your personal account'
+          : isBusinessClient
+            ? 'Create your business account'
+            : 'Create your client account'
     : role === 'guard'
       ? 'Guard sign in'
       : role === 'staff'
@@ -36,7 +44,21 @@ export function AuthFormHeader({
   const title = variant === 'sheet' ? sheetTitle : pageTitle;
 
   const workspaceLabel =
-    role === 'guard' ? 'Guard workspace' : role === 'staff' ? 'Staff workspace' : 'Client workspace';
+    role === 'guard'
+      ? 'Guard workspace'
+      : role === 'staff'
+        ? 'Staff workspace'
+        : isPersonalClient
+          ? 'Personal client'
+          : isBusinessClient
+            ? 'Business client'
+            : 'Client workspace';
+
+  const clientSignupSubtitle = isPersonalClient
+    ? 'You hire and pay as an individual. Request coverage once or as often as you need — including recurring services.'
+    : isBusinessClient
+      ? 'Your organization hires and pays, with extra tools for sites, staffing, and team access.'
+      : 'Post jobs, browse guards, and manage coverage from your dashboard.';
 
   const subtitle =
     variant === 'sheet'
@@ -45,7 +67,7 @@ export function AuthFormHeader({
           ? 'Independent contractors manage credentials, jobs, and pay here.'
           : role === 'staff'
             ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
-            : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
+            : clientSignupSubtitle
         : role === 'guard'
           ? 'Welcome back — your jobs and earnings are ready.'
           : role === 'staff'
@@ -60,7 +82,7 @@ export function AuthFormHeader({
             ? 'Independent contractors manage credentials, jobs, and pay here.'
             : role === 'staff'
               ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
-              : 'Post jobs, browse guards, and manage site coverage from your dashboard.'
+              : clientSignupSubtitle
           : role === 'guard'
             ? 'Welcome back — your jobs and earnings are ready.'
             : role === 'staff'

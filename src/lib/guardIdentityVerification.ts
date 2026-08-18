@@ -100,6 +100,25 @@ export function guardIdVerificationPhotosComplete(
   return Boolean(guard.idFrontUrl?.trim() && guard.idBackUrl?.trim() && guard.idSelfieUrl?.trim());
 }
 
+/** Verified status only counts when front, back, and selfie are actually on file. */
+export function governmentIdEffectivelyVerified(
+  guard: Pick<SecurityGuard, 'idVerificationStatus' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
+): boolean {
+  return getGuardIdVerificationStatus(guard) === 'verified' && guardIdVerificationPhotosComplete(guard);
+}
+
+/**
+ * Bounce a stored "verified" flag that has no ID photos — used for staff seeds and
+ * legacy rows that were marked verified without an upload.
+ */
+export function bounceUnverifiedGovernmentIdStatus(
+  guard: Pick<SecurityGuard, 'idVerificationStatus' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'>
+): GuardIdVerificationStatus {
+  const status = getGuardIdVerificationStatus(guard);
+  if (status === 'verified' && !guardIdVerificationPhotosComplete(guard)) return 'not_submitted';
+  return status;
+}
+
 /** True when staff still needs to choose Government ID vs driver’s license (and class). */
 export function guardGovIdNeedsDocumentTypeSelection(
   guard: Pick<SecurityGuard, 'idDocumentType' | 'idLicenseClass'>
@@ -117,10 +136,11 @@ export function guardGovIdNeedsDocumentTypeSelection(
 export function guardGovIdBelongsInCredentialFeed(
   guard: Pick<
     SecurityGuard,
-    'idVerificationStatus' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl'
+    'idVerificationStatus' | 'idFrontUrl' | 'idBackUrl' | 'idSelfieUrl' | 'isStaff'
   >
 ): boolean {
-  const status = getGuardIdVerificationStatus(guard);
+  if (guard.isStaff) return true;
+  const status = bounceUnverifiedGovernmentIdStatus(guard);
   if (status !== 'not_submitted') return true;
   return guardIdVerificationPhotosComplete(guard);
 }

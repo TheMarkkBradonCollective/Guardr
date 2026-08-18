@@ -186,6 +186,11 @@ interface StaffDashboardProps {
   onRequestCoiUpdate?: (guardId: string, staffNote?: string) => void | Promise<void>;
   onRequestCertUpdate?: (guardId: string, certId: string, staffNote?: string) => void | Promise<void>;
   onRevokeGuardIdentityVerification?: (guardId: string) => void | Promise<void>;
+  onApproveClientCredential?: (clientId: string, credentialId: string) => void | Promise<void>;
+  onRejectClientCredential?: (clientId: string, credentialId: string, reason?: string) => void | Promise<void>;
+  onUpdateClientCredentialRules?: (
+    rules: import('../lib/clientCredentialCatalog').ClientCredentialRuleOverride[]
+  ) => void | Promise<void>;
   onUpdateGuardIdImages?: (
     guardId: string,
     payload: import('./profile/GuardIdentityVerificationPanel').GuardIdentityVerificationPayload
@@ -394,6 +399,9 @@ export function StaffDashboard({
   onRequestCoiUpdate,
   onRequestCertUpdate,
   onRevokeGuardIdentityVerification,
+  onApproveClientCredential,
+  onRejectClientCredential,
+  onUpdateClientCredentialRules,
   onUpdateGuardIdImages,
   onApproveCert,
   onRejectCert,
@@ -861,6 +869,9 @@ export function StaffDashboard({
         return (
           <StaffCredentials
             guards={guards}
+            clients={clients}
+            clientCredentialRules={platformSettings.clientCredentialRules}
+            onUpdateClientCredentialRules={onUpdateClientCredentialRules}
             canVerifyCredentials={canVerifyGuardCredentials}
             currentUserRole={currentUser.role}
             initialItemId={selectedCredentialItemId}
@@ -877,9 +888,12 @@ export function StaffDashboard({
             onRequestCoiUpdate={onRequestCoiUpdate}
             onOpenGuardProfile={(guardId) => navigateSection('guards', { guardId })}
             onOpenStaffProfile={(staffId) => navigateSection('team', { teamId: staffId })}
+            onOpenClientProfile={(clientId) => navigateSection('clients', { clientId })}
             onItemIdChange={setSelectedCredentialItemId}
             onUpdateGuardIdImages={canManageGuardAccounts ? onUpdateGuardIdImages : undefined}
             onAddCertification={canManageGuardAccounts ? onAddCertification : undefined}
+            onApproveClientCredential={canVerifyGuardCredentials ? onApproveClientCredential : undefined}
+            onRejectClientCredential={canVerifyGuardCredentials ? onRejectClientCredential : undefined}
           />
         );
       case 'jobs':
@@ -907,6 +921,7 @@ export function StaffDashboard({
             initialSelectedId={selectedJobId}
             staffRole={currentUser.role}
             feeConfig={platformSettings.feeConfig}
+            feeSchedules={platformSettings.clientFeeSchedules}
           />
           </div>
         );

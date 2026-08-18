@@ -22,6 +22,8 @@ import {
   Plus,
   LifeBuoy,
 } from 'lucide-react';
+import { useClientCapabilities } from '../client/ClientCapabilitiesContext';
+import type { ClientOverflowNavId } from '../../lib/clientCapabilities';
 
 export type ClientRequestsJobTab = 'open' | 'scheduled' | 'completed' | 'missed';
 
@@ -50,20 +52,20 @@ interface ClientAppLayoutProps {
   onChangeTheme?: (mode: ThemeMode) => void;
 }
 
-const OVERFLOW_NAV: { id: ClientView; label: string; icon: typeof Home }[] = [
-  { id: 'invoices', label: 'Payments', icon: Receipt },
-  { id: 'guards', label: 'Users', icon: Users },
-  { id: 'locations', label: 'Locations', icon: MapPin },
-  { id: 'reports', label: 'Reports', icon: FileText },
-  { id: 'settings', label: 'Settings', icon: Settings },
-];
+const OVERFLOW_NAV_ICONS: Record<ClientOverflowNavId, typeof Home> = {
+  invoices: Receipt,
+  guards: Users,
+  locations: MapPin,
+  reports: FileText,
+  settings: Settings,
+};
 
 const SIDEBAR_VIEWS = new Set<ClientView>(['locations', 'reports', 'invoices', 'settings', 'guards']);
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   map: 'Map',
   home: 'Home',
-  guards: 'Users',
+  guards: 'Guards',
   requests: "Today's jobs",
   'support-compose': 'Contact support',
   'support-report': 'File a report',
@@ -119,12 +121,25 @@ export function ClientAppLayout({
   themeMode,
   onChangeTheme,
 }: ClientAppLayoutProps) {
+  const caps = useClientCapabilities();
   const screenTitle =
     activeView === 'home'
       ? `Welcome, ${companyName}`
       : activeView === 'requests'
         ? requestsTabTitle(requestsJobTab)
-        : VIEW_TITLES[activeView] ?? 'Client dashboard';
+        : activeView === 'locations'
+          ? caps.isPersonal
+            ? 'Locations'
+            : 'Sites'
+          : activeView === 'invoices'
+            ? caps.isPersonal
+              ? 'Payments'
+              : 'Billing'
+            : activeView === 'request'
+              ? caps.isPersonal
+                ? 'Request security'
+                : 'Post job offer'
+              : VIEW_TITLES[activeView] ?? 'Client dashboard';
 
   const fullBleed = activeView === 'map';
   const messagesViews: ClientView[] = ['messages', 'support', 'support-compose', 'support-report'];
@@ -179,10 +194,13 @@ export function ClientAppLayout({
 
   const overflowNavItems = useMemo(
     () =>
-      OVERFLOW_NAV.map((item) =>
-        item.id === 'invoices' && invoicesBadge > 0 ? { ...item, badge: invoicesBadge } : item,
-      ),
-    [invoicesBadge],
+      caps.overflowNav.map((item) => ({
+        id: item.id,
+        label: item.label,
+        icon: OVERFLOW_NAV_ICONS[item.id],
+        badge: item.id === 'invoices' && invoicesBadge > 0 ? invoicesBadge : undefined,
+      })),
+    [caps.overflowNav, invoicesBadge],
   );
 
   const sidebarFooter = (
@@ -211,7 +229,7 @@ export function ClientAppLayout({
     <DirectContextSelect
       value={companyName}
       options={[{ id: companyName, label: companyName }]}
-      aria-label="Organization"
+      aria-label={caps.isPersonal ? 'Account' : 'Organization'}
     />
   );
 
@@ -256,7 +274,7 @@ export function ClientAppLayout({
       sidebarPrimaryAction={
         !accountPending
           ? {
-              label: '+ Post a job',
+              label: caps.postJobLabel,
               icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
               onClick: () => onNavigate?.('request'),
             }

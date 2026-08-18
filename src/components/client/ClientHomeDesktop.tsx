@@ -31,6 +31,7 @@ import {
   Users,
 } from 'lucide-react';
 import type { ClientHomeAction } from './ClientHomeScreen';
+import { useClientCapabilities } from './ClientCapabilitiesContext';
 
 const HOME_TABLE_LIMIT = 25;
 
@@ -107,6 +108,7 @@ export function ClientHomeDesktop({
 
   const upcoming = getUpcomingCoverage(requests);
   const liveJobs = useMemo(() => getClientLiveJobs(requests), [requests]);
+  const caps = useClientCapabilities();
   const pendingActions = useMemo(() => clientActionCount(requests), [requests]);
   const jobPipelineSegments = useMemo(() => buildJobPipelineSegments(requests), [requests]);
   const weeklySeries = useMemo(() => computeWeeklyJobSeries(requests), [requests]);
@@ -198,21 +200,21 @@ export function ClientHomeDesktop({
       <div className="uber-direct-home-hub" data-tour="client-home-cta">
         <DirectHubCard
           title="Jobs"
-          description="Create and manage jobs for your locations"
+          description={caps.isPersonal ? 'Upcoming and past requests — request again anytime' : 'Create and manage jobs for your locations'}
           icon={Briefcase}
           iconTone="yellow"
           onClick={() => run('requests')}
         />
         <DirectHubCard
-          title="Billing"
-          description="View statements, download docs and manage payments"
+          title={caps.isPersonal ? 'Payments' : 'Billing'}
+          description={caps.isPersonal ? 'View invoices and payment history' : 'Business billing, statements, and invoices'}
           icon={CreditCard}
           iconTone="green"
           onClick={() => run('invoices')}
         />
         <DirectHubCard
           title="Guards"
-          description="Browse licensed guards and rehire trusted coverage"
+          description={caps.isPersonal ? 'See assigned guards and request coverage again' : 'Browse licensed guards and rehire trusted coverage'}
           icon={Users}
           iconTone="orange"
           onClick={() => run('guards')}
@@ -226,7 +228,7 @@ export function ClientHomeDesktop({
               Your guards
             </LabelSmall>
             <button type="button" className="uber-direct-inline-link" onClick={() => run('guards')}>
-              Browse all
+              {caps.isPersonal ? 'View all' : 'Browse all'}
             </button>
           </div>
           <div className="uber-direct-home-recent-guards-grid">
@@ -255,7 +257,7 @@ export function ClientHomeDesktop({
                     disabled={accountPending}
                     className="!text-[11px] uber-bg-accent-soft uber-text-accent"
                   >
-                    Hire again
+                    {caps.isPersonal ? 'Request again' : 'Hire again'}
                   </AppButton>
                 ) : null}
               </div>
@@ -296,7 +298,11 @@ export function ClientHomeDesktop({
 
       <WorkbenchPanel>
         {tableJobs.length === 0 ? (
-          <AppEmptyState title="No jobs yet">Post a job to get matched with licensed guards.</AppEmptyState>
+          <AppEmptyState title="No jobs yet">
+            {caps.isPersonal
+              ? 'Request security whenever you need it — one-time or recurring.'
+              : 'Post a job to get matched with licensed guards.'}
+          </AppEmptyState>
         ) : (
           <>
             <table className="uber-workbench-table uber-direct-deliveries-table">
@@ -358,11 +364,11 @@ export function ClientHomeDesktop({
         )}
       </WorkbenchPanel>
 
-      {(liveJobs.length > 0 || pendingActions > 0 || jobPipelineSegments.length > 0) ? (
+      {caps.has('staffing-coverage') && (liveJobs.length > 0 || pendingActions > 0 || jobPipelineSegments.length > 0) ? (
         <div className="uber-direct-home-insights">
           <WorkbenchPanel>
             <LabelSmall marginBottom="scale400" $style={{ fontWeight: 700, textTransform: 'none', fontSize: '14px' }}>
-              Operations insight
+              Staffing & coverage
             </LabelSmall>
             <Block display="grid" gridTemplateColumns="repeat(auto-fit, minmax(160px, 1fr))" gridGap="scale500" marginBottom="scale600">
               <Block>
@@ -390,12 +396,14 @@ export function ClientHomeDesktop({
                 <GuardrCard title="Weekly trend">
                   <OverviewLineChart series={weeklySeries} />
                 </GuardrCard>
+                {caps.has('reporting') ? (
                 <GuardrCard title="Recent reports">
                   <ParagraphMedium margin={0} $style={{ fontWeight: 700 }}>{recentReports.length}</ParagraphMedium>
                   <button type="button" className="uber-direct-inline-link" onClick={() => run('reports')}>
                     View reports
                   </button>
                 </GuardrCard>
+                ) : null}
               </Block>
             ) : null}
           </WorkbenchPanel>

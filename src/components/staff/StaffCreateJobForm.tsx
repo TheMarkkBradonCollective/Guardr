@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Client, JobType, SecurityGuard, SecurityRequest } from '../../types';
+import { clientDisplayName } from '../../lib/clientType';
 import { getClientRehireableGuards, guardHasWorkedWithClient } from '../../lib/guardDirectory';
 import { getClientAccountStatus } from '../../lib/accountStatus';
 import {
@@ -16,7 +17,7 @@ import {
   getDefaultShiftStart,
 } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
-import { computeGuardPay, resolvePlatformFeePerHour, type PlatformFeeConfig } from '../../lib/payments';
+import { computeGuardPay, resolveClientJobFeeConfig, resolvePlatformFeePerHour, type ClientPlatformFeeSchedules, type PlatformFeeConfig } from '../../lib/payments';
 import { DEFAULT_CALIFORNIA_CITY, cityFromGeocode, formatCityLabel, resolveJobCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { EMPTY_LISTING_FIELDS, JobListingFields } from '../../lib/jobListing';
@@ -67,11 +68,12 @@ interface StaffCreateJobFormProps {
   guards: SecurityGuard[];
   requests: SecurityRequest[];
   feeConfig: PlatformFeeConfig;
+  feeSchedules?: ClientPlatformFeeSchedules;
   onCreate: (input: StaffCreateJobInput) => Promise<string | void>;
   onCreated?: (jobId: string) => void;
 }
 
-export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCreate, onCreated }: StaffCreateJobFormProps) {
+export function StaffCreateJobForm({ clients, guards, requests, feeConfig, feeSchedules, onCreate, onCreated }: StaffCreateJobFormProps) {
   const selectableClientCities = getSelectableCityNamesForClients();
   const { open, setOpen, hideTrigger } = useStaffCreateFormOpen('job');
   const [clientId, setClientId] = useState('');
@@ -127,7 +129,14 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
       ? customTitle.trim()
       : serviceDefaultTitle(serviceId);
   const durationHours = computeDurationHours(startDate, endDate);
-  const platformFeePerHour = resolvePlatformFeePerHour(hourlyRate, feeConfig);
+  const selectedClient = approvedClients.find((c) => c.id === clientId);
+  const resolvedFeeConfig = resolveClientJobFeeConfig(
+    feeSchedules,
+    selectedClient?.clientType,
+    serviceToJobType(serviceId),
+    feeConfig
+  );
+  const platformFeePerHour = resolvePlatformFeePerHour(hourlyRate, resolvedFeeConfig);
   const guardPay = computeGuardPay(hourlyRate, platformFeePerHour);
   const estimatedPayout = Math.round(durationHours * hourlyRate * guardsNeeded * 100) / 100;
   const effectiveBreakMinutes = customBreakMinutes.trim()
@@ -211,7 +220,8 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         breakMinutes: effectiveBreakMinutes,
         breakPaid,
       });
-      const clientLabel = approvedClients.find((c) => c.id === clientId)?.companyName || 'Client';
+      const selectedClient = approvedClients.find((c) => c.id === clientId);
+      const clientLabel = selectedClient ? clientDisplayName(selectedClient) : 'Client';
       setMsg(
         assignGuardId
           ? `Job created for ${clientLabel} with prior guard rehired.`
@@ -267,7 +277,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
             <option value="">Select client…</option>
             {approvedClients.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.companyName || c.name} ({c.email})
+                {clientDisplayName(c)} ({c.email})
               </option>
             ))}
           </select>

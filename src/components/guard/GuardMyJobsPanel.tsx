@@ -7,6 +7,7 @@ import type { ScheduleJob } from '../../lib/guardSchedule';
 import type { GuardJobsBrowseTab } from '../../lib/guardJobsBrowse';
 import { JOB_TALLY_LABELS } from '../../lib/jobTallies';
 import { formatTimeUntilShift } from '../../lib/shiftCountdown';
+import { feeConfigFromJobSnapshot } from '../../lib/payments';
 import {
   JOBS_PIE_COLORS,
 } from '../jobs/JobsScreenHero';
@@ -251,7 +252,11 @@ export function GuardMyJobsPanel({
       : undefined,
     onAcceptInvite: onAcceptInvite ? () => void onAcceptInvite(job.id) : undefined,
     onDeclineInvite: onDeclineInvite ? () => void onDeclineInvite(job.id) : undefined,
-    feeConfig,
+    feeConfig: feeConfigFromJobSnapshot({
+      hourlyRate: job.hourlyRate ?? 0,
+      guardPay: job.guardPay,
+      platformFeePerHour: job.hourlyRate != null ? Math.max(0, job.hourlyRate - job.guardPay) : undefined,
+    }),
     onSubmitPriceOffer: onSubmitPriceOffer
       ? (input: {
           hourlyRate: number;

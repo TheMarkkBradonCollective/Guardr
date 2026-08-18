@@ -33,6 +33,7 @@ import { ResponsivePage } from './layouts/desktop/DesktopPageShell';
 import { WorkbenchEmpty, WorkbenchFlatSplit } from './baseui/layout/WorkbenchLayout';
 import { isTutorialDemoId } from '../lib/tutorialDemoData';
 import type { MessagesChrome } from '../lib/messagesChrome';
+import { useClientCapabilities } from './client/ClientCapabilitiesContext';
 
 export type ClientView =
   | 'map'
@@ -244,6 +245,7 @@ export function ClientDashboard({
   const [internalProfileGuardId, setInternalProfileGuardId] = useState<string | null>(null);
   const [internalDirectGuardId, setInternalDirectGuardId] = useState<string | null>(null);
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
+  const caps = useClientCapabilities();
 
   const effectiveProfileGuardId =
     profileGuardId !== undefined ? profileGuardId : internalProfileGuardId;
@@ -274,6 +276,12 @@ export function ClientDashboard({
   useEffect(() => {
     if (activeView) setView(activeView);
   }, [activeView]);
+
+  useEffect(() => {
+    if (!caps.allowsView(view)) {
+      navigate('home');
+    }
+  }, [view, caps]);
 
   useEffect(() => {
     if (view !== 'direct-request' || requestTargetGuard) return;
@@ -322,6 +330,10 @@ export function ClientDashboard({
         navigate('request');
         break;
       case 'reports':
+        if (!caps.has('reporting')) {
+          navigate('home');
+          break;
+        }
         setSelectedIncidentId(null);
         navigate('reports');
         break;
@@ -441,12 +453,16 @@ export function ClientDashboard({
       <RequestSecurityFlow
         preset={flowPreset}
         feeConfig={feeConfig}
+        feeSchedules={crewSettings?.clientFeeSchedules}
+        clientType={clientRecord?.clientType}
         guards={guards}
         favoriteGuardIds={favoriteGuardIds}
         clientLocations={clientLocations}
         jobLocations={jobLocations}
         clientId={clientId}
         defaultAssignmentMode={clientRecord?.defaultAssignmentMode}
+        clientRecord={clientRecord}
+        clientCredentialRules={crewSettings?.clientCredentialRules}
         onBack={() => navigate('home')}
         onSubmit={(req) => {
           onPostRequest(req);
@@ -476,6 +492,10 @@ export function ClientDashboard({
       <DirectGuardRequestFlow
         guard={requestTargetGuard}
         feeConfig={feeConfig}
+        feeSchedules={crewSettings?.clientFeeSchedules}
+        clientType={clientRecord?.clientType}
+        clientRecord={clientRecord}
+        clientCredentialRules={crewSettings?.clientCredentialRules}
         onBack={() => {
           setRequestTargetGuard(null);
           navigate('guards');
@@ -661,7 +681,7 @@ export function ClientDashboard({
     );
   }
 
-  if (view === 'reports') {
+  if (view === 'reports' && caps.has('reporting')) {
     const clientRecord: Client = {
       id: clientId,
       name: companyName,
