@@ -35,6 +35,7 @@ import {
   AssignmentMode,
   DifferentialPayRates,
   UserNotification,
+  ClientAccountKind,
 } from './types';
 import { canManageCompanyOperations, canRecordCashPayments, canAccessFinancialControls, canManagePlatformSettings, canManageStaffPermissions, canManageStaffPlatformContent, hasExecutivePaymentControls, isStaffRole, isExecutiveOpsRole, canAssignStaffRole, canAssignStaffSideRole, canModerateStaffMember, canDeleteResolvedSupportChat, canReviewJobRequests, canManageGuards, canApproveGuards, canVerifyCredentials, canManageClients, canHandleDisputes, canSuspendUsers, canSetTrustedStatus, canProposeStaffAccounts, canApproveStaffAccounts, setStaffRolePermissionOverrides, resolvePlatformRole } from './lib/permissions';
 import { canClientConfirmSelfAudit } from './lib/selfAuditPhotos';
@@ -88,6 +89,11 @@ import { AppHomeScreen } from './components/AppHomeScreen';
 import { AppGuidePage } from './components/docs/AppGuidePage';
 import { AuthPage } from './components/AuthPage';
 import { AuthRoleChoicePage } from './components/auth/AuthRoleChoicePage';
+import {
+  clientDisplayName,
+  clientWorkspaceLabel,
+  normalizeClientAccountKind,
+} from './lib/clientAccountKind';
 import { LoadingScreen } from './components/LoadingScreen';
 import { ClientAppLayout } from './components/layouts/ClientAppLayout';
 import { AccountMenu, type AccountMenuNotificationProps } from './components/layouts/AccountMenu';
@@ -470,6 +476,8 @@ import {
   readAppRouteFromWindow,
   readAuthChoiceFromUrl,
   readAuthChoiceFromWindow,
+  readAuthSignupPickFromUrl,
+  readAuthSignupPickFromWindow,
   readLegalPageFromUrl,
   readLegalPageFromWindow,
   readGuideFromUrl,
@@ -487,6 +495,7 @@ import {
   type StaffGuardDetailTab,
   type AuthViewMode,
   type AuthViewRole,
+  type AuthSignupPick,
 } from './lib/appNavigation';
 import type { LegalPageId } from './lib/legalContent';
 import { CURRENT_LEGAL_VERSIONS, requiredLegalDocumentsForRole } from './lib/legalContent';
@@ -656,6 +665,12 @@ export default function App() {
   );
   const [authChoiceMode, setAuthChoiceMode] = useState<'sign-in' | 'sign-up' | null>(
     () => readAuthChoiceFromWindow()
+  );
+  const [authSignupPick, setAuthSignupPick] = useState<AuthSignupPick | null>(
+    () => readAuthSignupPickFromWindow()
+  );
+  const [initialClientKind, setInitialClientKind] = useState<ClientAccountKind>(
+    () => readAppRouteFromWindow()?.authClientKind ?? 'business'
   );
   const [legalPage, setLegalPageState] = useState<LegalPageId | null>(() => readLegalPageFromWindow());
   const [downloadPageOpen, setDownloadPageOpen] = useState(false);
@@ -1626,34 +1641,60 @@ export default function App() {
 
   const setAuthViewRole = (role: AuthViewRole) => {
     setInitialAuthRole(role);
-    syncAppRoute({ role: 'client', authView: initialAuthMode, authRole: role }, true);
+    syncAppRoute(
+      {
+        role: 'client',
+        authView: initialAuthMode,
+        authRole: role,
+        authClientKind: role === 'client' ? initialClientKind : undefined,
+      },
+      true
+    );
   };
 
   const setAuthViewMode = (mode: AuthViewMode) => {
     setInitialAuthMode(mode);
-    syncAppRoute({ role: 'client', authView: mode, authRole: initialAuthRole }, true);
+    syncAppRoute(
+      {
+        role: 'client',
+        authView: mode,
+        authRole: initialAuthRole,
+        authClientKind: initialAuthRole === 'client' ? initialClientKind : undefined,
+      },
+      true
+    );
   };
 
-  const openAuthView = (role: AuthViewRole, mode: AuthViewMode) => {
+  const openAuthView = (role: AuthViewRole, mode: AuthViewMode, clientKind?: ClientAccountKind) => {
+    const kind = role === 'client' && mode === 'sign-up' ? normalizeClientAccountKind(clientKind) : undefined;
     setAuthChoiceMode(null);
+    setAuthSignupPick(null);
     setInitialAuthRole(role);
     setInitialAuthMode(mode);
+    if (kind) setInitialClientKind(kind);
     setIsAuthView(true);
-    syncAppRoute({ role: 'client', authView: mode, authRole: role });
+    syncAppRoute({
+      role: 'client',
+      authView: mode,
+      authRole: role,
+      authClientKind: kind,
+    });
   };
 
-  const openAuthChoice = (mode: 'sign-in' | 'sign-up') => {
+  const openAuthChoice = (mode: 'sign-in' | 'sign-up', signupPick: AuthSignupPick = 'path') => {
     setAuthChoiceMode(mode);
+    setAuthSignupPick(mode === 'sign-up' ? signupPick : null);
     setIsAuthView(false);
     setInitialAuthMode(mode);
     if (typeof window !== 'undefined') {
-      syncAuthChoiceRoute(mode);
+      syncAuthChoiceRoute(mode, false, mode === 'sign-up' ? signupPick : undefined);
     }
   };
 
   const closeAuthChoice = () => {
     navigateHistoryBack(() => {
       setAuthChoiceMode(null);
+      setAuthSignupPick(null);
       if (typeof window !== 'undefined') {
         window.history.replaceState({ home: true }, '', '/');
       }
@@ -1665,12 +1706,17 @@ export default function App() {
       openAuthChoice(mode);
       return;
     }
+    if (role === 'client' && mode === 'sign-up') {
+      openAuthChoice('sign-up', 'client');
+      return;
+    }
     openAuthView(role ?? 'client', mode ?? 'sign-in');
   };
 
   const closeAuthView = () => {
     setIsAuthView(false);
     setAuthChoiceMode(null);
+    setAuthSignupPick(null);
     document.documentElement.classList.remove('auth-page-open');
     if (typeof window !== 'undefined') {
       window.history.replaceState({ home: true }, '', '/');
@@ -1679,7 +1725,19 @@ export default function App() {
 
   const backToAuthRoleChoice = () => {
     navigateHistoryBack(() => {
-      syncAuthChoiceRoute(initialAuthMode, true);
+      const fallbackPick: AuthSignupPick =
+        initialAuthMode === 'sign-up' && initialAuthRole === 'client'
+          ? 'client'
+          : initialAuthMode === 'sign-up'
+            ? 'work'
+            : 'path';
+      if (initialAuthMode === 'sign-up') {
+        syncAuthChoiceRoute('sign-up', true, fallbackPick);
+        setAuthSignupPick(fallbackPick);
+      } else {
+        syncAuthChoiceRoute(initialAuthMode, true);
+        setAuthSignupPick(null);
+      }
       setAuthChoiceMode(initialAuthMode);
       setIsAuthView(false);
     });
@@ -1809,19 +1867,28 @@ export default function App() {
             ? (window.history.state as { authChoice?: 'sign-in' | 'sign-up' } | null)?.authChoice
             : undefined);
     const authChoice = authChoiceFromState ?? readAuthChoiceFromUrl(strippedUrl);
+    const signupPickFromState =
+      options.source === 'popstate'
+        ? (options.event?.state?.authSignupPick as AuthSignupPick | undefined)
+        : (typeof window !== 'undefined'
+            ? (window.history.state as { authSignupPick?: AuthSignupPick } | null)?.authSignupPick
+            : undefined);
+    const signupPick = signupPickFromState ?? readAuthSignupPickFromUrl(strippedUrl);
 
     if (authChoice && !user) {
       setAuthChoiceMode(authChoice);
+      setAuthSignupPick(authChoice === 'sign-up' ? signupPick ?? 'path' : null);
       setIsAuthView(false);
       setInitialAuthMode(authChoice);
       if (options.source !== 'popstate') {
-        syncAuthChoiceRoute(authChoice, true);
+        syncAuthChoiceRoute(authChoice, true, authChoice === 'sign-up' ? signupPick ?? 'path' : undefined);
       }
       return;
     }
 
     if (!user) {
       setAuthChoiceMode(null);
+      setAuthSignupPick(null);
     }
 
     const routeFromUrl = parseAppRoute(strippedUrl);
@@ -1844,6 +1911,7 @@ export default function App() {
         setIsAuthView(true);
         setInitialAuthRole(route.authRole ?? 'client');
         setInitialAuthMode(route.authView);
+        if (route.authClientKind) setInitialClientKind(route.authClientKind);
         if (options.source !== 'popstate') {
           syncAppRoute(route, true);
         }
@@ -2514,6 +2582,7 @@ export default function App() {
         return {
         id: c.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: c.email,
         companyName: c.company_name, phone: c.phone, avatar: c.avatar,
+        accountKind: normalizeClientAccountKind(c.account_kind),
         totalRequests: c.total_requests || 0,
         approved: c.account_status === 'active' || (c.approved ?? false),
         accountStatus: c.account_status || (c.approved === false ? 'suspended' : 'active'),
@@ -3705,6 +3774,7 @@ export default function App() {
     isAuthView,
     authChoiceMode,
     initialAuthMode,
+    authSignupPick,
   ]);
 
   const handleChangeAccountPassword = async (newPassword: string) => {
@@ -4303,6 +4373,7 @@ export default function App() {
       // Intake fields — written in a separate update so a missing migration
       // column never breaks the core sign-up flow
       const intakePayload: Record<string, unknown> = {
+        account_kind: client.accountKind ?? 'business',
         business_type: client.businessType ?? null,
         industries: client.industries ?? null,
         business_license: client.businessLicense ?? null,
@@ -4343,7 +4414,7 @@ export default function App() {
           { id: client.id, email: emailLower, role: 'client', name: client.name },
           {
             type: 'client_pending_approval',
-            body: `New client sign-up: ${client.companyName || client.name}`,
+            body: `New client sign-up: ${clientDisplayName(client)}`,
           }
         );
       }
@@ -5798,6 +5869,7 @@ export default function App() {
     email: string;
     companyName?: string;
     phone?: string;
+    accountKind?: ClientAccountKind;
   }): Promise<string> => {
     const emailLower = assertEmailAvailable(input.email);
     const { password, mustChangePassword } = provisionedPasswordFields();
@@ -5815,7 +5887,8 @@ export default function App() {
       middleName: normalized.middleName,
       lastName: normalized.lastName,
       email: input.email.trim(),
-      companyName: input.companyName?.trim() || normalized.name,
+      companyName: input.companyName?.trim() || (input.accountKind === 'personal' ? '' : normalized.name),
+      accountKind: input.accountKind ?? 'business',
       phone: input.phone?.trim() || '',
       avatar: '',
       totalRequests: 0,
@@ -5846,6 +5919,14 @@ export default function App() {
         setClients((prev) => prev.filter((c) => c.id !== newClient.id));
         console.error('Client insert error:', insertError);
         throw new Error('Could not save client to the database.');
+      }
+      try {
+        await supabase
+          .from('clients')
+          .update({ account_kind: newClient.accountKind ?? 'business' })
+          .eq('id', newClient.id);
+      } catch {
+        /* account_kind column may not exist yet */
       }
     }
     setStoredPassword(emailLower, { password, mustChangePassword, role: 'client' });
@@ -12671,10 +12752,13 @@ export default function App() {
         <>
           <AuthRoleChoicePage
             mode={authChoiceMode}
+            signupStep={authSignupPick ?? 'path'}
             themeMode={themeMode}
             onChangeTheme={changeThemeMode}
             onNavigateToAuth={navigateToAuth}
             onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
+            onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
+            onSelectClientKind={(kind) => openAuthView('client', 'sign-up', kind)}
             onOpenGuide={openPublicGuide}
             onBack={closeAuthChoice}
           />
@@ -12700,6 +12784,7 @@ export default function App() {
             onAuthRoleChange={setAuthViewRole}
             initialRole={initialAuthRole}
             initialMode={initialAuthMode}
+            initialClientKind={initialClientKind}
             themeMode={themeMode}
             onChangeTheme={changeThemeMode}
             presentation="page"
@@ -12714,10 +12799,13 @@ export default function App() {
           <>
             <AuthRoleChoicePage
               mode={authChoiceMode}
+              signupStep={authSignupPick ?? 'path'}
               themeMode={themeMode}
               onChangeTheme={changeThemeMode}
               onNavigateToAuth={navigateToAuth}
               onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
+              onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
+              onSelectClientKind={(kind) => openAuthView('client', 'sign-up', kind)}
               onOpenGuide={openPublicGuide}
               onBack={closeAuthChoice}
             />
@@ -12744,6 +12832,7 @@ export default function App() {
               onAuthRoleChange={setAuthViewRole}
               initialRole={initialAuthRole}
               initialMode={initialAuthMode}
+              initialClientKind={initialClientKind}
               themeMode={themeMode}
               onChangeTheme={changeThemeMode}
               presentation="page"
@@ -13106,7 +13195,11 @@ export default function App() {
         {marketplaceLegalGate}
         <ClientAppLayout
           currentUser={currentUser}
-          companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your company'}
+          companyName={
+            clientRecord
+              ? clientWorkspaceLabel(clientRecord)
+              : currentUser.clientName || currentUser.name || 'Your company'
+          }
           onSignOut={handleSignOut}
           activeView={clientView}
           requestsJobTab={clientRequestsJobTab}
@@ -13154,7 +13247,11 @@ export default function App() {
             />
           ) : (
             <ClientDashboard
-              companyName={clientRecord?.companyName || currentUser.clientName || currentUser.name || 'Your Company'}
+              companyName={
+                clientRecord
+                  ? clientWorkspaceLabel(clientRecord)
+                  : currentUser.clientName || currentUser.name || 'Your Company'
+              }
               clientId={currentUser.id}
               accountStatus={clientRecord?.accountStatus}
               approved={clientRecord?.approved}

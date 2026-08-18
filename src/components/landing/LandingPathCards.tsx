@@ -62,13 +62,13 @@ export function LandingPathCards({ onNavigateToAuth, layout }: LandingPathCardsP
         <Block display="flex" justifyContent="space-between" alignItems="flex-start" gridGap="scale400">
           <Block>
             <LabelSmall color="accent" marginBottom="scale200" overrides={{ Block: { style: { fontWeight: 700 } } }}>
-              For businesses &amp; sites
+              Personal or business
             </LabelSmall>
             <Block as="p" margin="0 0 6px" $style={{ fontWeight: 800, fontSize: '18px' }}>
               I need security
             </Block>
             <ParagraphMedium marginTop="0" marginBottom="0" color="contentSecondary">
-              Post coverage, review guards, monitor live shifts — hire on the marketplace.
+              Post coverage for a home, event, or business site — hire on the marketplace.
             </ParagraphMedium>
           </Block>
           <AccentIcon icon={Building2} size={22} strokeWidth={1.75} />

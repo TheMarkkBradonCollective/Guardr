@@ -37,7 +37,8 @@ import { GuardrSheet } from './baseui/overlays/GuardrSheet';
 import { AuthFormHeader } from './auth/AuthFormChrome';
 import { StaffSignupNotice } from './auth/StaffSignupNotice';
 import { personNameFromPayload } from '../lib/personName';
-import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS } from '../types';
+import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS, type ClientAccountKind } from '../types';
+import { normalizeClientAccountKind } from '../lib/clientAccountKind';
 import { ROLE_LABELS } from '../lib/permissions';
 import { generateGuardIndependentContractorNumber } from '../lib/guardContractorNumber';
 import type { LegalPageId } from '../lib/legalContent';
@@ -105,6 +106,14 @@ const PROPERTY_TYPE_OPTIONS = [
   'School / campus',
   'Restaurant / bar',
   'Hotel / hospitality',
+  'Other',
+] as const;
+
+const PERSONAL_PROPERTY_TYPE_OPTIONS = [
+  'Home / residence',
+  'Private event',
+  'Vacation / rental property',
+  'Residential / HOA',
   'Other',
 ] as const;
 
@@ -271,6 +280,7 @@ interface AuthPageProps {
   onAuthRoleChange?: (role: 'guard' | 'client' | 'staff') => void;
   initialRole?: 'guard' | 'client' | 'staff';
   initialMode?: 'sign-in' | 'sign-up';
+  initialClientKind?: ClientAccountKind;
   themeMode?: ThemeMode;
   onChangeTheme?: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
@@ -312,6 +322,7 @@ export function AuthPage({
   onAuthRoleChange,
   initialRole = 'client',
   initialMode = 'sign-in',
+  initialClientKind = 'business',
   themeMode = 'light',
   onChangeTheme,
   isDbConnected = false,
@@ -356,6 +367,9 @@ export function AuthPage({
   const [guardReliableTransport, setGuardReliableTransport] = useState<'' | 'yes' | 'no'>('');
 
   const [clientCompanyName, setClientCompanyName] = useState('');
+  const [clientKind, setClientKind] = useState<ClientAccountKind>(() =>
+    normalizeClientAccountKind(initialClientKind)
+  );
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Client intake fields
@@ -386,8 +400,9 @@ export function AuthPage({
   useEffect(() => {
     setRole(initialRole === 'guard' || initialRole === 'staff' ? initialRole : 'client');
     setIsSignUp(initialMode === 'sign-up');
+    setClientKind(normalizeClientAccountKind(initialClientKind));
     setErrorMsg('');
-  }, [initialRole, initialMode]);
+  }, [initialRole, initialMode, initialClientKind]);
 
   const guardSignupCities = getSignupCityNamesForRole('guard');
   const clientSignupCities = getSignupCityNamesForRole('client');
@@ -592,7 +607,7 @@ export function AuthPage({
           setErrorMsg(clientCityAccess.message);
           return;
         }
-        const company = clientCompanyName.trim();
+        const company = clientKind === 'personal' ? clientCompanyName.trim() : clientCompanyName.trim();
         const clientProfile: Client = {
           id: randomId,
           name: normalized.name,
@@ -601,13 +616,14 @@ export function AuthPage({
           lastName: normalized.lastName,
           email: emailLower,
           companyName: company,
+          accountKind: clientKind,
           phone: phone.trim() || '',
           avatar: '',
           totalRequests: 0,
           approved: false,
           accountStatus: 'pending',
 
-          businessType: businessType || undefined,
+          businessType: clientKind === 'personal' ? businessType || 'Individual' : businessType || undefined,
           industries: industries.length > 0 ? industries : undefined,
           businessLicense: businessLicense.trim() || undefined,
           website: website.trim() || undefined,
@@ -878,6 +894,7 @@ export function AuthPage({
     <AuthFormHeader
       role={role}
       isSignUp={isSignUp}
+      clientKind={role === 'client' ? clientKind : undefined}
       compact={isSheet || isMobilePageAuth}
       hideBadge={useFocusedAuthHeader || useRoleChoiceAuthLayout}
       center={
@@ -1247,12 +1264,15 @@ export function AuthPage({
                   <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} compact />
 
                   {/* ── Contact & Business ── */}
-                  <p className="uber-label">Client marketplace account</p>
-                  <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
-                    For businesses and sites that hire guards on the platform — not a job application to
-                    Guardr.
+                  <p className="uber-label">
+                    {clientKind === 'personal' ? 'Personal marketplace account' : 'Business marketplace account'}
                   </p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
+                    {clientKind === 'personal'
+                      ? 'For homes, events, and private coverage — not a job application to Guardr.'
+                      : 'For companies and sites that hire guards on the platform — not a job application to Guardr.'}
+                  </p>
+                  <div className={clientKind === 'personal' ? '' : 'grid grid-cols-2 gap-3'}>
                     <div>
                       <label className="uber-label block mb-2">Phone <span className="font-normal">(optional)</span></label>
                       <div className="relative">
@@ -1266,6 +1286,7 @@ export function AuthPage({
                         />
                       </div>
                     </div>
+                    {clientKind === 'business' ? (
                     <div>
                       <label className="uber-label block mb-2">Company name <span className="font-normal">(optional)</span></label>
                       <input
@@ -1276,7 +1297,10 @@ export function AuthPage({
                         className="uber-input"
                       />
                     </div>
+                    ) : null}
                   </div>
+                  {clientKind === 'business' ? (
+                  <>
                   <div>
                     <label className="uber-label block mb-2">Business type <span className="font-normal">(optional)</span></label>
                     <div className="relative">
@@ -1286,7 +1310,7 @@ export function AuthPage({
                         className="uber-input appearance-none pr-8"
                       >
                         <option value="">Select…</option>
-                        {BUSINESS_TYPE_OPTIONS.map((o) => (
+                        {BUSINESS_TYPE_OPTIONS.filter((o) => o !== 'Individual').map((o) => (
                           <option key={o} value={o}>{o}</option>
                         ))}
                       </select>
@@ -1341,6 +1365,8 @@ export function AuthPage({
                       </div>
                     </div>
                   </div>
+                  </>
+                  ) : null}
 
                   {/* ── Service needs ── */}
                   <p className="uber-label pt-2 border-t border-brand-border">Security needs</p>
@@ -1464,7 +1490,9 @@ export function AuthPage({
                   {/* ── Location ── */}
                   <p className="uber-label pt-2 border-t border-brand-border">Location</p>
                   <div>
-                    <label className="uber-label block mb-2">Primary city of operations</label>
+                    <label className="uber-label block mb-2">
+                      {clientKind === 'personal' ? 'City where you need coverage' : 'Primary city of operations'}
+                    </label>
                     <div className="relative">
                       <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted pointer-events-none" />
                       <select
@@ -1495,7 +1523,7 @@ export function AuthPage({
                   <div>
                     <label className="uber-label block mb-2">Property type <span className="font-normal">(optional — select all that apply)</span></label>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                      {(clientKind === 'personal' ? PERSONAL_PROPERTY_TYPE_OPTIONS : PROPERTY_TYPE_OPTIONS).map((opt) => (
                         <button
                           key={opt}
                           type="button"

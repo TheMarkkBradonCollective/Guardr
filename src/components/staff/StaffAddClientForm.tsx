@@ -5,6 +5,7 @@ import { PersonNameFields } from '../profile/PersonNameFields';
 import { personNameFromPayload } from '../../lib/personName';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
+import type { ClientAccountKind } from '../../types';
 
 export interface StaffAddClientInput {
   firstName: string;
@@ -13,6 +14,7 @@ export interface StaffAddClientInput {
   email: string;
   companyName: string;
   phone: string;
+  accountKind: ClientAccountKind;
 }
 
 interface StaffAddClientFormProps {
@@ -32,6 +34,7 @@ export function StaffAddClientForm({
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [accountKind, setAccountKind] = useState<ClientAccountKind>('business');
   const [phone, setPhone] = useState('');
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
@@ -43,6 +46,7 @@ export function StaffAddClientForm({
     setLastName('');
     setEmail('');
     setCompanyName('');
+    setAccountKind('business');
     setPhone('');
     setError('');
     setMsg('');
@@ -71,6 +75,7 @@ export function StaffAddClientForm({
         email: email.trim(),
         companyName: companyName.trim(),
         phone: phone.trim(),
+        accountKind,
       });
       const displayName = personNameFromPayload({
         firstName: firstName.trim(),
@@ -120,6 +125,26 @@ export function StaffAddClientForm({
             editing
           />
 
+          <div>
+            <p className="uber-label block mb-2">Account type</p>
+            <div className="flex gap-2">
+              {(['personal', 'business'] as const).map((kind) => (
+                <button
+                  key={kind}
+                  type="button"
+                  onClick={() => setAccountKind(kind)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                    accountKind === kind
+                      ? 'bg-brand-primary text-white border-brand-primary'
+                      : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
+                  }`}
+                >
+                  {kind === 'personal' ? 'Personal' : 'Business'}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="uber-label block mb-1">Email</label>
@@ -128,10 +153,11 @@ export function StaffAddClientForm({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="uber-input w-full"
-                placeholder="client@company.com"
+                placeholder={accountKind === 'personal' ? 'you@email.com' : 'client@company.com'}
                 required
               />
             </div>
+            {accountKind === 'business' ? (
             <div>
               <label className="uber-label block mb-1">Company / site name</label>
               <input
@@ -142,6 +168,7 @@ export function StaffAddClientForm({
                 placeholder="Optional — shows on job posts"
               />
             </div>
+            ) : null}
             <div>
               <label className="uber-label block mb-1">Phone</label>
               <input

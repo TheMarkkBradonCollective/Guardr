@@ -5,6 +5,7 @@ import {
   normalizeGuardTabForAccount,
   parseAppRoute,
   readAuthChoiceFromUrl,
+  readAuthSignupPickFromUrl,
   routeHasNestedSelection,
   routeWithoutNestedSelection,
   type AppRoute,
@@ -20,6 +21,34 @@ describe('auth role choice URLs', () => {
       role: 'client',
       authView: 'sign-in',
       authRole: 'guard',
+    });
+  });
+
+  it('reads the three sign-up selection pages', () => {
+    assert.equal(readAuthChoiceFromUrl('/?auth=sign-up&pick=path'), 'sign-up');
+    assert.equal(readAuthChoiceFromUrl('/?auth=sign-up&pick=client'), 'sign-up');
+    assert.equal(readAuthChoiceFromUrl('/?auth=sign-up&pick=work'), 'sign-up');
+    assert.equal(readAuthSignupPickFromUrl('/?auth=sign-up&pick=path'), 'path');
+    assert.equal(readAuthSignupPickFromUrl('/?auth=sign-up&pick=client'), 'client');
+    assert.equal(readAuthSignupPickFromUrl('/?auth=sign-up&pick=work'), 'work');
+    assert.equal(readAuthSignupPickFromUrl('/?auth=sign-up&pick=role'), 'path');
+    assert.equal(parseAppRoute('/?auth=sign-up&pick=path'), null);
+    assert.equal(parseAppRoute('/?auth=sign-up&pick=client'), null);
+    assert.equal(parseAppRoute('/?auth=sign-up&pick=work'), null);
+  });
+
+  it('parses personal vs business client sign-up', () => {
+    assert.deepEqual(parseAppRoute('/?auth=sign-up&ar=client&ck=personal'), {
+      role: 'client',
+      authView: 'sign-up',
+      authRole: 'client',
+      authClientKind: 'personal',
+    });
+    assert.deepEqual(parseAppRoute('/?auth=sign-up&ar=client&ck=business'), {
+      role: 'client',
+      authView: 'sign-up',
+      authRole: 'client',
+      authClientKind: 'business',
     });
   });
 });

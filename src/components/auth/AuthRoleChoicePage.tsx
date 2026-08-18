@@ -1,10 +1,11 @@
 import React from 'react';
 import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
-import { ArrowRight, Briefcase, Building2, Shield, User } from 'lucide-react';
+import { ArrowRight, Briefcase, Building2, Home, Shield, User } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { useDevice } from '../../lib/platform';
-import type { AuthViewRole } from '../../lib/appNavigation';
+import type { AuthSignupPick, AuthViewRole } from '../../lib/appNavigation';
+import type { ClientAccountKind } from '../../types';
 import { DirectTopHeader } from '../baseui/layout/DirectTopHeader';
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { FONT_DISPLAY } from '../../theme/typography';
@@ -13,70 +14,112 @@ const HEADING_FONT = FONT_DISPLAY;
 
 export type AuthRoleChoiceMode = 'sign-in' | 'sign-up';
 
-interface RoleOption {
-  role: AuthViewRole;
+interface ChoiceOption {
+  id: string;
   icon: typeof Shield;
   title: string;
   description: string;
+  badge?: string;
+  emphasized?: boolean;
 }
 
-const SIGN_IN_OPTIONS: RoleOption[] = [
+const SIGN_IN_OPTIONS: ChoiceOption[] = [
   {
-    role: 'guard',
+    id: 'guard',
     icon: Shield,
     title: 'Log in as guard',
     description: 'Independent contractor — your marketplace jobs and earnings.',
   },
   {
-    role: 'client',
+    id: 'client',
     icon: User,
     title: 'Log in as client',
-    description: 'Business account — post coverage and manage sites.',
+    description: 'Personal or business — post coverage and manage sites.',
   },
   {
-    role: 'staff',
+    id: 'staff',
     icon: Briefcase,
     title: 'Log in as staff',
     description: 'Guardr platform team — operations and support workspace.',
   },
 ];
 
-const MARKETPLACE_SIGNUP_OPTIONS: RoleOption[] = [
+const SIGNUP_PATH_OPTIONS: ChoiceOption[] = [
   {
-    role: 'client',
-    icon: Building2,
-    title: 'I need security for my site',
-    description:
-      'Business or property — post jobs and hire licensed guards on the marketplace. Not a job application to Guardr.',
+    id: 'client',
+    icon: User,
+    title: 'I need security',
+    description: 'Hire licensed guards for a home, event, or business site. Not a job application to Guardr.',
   },
   {
-    role: 'guard',
-    icon: Shield,
-    title: 'I\'m a licensed guard (contractor)',
-    description:
-      'Browse shifts on the map and work as an independent contractor. Guardr does not employ guards through this signup.',
+    id: 'work',
+    icon: Briefcase,
+    title: 'I want to work',
+    description: 'Independent contractor on the marketplace, or apply for a Guardr staff role.',
   },
 ];
 
-const STAFF_SIGNUP_OPTION: RoleOption = {
-  role: 'staff',
-  icon: Briefcase,
-  title: 'Apply to work at Guardr',
-  description:
-    'Platform operations role (Support to start). Government ID, Stripe payout setup, and Director review — not guard or client signup.',
-};
+const SIGNUP_CLIENT_KIND_OPTIONS: ChoiceOption[] = [
+  {
+    id: 'personal',
+    icon: Home,
+    title: 'Personal',
+    description: 'Home, private events, and coverage you are hiring for yourself.',
+  },
+  {
+    id: 'business',
+    icon: Building2,
+    title: 'Business',
+    description: 'Companies, venues, properties, and ongoing site coverage.',
+  },
+];
 
-const COPY: Record<AuthRoleChoiceMode, { heading: string; subheading: string; ariaLabel: string }> = {
+const SIGNUP_WORK_OPTIONS: ChoiceOption[] = [
+  {
+    id: 'guard',
+    icon: Shield,
+    title: "I'm a licensed guard (contractor)",
+    description:
+      'Browse shifts on the map and work as an independent contractor. Guardr does not employ guards through this signup.',
+  },
+  {
+    id: 'staff',
+    icon: Briefcase,
+    title: 'Apply to work at Guardr',
+    description:
+      'Platform operations role (Support to start). Government ID, Stripe payout setup, and Director review — not guard or client signup.',
+    badge: 'Guardr employment',
+    emphasized: true,
+  },
+];
+
+const COPY: Record<
+  'sign-in' | AuthSignupPick,
+  { heading: string; subheading: string; ariaLabel: string; kicker?: string }
+> = {
   'sign-in': {
     heading: 'Log in to your account',
     subheading: 'Choose the workspace that matches how you use Guardr.',
     ariaLabel: 'Choose how to log in',
   },
-  'sign-up': {
+  path: {
     heading: 'Create an account',
-    subheading:
-      'Guard and client are marketplace accounts. To work for Guardr as staff, use Apply to work at Guardr — we do not hire through guard or client signup.',
+    subheading: 'First, tell us whether you need coverage or want to work.',
     ariaLabel: 'Choose how to sign up',
+    kicker: 'Create an account',
+  },
+  client: {
+    heading: 'Personal or business?',
+    subheading: 'Choose how you will hire security. Either account can post jobs and manage coverage.',
+    ariaLabel: 'Choose personal or business',
+    kicker: 'I need security',
+  },
+  work: {
+    heading: 'How do you want to work?',
+    subheading:
+      'Guards are independent contractors on the marketplace. Staff apply to work at Guardr — we do not hire through guard signup.',
+    ariaLabel: 'Choose how to work',
+    kicker: 'I want to work',
   },
 };
 
@@ -106,25 +149,23 @@ function AuthChoiceHeroVisual() {
 function RoleChoiceRow({
   option,
   onSelect,
-  emphasized = false,
 }: {
-  option: RoleOption;
-  onSelect: (role: AuthViewRole) => void;
-  emphasized?: boolean;
+  option: ChoiceOption;
+  onSelect: (id: string) => void;
 }) {
   const [, theme] = useStyletron();
-  const { role, icon: Icon, title, description } = option;
+  const { id, icon: Icon, title, description, badge, emphasized } = option;
 
   return (
     <Block
       as="button"
       type="button"
       className={`auth-role-choice-option${emphasized ? ' auth-role-choice-option--staff' : ''}`}
-      onClick={() => onSelect(role)}
+      onClick={() => onSelect(id)}
     >
       <Block display="flex" alignItems="center" gridGap="scale400" marginBottom="scale400">
         <Icon size={24} color={theme.colors.contentPrimary} strokeWidth={1.75} aria-hidden />
-        {emphasized ? (
+        {badge ? (
           <Block
             as="span"
             $style={{
@@ -135,7 +176,7 @@ function RoleChoiceRow({
               color: theme.colors.accent,
             }}
           >
-            Guardr employment
+            {badge}
           </Block>
         ) : null}
       </Block>
@@ -182,31 +223,66 @@ function RoleChoiceRow({
 
 interface AuthRoleChoicePageProps {
   mode: AuthRoleChoiceMode;
+  signupStep?: AuthSignupPick;
   themeMode: ThemeMode;
   onChangeTheme: (mode: ThemeMode) => void;
   onNavigateToAuth: (role?: AuthViewRole, mode?: 'sign-in' | 'sign-up') => void;
   onSelectRole: (role: AuthViewRole) => void;
+  onSelectSignupPath?: (path: 'client' | 'work') => void;
+  onSelectClientKind?: (kind: ClientAccountKind) => void;
   onOpenGuide?: () => void;
   onBack?: () => void;
 }
 
 /**
- * Full-screen Guard / Client / Staff picker — separates marketplace signup from Guardr staff hiring.
+ * Sign-in: Guard / Client / Staff.
+ * Sign-up: three selection pages — path, then personal/business or guard/staff.
  */
 export function AuthRoleChoicePage({
   mode,
-  themeMode,
-  onChangeTheme,
-  onNavigateToAuth,
+  signupStep = 'path',
+  themeMode: _themeMode,
+  onChangeTheme: _onChangeTheme,
+  onNavigateToAuth: _onNavigateToAuth,
   onSelectRole,
-  onOpenGuide,
+  onSelectSignupPath,
+  onSelectClientKind,
+  onOpenGuide: _onOpenGuide,
   onBack,
 }: AuthRoleChoicePageProps) {
   const [, theme] = useStyletron();
   const { formFactor } = useDevice();
   const factor = formFactor === 'tablet' ? 'tablet' : formFactor === 'desktop' ? 'desktop' : 'mobile';
   const isMobile = factor === 'mobile';
-  const copy = COPY[mode];
+  const copyKey = mode === 'sign-in' ? 'sign-in' : signupStep;
+  const copy = COPY[copyKey];
+  const backLabel = mode === 'sign-up' && signupStep !== 'path' ? 'Back' : 'Home';
+  const showHero = !isMobile && (mode === 'sign-in' || signupStep === 'path');
+
+  const handleSelect = (id: string) => {
+    if (mode === 'sign-in') {
+      onSelectRole(id as AuthViewRole);
+      return;
+    }
+    if (signupStep === 'path') {
+      if (id === 'client' || id === 'work') onSelectSignupPath?.(id);
+      return;
+    }
+    if (signupStep === 'client') {
+      if (id === 'personal' || id === 'business') onSelectClientKind?.(id);
+      return;
+    }
+    if (id === 'guard' || id === 'staff') onSelectRole(id);
+  };
+
+  const options =
+    mode === 'sign-in'
+      ? SIGN_IN_OPTIONS
+      : signupStep === 'client'
+        ? SIGNUP_CLIENT_KIND_OPTIONS
+        : signupStep === 'work'
+          ? SIGNUP_WORK_OPTIONS
+          : SIGNUP_PATH_OPTIONS;
 
   return (
     <Block
@@ -214,13 +290,14 @@ export function AuthRoleChoicePage({
       height="100dvh"
       className="auth-role-choice-page"
       data-landing-factor={formFactor}
+      data-signup-step={mode === 'sign-up' ? signupStep : 'sign-in'}
       backgroundColor="backgroundPrimary"
       display="flex"
       flexDirection="column"
       overflow="hidden"
     >
       <DirectTopHeader onBrandClick={onBack} />
-      {onBack ? <AppSubScreenHeader title="" hideTitle onBack={onBack} backLabel="Home" /> : null}
+      {onBack ? <AppSubScreenHeader title="" hideTitle onBack={onBack} backLabel={backLabel} /> : null}
 
       <Block as="main" className="auth-role-choice-main">
         <Block as="section" aria-label={copy.ariaLabel} className="auth-role-choice-hero">
@@ -235,6 +312,22 @@ export function AuthRoleChoicePage({
             alignItems="center"
           >
             <Block>
+              {copy.kicker ? (
+                <Block
+                  as="p"
+                  margin={0}
+                  marginBottom="scale300"
+                  $style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    color: theme.colors.contentSecondary,
+                  }}
+                >
+                  {copy.kicker}
+                </Block>
+              ) : null}
               <Block
                 as="h1"
                 margin={0}
@@ -264,7 +357,7 @@ export function AuthRoleChoicePage({
               </Block>
             </Block>
 
-            {!isMobile && mode === 'sign-in' ? <AuthChoiceHeroVisual /> : null}
+            {showHero ? <AuthChoiceHeroVisual /> : null}
           </Block>
         </Block>
 
@@ -278,30 +371,9 @@ export function AuthRoleChoicePage({
             gridTemplateColumns="1fr"
             gridGap={isMobile ? 'scale600' : 'scale800'}
           >
-            {mode === 'sign-in' ? (
-              SIGN_IN_OPTIONS.map((option) => (
-                <RoleChoiceRow key={option.role} option={option} onSelect={onSelectRole} />
-              ))
-            ) : (
-              <>
-                <Block as="p" margin={0} $style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: theme.colors.contentSecondary }}>
-                  Marketplace — not Guardr employment
-                </Block>
-                {MARKETPLACE_SIGNUP_OPTIONS.map((option) => (
-                  <RoleChoiceRow key={option.role} option={option} onSelect={onSelectRole} />
-                ))}
-                <Block marginTop="scale400" marginBottom="scale200">
-                  <Block
-                    as="p"
-                    margin={0}
-                    $style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: theme.colors.contentSecondary }}
-                  >
-                    Work at Guardr
-                  </Block>
-                </Block>
-                <RoleChoiceRow option={STAFF_SIGNUP_OPTION} onSelect={onSelectRole} emphasized />
-              </>
-            )}
+            {options.map((option) => (
+              <RoleChoiceRow key={option.id} option={option} onSelect={handleSelect} />
+            ))}
           </Block>
         </Block>
       </Block>

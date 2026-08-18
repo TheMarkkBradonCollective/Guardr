@@ -1,6 +1,7 @@
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
-import type { SecurityGuard } from '../types';
+import type { ClientAccountKind, SecurityGuard } from '../types';
+import { isClientAccountKind } from './clientAccountKind';
 import { isGuardAccountApproved, isGuardUserStatusActive } from './accountStatus';
 import type { GuardJobsBrowseTab } from './guardJobsBrowse';
 import type { PerformanceFactorId } from './guardPerformanceFactorDetail';
@@ -27,6 +28,11 @@ export type AppRole = 'staff' | 'guard' | 'client';
 
 export type AuthViewMode = 'sign-in' | 'sign-up';
 export type AuthViewRole = 'guard' | 'client' | 'staff';
+/** Sign-up selection screens: path → client kind or work role. */
+export type AuthSignupPick = 'path' | 'client' | 'work';
+
+const AUTH_CHOICE_PICKS = new Set(['role', 'path', 'client', 'work']);
+const AUTH_SIGNUP_PICKS = new Set<AuthSignupPick>(['path', 'client', 'work']);
 
 export type StaffGuardDetailTab = 'profile' | 'certs' | 'inventory' | 'performance' | 'timesheet';
 
@@ -91,6 +97,8 @@ export interface AppRoute {
   /** Unauthenticated auth screen */
   authView?: AuthViewMode;
   authRole?: AuthViewRole;
+  /** Client sign-up — personal vs business. */
+  authClientKind?: ClientAccountKind;
 }
 
 const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
@@ -239,6 +247,7 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   const guardJobId = searchParams.get('gj');
   const authView = searchParams.get('auth');
   const authRole = searchParams.get('ar');
+  const authClientKind = searchParams.get('ck');
 
   if (staffGuardId) nested.staffGuardId = staffGuardId;
   if (staffClientId) nested.staffClientId = staffClientId;
@@ -291,9 +300,10 @@ function parseNestedRoute(searchParams: URLSearchParams): Partial<AppRoute> {
   if (clientJobId) nested.clientJobId = clientJobId;
   if (guardJobsTab) nested.guardJobsTab = guardJobsTab;
   if (guardJobId) nested.guardJobId = guardJobId;
-  const isRoleChoice = searchParams.get('pick') === 'role';
-  if (!isRoleChoice && (authView === 'sign-in' || authView === 'sign-up')) nested.authView = authView;
+  const isAuthChoice = AUTH_CHOICE_PICKS.has(searchParams.get('pick') ?? '');
+  if (!isAuthChoice && (authView === 'sign-in' || authView === 'sign-up')) nested.authView = authView;
   if (authRole === 'guard' || authRole === 'client' || authRole === 'staff') nested.authRole = authRole;
+  if (isClientAccountKind(authClientKind)) nested.authClientKind = authClientKind;
 
   return nested;
 }
@@ -325,6 +335,7 @@ function buildNestedQuery(route: AppRoute): URLSearchParams {
   if (route.guardJobId) params.set('gj', route.guardJobId);
   if (route.authView) params.set('auth', route.authView);
   if (route.authRole) params.set('ar', route.authRole);
+  if (route.authClientKind) params.set('ck', route.authClientKind);
   return params;
 }
 
@@ -484,12 +495,22 @@ export function readAppRouteFromWindow(): AppRoute | null {
   return parseAppRoute(stripEphemeralQueryParams(window.location.pathname + window.location.search));
 }
 
-/** Role picker at `/?auth=sign-in&pick=role` (distinct from the sign-in form URL). */
+/** Role / signup picker at `/?auth=sign-in&pick=role` or `/?auth=sign-up&pick=path`. */
 export function readAuthChoiceFromUrl(url: string): AuthViewMode | null {
   const { searchParams } = parsePath(url);
-  if (searchParams.get('pick') !== 'role') return null;
+  const pick = searchParams.get('pick');
+  if (!AUTH_CHOICE_PICKS.has(pick ?? '')) return null;
   const auth = searchParams.get('auth');
   if (auth === 'sign-in' || auth === 'sign-up') return auth;
+  return null;
+}
+
+export function readAuthSignupPickFromUrl(url: string): AuthSignupPick | null {
+  const { searchParams } = parsePath(url);
+  if (searchParams.get('auth') !== 'sign-up') return null;
+  const pick = searchParams.get('pick');
+  if (pick && AUTH_SIGNUP_PICKS.has(pick as AuthSignupPick)) return pick as AuthSignupPick;
+  if (pick === 'role') return 'path';
   return null;
 }
 
@@ -498,16 +519,31 @@ export function readAuthChoiceFromWindow(): AuthViewMode | null {
   return readAuthChoiceFromUrl(window.location.pathname + window.location.search);
 }
 
-export function buildAuthChoicePath(mode: AuthViewMode): string {
-  return `/?auth=${mode}&pick=role`;
+export function readAuthSignupPickFromWindow(): AuthSignupPick | null {
+  if (typeof window === 'undefined') return null;
+  return readAuthSignupPickFromUrl(window.location.pathname + window.location.search);
 }
 
-export function syncAuthChoiceRoute(mode: AuthViewMode, replace = false): void {
-  const nextPath = buildAuthChoicePath(mode);
-  const state = { authChoice: mode };
+export function buildAuthChoicePath(mode: AuthViewMode, signupPick?: AuthSignupPick): string {
+  if (mode === 'sign-in') return '/?auth=sign-in&pick=role';
+  return `/?auth=sign-up&pick=${signupPick ?? 'path'}`;
+}
+
+export function syncAuthChoiceRoute(
+  mode: AuthViewMode,
+  replace = false,
+  signupPick?: AuthSignupPick
+): void {
+  const resolvedPick = mode === 'sign-up' ? signupPick ?? 'path' : undefined;
+  const nextPath = buildAuthChoicePath(mode, resolvedPick);
+  const state = { authChoice: mode, authSignupPick: resolvedPick };
   const pathMatches = currentBrowserPath() === nextPath;
-  const existingChoice = (window.history.state as { authChoice?: AuthViewMode } | null)?.authChoice;
-  const stateMatches = existingChoice === mode;
+  const existing = window.history.state as {
+    authChoice?: AuthViewMode;
+    authSignupPick?: AuthSignupPick;
+  } | null;
+  const stateMatches =
+    existing?.authChoice === mode && existing?.authSignupPick === resolvedPick;
 
   if (pathMatches && stateMatches) return;
 

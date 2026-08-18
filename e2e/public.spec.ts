@@ -29,6 +29,37 @@ test.describe('Guardr public pages', () => {
     await expect(page.getByRole('button', { name: /Log in as guard/i })).toBeVisible();
   });
 
+  test('sign-up uses three selection pages', async ({ page }) => {
+    await page.goto('/?auth=sign-up&pick=path');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: /I need security/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /I want to work/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /I need security/i }).click();
+    await expect(page.getByRole('button', { name: /^Personal/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Business/i })).toBeVisible();
+
+    await page.goto('/?auth=sign-up&pick=work');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: /licensed guard/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Apply to work at Guardr/i })).toBeVisible();
+  });
+
+  test('personal client sign-up hides company fields', async ({ page }) => {
+    await page.goto('/?auth=sign-up&ar=client&ck=personal');
+    await waitForAppReady(page);
+    await expect(page.getByRole('heading', { name: /personal account/i })).toBeVisible();
+    await expect(page.getByText('Company name')).toHaveCount(0);
+    await expect(page.getByText('Business license / EIN')).toHaveCount(0);
+  });
+
+  test('business client sign-up shows company fields', async ({ page }) => {
+    await page.goto('/?auth=sign-up&ar=client&ck=business');
+    await waitForAppReady(page);
+    await expect(page.getByRole('heading', { name: /business account/i })).toBeVisible();
+    await expect(page.getByText('Company name')).toBeVisible();
+  });
+
   test('legal terms page is reachable', async ({ page }) => {
     await page.goto('/legal/terms');
     await waitForAppReady(page);

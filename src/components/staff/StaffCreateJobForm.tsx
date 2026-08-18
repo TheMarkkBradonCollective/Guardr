@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Client, JobType, SecurityGuard, SecurityRequest } from '../../types';
+import { clientDisplayName } from '../../lib/clientAccountKind';
 import { getClientRehireableGuards, guardHasWorkedWithClient } from '../../lib/guardDirectory';
 import { getClientAccountStatus } from '../../lib/accountStatus';
 import {
@@ -211,7 +212,8 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
         breakMinutes: effectiveBreakMinutes,
         breakPaid,
       });
-      const clientLabel = approvedClients.find((c) => c.id === clientId)?.companyName || 'Client';
+      const selectedClient = approvedClients.find((c) => c.id === clientId);
+      const clientLabel = selectedClient ? clientDisplayName(selectedClient) : 'Client';
       setMsg(
         assignGuardId
           ? `Job created for ${clientLabel} with prior guard rehired.`
@@ -267,7 +269,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, onCre
             <option value="">Select client…</option>
             {approvedClients.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.companyName || c.name} ({c.email})
+                {clientDisplayName(c)} ({c.email})
               </option>
             ))}
           </select>

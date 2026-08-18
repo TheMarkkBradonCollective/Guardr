@@ -18,6 +18,7 @@ import { AppItemCardStack } from '../ui/app/AppPrimitives';
 import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
 import { CLIENT_ACCOUNT_STATUS_LABELS, getClientAccountStatus } from '../../lib/accountStatus';
 import { StaffClientApplicationSummary } from './StaffClientApplicationSummary';
+import { clientAccountKindLabel, clientDisplayName } from '../../lib/clientAccountKind';
 
 interface StaffClientDetailPanelProps {
   client: Client;
@@ -64,7 +65,7 @@ export function StaffClientDetailPanel({
     if (!onDeleteClient) return;
     if (!(await showAppConfirm({
       title: 'Delete client account?',
-      message: `Delete client account for ${client.companyName || client.name}? This cannot be undone.`,
+      message: `Delete client account for ${clientDisplayName(client)}? This cannot be undone.`,
       confirmLabel: 'Delete account',
       tone: 'danger',
     }))) {
@@ -80,7 +81,7 @@ export function StaffClientDetailPanel({
     }
   };
 
-  const displayName = client.companyName || client.name;
+  const displayName = clientDisplayName(client);
 
   const handleToggleTrusted = async () => {
     if (!onSetClientTrusted) return;
@@ -122,12 +123,12 @@ export function StaffClientDetailPanel({
       <div className="flex items-start gap-4 pb-5 border-b border-brand-border">
         <ProfileAvatar
           src={client.avatar}
-          name={client.companyName || client.name}
+          name={displayName}
           size="lg"
           rounded="xl"
         />
         <div className="min-w-0 flex-1">
-          <h2 className="font-bold text-lg">{client.companyName || client.name}</h2>
+          <h2 className="font-bold text-lg">{displayName}</h2>
           {client.companyName && client.name !== client.companyName && (
             <p className="text-sm text-brand-text-muted">{client.name}</p>
           )}
@@ -145,6 +146,7 @@ export function StaffClientDetailPanel({
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
             <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
+            <WfBadge>{clientAccountKindLabel(client.accountKind)}</WfBadge>
             {client.trusted && <WfBadge tone="primary">Trusted</WfBadge>}
             {client.rating != null && (
               <WfBadge className="inline-flex items-center gap-1">

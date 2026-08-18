@@ -239,6 +239,18 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_prior_security_service BOOLEAN;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS prior_security_provider TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS special_requirements TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS default_assignment_mode TEXT DEFAULT 'client-approve';
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS account_kind TEXT;
+
+UPDATE clients
+SET account_kind = 'business'
+WHERE account_kind IS NULL OR account_kind NOT IN ('personal', 'business');
+
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_account_kind_check;
+ALTER TABLE clients ADD CONSTRAINT clients_account_kind_check
+  CHECK (account_kind IN ('personal', 'business'));
+
+ALTER TABLE clients ALTER COLUMN account_kind SET DEFAULT 'business';
+ALTER TABLE clients ALTER COLUMN account_kind SET NOT NULL;
 
 UPDATE clients SET favorite_guard_ids = '[]'::jsonb WHERE favorite_guard_ids IS NULL;
 UPDATE guards SET trusted = FALSE WHERE trusted IS NULL;

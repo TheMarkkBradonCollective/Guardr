@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Building2, Search } from 'lucide-react';
 import { Client, SecurityRequest, SessionUser } from '../../types';
+import { clientAccountKindLabel, clientDisplayName } from '../../lib/clientAccountKind';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffClientDetailPanel } from './StaffClientDetailPanel';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -108,7 +109,7 @@ export function StaffClientsPanel({
     .sort((a, b) => {
       const rank = clientRosterSortRank(a) - clientRosterSortRank(b);
       if (rank !== 0) return rank;
-      return (a.companyName || a.name).localeCompare(b.companyName || b.name);
+      return clientDisplayName(a).localeCompare(clientDisplayName(b));
     });
 
   const selectedClient = selectedId ? clients.find((c) => c.id === selectedId) ?? null : null;
@@ -129,11 +130,13 @@ export function StaffClientsPanel({
         id: 'client',
         header: 'Client',
         grow: true,
-        sortValue: (client) => (client.companyName || client.name).toLowerCase(),
+        sortValue: (client) => clientDisplayName(client).toLowerCase(),
         render: (client) => (
           <>
-            <p className="uber-workbench-table-primary">{client.companyName || client.name}</p>
-            <p className="uber-workbench-table-secondary">{client.email}</p>
+            <p className="uber-workbench-table-primary">{clientDisplayName(client)}</p>
+            <p className="uber-workbench-table-secondary">
+              {clientAccountKindLabel(client.accountKind)} · {client.email}
+            </p>
           </>
         ),
       },
@@ -320,12 +323,12 @@ export function StaffClientsPanel({
                 avatar={
                   <ProfileAvatar
                     src={client.avatar}
-                    name={client.companyName || client.name}
+                    name={clientDisplayName(client)}
                     size="sm"
                     rounded="lg"
                   />
                 }
-                title={client.companyName || client.name}
+                title={clientDisplayName(client)}
                 subtitle={client.email}
                 meta={
                   <div className="flex flex-wrap items-center gap-1.5">

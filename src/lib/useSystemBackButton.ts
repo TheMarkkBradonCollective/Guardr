@@ -3,6 +3,7 @@ import { isNativeShell } from './platform/device';
 import {
   readAppRouteFromWindow,
   readAuthChoiceFromWindow,
+  readAuthSignupPickFromWindow,
   syncAppRoute,
   syncAuthChoiceRoute,
 } from './appNavigation';
@@ -19,7 +20,7 @@ export function useSystemBackButtonBootstrap(enabled: boolean): void {
 
     const authChoice = readAuthChoiceFromWindow();
     if (authChoice) {
-      syncAuthChoiceRoute(authChoice, true);
+      syncAuthChoiceRoute(authChoice, true, readAuthSignupPickFromWindow() ?? undefined);
       return;
     }
 
