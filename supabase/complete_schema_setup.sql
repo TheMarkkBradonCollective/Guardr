@@ -1111,7 +1111,7 @@ WHERE id_verification_status = 'verified'
 UPDATE staff
 SET user_status = 'approved'
 WHERE user_status = 'active'
-  AND COALESCE(staff_role, '') IS DISTINCT FROM 'Founder'
+  AND COALESCE(staff_role, '') NOT IN ('Founder', 'Owner')
   AND (
     id_verification_status IS DISTINCT FROM 'verified'
     OR COALESCE(btrim(id_front_url), '') = ''
@@ -1689,7 +1689,7 @@ ON CONFLICT (id) DO NOTHING;
 UPDATE staff
 SET user_status = 'approved'
 WHERE user_status = 'active'
-  AND COALESCE(staff_role, '') IS DISTINCT FROM 'Founder'
+  AND COALESCE(staff_role, '') NOT IN ('Founder', 'Owner')
   AND (
     id_verification_status IS DISTINCT FROM 'verified'
     OR COALESCE(btrim(id_front_url), '') = ''
