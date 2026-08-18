@@ -200,7 +200,7 @@ export function ClientHomeDesktop({
       <div className="uber-direct-home-hub" data-tour="client-home-cta">
         <DirectHubCard
           title="Jobs"
-          description={caps.isPersonal ? 'Request and manage upcoming services' : 'Create and manage jobs for your locations'}
+          description={caps.isPersonal ? 'Upcoming and past requests — request again anytime' : 'Create and manage jobs for your locations'}
           icon={Briefcase}
           iconTone="yellow"
           onClick={() => run('requests')}
@@ -257,7 +257,7 @@ export function ClientHomeDesktop({
                     disabled={accountPending}
                     className="!text-[11px] uber-bg-accent-soft uber-text-accent"
                   >
-                    Hire again
+                    {caps.isPersonal ? 'Request again' : 'Hire again'}
                   </AppButton>
                 ) : null}
               </div>
@@ -298,7 +298,11 @@ export function ClientHomeDesktop({
 
       <WorkbenchPanel>
         {tableJobs.length === 0 ? (
-          <AppEmptyState title="No jobs yet">Post a job to get matched with licensed guards.</AppEmptyState>
+          <AppEmptyState title="No jobs yet">
+            {caps.isPersonal
+              ? 'Request security whenever you need it — one-time or recurring.'
+              : 'Post a job to get matched with licensed guards.'}
+          </AppEmptyState>
         ) : (
           <>
             <table className="uber-workbench-table uber-direct-deliveries-table">

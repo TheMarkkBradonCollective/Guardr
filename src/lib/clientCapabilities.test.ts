@@ -16,7 +16,7 @@ import {
 } from './clientCapabilities';
 
 describe('clientCapabilities', () => {
-  it('gives personal accounts the shared tools only', () => {
+  it('lets personal accounts request, rebook, and schedule recurring coverage', () => {
     const caps = clientCapabilities('personal');
     for (const cap of SHARED_CLIENT_CAPABILITIES) {
       assert.equal(caps.has(cap), true, cap);
@@ -24,6 +24,9 @@ describe('clientCapabilities', () => {
     for (const cap of BUSINESS_ONLY_CAPABILITIES) {
       assert.equal(caps.has(cap), false, cap);
     }
+    assert.equal(clientHasCapability('personal', 'recurring-schedules'), true);
+    assert.equal(clientHasCapability('personal', 'rebook-service'), true);
+    assert.equal(clientHasCapability('personal', 'rehire-guard'), true);
   });
 
   it('gives business accounts every shared tool plus site/staffing extras', () => {
@@ -35,13 +38,13 @@ describe('clientCapabilities', () => {
     assert.equal(clientHasCapability({ clientType: 'personal' }, 'reporting'), false);
   });
 
-  it('keeps personal request size small and business site staffing larger', () => {
+  it('keeps bulk site staffing as a business tool, not a one-request limit', () => {
     assert.equal(clientMaxGuardsPerRequest('personal'), 4);
     assert.equal(clientMaxGuardsPerRequest('business'), 50);
     assert.equal(clampClientGuardsNeeded(12, 'personal'), 4);
     assert.equal(clampClientGuardsNeeded(12, 'business'), 12);
     assert.equal(clampClientGuardsNeeded(8, 'personal', 6), 6);
-    assert.equal(clientMaxSavedLocations('personal'), 8);
+    assert.equal(clientMaxSavedLocations('personal'), null);
     assert.equal(clientMaxSavedLocations('business'), null);
   });
 
@@ -64,7 +67,15 @@ describe('clientCapabilities', () => {
 
     const personalHome = clientHomeQuickActions('personal').map((item) => item.id);
     const businessHome = clientHomeQuickActions('business').map((item) => item.id);
-    assert.deepEqual(personalHome, ['request', 'guards', 'locations', 'schedule']);
+    assert.deepEqual(personalHome, ['request', 'guards', 'locations', 'schedule', 'recurring']);
+    assert.equal(
+      clientHomeQuickActions('personal').find((item) => item.id === 'request')?.sub,
+      'Request another anytime'
+    );
+    assert.equal(
+      clientHomeQuickActions('personal').find((item) => item.id === 'recurring')?.label,
+      'Recurring security'
+    );
     assert.ok(businessHome.includes('recurring'));
     assert.ok(businessHome.includes('reports'));
     assert.equal(clientPostJobLabel('personal'), '+ Request security');

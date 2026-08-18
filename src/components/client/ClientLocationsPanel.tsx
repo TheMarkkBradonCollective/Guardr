@@ -49,11 +49,8 @@ export function ClientLocationsPanel({
   );
   const trusted = canClientSetLocationRisk(client);
 
-  const atLocationLimit =
-    caps.maxSavedLocations != null && mine.length >= caps.maxSavedLocations;
-
   const handleAdd = async () => {
-    if (!name.trim() || address.trim().length < 4 || atLocationLimit) return;
+    if (!name.trim() || address.trim().length < 4) return;
     setSaving(true);
     try {
       const draft = newClientLocationDraft(
@@ -91,7 +88,7 @@ export function ClientLocationsPanel({
           </h3>
           <p className="text-sm text-brand-text-muted mt-1">
             {caps.isPersonal
-              ? 'Save home, event venues, and other personal locations you hire coverage for.'
+              ? 'Save preferred places — home, venues, and anywhere you hire coverage more than once.'
               : 'Manage multiple sites, keep location notes, and mark a site private so only staff can reuse it.'}
             {trusted ? ' As a trusted client you set risk level directly.' : null}
           </p>
@@ -209,15 +206,9 @@ export function ClientLocationsPanel({
           <span>Do not list — keep this site private (staff can still manage it).</span>
         </label>
         ) : null}
-        {atLocationLimit ? (
-          <p className="text-sm text-brand-text-muted">
-            Personal accounts can save up to {caps.maxSavedLocations} locations. Remove one or use a business
-            account for multiple sites.
-          </p>
-        ) : null}
         <button
           type="button"
-          disabled={saving || atLocationLimit || !name.trim() || address.trim().length < 4}
+          disabled={saving || !name.trim() || address.trim().length < 4}
           onClick={() => void handleAdd()}
           className="uber-btn-primary w-full"
         >

@@ -2,12 +2,16 @@ import type { Client, ClientType } from '../types';
 import { normalizeClientType } from './clientType';
 
 /**
- * One client system. Client type unlocks extra tools — Personal stays simple,
- * Business adds site, staffing, and reporting capabilities.
+ * One client system. Client type is account structure, not usage frequency.
+ * Personal = individual customer who can request, rebook, and schedule ongoing coverage.
+ * Business = organization with expanded site, staffing, and team management tools.
  */
 export type ClientCapability =
   | 'request-security'
   | 'one-time-schedule'
+  | 'recurring-schedules'
+  | 'rebook-service'
+  | 'rehire-guard'
   | 'manage-upcoming'
   | 'view-assigned-guards'
   | 'messaging'
@@ -18,7 +22,6 @@ export type ClientCapability =
   | 'multiple-sites'
   | 'multiple-users'
   | 'employee-access'
-  | 'recurring-schedules'
   | 'site-requirements'
   | 'site-rosters'
   | 'multi-guard-requests'
@@ -27,9 +30,13 @@ export type ClientCapability =
   | 'company-documents'
   | 'reporting';
 
+/** Both account types are repeat customers. Frequency is not gated by type. */
 export const SHARED_CLIENT_CAPABILITIES: readonly ClientCapability[] = [
   'request-security',
   'one-time-schedule',
+  'recurring-schedules',
+  'rebook-service',
+  'rehire-guard',
   'manage-upcoming',
   'view-assigned-guards',
   'messaging',
@@ -43,7 +50,6 @@ export const BUSINESS_ONLY_CAPABILITIES: readonly ClientCapability[] = [
   'multiple-sites',
   'multiple-users',
   'employee-access',
-  'recurring-schedules',
   'site-requirements',
   'site-rosters',
   'multi-guard-requests',
@@ -53,10 +59,9 @@ export const BUSINESS_ONLY_CAPABILITIES: readonly ClientCapability[] = [
   'reporting',
 ] as const;
 
-/** Personal one-time jobs can still cover a small event; bulk site staffing is business. */
+/** Personal events stay a small team; bulk site staffing is a business management tool. */
 export const PERSONAL_MAX_GUARDS_PER_REQUEST = 4;
 export const BUSINESS_MAX_GUARDS_PER_REQUEST = 50;
-export const PERSONAL_MAX_SAVED_LOCATIONS = 8;
 
 export type ClientOverflowNavId = 'invoices' | 'guards' | 'locations' | 'reports' | 'settings';
 
@@ -106,9 +111,9 @@ export function clientMaxGuardsPerRequest(
 }
 
 export function clientMaxSavedLocations(
-  clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
+  _clientOrType?: ClientType | Pick<Client, 'clientType'> | undefined
 ): number | null {
-  return clientHasCapability(clientOrType, 'multiple-sites') ? null : PERSONAL_MAX_SAVED_LOCATIONS;
+  return null;
 }
 
 export function clampClientGuardsNeeded(
@@ -160,30 +165,38 @@ export function clientHomeQuickActions(
     {
       id: 'request',
       label: type === 'personal' ? 'Request security' : 'Post job',
-      sub: type === 'personal' ? 'One-time coverage' : 'Open to guards',
+      sub: type === 'personal' ? 'Request another anytime' : 'Open to guards',
     },
     {
       id: 'guards',
-      label: type === 'personal' ? 'Assigned guards' : 'Browse guards',
-      sub: type === 'personal' ? "Who's covering you" : 'Resumes & licenses',
+      label: type === 'personal' ? 'Rebook a guard' : 'Browse guards',
+      sub: type === 'personal' ? 'Same guard or team again' : 'Resumes & licenses',
     },
     {
       id: 'locations',
-      label: type === 'personal' ? 'My places' : 'Sites',
-      sub: type === 'personal' ? 'Saved personal locations' : 'Locations & site notes',
+      label: type === 'personal' ? 'Preferred locations' : 'Sites',
+      sub: type === 'personal' ? 'Reuse saved places' : 'Locations & site notes',
     },
     {
       id: 'schedule',
       label: 'Schedule',
-      sub: type === 'personal' ? 'Plan a one-time service' : 'Plan ahead',
+      sub: type === 'personal' ? 'One-time or recurring' : 'Plan ahead',
     },
   ];
-  if (clientHasCapability(type, 'multi-guard-requests')) {
-    actions.push({
-      id: 'recurring',
-      label: 'Multi-guard site',
-      sub: 'Construction & events',
-    });
+  if (clientHasCapability(type, 'recurring-schedules')) {
+    actions.push(
+      type === 'personal'
+        ? {
+            id: 'recurring',
+            label: 'Recurring security',
+            sub: 'Weekly or ongoing coverage',
+          }
+        : {
+            id: 'recurring',
+            label: 'Multi-guard site',
+            sub: 'Construction & events',
+          }
+    );
   }
   if (clientHasCapability(type, 'reporting')) {
     actions.push({

@@ -326,7 +326,7 @@ export function ClientDashboard({
         navigate('request');
         break;
       case 'recurring':
-        setFlowPreset(caps.has('recurring-schedules') || caps.has('multi-guard-requests') ? 'recurring' : 'schedule');
+        setFlowPreset('recurring');
         navigate('request');
         break;
       case 'reports':

@@ -1267,8 +1267,8 @@ export function AuthPage({
                   </p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
                     {clientKind === 'personal'
-                      ? 'You are the contracting party and pay as an individual. Coverage can still be at a home, venue, or other site — that does not make this a business account.'
-                      : 'The company or organization is the contracting party and pays the invoice. You can still post a private event if the business is hiring.'}
+                      ? 'You hire and pay as an individual. Request security as often as you need — one-time or recurring. Coverage can still be at a home, venue, or other site.'
+                      : 'The company or organization is the contracting party and pays. Extra tools for sites, staffing, and team access.'}
                   </p>
                   {clientKind === 'business' ? (
                   <div>

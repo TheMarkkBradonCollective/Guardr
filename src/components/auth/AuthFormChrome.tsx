@@ -55,9 +55,9 @@ export function AuthFormHeader({
             : 'Client workspace';
 
   const clientSignupSubtitle = isPersonalClient
-    ? 'You hire and pay as an individual. Coverage can still be at a venue, home, or other site.'
+    ? 'You hire and pay as an individual. Request coverage once or as often as you need — including recurring services.'
     : isBusinessClient
-      ? 'Your organization hires and pays. You can still post a private event if the business is the contracting party.'
+      ? 'Your organization hires and pays, with extra tools for sites, staffing, and team access.'
       : 'Post jobs, browse guards, and manage coverage from your dashboard.';
 
   const subtitle =

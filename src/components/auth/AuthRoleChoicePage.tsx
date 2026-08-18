@@ -66,14 +66,14 @@ const SIGNUP_CLIENT_KIND_OPTIONS: ChoiceOption[] = [
     icon: User,
     title: 'Personal',
     description:
-      'You are hiring and paying as yourself — protection, a private event, residential coverage, or help for a family member. The job can still be at a venue or business site.',
+      'You hire and pay as yourself. Request coverage once or as often as you need — including recurring services. The job can still be at a venue or business site.',
   },
   {
     id: 'business',
     icon: Building2,
     title: 'Business',
     description:
-      'A company, venue, or organization is the contracting party and pays the invoice. You can still post a private event if the business is hiring.',
+      'A company, venue, or organization is the contracting party and pays. Extra tools for sites, staffing, and team access. You can still post a private event if the business is hiring.',
   },
 ];
 

@@ -246,7 +246,9 @@ export function ClientHomeScreen({
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-base">No guards on site right now</p>
                 <p className="text-sm uber-text-muted mt-1 leading-relaxed">
-                  Post a job offer or open the map to track coverage when shifts go live.
+                  {caps.isPersonal
+                    ? 'Request security again or open the map to track coverage when a shift goes live.'
+                    : 'Post a job offer or open the map to track coverage when shifts go live.'}
                 </p>
               </div>
             </div>
@@ -340,7 +342,7 @@ export function ClientHomeScreen({
                   disabled={accountPending}
                   className="!text-[10px] uber-bg-accent-soft uber-text-accent"
                 >
-                  Hire again
+                  {caps.isPersonal ? 'Request again' : 'Hire again'}
                 </AppButton>
               </div>
             ))}
@@ -355,7 +357,9 @@ export function ClientHomeScreen({
       >
         {upcoming.length === 0 ? (
           <AppEmptyState icon={<Calendar className="w-5 h-5" />} title="No scheduled coverage">
-            Post a job to get matched with licensed guards.
+            {caps.isPersonal
+              ? 'Request security whenever you need it — one-time or recurring.'
+              : 'Post a job to get matched with licensed guards.'}
           </AppEmptyState>
         ) : (
           <div className="flex flex-col gap-2 px-5">
