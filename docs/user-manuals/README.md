@@ -30,6 +30,6 @@ Output is copied to `public/manuals/` for website and in-app downloads at `/manu
 
 Each manual is written for its role:
 
-- **Client** — hiring independent contractors; costs, billing, and direct engagement
+- **Client** — Personal vs Business contracting party; hiring independent contractors; credentials, costs, billing
 - **Guard** — independent contractor status; credentials, shifts, payouts
 - **Staff** — Guardr employees; governance, marketplace payments pipeline, staff compensation

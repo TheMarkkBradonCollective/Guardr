@@ -19,7 +19,8 @@ Use this when **shipping a version** to production. For git/PR cleanup only, use
 - `package.json`, download version, PWA cache, and APK binary share the **same version**
 - Auth, push notifications, and realtime work on web, PWA, and APK
 - `npm run lint`, `npm test`, and `npm run build` pass
-- `docs/DEV-UPDATES.md` and `docs/guardr-general-guide.md` are updated
+- `docs/DEV-UPDATES.md` and `docs/guardr-general-guide.md` are updated (dates, missing product copy, and activity-cloud Time tables)
+- User manuals under `docs/user-manuals/` are updated when user-facing behavior changed (`npm run docs:manuals-pdf` if those files changed)
 - You end on `main`, merged and deployed
 
 ## Phase 1 — Merge (`/merge`)
@@ -59,12 +60,39 @@ Do not proceed to release steps with open PRs that should ship in this release.
 4. Wire missing Supabase realtime subscriptions
 5. Bundle or update push handlers if needed
 
-## Phase 5 — Deploy and docs
+## Phase 5 — Docs, activity cloud, deploy
+
+This phase is **mandatory on every `/update`**, including when the product change feels "docs-only" or the version bump is the headline. Skipping it leaves Staff → Dev notes stale and the activity heatmap blank for the release day.
+
+### 5a — Guide, manuals, dates
+
+1. Set **Last updated** on `docs/DEV-UPDATES.md` and `docs/guardr-general-guide.md` to **today's weekday date** (e.g. `Tuesday, August 18, 2026`).
+2. Update `docs/guardr-general-guide.md` for **every** user-facing or ops behavior that shipped in this release — fill missing sections; do not only append a bullet. Signup, roles, fees, credentials, and staff onboarding are the usual gaps.
+3. Update `docs/user-manuals/*.md` when clients, guards, or staff procedures changed. If those files change, run `npm run docs:manuals-pdf` so `public/manuals/` matches.
+4. Update `## Quick reference by date` in `docs/DEV-UPDATES.md` with a row for this release day.
+
+### 5b — Dev notes + activity cloud (required)
+
+The Staff **Dev notes** heatmap (`src/lib/devActivityGrid.ts` → `parseDevActivityGrid`) **only** counts:
+
+- `| Time | What shipped |` table rows under a dated `## Weekday, Month D, YYYY` heading (`| 8:13 AM | … |`)
+- `**Activity:** 9:25 AM` lines
+- `### Something (9:25 AM)` headings plus `- ` bullets under that hour
+
+A changelog with no Time rows **does not light up the cloud**.
+
+1. `git log --format='%ad %s' --date=format:'%A, %B %-d, %Y %I:%M %p'` for commits in this release (convert to `h:mm AM/PM`).
+2. Insert a dated day section at the top of `docs/DEV-UPDATES.md` (or add a Time table to today's existing heading).
+3. Add a `| Time | What shipped |` table with **one row per commit** (merge commits can be skipped). Use the weekday name in the `##` heading or those rows are ignored.
+4. Write the release notes under that heading (PRs merged, shipped behavior, SQL to run, version).
+5. Confirm the latest dated heading in `docs/DEV-UPDATES.md` has Time rows — `src/lib/devActivityGrid.test.ts` asserts this.
+
+Do **not** ship `/update` with Last updated still on a previous date, or with a new day heading that has no Time table.
+
+### 5c — Deploy
 
 1. Deploy website (per project process)
-2. Update `docs/DEV-UPDATES.md` with release notes
-3. Update `docs/guardr-general-guide.md` if user-facing behavior changed
-4. Push `cursor/full-platform-update-97bf`, **merge to `main`**, pull `main` locally
+2. Push `cursor/full-platform-update-97bf`, **merge to `main`**, pull `main` locally
 
 ## Clear all PRs
 
@@ -91,6 +119,7 @@ After merging what belongs on `main`:
 - SQL to run in Supabase (if any)
 - APK download link
 - Auth, notification, and sync verification results
+- Docs: Last updated date, Guide sections filled, Dev notes Time table (activity cloud), manuals/PDF if regenerated
 - What to do next
 
 ## Related

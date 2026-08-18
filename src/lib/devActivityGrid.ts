@@ -20,7 +20,10 @@ function emptyActivityGrid(): number[][] {
   return Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
 }
 
-/** Day-of-week × hour-of-day commit activity (7×24) parsed from dev notes tables. */
+/** Day-of-week × hour-of-day commit activity (7×24) parsed from dev notes tables.
+ * `/update` must write `| Time | What shipped |` rows under a dated `## Weekday, …` heading
+ * or this grid stays empty for that day.
+ */
 export function parseDevActivityGrid(markdown: string): number[][] {
   const grid = emptyActivityGrid();
   let currentDay: number | null = null;

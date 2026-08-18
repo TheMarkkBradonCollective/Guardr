@@ -94,4 +94,5 @@ Pre-release hardening: /fullaudit or /run
 - `docs/CROSS_PLATFORM.md` — surface model (desktop / tablet / mobile / PWA / APK)
 - `docs/guardedesign.md` — design language
 - `docs/design-patterns.md` — Base Web patterns
-- `docs/DEV-UPDATES.md` — release changelog
+- `docs/DEV-UPDATES.md` — release changelog **and** activity-cloud Time tables (Staff → Dev notes heatmap)
+- `docs/user-manuals/` — printable role manuals (`npm run docs:manuals-pdf`)

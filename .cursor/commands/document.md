@@ -20,10 +20,16 @@ Generate complete documentation for the selected scope, including workflows, API
 - Feature list (shipped vs partial)
 - Setup and deployment notes
 - Changelog entry in `docs/DEV-UPDATES.md` when shipping user-visible changes
+- **Last updated** date on Dev notes and the Guide
+- `| Time | What shipped |` rows from git commit times so the Staff Dev notes **activity cloud** records the day (`parseDevActivityGrid`)
+- `docs/guardr-general-guide.md` filled in for the scope (not changelog-only)
+- User manuals when the scope is client/guard/staff procedure
 
 ## Output locations
 
 - `docs/guardr-general-guide.md` — primary product + technical guide
+- `docs/DEV-UPDATES.md` — changelog + `| Time | What shipped |` activity-cloud rows
+- `docs/user-manuals/` — printable role manuals when procedure changed
 - `docs/CROSS_PLATFORM.md` — surface and platform behavior
 - Feature-specific docs under `docs/` when warranted
 
