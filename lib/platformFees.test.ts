@@ -4,11 +4,14 @@ import {
   computeJobBilling,
   DEFAULT_CLIENT_FEE_SCHEDULES,
   DEFAULT_PLATFORM_FEE_CONFIG,
+  feeConfigFromJobSnapshot,
   feeConfigJsonWithSchedules,
   feeGuardTypeFromJobType,
+  jobPlatformFeePerHour,
   normalizeClientPlatformFeeSchedules,
   normalizePlatformFeeConfig,
   parseFeeSchedulesFromFeeConfigJson,
+  rebillJobFromSnapshot,
   resolveClientJobFeeConfig,
   resolvePlatformFeePerHour,
 } from './platformFees';
@@ -120,6 +123,51 @@ test('legacy fee_config without schedules clones the live fee into both accounts
   assert.equal(cloned.business.flatFeePerHour, 5);
   assert.deepEqual(cloned.personal.byGuardType, {});
   assert.deepEqual(cloned.business.byGuardType, {});
+});
+
+test('rebillJobFromSnapshot keeps the frozen platform fee when live tables would differ', () => {
+  const job = {
+    hourlyRate: 40,
+    platformFeePerHour: 12,
+    guardPay: 28,
+  };
+  const live = resolveClientJobFeeConfig(DEFAULT_CLIENT_FEE_SCHEDULES, 'business', 'bodyguard');
+  assert.equal(live.flatFeePerHour, 12);
+
+  const rescheduled = rebillJobFromSnapshot(job, { durationHours: 10, guardsNeeded: 1 });
+  assert.equal(rescheduled.platformFeePerHour, 12);
+  assert.equal(rescheduled.guardPay, 28);
+  assert.equal(rescheduled.hourlyRate, 40);
+  assert.equal(rescheduled.estimatedPayout, 400);
+
+  const rateEdit = rebillJobFromSnapshot(job, {
+    hourlyRate: 50,
+    durationHours: 8,
+    guardsNeeded: 1,
+  });
+  assert.equal(rateEdit.platformFeePerHour, 12);
+  assert.equal(rateEdit.guardPay, 38);
+  assert.equal(rateEdit.estimatedPayout, 400);
+
+  const agreed = rebillJobFromSnapshot(job, {
+    hourlyRate: 50,
+    durationHours: 8,
+    guardsNeeded: 1,
+    agreementFeeConfig: { model: 'flat', flatFeePerHour: 7 },
+  });
+  assert.equal(agreed.platformFeePerHour, 7);
+  assert.equal(agreed.guardPay, 43);
+});
+
+test('feeConfigFromJobSnapshot ignores live personal/business schedules', () => {
+  const snapshot = feeConfigFromJobSnapshot({
+    hourlyRate: 40,
+    platformFeePerHour: 9,
+  });
+  assert.equal(snapshot.model, 'flat');
+  assert.equal(snapshot.flatFeePerHour, 9);
+  assert.equal(jobPlatformFeePerHour({ hourlyRate: 40, platformFeePerHour: undefined }), 5);
+  assert.equal(jobPlatformFeePerHour({ hourlyRate: 40, guardPay: 31 }), 9);
 });
 
 test('fee_config JSON round-trips nested personal and business schedules', () => {

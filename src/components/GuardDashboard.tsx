@@ -85,7 +85,7 @@ import {
 import { guardScheduleConflictError, type ScheduleJob } from '../lib/guardSchedule';
 import { isGuardTrusted } from '../lib/guardTrust';
 import { computeGuardEarningsBreakdown } from '../lib/guardEarnings';
-import { resolveClientJobFeeConfig, type ClientPlatformFeeSchedules } from '../lib/payments';
+import { feeConfigFromJobSnapshot } from '../lib/payments';
 import { openGuardPayoutInvoices } from '../lib/guardPayoutInvoiceStorage';
 import { GuardJobView, GuardPayoutView } from '../lib/guardJobView';
 import { guardParticipatesInJobChat } from '../lib/jobChat';
@@ -177,8 +177,6 @@ interface GuardDashboardProps {
   onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
   accountNotifications?: AccountMenuNotificationProps;
   feeConfig?: import('../lib/payments').PlatformFeeConfig;
-  feeSchedules?: ClientPlatformFeeSchedules;
-  clientTypeById?: Record<string, string>;
   onSubmitPriceOffer?: (
     requestId: string,
     input: {
@@ -344,8 +342,6 @@ export function GuardDashboard({
   onDeclineTeamInvite,
   accountNotifications,
   feeConfig,
-  feeSchedules,
-  clientTypeById,
   onSubmitPriceOffer,
   onAcceptPriceOffer,
   coworkerGuards = [],
@@ -416,13 +412,18 @@ export function GuardDashboard({
   isDbConnected = false,
 }: GuardDashboardProps) {
   const isEmbedded = variant === 'embedded';
-  const feeForJob = (job: { clientId?: string; type?: string }) =>
-    resolveClientJobFeeConfig(
-      feeSchedules,
-      job.clientId ? clientTypeById?.[job.clientId] : undefined,
-      job.type,
-      feeConfig
-    );
+  const feeForJob = (job: {
+    hourlyRate?: number;
+    guardPay?: number;
+    platformFeePerHour?: number;
+    agreementFeeConfig?: import('../types').AgreementPlatformFeeConfig;
+  }) =>
+    feeConfigFromJobSnapshot({
+      hourlyRate: job.hourlyRate ?? 0,
+      platformFeePerHour: job.platformFeePerHour,
+      guardPay: job.guardPay,
+      agreementFeeConfig: job.agreementFeeConfig,
+    });
   const isControlled = controlledTab !== undefined;
   const [standaloneTab, setStandaloneTab] = useState<GuardTab>(controlledTab ?? initialTab);
   const activeTab = isEmbedded ? shiftTab : (isControlled ? controlledTab : standaloneTab);
@@ -1584,8 +1585,6 @@ export function GuardDashboard({
                 onAcceptInvite={onAcceptTeamInvite}
                 onDeclineInvite={onDeclineTeamInvite}
                 feeConfig={feeConfig}
-                feeSchedules={feeSchedules}
-                clientTypeById={clientTypeById}
                 onSubmitPriceOffer={onSubmitPriceOffer}
                 onAcceptPriceOffer={onAcceptPriceOffer}
                 onViewBriefing={openBriefingForJob}

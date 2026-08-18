@@ -180,7 +180,7 @@ export function toGuardJobView(
   req: SecurityRequest,
   guardId?: string
 ): GuardJobView {
-  const guardPay = req.guardPay ?? computeGuardPay(req.hourlyRate);
+  const guardPay = req.guardPay ?? computeGuardPay(req.hourlyRate, req.platformFeePerHour);
   const canViewBriefing = guardId ? guardCanViewOperationalBriefing(guardId, req) : false;
   const sensitiveBriefingExists = jobHasSensitiveBriefing(req);
 

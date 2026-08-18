@@ -179,8 +179,9 @@ export function StaffPaymentSettingsPanel({
     <div className="space-y-4 min-w-0">
       <p className="text-sm text-brand-text/70 leading-relaxed">
         Personal and business accounts have separate platform fee tables. Within each table, every guard
-        type can use the account default or its own rate. Open-contract jobs can still override these
-        defaults per agreement.
+        type can use the account default or its own rate. These rates apply to <strong>new jobs only</strong>.
+        Posted, approved, and contracted jobs keep the prices already saved on that job. Open-contract
+        jobs can still negotiate a different take on that specific agreement.
       </p>
 
       <div className="segmented-control segmented-control-full">

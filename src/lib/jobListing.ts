@@ -299,6 +299,8 @@ export function mergeJobListingUpdates(
     guardsNeeded: safe.guardsNeeded ?? existing.guardsNeeded,
     guardPay: safe.guardPay ?? existing.guardPay,
     estimatedPayout: safe.estimatedPayout ?? existing.estimatedPayout,
+    platformFeePerHour: existing.platformFeePerHour,
+    agreementFeeConfig: existing.agreementFeeConfig,
     requiredCertifications: safe.requiredCertifications ?? existing.requiredCertifications,
     status: computed.status,
   };

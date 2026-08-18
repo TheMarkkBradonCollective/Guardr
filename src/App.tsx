@@ -201,7 +201,7 @@ import { parseInventoryEquipmentJson, parseInventoryUniformsJson } from './lib/g
 import { guardApplicationCredentialVerificationBlocker } from './lib/guardApplicationIntake';
 import { computeDurationHours, formatShiftRange } from './lib/dates';
 import { normalizeJobStatus } from './lib/jobStatus';
-import { computeGuardPay, computeJobBilling, LEGACY_PLATFORM_FEE_PER_HOUR, resolvePlatformFeePerHour } from './lib/payments';
+import { computeGuardPay, computeJobBilling, feeConfigFromJobSnapshot, LEGACY_PLATFORM_FEE_PER_HOUR, rebillJobFromSnapshot, resolvePlatformFeePerHour } from './lib/payments';
 import {
   acceptGuardPriceOffer,
   appendGuardPriceOffer,
@@ -2751,7 +2751,7 @@ export default function App() {
           earlyClockOutActualHours: r.early_clock_out_actual_hours != null ? Number(r.early_clock_out_actual_hours) : undefined,
           earlyClockOutRefundAmount: r.early_clock_out_refund_amount != null ? Number(r.early_clock_out_refund_amount) : undefined,
           earlyClockOutRefundStatus: r.early_clock_out_refund_status ?? undefined,
-          guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate),
+          guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate, r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR),
           platformFeePerHour: r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR,
           pricingMode: r.pricing_mode === 'open_contract' ? 'open_contract' : 'standard',
           agreementFeeConfig: r.agreement_fee_config ?? undefined,
@@ -3522,14 +3522,6 @@ export default function App() {
     () => clientPaymentGates(platformSettings),
     [platformSettings]
   );
-
-  const clientTypeById = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const client of clients) {
-      map[client.id] = client.clientType ?? 'business';
-    }
-    return map;
-  }, [clients]);
 
   const companyPlacardPublicDocuments = useMemo(
     () =>
@@ -9162,10 +9154,12 @@ export default function App() {
     }
   ) => {
     const guardsNeeded = existing.guardsNeeded ?? 1;
-    const estimatedPayout =
-      change.estimatedPayout ??
-      Math.round(change.durationHours * existing.hourlyRate * guardsNeeded * 100) / 100;
-    const guardPay = change.guardPay ?? computeGuardPay(existing.hourlyRate);
+    const billing = rebillJobFromSnapshot(existing, {
+      durationHours: change.durationHours,
+      guardsNeeded,
+    });
+    const estimatedPayout = change.estimatedPayout ?? billing.estimatedPayout;
+    const guardPay = change.guardPay ?? billing.guardPay;
 
     const merged: SecurityRequest = {
       ...existing,
@@ -10339,16 +10333,11 @@ export default function App() {
       appToast('That offer is no longer available.', 'error');
       return;
     }
-    const jobClient = clients.find((c) => c.id === job.clientId);
     const billing = applyAgreedOfferToJobBilling({
       offer,
       durationHours: job.durationHours,
       guardsNeeded: job.guardsNeeded ?? 1,
-      globalFeeConfig: feeConfigForClientJob(
-        platformSettings,
-        jobClient?.clientType,
-        job.type
-      ),
+      globalFeeConfig: feeConfigFromJobSnapshot(job),
     });
     const applicants = job.applicants.includes(guardId)
       ? job.applicants
@@ -13023,8 +13012,6 @@ export default function App() {
           onAcceptJob={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
           feeConfig={platformSettings.feeConfig}
-          feeSchedules={platformSettings.clientFeeSchedules}
-          clientTypeById={clientTypeById}
           onSubmitPriceOffer={(requestId, input) =>
             void handleSubmitPriceOffer(requestId, activeGuardId, input, 'guard')
           }

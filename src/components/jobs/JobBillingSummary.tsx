@@ -42,7 +42,7 @@ export function JobBillingSummary({
   platformFeeTotal,
 }: JobBillingSummaryProps) {
   const guardRate =
-    guardPayProp ?? (hourlyRate != null ? computeGuardPay(hourlyRate) : 0);
+    guardPayProp ?? (hourlyRate != null ? computeGuardPay(hourlyRate, platformFeePerHour) : 0);
   const guardEarns = Math.round(durationHours * guardRate * 100) / 100;
   const platformRate = platformFeePerHour ?? PLATFORM_FEE_PER_HOUR;
   const platformFee =

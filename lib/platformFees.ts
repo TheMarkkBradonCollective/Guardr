@@ -174,6 +174,75 @@ export function computeGuardPayoutCents(
   return Math.round(durationHours * guardPay * 100);
 }
 
+/** Frozen rates captured on a posted job or contract. Live fee tables must not rewrite these. */
+export interface JobBillingSnapshot {
+  hourlyRate: number;
+  platformFeePerHour?: number | null;
+  guardPay?: number | null;
+  agreementFeeConfig?: AgreementPlatformFeeConfig | null;
+}
+
+export function jobPlatformFeePerHour(
+  job: JobBillingSnapshot,
+  fallback: number = LEGACY_PLATFORM_FEE_PER_HOUR
+): number {
+  if (job.platformFeePerHour != null && Number.isFinite(job.platformFeePerHour)) {
+    return Math.max(0, job.platformFeePerHour);
+  }
+  if (job.guardPay != null && Number.isFinite(job.guardPay)) {
+    return Math.max(0, job.hourlyRate - job.guardPay);
+  }
+  return fallback;
+}
+
+/** Rebuild a fee config from the job's stored take so previews never use live staff tables. */
+export function feeConfigFromJobSnapshot(job: JobBillingSnapshot): PlatformFeeConfig {
+  return {
+    model: 'flat',
+    flatFeePerHour: jobPlatformFeePerHour(job),
+    percentRate: 0,
+  };
+}
+
+/**
+ * Recompute duration-based totals from a job's frozen platform fee.
+ * Live personal/business schedules are never consulted.
+ */
+export function rebillJobFromSnapshot(
+  job: JobBillingSnapshot,
+  next: {
+    hourlyRate?: number;
+    durationHours: number;
+    guardsNeeded?: number;
+    agreementFeeConfig?: AgreementPlatformFeeConfig | null;
+  }
+): {
+  hourlyRate: number;
+  platformFeePerHour: number;
+  guardPay: number;
+  estimatedPayout: number;
+  agreementFeeConfig?: AgreementPlatformFeeConfig;
+} {
+  const hourlyRate = Math.max(0, next.hourlyRate ?? job.hourlyRate);
+  const agreement =
+    next.agreementFeeConfig !== undefined
+      ? normalizeAgreementFeeConfig(next.agreementFeeConfig)
+      : normalizeAgreementFeeConfig(job.agreementFeeConfig);
+  const platformFeePerHour = agreement
+    ? resolveAgreementPlatformFeePerHour(hourlyRate, agreement)
+    : jobPlatformFeePerHour(job);
+  const guardPay = computeGuardPay(hourlyRate, platformFeePerHour);
+  const estimatedPayout =
+    Math.round(next.durationHours * hourlyRate * Math.max(1, next.guardsNeeded ?? 1) * 100) / 100;
+  return {
+    hourlyRate,
+    platformFeePerHour,
+    guardPay,
+    estimatedPayout,
+    agreementFeeConfig: agreement,
+  };
+}
+
 export function computeJobBilling(
   hourlyRate: number,
   durationHours: number,

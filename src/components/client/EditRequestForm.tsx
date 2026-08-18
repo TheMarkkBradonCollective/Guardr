@@ -3,7 +3,7 @@ import { SecurityRequest } from '../../types';
 import { computeDurationHours, formatDuration, toDatetimeLocal } from '../../lib/dates';
 import { minScheduleDatetimeLocal, validateShiftSchedule } from '../../lib/jobEditRules';
 import { paidScheduleDurationHours } from '../../lib/jobScheduleChange';
-import { computeGuardPay } from '../../lib/payments';
+import { rebillJobFromSnapshot } from '../../lib/payments';
 import { cityFromGeocode, formatCityLabel, isCaliforniaCity, resolveJobCity, type CaliforniaCity } from '../../lib/californiaCities';
 import { getSelectableCityNamesForClients } from '../../lib/platformCities';
 import { listingFieldsFromJob } from '../../lib/jobListing';
@@ -99,9 +99,10 @@ export function EditRequestForm({
           longitude: submitLongitude,
         });
       } else if (paidReschedule) {
-        const guardPay = computeGuardPay(request.hourlyRate);
-        const guardsNeeded = request.guardsNeeded ?? 1;
-        const estimatedPayout = Math.round(durationHours * request.hourlyRate * guardsNeeded * 100) / 100;
+        const billing = rebillJobFromSnapshot(request, {
+          durationHours,
+          guardsNeeded: request.guardsNeeded ?? 1,
+        });
         await onSave(request.id, {
           title: trimmedTitle,
           siteName: siteName.trim(),
@@ -111,8 +112,8 @@ export function EditRequestForm({
           startDate: new Date(startDate).toISOString(),
           endDate: new Date(endDate).toISOString(),
           durationHours,
-          estimatedPayout,
-          guardPay,
+          estimatedPayout: billing.estimatedPayout,
+          guardPay: billing.guardPay,
           latitude: submitLatitude,
           longitude: submitLongitude,
         });
@@ -122,8 +123,11 @@ export function EditRequestForm({
           caps.clientType,
           request.guardsNeeded ?? 1
         );
-        const guardPay = computeGuardPay(hourlyRate);
-        const estimatedPayout = Math.round(durationHours * hourlyRate * nextGuards * 100) / 100;
+        const billing = rebillJobFromSnapshot(request, {
+          hourlyRate,
+          durationHours,
+          guardsNeeded: nextGuards,
+        });
         await onSave(request.id, {
           title: trimmedTitle,
           siteName: siteName.trim(),
@@ -135,8 +139,8 @@ export function EditRequestForm({
           durationHours,
           guardsNeeded: nextGuards,
           hourlyRate,
-          guardPay,
-          estimatedPayout,
+          guardPay: billing.guardPay,
+          estimatedPayout: billing.estimatedPayout,
           description: listing.description.trim(),
           uniformRequirements: listing.uniformRequirements.trim(),
           equipmentRequirements: listing.equipmentRequirements.trim(),
