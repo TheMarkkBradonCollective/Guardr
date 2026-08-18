@@ -6,10 +6,12 @@ import type { PlatformSettings } from '../../lib/platformSettings';
 import type { StaffTeamDetailTab } from '../../lib/appNavigation';
 import {
   matchesStaffRoleFilter,
+  matchesStaffTeamFilter,
   matchesStaffTierFilter,
   staffRosterSortRank,
   type StaffRoleFilter,
   type StaffRosterTier,
+  type StaffTeamFilter,
 } from '../../lib/staffListFilters';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
 import { StaffTeamDetailPanel } from './StaffTeamDetailPanel';
@@ -110,6 +112,7 @@ export function StaffTeamPanel({
   const formFactor = useLayoutFormFactor();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<StaffRoleFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StaffTeamFilter>('all');
   const [staffTeamTab, setStaffTeamTab] = useState<StaffTeamDetailTab>('profile');
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(initialSelectedId);
   const isControlled = controlledSelectedId !== undefined;
@@ -139,6 +142,7 @@ export function StaffTeamPanel({
         (g.badgeNumber ?? '').toLowerCase().includes(search.toLowerCase())
     )
     .filter((member) => matchesStaffRoleFilter(member, roleFilter))
+    .filter((member) => matchesStaffTeamFilter(member, statusFilter))
     .sort((a, b) => {
       const rank = staffRosterSortRank(a) - staffRosterSortRank(b);
       if (rank !== 0) return rank;
@@ -219,18 +223,32 @@ export function StaffTeamPanel({
         placeholder={searchPlaceholder}
         className="max-w-md"
       />
-      <StaffListFilterTabs
-        aria-label={`${rosterLabel} role`}
-        activeId={roleFilter}
-        onChange={(id) => setRoleFilter(id as StaffRoleFilter)}
-        tabs={[
-          { id: 'all', label: 'All' },
-          ...tierRoleOptions.map((role) => ({
-            id: role,
-            label: ROLE_LABELS[staffRoleToPlatformRole(role)],
-          })),
-        ]}
-      />
+      <div className="space-y-2">
+        <StaffListFilterTabs
+          aria-label={`${rosterLabel} role`}
+          activeId={roleFilter}
+          onChange={(id) => setRoleFilter(id as StaffRoleFilter)}
+          tabs={[
+            { id: 'all', label: 'All' },
+            ...tierRoleOptions.map((role) => ({
+              id: role,
+              label: ROLE_LABELS[staffRoleToPlatformRole(role)],
+            })),
+          ]}
+        />
+        <StaffListFilterTabs
+          aria-label={`${rosterLabel} roster status`}
+          activeId={statusFilter}
+          onChange={(id) => setStatusFilter(id as StaffTeamFilter)}
+          tabs={[
+            { id: 'all', label: 'All' },
+            { id: 'pending', label: 'Pending' },
+            { id: 'inactive', label: 'Inactive' },
+            { id: 'active', label: 'Active' },
+            { id: 'suspended', label: 'Suspended' },
+          ]}
+        />
+      </div>
     </>
   ) : null;
 
