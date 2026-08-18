@@ -80,14 +80,14 @@ nobody can quietly collapse them into a single scale with a factor.
 
 | | Mobile | Tablet | Desktop |
 |---|---|---|---|
-| Navigation | drawer sidebar + bottom footer tabs | side rail | sidebar + top bar |
+| Navigation | bottom tabs + More sheet | side rail | sidebar + top bar |
 | Overlay | sheet / modal (existing) | docked side panel | centred dialog |
 | Detail view | push over list | two-column split | resizable multi-panel |
 | Minimum target | 48px | 44px | 32px |
 | Body type | 16px | 15px | 14px |
 | Row height | 68px | 60px | 40px |
 | Page transition | slide-over 300ms | panel-fade 260ms | cross-fade 160ms |
-| Title lives in | header band (hamburger + title) | page body | top bar breadcrumb |
+| Title lives in | header band (avatar + title) | page body | top bar breadcrumb |
 | Hover carries meaning | no | no | yes |
 | Keyboard shortcuts | no | no | yes |
 | Gesture navigation | yes | yes | no |
@@ -99,20 +99,20 @@ leaking into one another.
 
 **Title ownership** is worth calling out because getting it wrong produces visible
 duplication: exactly one place per surface renders the page title. Mobile uses its
-header band (hamburger + title + account), tablet uses the page body, desktop uses
+header band (avatar + title), tablet uses the page body, desktop uses
 the top bar breadcrumb. The tablet shell header therefore shows workspace context,
 not a title.
 
-## Mobile is intentionally the classic shell
+## Mobile is its own application
 
-The mobile surface keeps the pre-remaster Uber-style application: hamburger drawer
-sidebar (identity + full nav + footer links) and sticky bottom footer tabs with a
-More sheet. Tablet and desktop do **not** reuse that shell — they load independent
-CODE25 / CODE26 chunks. The surface router exists so those
-wider layouts stop piggybacking off the phone, not so the phone itself is rebuilt.
+The mobile surface is a thumb-first phone app: a 56px header (account avatar +
+title), an edge-to-edge scrolling canvas, a fixed bottom tab bar, and bottom
+sheets for overflow destinations and account. There is no hamburger drawer of
+primary destinations and no desktop sidebar scaled down.
 
-Production mobile mounts CODE27 with CODE28. The newer
-CODE29 kit remains available for the CODE30 harness.
+Production mobile mounts `MobileAppShell` via `SurfaceAppShell` — the same router
+tablet and desktop use for their independent shells. `GuardrDrawerShell` is not
+the signed-in phone chrome.
 
 ## The three navigation models
 

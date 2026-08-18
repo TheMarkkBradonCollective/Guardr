@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Block } from 'baseui/block';
 import { SessionUser } from '../../../types';
 import { ROLE_LABELS } from '../../../lib/permissions';
 import { isStaffOpsMapSection, isStaffMessagesHubSection, StaffSection } from '../../../lib/staffOps';
@@ -11,12 +10,12 @@ import { SidebarFooterLinks } from '../SidebarFooterLinks';
 import { STAFF_NAV_GROUPS } from '../../../lib/staffNavGroups';
 import { StaffNavItem } from '../../staff/StaffSidebarNav';
 import { showAppAlert } from '../../ui/AppConfirm';
-import { GuardrDrawerShell, type SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
+import type { SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
 import type { SurfacePrimaryAction } from '../../../surfaces/surfaceShellTypes';
 import { useSurface } from '../../../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../../../surfaces/SurfaceAppShell';
 import type { SurfaceDestination } from '../../../surfaces/surfaceNavigation';
-import { MobileDrawerIdentity } from '../MobileDrawerIdentity';
+import { ProfileAvatar } from '../../profile/ProfileAvatar';
 
 interface DesktopStaffAdminShellProps {
   children: React.ReactNode;
@@ -47,10 +46,10 @@ interface DesktopStaffAdminShellProps {
   sidebarPrimaryActions?: Array<SurfacePrimaryAction | SidebarPrimaryAction>;
 }
 
-/** Section groups for drawer / rail / sidebar — see staffNavGroups.ts */
+/** Section groups for rail / sidebar / More sheet — see staffNavGroups.ts */
 const MENU_GROUPS = STAFF_NAV_GROUPS;
 
-/** Thumb-order tabs for the mobile staff app. Everything else lives in the drawer / More sheet. */
+/** Thumb-order tabs for the mobile staff app. Everything else lives in More. */
 const MOBILE_TAB_ORDER: StaffSection[] = ['overview', 'jobs', 'guards', 'messages'];
 const FINANCE_TAB_ORDER: StaffSection[] = [
   'overview',
@@ -63,14 +62,11 @@ const FINANCE_TAB_ORDER: StaffSection[] = [
 /** Destinations pinned to the tablet quick-switch row — live ops, not admin. */
 const TABLET_QUICK: StaffSection[] = ['overview', 'map', 'jobs'];
 
-/** Pre-remaster staff bottom-nav order (drawer shell footer). */
-const STAFF_BOTTOM_NAV_IDS: StaffSection[] = ['overview', 'jobs', 'clients', 'guards', 'team'];
-
 /**
  * Staff entry point into the three surface applications.
  *
- * Mobile keeps the original drawer sidebar + bottom footer nav. Tablet and
- * desktop use their own independent shells so they never share the phone layout.
+ * Mobile, tablet, and desktop each load their own independent shell. Destinations
+ * are the same catalog; only the arrangement changes.
  */
 export function DesktopStaffAdminShell({
   children,
@@ -101,7 +97,6 @@ export function DesktopStaffAdminShell({
   sidebarPrimaryActions,
 }: DesktopStaffAdminShellProps) {
   const { surface } = useSurface();
-  const isMobileShell = surface === 'mobile';
   const accessFlags = {
     showFinance,
     showPayments,
@@ -115,46 +110,6 @@ export function DesktopStaffAdminShell({
   const bleed = isMap || isStaffMessagesHubSection(activeSection);
 
   const visible = (item: StaffNavItem) => isStaffNavItemVisible(item, accessFlags);
-
-  const navGroups = useMemo(
-    () =>
-      MENU_GROUPS.map((group) => ({
-        title: group.title,
-        items: group.ids
-          .map((id) => navItems.find((n) => n.id === id))
-          .filter((item): item is StaffNavItem => !!item && visible(item))
-          .map((item) => ({
-            id: item.id,
-            label: item.label,
-            icon: item.icon,
-          })),
-      })).filter((group) => group.items.length > 0),
-    [
-      navItems,
-      showFinance,
-      showPayments,
-      showSettings,
-      showPermissions,
-      showDisputes,
-      showCities,
-      financeDeskOnly,
-    ],
-  );
-
-  const flatNavItems = useMemo(() => navGroups.flatMap((group) => group.items), [navGroups]);
-
-  const mobileBottomNavItems = useMemo(() => {
-    if (!isMobileShell) return undefined;
-    const bottomIds = financeDeskOnly ? FINANCE_TAB_ORDER : STAFF_BOTTOM_NAV_IDS;
-    return bottomIds.map((id) => {
-      const item = flatNavItems.find((nav) => nav.id === id);
-      if (!item) return null;
-      return {
-        ...item,
-        label: id === 'guards' ? 'Guard' : item.label,
-      };
-    }).filter((item): item is NonNullable<typeof item> => item != null);
-  }, [isMobileShell, flatNavItems, financeDeskOnly]);
 
   const destinations = useMemo<SurfaceDestination[]>(() => {
     const mobileOrder = financeDeskOnly ? FINANCE_TAB_ORDER : MOBILE_TAB_ORDER;
@@ -217,50 +172,6 @@ export function DesktopStaffAdminShell({
     <SidebarFooterLinks onOpenSettings={() => onNavigate('preferences')} onOpenLegal={onOpenLegal} />
   );
 
-  if (isMobileShell) {
-    return (
-      <GuardrDrawerShell
-        forceLayout="mobile"
-        workspaceLabel="Staff workspace"
-        title={screenTitle}
-        navGroups={navGroups}
-        activeNavId={navHighlight}
-        onNavigate={handleNav}
-        accountMenu={accountMenu}
-        sidebarPrimaryAction={sidebarPrimaryAction}
-        sidebarPrimaryActions={sidebarPrimaryActions}
-        sidebarBrandExtra={
-          isDbConnected ? (
-            <Block
-              width="8px"
-              height="8px"
-              backgroundColor="positive"
-              overrides={{ Block: { style: { borderRadius: '50%', flexShrink: 0 } } }}
-              aria-label="Connected"
-            />
-          ) : null
-        }
-        sidebarFooter={sidebarFooter}
-        sidebarIdentity={
-          <MobileDrawerIdentity
-            userName={currentUser.name}
-            avatarUrl={currentUser.avatar}
-            onClick={() => onNavigate('profile')}
-          />
-        }
-        hideHeader={hideHeader}
-        headerExtension={headerExtension}
-        headerOverride={headerOverride}
-        bleed={bleed}
-        variant={isMap ? 'dark' : 'default'}
-        ariaLabel="Staff navigation"
-        mobileBottomNavItems={mobileBottomNavItems}
-      >
-        {children}
-      </GuardrDrawerShell>
-    );
-  }
-
   return (
     <SurfaceAppShell
       title={screenTitle}
@@ -268,6 +179,15 @@ export function DesktopStaffAdminShell({
       destinations={destinations}
       activeId={navHighlight}
       onNavigate={handleNav}
+      notifications={undefined}
+      identity={
+        <ProfileAvatar
+          src={currentUser.avatar}
+          name={currentUser.name}
+          size="sm"
+          className="sfm-shell-avatar"
+        />
+      }
       accountMenu={accountMenu}
       navFooter={sidebarFooter}
       primaryAction={sidebarPrimaryAction ?? sidebarPrimaryActions?.[0]}
