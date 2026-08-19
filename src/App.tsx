@@ -4408,7 +4408,7 @@ export default function App() {
         });
       if (insertError) {
         console.error('Client DB insert error:', insertError);
-        throw new Error('Could not create hiring account. This email may already be registered.');
+        throw new Error('Could not create customer. This email may already be registered.');
       }
 
       // Intake fields — written in a separate update so a missing migration
@@ -5884,7 +5884,7 @@ export default function App() {
       throw new Error('This email is already registered to a guard or staff account.');
     }
     if (clients.some((c) => c.email.toLowerCase() === emailLower)) {
-      throw new Error('This email is already registered to a hiring account.');
+      throw new Error('This email is already registered to a customer.');
     }
     return emailLower;
   };
@@ -6626,7 +6626,7 @@ export default function App() {
 
   const handleApproveClient = async (clientId: string) => {
     if (!currentUser || !canManageClients(currentUser)) {
-      appToast('You do not have permission to approve hiring accounts.', 'error');
+      appToast('You do not have permission to approve customers.', 'error');
       return;
     }
     setClients((prev) =>
@@ -6670,7 +6670,7 @@ export default function App() {
 
   const handleRejectClient = async (clientId: string) => {
     if (!currentUser || !canManageClients(currentUser)) {
-      appToast('You do not have permission to reject hiring accounts.', 'error');
+      appToast('You do not have permission to reject customers.', 'error');
       return;
     }
     const client = clients.find((c) => c.id === clientId);
@@ -6832,14 +6832,14 @@ export default function App() {
 
   const handleRequestClientApplicationRevision = async (clientId: string, reason?: string) => {
     if (!currentUser || !canManageClients(currentUser)) {
-      appToast('You do not have permission to request hiring-account application revisions.', 'error');
+      appToast('You do not have permission to request customer application revisions.', 'error');
       return;
     }
     const client = clients.find((c) => c.id === clientId);
     if (!client) throw new Error('Client not found.');
     const status = getClientAccountStatus(client);
     if (status !== 'pending' && status !== 'active') {
-      throw new Error('Only pending or approved hiring-account applications can be sent back for revision.');
+      throw new Error('Only pending or approved customer applications can be sent back for revision.');
     }
 
     const activeJob = requests.find(
@@ -6883,7 +6883,7 @@ export default function App() {
         .eq('id', clientId);
       if (error) {
         setClients((prev) => prev.map((c) => (c.id === clientId ? previous : c)));
-        throw new Error('Could not request hiring-account application revision.');
+        throw new Error('Could not request customer application revision.');
       }
     }
 
@@ -7793,7 +7793,7 @@ export default function App() {
       const { error } = await supabase.from('clients').delete().eq('id', clientId);
       if (error) {
         console.error('Client delete error:', error);
-        throw new Error('Could not delete hiring account from the database.');
+        throw new Error('Could not delete customer from the database.');
       }
     }
     setClients((prev) => prev.filter((c) => c.id !== clientId));
@@ -7833,7 +7833,7 @@ export default function App() {
       return;
     }
 
-    const clientName = clientRecord?.companyName || currentUser?.clientName || currentUser?.name || 'Hiring account';
+    const clientName = clientRecord?.companyName || currentUser?.clientName || currentUser?.name || 'Customer';
     const clientLogo = clientName.split(' ').map((w: string) => w[0]).join('').slice(0, 3).toUpperCase();
     const siteName = newRequest.siteName || '';
     const address = newRequest.address || newRequest.location || 'To Be Confirmed';
@@ -12267,7 +12267,7 @@ export default function App() {
     await persistClientMessageToDb(message);
     trackStaffWorkActionForUser(currentUser, {
       action: 'client_message_sent',
-      label: 'Hiring-account message sent',
+      label: 'Customer message sent',
     });
     void reportPushEvent(currentUser, {
       type: 'client_message',

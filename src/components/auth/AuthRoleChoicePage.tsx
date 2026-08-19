@@ -33,7 +33,7 @@ const SIGN_IN_OPTIONS: ChoiceOption[] = [
   {
     id: 'client',
     icon: User,
-    title: 'I need security',
+    title: 'Log in as customer',
     description: 'Personal or business — whoever is hiring and paying for coverage.',
   },
   {

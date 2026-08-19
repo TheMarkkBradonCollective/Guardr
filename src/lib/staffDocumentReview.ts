@@ -143,9 +143,9 @@ export async function promptRequestGuardApplicationRevisionNote(): Promise<strin
 /** Soft reopen — unlock submitted client application contact details. Returns null if cancelled. */
 export async function promptRequestClientApplicationRevisionNote(): Promise<string | null> {
   const confirmed = await showAppConfirm({
-    title: 'Request hiring-account application revision?',
+    title: 'Request customer application revision?',
     message:
-      'Application details unlock so the hiring account can fix issues. Approved applications return to Pending for re-review.',
+      'Application details unlock so the customer can fix issues. Approved applications return to Pending for re-review.',
     confirmLabel: 'Request revision',
     cancelLabel: 'Keep reviewing',
     tone: 'danger',

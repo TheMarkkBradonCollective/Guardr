@@ -64,8 +64,8 @@ export function StaffClientDetailPanel({
   const handleDelete = async () => {
     if (!onDeleteClient) return;
     if (!(await showAppConfirm({
-      title: 'Delete hiring account?',
-      message: `Delete hiring account for ${clientDisplayName(client)}? This cannot be undone.`,
+      title: 'Delete customer?',
+      message: `Delete customer for ${clientDisplayName(client)}? This cannot be undone.`,
       confirmLabel: 'Delete account',
       tone: 'danger',
     }))) {
@@ -75,7 +75,7 @@ export function StaffClientDetailPanel({
     try {
       await onDeleteClient(client.id);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not delete hiring account.', { tone: 'error' });
+      showAppToast(err instanceof Error ? err.message : 'Could not delete customer.', { tone: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -179,17 +179,17 @@ export function StaffClientDetailPanel({
           <div className="staff-detail-actions">
             {isPending && (
               <AppButton variant="primary" size="sm" className="staff-action-btn--ok" onClick={() => void handleApproveClient()}>
-                Approve hiring account
+                Approve customer
               </AppButton>
             )}
             {isSuspended && (
               <AppButton variant="primary" size="sm" className="staff-action-btn--ok" onClick={() => void handleRestoreClient()}>
-                Restore hiring account
+                Restore customer
               </AppButton>
             )}
             {!isPending && !isSuspended && (
               <AppButton variant="danger" size="sm" className="staff-action-btn--warn" onClick={() => void handleSuspendClient()}>
-                Suspend hiring account
+                Suspend customer
               </AppButton>
             )}
             {onSetClientTrusted && (
@@ -200,8 +200,8 @@ export function StaffClientDetailPanel({
                 onClick={() => void handleToggleTrusted()}
                 title={
                   client.trusted
-                    ? 'Remove trusted status — hiring-account jobs will require staff approval'
-                    : 'Mark as trusted — hiring-account jobs skip approval queue'
+                    ? 'Remove trusted status — customer jobs will require staff approval'
+                    : 'Mark as trusted — customer jobs skip approval queue'
                 }
               >
                 {client.trusted ? 'Remove trusted' : 'Mark as trusted'}

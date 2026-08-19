@@ -6,7 +6,7 @@ import {
   SessionUser,
   SupportTicket,
 } from '../types';
-import { hiringAccountDisplayFallback } from './audienceLabels';
+import { customerDisplayFallback } from './audienceLabels';
 import { guardForRequest } from './clientShift';
 import {
   formatJobChatGuardNames,
@@ -169,7 +169,7 @@ export function buildGuardJobInboxRows({
       id: `job-${job.id}`,
       channel: 'job',
       title: job.title,
-      subtitle: `${job.clientName ?? hiringAccountDisplayFallback('staff')} · ${job.siteName || job.location}`,
+      subtitle: `${job.clientName ?? customerDisplayFallback()} · ${job.siteName || job.location}`,
       preview: lastMessage?.body ?? (eligible ? 'Start conversation' : 'View job chat history'),
       updatedAt: lastMessage?.createdAt ?? thread?.createdAt ?? job.startDate,
       badge: eligible ? 'Live' : readOnly ? 'Archived' : 'Active',
@@ -255,11 +255,11 @@ export function buildStaffInboxRows({
   rows.push({
     id: 'client-community',
     channel: 'client-community',
-    title: 'Hiring-account chat',
+    title: 'Customer chat',
     subtitle: 'All-clients channel',
     preview: 'Community channel for active clients and staff',
     updatedAt: clientMessagesUpdatedAt ?? staffMessagesUpdatedAt ?? new Date(0).toISOString(),
-    badge: 'Hiring accounts',
+    badge: 'Customers',
     badgeTone: 'default',
   });
 

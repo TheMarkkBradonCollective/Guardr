@@ -39,7 +39,7 @@ export function AuthFormHeader({
       ? 'Guard sign in'
       : role === 'staff'
         ? 'Staff sign in'
-        : 'Coverage sign in';
+        : 'Customer sign in';
 
   const title = variant === 'sheet' ? sheetTitle : pageTitle;
 
@@ -52,7 +52,7 @@ export function AuthFormHeader({
           ? 'Personal account'
           : isBusinessClient
             ? 'Business account'
-            : 'Coverage workspace';
+            : 'Customer workspace';
 
   const clientSignupSubtitle = isPersonalClient
     ? 'You hire and pay as an individual. Request coverage once or as often as you need — including recurring services.'

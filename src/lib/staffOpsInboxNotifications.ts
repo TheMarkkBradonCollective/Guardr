@@ -277,7 +277,7 @@ export function buildStaffOpsInboxNotifications(input: BuildStaffOpsInboxInput):
         'applications',
         appId,
         'Account application',
-        'New guard or hiring-account application needs review.',
+        'New guard or customer application needs review.',
         new Date().toISOString(),
         readAtById
       )

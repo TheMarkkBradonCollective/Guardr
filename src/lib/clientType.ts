@@ -1,5 +1,5 @@
 import type { Client, ClientType } from '../types';
-import { hiringAccountDisplayFallback } from './audienceLabels';
+import { customerDisplayFallback } from './audienceLabels';
 
 export type { ClientType };
 
@@ -23,9 +23,9 @@ type ClientNameFields = Pick<Client, 'name' | 'companyName' | 'clientType' | 'fi
 /** Staff lists, approvals, and confirmations — the contracting party. */
 export function clientDisplayName(client: ClientNameFields): string {
   if (normalizeClientType(client.clientType) === 'personal') {
-    return client.name?.trim() || client.firstName?.trim() || hiringAccountDisplayFallback('staff');
+    return client.name?.trim() || client.firstName?.trim() || customerDisplayFallback();
   }
-  return client.companyName?.trim() || client.name?.trim() || hiringAccountDisplayFallback('staff');
+  return client.companyName?.trim() || client.name?.trim() || customerDisplayFallback();
 }
 
 /** Client home greeting / workspace label. */

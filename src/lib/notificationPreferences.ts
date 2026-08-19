@@ -125,7 +125,7 @@ export const NOTIFICATION_TYPE_OPTIONS: {
   {
     key: 'clientMessage',
     type: 'client_message',
-    label: 'Hiring-account chat',
+    label: 'Customer chat',
     description: 'Messages in the all-clients community channel.',
     roles: ['client'],
   },
@@ -160,7 +160,7 @@ export const NOTIFICATION_TYPE_OPTIONS: {
   {
     key: 'clientPendingApproval',
     type: 'client_pending_approval',
-    label: 'Hiring account reviews',
+    label: 'Customer reviews',
     description: 'New client sign-ups awaiting approval.',
     roles: ['staff'],
   },

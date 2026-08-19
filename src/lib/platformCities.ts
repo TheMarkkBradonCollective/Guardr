@@ -272,7 +272,7 @@ export const CITY_STATUS_LABELS: Record<CityMarketStatus, string> = {
 
 export const CITY_STATUS_DESCRIPTIONS: Record<CityMarketStatus, string> = {
   open: 'Accepting applications and releasing accounts to staff.',
-  closed: 'Not accepting new guard or hiring-account applications.',
+  closed: 'Not accepting new guard or customer applications.',
   waitlist:
     'Accepting applications in the background but not releasing to staff until the market is fully active.',
 };

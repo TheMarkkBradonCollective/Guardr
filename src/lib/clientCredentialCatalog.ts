@@ -45,7 +45,7 @@ export const CLIENT_CREDENTIAL_CATALOG: ClientCredentialTypeDef[] = [
     applicableTo: ['personal'],
     requiredFor: [],
     alwaysRequired: true,
-    requiredForDescription: 'Required for every personal hiring account.',
+    requiredForDescription: 'Required for every personal customer.',
     description: 'A government-issued photo ID for the individual hiring Guardr.',
   },
   {
@@ -120,7 +120,7 @@ export const CLIENT_CREDENTIAL_CATALOG: ClientCredentialTypeDef[] = [
     applicableTo: ['business'],
     requiredFor: [],
     alwaysRequired: true,
-    requiredForDescription: 'Required for the authorized representative on every business hiring account.',
+    requiredForDescription: 'Required for the authorized representative on every business customer.',
     description: 'A government-issued photo ID for the person authorized to hire Guardr for the business.',
   },
   {

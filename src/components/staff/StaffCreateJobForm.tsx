@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Client, JobType, SecurityGuard, SecurityRequest } from '../../types';
-import { hiringAccountDisplayFallback } from '../../lib/audienceLabels';
+import { customerDisplayFallback } from '../../lib/audienceLabels';
 import { clientDisplayName } from '../../lib/clientType';
 import { getClientRehireableGuards, guardHasWorkedWithClient } from '../../lib/guardDirectory';
 import { getClientAccountStatus } from '../../lib/accountStatus';
@@ -222,7 +222,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, feeSc
         breakPaid,
       });
       const selectedClient = approvedClients.find((c) => c.id === clientId);
-      const clientLabel = selectedClient ? clientDisplayName(selectedClient) : hiringAccountDisplayFallback('staff');
+      const clientLabel = selectedClient ? clientDisplayName(selectedClient) : customerDisplayFallback();
       setMsg(
         assignGuardId
           ? `Job created for ${clientLabel} with prior guard rehired.`
@@ -265,7 +265,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, feeSc
         <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="sm:col-span-2">
-          <label className="uber-label block mb-1">Hiring account</label>
+          <label className="uber-label block mb-1">Customer</label>
           <select
             value={clientId}
             onChange={(e) => {
