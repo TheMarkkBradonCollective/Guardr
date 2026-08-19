@@ -1,6 +1,6 @@
 # Print-ready PDFs
 
-Generated August 18, 2026. US Letter, with cover page, running headers/footers, and page numbers.
+Generated August 19, 2026. US Letter, with cover page, running headers/footers, and page numbers.
 
 Each role manual is a **standalone printable PDF**. The combined binder merges those exact files in order (plus a binder cover page).
 

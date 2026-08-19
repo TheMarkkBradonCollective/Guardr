@@ -14,7 +14,9 @@ Guardr is operated by **Signature Security Specialist, LLC** as a **technology m
 | In a **direct service relationship with the client** for each assignment | Dispatched, supervised, or employed by Guardr on site |
 | Responsible for your own licenses, insurance, taxes, and business compliance | Covered by Guardr as your employer |
 
-When you accept a job, you enter a **direct contract with that client** for that assignment. Guardr provides the platform, payment facilitation, and credential review tools — **not** security supervision or employment.
+When you accept a job, you enter a **direct contract with that customer** for that assignment. Guardr provides the platform, payment facilitation, and credential review tools — **not** security supervision or employment.
+
+On shift screens and job details, the hiring party is labeled **Customer** (personal or business account).
 
 **Guardr staff** (Support through Founder) are **platform employees**. They verify marketplace eligibility and run operations. They do **not** employ you and do **not** assign normal field work — clients approve who works their site.
 

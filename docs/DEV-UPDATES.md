@@ -17,14 +17,27 @@ The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | Wha
 
 | Time | What shipped |
 |------|----------------|
-| 6:52 AM | Merge PR #1003 — remove sidebar create buttons; restore Management/Credentials add actions |
-| 7:08 AM | Merge PR #1004 — staff platform and auth use Customer labels |
-| 7:10 AM | Release v1.0.131-beta — APK via CI |
+| 5:27 AM | Rename user-facing client labels to customer / hiring account |
+| 5:31 AM | Fix formatReviewCount test for customer review wording |
+| 5:43 AM | Merge PR #1001 — customer / hiring-account UI labels |
+| 5:44 AM | Release v1.0.130-beta — version bump, PWA cache |
+| 5:51 AM | Ship CI-built guardr.apk v1.0.130 (build 230) |
+| 6:14 AM | Remove add/create buttons from role sidebars |
+| 6:17 AM | Show add buttons on Management and Credentials pages |
+| 6:48 AM | Merge PR #1003 — sidebar create cleanup |
+| 7:11 AM | Merge PR #1004 — staff platform and auth use Customer labels |
+| 7:35 AM | Merge PR #1005 — release v1.0.131-beta, APK via CI, Git LFS for APK |
+| 7:45 AM | Complete /update docs — Guide, Dev notes, user manuals |
 
 **Shipped**
-- **v1.0.131** (build **231**) — unified Customer terminology on staff/auth; sidebar create buttons removed; inline add on Management + Credentials
+- **v1.0.131** (build **231**) — unified **Customer** terminology on staff/auth; sidebar create buttons removed; inline add on Management + Credentials
 - PWA service worker cache bust: `guardr-cache-v1-0-131-beta`
-- Android CI: sideload APK artifact
+- Android CI: sideload APK (`guardr-android-apk` artifact); **AAB skipped** — Play keystore secrets not configured
+- **Git LFS** — `*.apk` tracked via LFS (APK exceeds GitHub 100 MB blob limit)
+- **Docs** — `guardr-general-guide.md`, user manuals, Dev notes activity cloud
+
+**Download**
+- https://www.guardr.co/download/guardr.apk?v=231
 
 ---
 
@@ -1268,6 +1281,8 @@ Bringing this to investors — needed every workflow working, every button, ever
 | **Jul 16** | 50+ | Push/FCM fix, APK parity, invoices, realtime sync, notification sound, v1.0.67 |
 | **Jul 15** | 4+ | Production audit, back button, Guide rename → v1.0.45 |
 | **Aug 11** | 20+ | User manuals, staff 50% revenue share, v1.0.115–122 |
+| **Aug 19** | 12+ | /update v1.0.131 — Customer labels (staff/auth), sidebar create cleanup, APK build 231, Git LFS |
+| **Aug 19** | 6+ | /update v1.0.130 — customer/hiring-account UI labels, APK build 230 |
 | **Aug 14** | 10+ | /update v1.0.123 — fieldtest chat, message delete, Google Play prep |
 | **Aug 18** | 24+ | /update v1.0.129 — full platform release, APK + AAB via CI |
 | **Aug 18** | 22+ | /update v1.0.128 — consolidated Aug 18 Supabase SQL catch-up snippet |

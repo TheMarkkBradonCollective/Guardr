@@ -1,6 +1,6 @@
 # Guardr — Guide
 
-**Last updated:** Tuesday, August 18, 2026
+**Last updated:** Wednesday, August 19, 2026
 
 Guardr connects **clients** who need security coverage with **licensed guards** through an independent-contractor technology marketplace. Guardr staff **verify guard credentials** for marketplace eligibility — that is the platform's core compliance role. Guardr is not the employer, PPO, or staffing agency.
 
@@ -25,6 +25,20 @@ Signup is three screens: **I need security** vs **I want to work**, then Persona
 
 Do **not** use guard or client signup if you are applying for a staff job — use **Apply to work at Guardr** instead. Personal vs Business is **who pays**, not the type of location.
 
+### User-facing labels (August 2026)
+
+Guardr uses different words depending on who is looking at the screen. Internal code and database tables still use `client` — only the **display text** changed.
+
+| Audience | What you see | Notes |
+|----------|--------------|-------|
+| **Guards** | **Customer** on shifts, messages, and job details | The person or business hiring coverage for that job |
+| **Staff ops** | **Customers** in the sidebar and roster panels | Formerly labeled "Clients" in staff UI |
+| **Sign-in** | **Log in as customer** | Marketplace hiring party (personal or business account) |
+| **Sign-up** | **I need security** → Personal or Business account | Unchanged marketing path on the homepage |
+| **Auth chrome** | **Customer sign in** / **Customer workspace** | Login and session headers for hiring accounts |
+
+Staff **create** actions (add customer, guard, staff, credential, job) appear **on the page** — not as buttons in the left sidebar. **Management** and **Credentials** always show their add controls when your role allows them.
+
 ### Where to open this guide
 
 | Audience | How to open it | Page title |
@@ -42,7 +56,7 @@ Do **not** use guard or client signup if you are applying for a staff job — us
 | **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
 | **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff; **Guide** / PDF manuals available. **Map**, **Jobs**, **Payments**, and **Profile** remain blocked until **active**. |
 | **Guard (active)** | **Map**, **Jobs**, **Payments**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
-| **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Clients**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
+| **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Customers**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
 | **Staff (pending / approved ops)** | **Staff activation** — upload government ID (front, back, selfie) and connect Stripe; ops panels blocked until **active** |
 | **Staff (management, Manager+)** | Ops dashboard available while **approved** (inactive on roster); upload government ID from **Profile** until verified and auto-activated — not the activation screen |
 | **Staff (active)** | Role-based sidebar — see **Staff role permissions**; **Profile** for government ID updates and **Timesheets**; Directors/Founders also use **Payments** for staff compensation |
@@ -942,7 +956,7 @@ Directors have unrestricted operational access and financial controls. You manag
 | Place guard on job (dispute/safety exception only) | **Jobs** — confirmation required |
 | Full analytics with financial data | **Analytics** |
 | Dev notes | **Dev notes** (sidebar) |
-| Mark guards/clients as **trusted** | **Guards** / **Clients** detail |
+| Mark guards/customers as **trusted** | **Guards** / **Customers** detail |
 
 ### Financial workflow
 
@@ -1025,7 +1039,7 @@ The summary cards below list the key permissions for each role. Expand the topic
 | Page | Moderator | Administrator | Director | Founder |
 |------|-----------|---------------|----------|---------|
 | **Overview**, **Map**, **Jobs** | ✓ | ✓ | ✓ | ✓ |
-| **Applications**, **Credentials**, **Guards**, **Clients** | ✓ | ✓ | ✓ | ✓ |
+| **Applications**, **Credentials**, **Guards**, **Customers** | ✓ | ✓ | ✓ | ✓ |
 | **Messages**, **Incidents** | ✓ | ✓ | ✓ | ✓ |
 | **Stats** (desktop) | ✓ | ✓ | ✓ | ✓ |
 | **Disputes**, **Analytics** | — | ✓ | ✓ | ✓ |
@@ -1319,29 +1333,29 @@ Staff can:
 
 - Search and filter the guard roster.
 - Open a guard profile to view credentials, eligibility status, jobs, and contact info.
-- Add a new guard account (**Add guard** button).
+- Add a new guard account (**Add guard** button on the page).
 - Review credentials and verify documents uploaded by the guard (staff cannot edit credential data — guards upload and resubmit).
 - **Credentials** tab — full credential catalog plus **Account access** (**Deactivate**, **Block**, **Restore access**). Government ID review is approve/resubmit only; deny pending applications from **Applications**.
 - **Edit profile** — Save/Cancel stay pinned at the top while editing; account access and admin actions are hidden until you save or cancel.
 - Verify credentials; accounts auto-activate when all five required credentials are verified.
 - Deactivate, block, or restore guard access (Administrator+).
 
-#### Clients panel
+#### Customers panel
 
-**Where:** Staff sidebar → **Clients**
+**Where:** Staff sidebar → **Customers**
 
-The Clients panel lists all client accounts. Two filter rows:
+The Customers panel lists all marketplace hiring accounts (personal and business). Two filter rows:
 
 - **Account type:** Personal / Business (default Personal)
 - **Status:** All / Pending / Active / Suspended (default All)
 
 Staff can:
 
-- Search and filter the client roster (Personal vs Business).
-- Open a client profile to view account status, jobs, contact info, and **credential** uploads.
-- Add a new client account (**Add client** button).
-- Approve, suspend, or restore client access.
-- Review client credentials (approve / reject) — the same items also appear in **Credentials → Clients**.
+- Search and filter the customer roster (Personal vs Business).
+- Open a customer profile to view account status, jobs, contact info, and **credential** uploads.
+- Add a new customer account (**Add customer** button on the page).
+- Approve, suspend, or restore customer access.
+- Review customer credentials (approve / reject) — the same items also appear in **Credentials → Customers**.
 
 #### Staff / Team panel
 
@@ -1355,7 +1369,7 @@ The Staff panel lists **operations** staff (Support, Moderator, Administrator). 
 Staff can:
 
 - View the operations team roster.
-- Add new staff accounts (**Add staff** button) — Directors and Founders only.
+- Add new staff accounts (**Add staff** button on the page) — Directors and Founders only.
 - Review each member's role — see **Guide → Staff role permissions** for what each tier can do.
 
 Staff accounts manage the platform only and cannot accept field guard jobs.
@@ -1371,6 +1385,8 @@ The Management panel lists executive staff (Manager, Director, Founder). Same tw
 
 Profiles on this page are **not visible** to Support, Moderator, or Administrator anywhere in the app (nav, Applications, Credentials, or deep links).
 
+**Add staff** (Manager+) — use the **Add staff** button on this page (not in the sidebar).
+
 #### Applications panel
 
 **Where:** Staff sidebar → **Applications**
@@ -1381,7 +1397,7 @@ The Applications section holds account intake and job-offer review queues. Open 
 |-------|---------------|
 | **Job offers** | Submitted job listings waiting for staff approval before going live. |
 | **Guard accounts** | New guard sign-ups — Moderator+ **approve application** (`pending` → `approved`). Guards can upload credentials while pending. |
-| **Client accounts** | New client sign-ups waiting for staff approval. |
+| **Customer accounts** | New customer sign-ups waiting for staff approval. |
 | **Staff accounts** | Staff job applicants via **Work at Guardr** — Director/Founder **approve application** (`pending` → `approved`). Applicant uploads government ID and connects Stripe while pending; account **activates** when checklist is complete. |
 
 When Administrator+ verifies all five activation credentials, guard accounts **auto-activate** (`approved` → `active`).
@@ -1392,13 +1408,13 @@ On phone, the Applications roster fits the viewport — scroll inside the list, 
 
 **Where:** Staff sidebar → **Credentials**
 
-Credential verification queue for **guards, staff, and clients**. Approve or reject each upload. Audience tabs: **All**, **Staff**, **Guards**, **Clients**. Status tabs: **All**, **Pending review**, **Pending upload**, **Verified**, and **Rejected**.
+Credential verification queue for **guards, staff, and customers**. Approve or reject each upload. Audience tabs: **All**, **Staff**, **Guards**, **Customers**. Status tabs: **All**, **Pending review**, **Pending upload**, **Verified**, and **Rejected**.
 
 **Staff government ID** always appears in this queue. Verified-without-photos shows as **Pending upload** until front, back, and selfie are on file.
 
-**Clients tab:** review client library uploads. Manager+ can edit the **Client credential library** under **Permissions** (Applicable To and Required For per job type). Personal government ID and business representative ID stay always-required.
+**Customers tab:** review customer credential library uploads. Manager+ can edit the **customer credential library** under **Permissions** (Applicable To and Required For per job type). Personal government ID and business representative ID stay always-required.
 
-**Add credential** (Administrator+, **Guards** tab): On desktop, use **+ Add credential** in the sidebar; on mobile, use the toolbar button. Pick a credential type, choose a guard, then complete the upload wizard — credentials added by staff are saved as verified on the guard profile.
+**Add credential** (Administrator+, **Guards** tab): Use **+ Add credential** at the top of the Credentials page (visible on desktop for all audience filters). Pick a credential type, choose a guard, then complete the upload wizard — credentials added by staff are saved as verified on the guard profile.
 
 Pending guards can also upload activation credentials from their application review screen.
 
