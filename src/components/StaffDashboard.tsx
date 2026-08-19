@@ -1410,12 +1410,6 @@ export function StaffDashboard({
       accountNotifications={staffAccountNotifications}
       headerExtension={messagesChromeActive ? staffMessagesChrome.extension : undefined}
       headerOverride={messagesChromeActive ? staffMessagesChrome.override : undefined}
-      canCreateJob={canManageJobs}
-      canAddClient={canManageClientAccounts}
-      canAddGuard={canManageGuardAccounts}
-      canAddStaff={canProposeStaff}
-      canAddCredential={canManageGuardAccounts}
-      canAddLocation={canReviewJobs}
     >
       <AppPageTransition motionKey={section} className="min-h-0">
         {renderSection()}

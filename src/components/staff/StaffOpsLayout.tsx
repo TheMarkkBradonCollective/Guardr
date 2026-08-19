@@ -6,7 +6,7 @@ import { StaffNavItem } from './StaffSidebarNav';
 import type { LegalPageId } from '../../lib/legalContent';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { DesktopStaffAdminShell } from '../layouts/desktop/DesktopStaffAdminShell';
-import { StaffShellCreateProvider, useStaffSidebarPrimaryActions } from './StaffShellCreateContext';
+import { StaffShellCreateProvider } from './StaffShellCreateContext';
 import {
   AlertTriangle,
   BarChart3,
@@ -55,12 +55,6 @@ interface StaffOpsLayoutProps {
   accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
   headerOverride?: React.ReactNode;
-  canCreateJob?: boolean;
-  canAddClient?: boolean;
-  canAddGuard?: boolean;
-  canAddStaff?: boolean;
-  canAddCredential?: boolean;
-  canAddLocation?: boolean;
 }
 
 const SECTION_TITLES: Record<StaffSection, string> = {
@@ -114,12 +108,6 @@ export function StaffOpsLayout({
   accountNotifications,
   headerExtension,
   headerOverride,
-  canCreateJob = false,
-  canAddClient = false,
-  canAddGuard = false,
-  canAddStaff = false,
-  canAddCredential = false,
-  canAddLocation = false,
 }: StaffOpsLayoutProps) {
   const showFinance = canAccessFinancialControls(currentUser);
   const showPayments = showFinance;
@@ -197,12 +185,6 @@ export function StaffOpsLayout({
         accountNotifications={accountNotifications}
         headerExtension={headerExtension}
         headerOverride={headerOverride}
-        canCreateJob={canCreateJob}
-        canAddClient={canAddClient}
-        canAddGuard={canAddGuard}
-        canAddStaff={canAddStaff}
-        canAddCredential={canAddCredential}
-        canAddLocation={canAddLocation}
       >
         {children}
       </StaffOpsLayoutInner>
@@ -251,22 +233,7 @@ function StaffOpsLayoutInner({
   accountNotifications,
   headerExtension,
   headerOverride,
-  canCreateJob = false,
-  canAddClient = false,
-  canAddGuard = false,
-  canAddStaff = false,
-  canAddCredential = false,
-  canAddLocation = false,
 }: StaffOpsLayoutInnerProps) {
-  const sidebarPrimaryActions = useStaffSidebarPrimaryActions(navHighlight, {
-    canCreateJob: navHighlight === 'jobs' && canCreateJob,
-    canAddClient: (navHighlight === 'clients' || navHighlight === 'applications') && canAddClient,
-    canAddGuard: (navHighlight === 'guards' || navHighlight === 'applications') && canAddGuard,
-    canAddStaff: navHighlight === 'team' && canAddStaff,
-    canAddCredential: navHighlight === 'credentials' && canAddCredential,
-    canAddLocation: navHighlight === 'locations' && canAddLocation,
-  });
-
   return (
     <DesktopStaffAdminShell
       currentUser={currentUser}
@@ -293,7 +260,6 @@ function StaffOpsLayoutInner({
       accountNotifications={accountNotifications}
       headerExtension={headerExtension}
       headerOverride={headerOverride}
-      sidebarPrimaryActions={sidebarPrimaryActions}
     >
       {children}
     </DesktopStaffAdminShell>
