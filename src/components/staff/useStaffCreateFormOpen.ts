@@ -1,21 +1,18 @@
 import { useCallback, useState } from 'react';
-import { useLayoutFormFactor } from '../../surfaces';
 import {
   type StaffCreateActionKey,
   useStaffShellCreateRegistration,
 } from './StaffShellCreateContext';
 
-/** Shared open state for staff create forms — registers with sidebar CTA on desktop. */
+/** Shared open state for staff create forms. */
 export function useStaffCreateFormOpen(
   actionKey: StaffCreateActionKey | null | undefined,
-  options?: { showInlineTriggerOnDesktop?: boolean },
+  _options?: { showInlineTriggerOnDesktop?: boolean },
 ) {
   const [open, setOpen] = useState(false);
-  const formFactor = useLayoutFormFactor();
-  const hideTrigger = formFactor === 'desktop' && !options?.showInlineTriggerOnDesktop;
 
   const requestOpen = useCallback(() => setOpen(true), []);
   useStaffShellCreateRegistration(actionKey, requestOpen);
 
-  return { open, setOpen, hideTrigger };
+  return { open, setOpen, hideTrigger: false };
 }
