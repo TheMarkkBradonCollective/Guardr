@@ -31,34 +31,62 @@ describe('staffCityAccess', () => {
     );
   });
 
-  it('allows managers and below to work multiple cities', () => {
-    assert.equal(staffRequiresCityAssignment('Manager'), true);
+  it('allows operations staff below Manager to work multiple cities', () => {
+    const openCities = [
+      {
+        id: 'sacramento',
+        name: 'Sacramento',
+        stateCode: 'CA',
+        status: 'open' as const,
+        waitlistAudience: 'both' as const,
+        recommendOpen: false,
+        sortOrder: 0,
+      },
+      {
+        id: 'oakland',
+        name: 'Oakland',
+        stateCode: 'CA',
+        status: 'open' as const,
+        waitlistAudience: 'both' as const,
+        recommendOpen: false,
+        sortOrder: 1,
+      },
+    ];
     assert.deepEqual(
-      normalizeStaffManagedCitiesForRole(
-        'Administrator',
-        ['Sacramento', 'Oakland'],
-        [
-          {
-            id: 'sacramento',
-            name: 'Sacramento',
-            stateCode: 'CA',
-            status: 'open',
-            waitlistAudience: 'both',
-            recommendOpen: false,
-            sortOrder: 0,
-          },
-          {
-            id: 'oakland',
-            name: 'Oakland',
-            stateCode: 'CA',
-            status: 'open',
-            waitlistAudience: 'both',
-            recommendOpen: false,
-            sortOrder: 1,
-          },
-        ]
-      ),
+      normalizeStaffManagedCitiesForRole('Administrator', ['Sacramento', 'Oakland'], openCities),
       ['Oakland', 'Sacramento']
+    );
+  });
+
+  it('limits managers to one city', () => {
+    assert.equal(staffRequiresCityAssignment('Manager'), true);
+    const openCities = [
+      {
+        id: 'sacramento',
+        name: 'Sacramento',
+        stateCode: 'CA',
+        status: 'open' as const,
+        waitlistAudience: 'both' as const,
+        recommendOpen: false,
+        sortOrder: 0,
+      },
+      {
+        id: 'oakland',
+        name: 'Oakland',
+        stateCode: 'CA',
+        status: 'open' as const,
+        waitlistAudience: 'both' as const,
+        recommendOpen: false,
+        sortOrder: 1,
+      },
+    ];
+    assert.deepEqual(
+      normalizeStaffManagedCitiesForRole('Manager', ['Sacramento', 'Oakland'], openCities),
+      ['Oakland']
+    );
+    assert.throws(
+      () => validateStaffCityAssignment('Manager', ['Sacramento', 'Oakland'], { platformCities: openCities }),
+      /only be assigned to one city/
     );
   });
 

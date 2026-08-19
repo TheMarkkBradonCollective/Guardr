@@ -6531,6 +6531,7 @@ export default function App() {
 
     const previousManagerId = city.cityManagerId ?? null;
     const staffUpdates = new Map<string, string[]>();
+    const cityManagerClears: string[] = [];
 
     const queueStaffCities = (staffId: string, cities: string[]) => {
       staffUpdates.set(staffId, cities);
@@ -6558,13 +6559,15 @@ export default function App() {
         throw new Error('City manager must be a Manager staff account.');
       }
 
+      for (const otherCity of platformCities) {
+        if (otherCity.id !== cityId && otherCity.cityManagerId === managerId) {
+          cityManagerClears.push(otherCity.id);
+        }
+      }
+
       queueStaffCities(
         managerId,
-        normalizeStaffManagedCitiesForRole(
-          'Manager',
-          [...(manager.managedCities ?? []), city.name],
-          platformCities
-        )
+        normalizeStaffManagedCitiesForRole('Manager', [city.name], platformCities)
       );
     }
 
@@ -6579,7 +6582,13 @@ export default function App() {
     const previousGuards = guards;
 
     setPlatformCities((prev) => {
-      const next = prev.map((entry) => (entry.id === cityId ? updatedCity : entry));
+      const next = prev.map((entry) => {
+        if (entry.id === cityId) return updatedCity;
+        if (cityManagerClears.includes(entry.id)) {
+          return { ...entry, cityManagerId: null };
+        }
+        return entry;
+      });
       setPlatformCitiesCache(next);
       return next;
     });
@@ -6593,9 +6602,15 @@ export default function App() {
     }
 
     if (isDbConnected) {
+      const citiesToPersist = [
+        updatedCity,
+        ...platformCities
+          .filter((entry) => cityManagerClears.includes(entry.id))
+          .map((entry) => ({ ...entry, cityManagerId: null })),
+      ];
       const { error: cityError } = await supabase
         .from('platform_cities')
-        .upsert(platformCityToDbRow(updatedCity));
+        .upsert(citiesToPersist.map(platformCityToDbRow));
       if (cityError) {
         setPlatformCities(previousCities);
         setPlatformCitiesCache(previousCities);

@@ -12,13 +12,20 @@ export function staffRequiresCityAssignment(staffRole?: StaffRole | null): boole
   return !isExecutiveStaffRole(staffRole);
 }
 
+/** Managers are city managers — exactly one California market per Manager account. */
+export const MANAGER_MAX_CITIES = 1;
+
 export function normalizeStaffManagedCitiesForRole(
   staffRole: StaffRole | undefined,
   cities: string[] | undefined,
   available: PlatformCity[] = []
 ): string[] {
   if (!staffRole || isExecutiveStaffRole(staffRole)) return [];
-  return normalizeManagedCities(cities, available);
+  const normalized = normalizeManagedCities(cities, available);
+  if (staffRole === 'Manager') {
+    return normalized.slice(0, MANAGER_MAX_CITIES);
+  }
+  return normalized;
 }
 
 export function validateStaffCityAssignment(
@@ -36,6 +43,10 @@ export function validateStaffCityAssignment(
       throw new Error('Directors and Founders are not assigned to a city.');
     }
     return;
+  }
+
+  if (staffRole === 'Manager' && managedCities.length > MANAGER_MAX_CITIES) {
+    throw new Error('Managers may only be assigned to one city.');
   }
 
   if (staffRole !== 'Manager' || managedCities.length === 0 || !options?.platformCities) {
