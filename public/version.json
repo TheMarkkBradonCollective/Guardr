@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.129-beta",
+  "webVersion": "1.0.130-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.129",
-    "versionCode": 229,
+    "version": "1.0.130",
+    "versionCode": 230,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.129.apk",
-    "fileSize": 93551798,
-    "sha256": "41041688fb0193cdc9ecf03c66b7ee8148e5272dbcd44fbe05af2798bf0e72ea",
-    "releaseNotes": "Full platform release: CI-built sideload APK and Play AAB; web + PWA alignment for Aug 18 session (roster tabs, staff activation, client credentials, SQL catch-up)."
+    "downloadName": "guardr-v1.0.130.apk",
+    "fileSize": 101537347,
+    "sha256": "8d405eddcb29fa1a0aeb7061f5e586f294061b60081848e8f302e9d7f6fce359",
+    "releaseNotes": "UI terminology: guards see customer labels on shifts; staff ops see hiring accounts instead of clients; auth uses personal/business account wording. Internal client role unchanged."
   },
-  "updatedAt": "2026-08-18T15:28:30.269Z"
+  "updatedAt": "2026-08-19T05:50:34.329Z"
 }

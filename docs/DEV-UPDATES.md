@@ -1,15 +1,29 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Tuesday, August 18, 2026  
+**Last updated:** Wednesday, August 19, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.129**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.130**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
 The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | What shipped |` tables under dated `## Weekday, Month D, YYYY` headings (and from `**Activity:**` / `### Title (h:mm AM)` lines). Every `/update` must add those Time rows from git commit times, bump **Last updated**, fill Guide gaps for what shipped, and refresh **Quick reference by date**. Changelog-only entries without times do not light up the cloud.
+
+---
+
+## Wednesday, August 19, 2026 — /update → v1.0.130
+
+| Time | What shipped |
+|------|----------------|
+| 5:43 AM | Merge PR #1001 — rename user-facing client labels to customer / hiring account |
+| 5:45 AM | Release v1.0.130-beta — APK + AAB via CI |
+
+**Shipped**
+- **v1.0.130** (build **230**) — customer / hiring-account UI labels (guards, staff, auth); code identifiers unchanged
+- PWA service worker cache bust: `guardr-cache-v1-0-130-beta`
+- Android CI: sideload APK + Play AAB artifacts
 
 ---
 

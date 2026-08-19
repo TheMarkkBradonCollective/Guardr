@@ -1,7 +1,7 @@
 {
   "name": "guardr",
   "private": true,
-  "version": "1.0.129-beta",
+  "version": "1.0.130-beta",
   "type": "module",
   "scripts": {
     "prebuild": "npm run generate:logos && npm run generate:walkie-chirp && npm run generate:download-version",
