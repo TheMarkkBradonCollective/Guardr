@@ -266,7 +266,7 @@ export const STAFF_DESTINATIONS: SurfaceDestination[] = [
   { id: 'map', label: 'Live map', icon: Map, section: 'Dashboard', tabletQuick: true },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, section: 'Operations', mobileRank: 2, tabletQuick: true, badge: 4 },
   { id: 'guards', label: 'Guards', icon: Users, section: 'Operations', mobileRank: 3 },
-  { id: 'clients', label: 'Hiring accounts', icon: Users, section: 'Operations' },
+  { id: 'clients', label: 'Customers', icon: Users, section: 'Operations' },
   { id: 'credentials', label: 'Credentials', icon: ShieldCheck, section: 'Operations', badge: 7 },
   { id: 'messages', label: 'Messages', icon: MessagesSquare, section: 'Communications', mobileRank: 4, badge: 3 },
   { id: 'support', label: 'Support', icon: LifeBuoy, section: 'Communications' },

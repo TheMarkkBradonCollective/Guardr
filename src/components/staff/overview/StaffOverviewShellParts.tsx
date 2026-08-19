@@ -50,7 +50,7 @@ export const QUICK_LINK_META: Record<
   guards: { label: 'Guards', icon: Shield, sub: 'Field roster' },
   team: { label: 'Staff', icon: Users, sub: 'Platform team' },
   management: { label: 'Management', icon: UsersRound, sub: 'Executive roster' },
-  clients: { label: 'Hiring accounts', icon: Building2, sub: 'Accounts' },
+  clients: { label: 'Customers', icon: Building2, sub: 'Accounts' },
   incidents: { label: 'Incidents', icon: AlertTriangle, sub: 'Follow-up' },
   violations: { label: 'Violations', icon: ShieldAlert, sub: 'Shift issues' },
   stats: { label: 'Stats', icon: BarChart3, sub: 'Reporting' },
@@ -91,7 +91,7 @@ export const STAFF_OVERVIEW_HUB_META: Record<
   },
   applications: {
     title: 'Applications',
-    description: 'Pending guard, hiring-account, and staff sign-ups',
+    description: 'Pending guard, customer, and staff sign-ups',
     iconTone: 'orange',
   },
   credentials: {
@@ -106,7 +106,7 @@ export const STAFF_OVERVIEW_HUB_META: Record<
   },
   incidents: {
     title: 'Incidents',
-    description: 'Hiring-account reports and escalation follow-up',
+    description: 'Customer reports and escalation follow-up',
     iconTone: 'orange',
   },
   messages: {
@@ -130,8 +130,8 @@ export const STAFF_OVERVIEW_HUB_META: Record<
     iconTone: 'green',
   },
   clients: {
-    title: 'Hiring accounts',
-    description: 'Hiring accounts and coverage history',
+    title: 'Customers',
+    description: 'Customers and coverage history',
     iconTone: 'yellow',
   },
   settings: {
@@ -572,7 +572,7 @@ export function StaffOverviewQueueBoard({
       id: 'schedule-changes',
       label: 'Schedule changes',
       count: stats.pendingScheduleChanges,
-      description: 'Guard or hiring account requested a schedule update',
+      description: 'Guard or customer requested a schedule update',
       section: 'jobs' as StaffSection,
       roles: ['administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },
@@ -588,7 +588,7 @@ export function StaffOverviewQueueBoard({
       id: 'applications',
       label: 'Account applications',
       count: stats.pendingAccountApplications,
-      description: 'New guard, hiring account, or staff sign-ups',
+      description: 'New guard, customer, or staff sign-ups',
       section: 'applications' as StaffSection,
       roles: ['administrator', 'manager', 'director', 'owner'] as PlatformRole[],
     },

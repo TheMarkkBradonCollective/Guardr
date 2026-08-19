@@ -20,7 +20,7 @@ const STAFF_ROLE_INFO: { role: PlatformRole; icon: typeof Shield; permissions: s
     icon: Shield,
     permissions: [
       'Everything Support can do',
-      'Approve guard & hiring-account applications',
+      'Approve guard & customer applications',
       'Activate approved guard accounts (manual)',
       'Review reports & monitor platform activity',
       'View performance stats',
@@ -125,7 +125,7 @@ export function ClientGuardRolesSummary() {
       <div className="app-list-row app-list-row-align-top flex-col !items-stretch gap-2 sm:border-r sm:border-brand-border">
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-brand-primary" />
-          <h4 className="font-bold text-sm">Hiring account</h4>
+          <h4 className="font-bold text-sm">Customer</h4>
         </div>
         <p className="text-[11px] text-brand-text-muted leading-relaxed">
           Post security requests, hire guards, manage payments, review reports, and rate guards.

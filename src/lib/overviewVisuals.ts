@@ -99,7 +99,7 @@ export function buildPeopleSegments(guards: SecurityGuard[], clients: Client[]):
   const staffCount = guards.filter((g) => g.isStaff).length;
 
   return [
-    { label: 'Hiring accounts', value: clients.length, tone: 'primary' as const },
+    { label: 'Customers', value: clients.length, tone: 'primary' as const },
     { label: 'Field guards', value: fieldGuards, tone: 'success' as const },
     { label: 'Staff', value: staffCount, tone: 'info' as const },
   ].filter((segment) => segment.value > 0);

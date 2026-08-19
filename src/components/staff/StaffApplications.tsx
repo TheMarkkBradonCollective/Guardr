@@ -111,7 +111,7 @@ function applicationListKey(entry: ApplicationListEntry): string {
 function applicationKindLabel(kind: ApplicationKind): string {
   if (kind === 'guard') return 'Guard';
   if (kind === 'staff') return 'Staff';
-  return 'Hiring account';
+  return 'Customer';
 }
 
 function applicationStatusTone(status: ApprovalFeedItem['status']): StatusTone {
@@ -158,7 +158,7 @@ function ApplicationFeedRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <WfBadge tone={kind === 'guard' ? 'primary' : kind === 'staff' ? 'warning' : 'default'}>
-              {kind === 'guard' ? 'Guard' : kind === 'staff' ? 'Staff' : 'Hiring account'}
+              {kind === 'guard' ? 'Guard' : kind === 'staff' ? 'Staff' : 'Customer'}
             </WfBadge>
             <p className="uber-feed-row-title">{item.title}</p>
           </div>
@@ -610,7 +610,7 @@ export function StaffApplications({
             );
           }}
           tabs={[
-            { id: 'client', label: 'Hiring account' },
+            { id: 'client', label: 'Customer' },
             { id: 'guard', label: 'Guard' },
             { id: 'staff', label: 'Staff' },
           ]}

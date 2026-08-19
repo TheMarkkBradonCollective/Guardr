@@ -124,7 +124,7 @@ type AudienceFilter = 'all' | GuideAudienceTag;
 const CLIENT_GUARD_TABS: { id: AudienceFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'guard', label: 'Guards' },
-  { id: 'client', label: 'Hiring accounts' },
+  { id: 'client', label: 'Customers' },
 ];
 
 const STAFF_TABS: { id: AudienceFilter; label: string }[] = [
@@ -134,7 +134,7 @@ const STAFF_TABS: { id: AudienceFilter; label: string }[] = [
   { id: 'administrator', label: 'Admin' },
   { id: 'director', label: 'Director' },
   { id: 'founder', label: 'Founder' },
-  { id: 'client', label: 'Hiring accounts' },
+  { id: 'client', label: 'Customers' },
   { id: 'guard', label: 'Guards' },
 ];
 

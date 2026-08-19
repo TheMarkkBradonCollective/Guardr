@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CornerDownLeft, SmilePlus, MessageCircle, Lock, Trash2 } from 'lucide-react';
 import { PlatformRole } from '../../types';
-import { STAFF_HIRING_ACCOUNT_LABEL } from '../../lib/audienceLabels';
+import { CUSTOMER_LABEL } from '../../lib/audienceLabels';
 import { isStaffSender } from '../../lib/jobChat';
 import { staffChatSenderLabel } from '../../lib/staffMessenger';
 import {
@@ -158,7 +158,7 @@ function messageSenderLabel(
     return communityChatSenderLabel(viewerRole, msg.senderRole, msg.senderName, 'Guard');
   }
   if (clientChatLabels) {
-    return communityChatSenderLabel(viewerRole, msg.senderRole, msg.senderName, STAFF_HIRING_ACCOUNT_LABEL);
+    return communityChatSenderLabel(viewerRole, msg.senderRole, msg.senderName, CUSTOMER_LABEL);
   }
   return chatSenderLabelForViewer(viewerRole, msg.senderRole, msg.senderName, msg.senderId);
 }
@@ -180,7 +180,7 @@ function messageSender(
   }
   if (guardChatLabels || clientChatLabels) {
     const roleLabel = ROLE_LABELS[msg.senderRole] ?? msg.senderRole;
-    const peerFallback = guardChatLabels ? 'Guard' : STAFF_HIRING_ACCOUNT_LABEL;
+    const peerFallback = guardChatLabels ? 'Guard' : CUSTOMER_LABEL;
     const displayName = displaySenderNameForViewer(
       viewerRole,
       msg.senderRole,

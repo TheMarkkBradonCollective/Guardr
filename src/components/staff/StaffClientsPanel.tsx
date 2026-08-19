@@ -116,7 +116,7 @@ export function StaffClientsPanel({
     () => [
       {
         id: 'client',
-        header: 'Hiring account',
+        header: 'Customer',
         grow: true,
         sortValue: (client) => clientDisplayName(client).toLowerCase(),
         render: (client) => (
@@ -238,7 +238,7 @@ export function StaffClientsPanel({
                 rowKey={(client) => client.id}
                 selectedKey={selectedId ?? undefined}
                 onRowClick={(client) => setSelectedId(client.id)}
-                caption="Hiring accounts"
+                caption="Customers"
                 cardLayout={{ title: 'client', subtitle: 'jobs', trailing: 'status' }}
               />
             )
@@ -267,7 +267,7 @@ export function StaffClientsPanel({
           </p>
           <p className="app-empty-state-body">
             {clients.length === 0
-              ? 'Add the first hiring account to get started.'
+              ? 'Add the first customer to get started.'
               : 'Try adjusting your search term.'}
           </p>
         </div>

@@ -741,7 +741,7 @@ export function StaffCredentials({
             { id: 'all', label: 'All' },
             { id: 'staff', label: 'Staff' },
             { id: 'guards', label: 'Guards' },
-            { id: 'clients', label: 'Hiring accounts' },
+            { id: 'clients', label: 'Customers' },
           ]}
         />
         <StaffListFilterTabs

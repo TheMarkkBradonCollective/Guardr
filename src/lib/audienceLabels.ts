@@ -1,16 +1,14 @@
-/** User-facing labels for marketplace hiring accounts (internal role and tables still use `client`). */
+/** User-facing labels for marketplace customers (internal role and tables still use `client`). */
 
-export const GUARD_CUSTOMER_LABEL = 'Customer';
-
-export const STAFF_HIRING_ACCOUNT_LABEL = 'Hiring account';
-export const STAFF_HIRING_ACCOUNTS_LABEL = 'Hiring accounts';
+export const CUSTOMER_LABEL = 'Customer';
+export const CUSTOMERS_LABEL = 'Customers';
 
 export const PERSONAL_ACCOUNT_LABEL = 'Personal account';
 export const BUSINESS_ACCOUNT_LABEL = 'Business account';
 
 /** Fallback display name when profile fields are empty. */
-export function hiringAccountDisplayFallback(audience: 'guard' | 'staff' = 'staff'): string {
-  return audience === 'guard' ? GUARD_CUSTOMER_LABEL : STAFF_HIRING_ACCOUNT_LABEL;
+export function customerDisplayFallback(): string {
+  return CUSTOMER_LABEL;
 }
 
 /** Personal vs business contracting party label. */

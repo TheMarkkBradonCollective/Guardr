@@ -42,10 +42,10 @@ export function StaffAnalyticsPanel({ guards, clients, requests, showFinancials 
         ]
       : []),
     { label: 'Active Guards', value: String(data.activeGuards), pct: null },
-    { label: 'Registered hiring accounts', value: String(data.clientGrowth), pct: null },
-    { label: 'Repeat hiring accounts', value: String(data.repeatClients), pct: null },
+    { label: 'Registered customers', value: String(data.clientGrowth), pct: null },
+    { label: 'Repeat customers', value: String(data.repeatClients), pct: null },
     { label: 'Job Completion Rate', value: `${data.jobCompletionRate}%`, pct: data.jobCompletionRate },
-    { label: 'Hiring-account incident rate', value: `${data.incidentRate}%`, pct: data.incidentRate },
+    { label: 'Customer incident rate', value: `${data.incidentRate}%`, pct: data.incidentRate },
     ...(showFinancials
       ? [{ label: 'Avg Guard Earnings / Job', value: formatOperationalMoney(data.avgGuardEarnings), pct: null }]
       : []),

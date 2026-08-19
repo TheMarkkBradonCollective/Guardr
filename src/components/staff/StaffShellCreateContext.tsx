@@ -30,7 +30,7 @@ export function staffSectionCreateAction(section: StaffSection): StaffCreateActi
 
 export const STAFF_CREATE_ACTION_LABELS: Record<StaffCreateActionKey, string> = {
   job: 'Create job',
-  client: 'Add hiring account',
+  client: 'Add customer',
   guard: 'Add guard',
   staff: 'Add staff',
   credential: 'Add credential',

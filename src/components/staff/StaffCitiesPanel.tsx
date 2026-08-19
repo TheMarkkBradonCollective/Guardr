@@ -78,7 +78,7 @@ const DIRECTOR_ACTION_OPTIONS: { value: DirectorActionValue; label: string }[] =
   { value: 'open', label: 'Open' },
   { value: 'closed', label: 'Closed' },
   { value: 'waitlist:guard', label: 'Wait list — guards' },
-  { value: 'waitlist:client', label: 'Wait list — hiring accounts' },
+  { value: 'waitlist:client', label: 'Wait list — customers' },
   { value: 'waitlist:both', label: 'Wait list — both' },
 ];
 
@@ -379,7 +379,7 @@ export function StaffCitiesPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Platform"
-            subtitle="Control where Guardr accepts guard and hiring-account applications."
+            subtitle="Control where Guardr accepts guard and customer applications."
             actions={
               <div className="adm-cities-toolbar-controls">
                 <WfSearchBar

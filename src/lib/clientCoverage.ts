@@ -145,7 +145,7 @@ export function buildActivityFeed(
       items.push({
         id: `${req.id}-audit-confirmed`,
         timestamp: req.checkInAudit.clientConfirmedAt,
-        label: 'Hiring account confirmed self-audit photos',
+        label: 'Customer confirmed self-audit photos',
         requestId: req.id,
         sortKey: new Date(req.checkInAudit.clientConfirmedAt).getTime() + 2,
       });

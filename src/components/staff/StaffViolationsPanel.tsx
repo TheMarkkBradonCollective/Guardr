@@ -132,7 +132,7 @@ export function StaffViolationsPanel({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <WfBadge tone={v.source === 'client' ? 'warning' : 'primary'}>
-              {v.source === 'client' ? 'hiring-account flag' : 'system'}
+              {v.source === 'client' ? 'customer flag' : 'system'}
             </WfBadge>
             <h3 className="font-semibold text-sm mt-1">{v.label}</h3>
             <p className="text-xs text-brand-text-muted mt-0.5">
@@ -147,7 +147,7 @@ export function StaffViolationsPanel({
             <span className="text-brand-text">Guard:</span> {v.guardName}
           </p>
           <p>
-            <span className="text-brand-text">Hiring account:</span> {v.clientName}
+            <span className="text-brand-text">Customer:</span> {v.clientName}
           </p>
           <p>
             <span className="text-brand-text">Checkpoint:</span> {v.checkpoint}
@@ -228,7 +228,7 @@ export function StaffViolationsPanel({
                 }}
                 className="app-button-primary app-btn-sm disabled:opacity-50"
               >
-                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Uphold hiring account'}
+                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Uphold customer'}
               </button>
             </div>
           </div>
@@ -262,7 +262,7 @@ export function StaffViolationsPanel({
 
   const emptyMessage = tab === 'open' ? 'No open violations' : 'No violations on file';
   const emptyBody =
-    'Skipped checkpoints, briefing not-ready flags, and hiring-account shift reviews appear here.';
+    'Skipped checkpoints, briefing not-ready flags, and customer shift reviews appear here.';
 
   const emptyState =
     formFactor === 'desktop' ? (
@@ -290,7 +290,7 @@ export function StaffViolationsPanel({
           toolbar={
             <WorkbenchToolbar
               eyebrow="Accountability"
-              subtitle="Shift checkpoint skips, briefing readiness, and hiring-account verification flags."
+              subtitle="Shift checkpoint skips, briefing readiness, and customer verification flags."
             />
           }
         >
@@ -316,7 +316,7 @@ export function StaffViolationsPanel({
         toolbar={
           <WorkbenchToolbar
             eyebrow="Accountability"
-            subtitle="Shift checkpoint skips, briefing readiness, and hiring-account verification flags."
+            subtitle="Shift checkpoint skips, briefing readiness, and customer verification flags."
           />
         }
       >

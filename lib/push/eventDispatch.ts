@@ -102,12 +102,12 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     body: event.body || 'New message from another guard',
   }),
   client_message: (event) => ({
-    title: 'Hiring-account chat',
-    body: event.body || 'New message from another hiring account',
+    title: 'Customer chat',
+    body: event.body || 'New message from another customer',
   }),
   job_submitted: (event) => ({
     title: 'New job request',
-    body: event.body || 'A hiring account submitted a job awaiting staff review',
+    body: event.body || 'A customer submitted a job awaiting staff review',
   }),
   guard_application: (event) => ({
     title: 'Guard application',
@@ -122,8 +122,8 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     body: event.body || 'A guard account needs staff review',
   }),
   client_pending_approval: (event) => ({
-    title: 'Hiring account pending approval',
-    body: event.body || 'A hiring account needs staff review',
+    title: 'Customer pending approval',
+    body: event.body || 'A customer needs staff review',
   }),
   credential_pending: (event) => ({
     title: 'Credential review',
@@ -138,8 +138,8 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     body: event.body || 'Your job invoice is ready for payment',
   }),
   client_cash_payment_requested: (event) => ({
-    title: 'Hiring-account cash payment request',
-    body: event.body || 'A hiring account requested to pay in cash',
+    title: 'Customer cash payment request',
+    body: event.body || 'A customer requested to pay in cash',
   }),
   guard_cash_payout_requested: (event) => ({
     title: 'Guard cash payout request',
@@ -170,8 +170,8 @@ const EVENT_DEFAULTS: Record<string, (event: PushEventInput) => { title: string;
     body: event.body || 'Your trusted guard status changed',
   }),
   client_trusted_status: (event) => ({
-    title: event.title ?? 'Trusted hiring-account update',
-    body: event.body || 'Your trusted hiring-account status changed',
+    title: event.title ?? 'Trusted customer update',
+    body: event.body || 'Your trusted customer status changed',
   }),
   job_relisted: (event) => ({
     title: 'Job back on marketplace',

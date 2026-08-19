@@ -257,7 +257,7 @@ r.channel === 'guard-community' ||
         );
       } else if (effectiveSelection.kind === 'client-channel') {
         override = (
-          <AppChatHeader title="Hiring-account chat" subtitle="All hiring accounts community channel" onBack={clearSelection} />
+          <AppChatHeader title="Customer chat" subtitle="All customers community channel" onBack={clearSelection} />
         );
       } else if (effectiveSelection.kind === 'job') {
         const request = requests.find((r) => r.id === effectiveSelection.requestId);
@@ -372,7 +372,7 @@ r.channel === 'guard-community' ||
         <div className="flex flex-col h-full min-h-0 app-full-page-screen">
           {!embedHeaderInShell && (
             <AppChatHeader
-              title="Hiring-account chat"
+              title="Customer chat"
               subtitle="All-clients community channel"
               onBack={clearSelection}
               hideBackOnDesktop
@@ -391,7 +391,7 @@ r.channel === 'guard-community' ||
               placeholder="Message the client community…"
               clientChatLabels
               readOnly={!canPostClientChat}
-              readOnlyMessage="Hiring-account chat is open to active hiring accounts and staff moderators."
+              readOnlyMessage="Customer chat is open to active customers and staff moderators."
             />
           </div>
         </div>

@@ -162,7 +162,7 @@ export function ClientMessagesPanel({
   const communityRow: InboxRow = {
     id: 'client-community',
     channel: 'client-community',
-    title: 'Hiring-account chat',
+    title: 'Customer chat',
     subtitle: '',
     preview: '',
     updatedAt: clientChannelUpdatedAt,
