@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.130-beta",
+  "webVersion": "1.0.131-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.130",
-    "versionCode": 230,
+    "version": "1.0.131",
+    "versionCode": 231,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.130.apk",
+    "downloadName": "guardr-v1.0.131.apk",
     "fileSize": 101537347,
     "sha256": "8d405eddcb29fa1a0aeb7061f5e586f294061b60081848e8f302e9d7f6fce359",
-    "releaseNotes": "UI terminology: guards see customer labels on shifts; staff ops see hiring accounts instead of clients; auth uses personal/business account wording. Internal client role unchanged."
+    "releaseNotes": "Staff platform and auth now say Customer(s) everywhere; sidebar create buttons removed with add actions restored on Management and Credentials pages."
   },
-  "updatedAt": "2026-08-19T05:50:34.329Z"
+  "updatedAt": "2026-08-19T07:12:28.059Z"
 }

@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.131':
+    'Staff platform and auth now say Customer(s) everywhere; sidebar create buttons removed with add actions restored on Management and Credentials pages.',
   '1.0.130':
     'UI terminology: guards see customer labels on shifts; staff ops see hiring accounts instead of clients; auth uses personal/business account wording. Internal client role unchanged.',
   '1.0.129':
