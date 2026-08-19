@@ -1302,6 +1302,9 @@ export function StaffDashboard({
             cities={platformCities}
             actorManagedCities={actorStaffProfile?.managedCities}
             staffRoster={guards.filter((guard) => guard.isStaff)}
+            marketplaceGuards={guards.filter((guard) => !guard.isStaff)}
+            clients={clients}
+            staffMarketplaceCap={platformSettings.staffMarketplaceCap}
             onUpdateCity={onUpdatePlatformCity}
             onAssignCityManager={onAssignCityManager}
           />

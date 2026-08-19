@@ -15,6 +15,11 @@ import {
   type StaffCompensationConfig,
 } from './staffCompensation';
 import {
+  DEFAULT_STAFF_MARKETPLACE_CAP_CONFIG,
+  normalizeStaffMarketplaceCapConfig,
+  type StaffMarketplaceCapConfig,
+} from './staffMarketplaceCap';
+import {
   parseClientCredentialRuleOverrides,
   type ClientCredentialRuleOverride,
 } from './clientCredentialCatalog';
@@ -94,6 +99,8 @@ export interface PlatformSettings {
   teamLeadBonusPlatformSharePercent?: number;
   /** Staff revenue-share compensation — % of collected platform fees per role. */
   staffCompensation?: StaffCompensationConfig;
+  /** City staffing cap — staff slots scale with active guards and clients in each market. */
+  staffMarketplaceCap?: StaffMarketplaceCapConfig;
   /** Admin overrides for the client credential library (applicable to / required for). */
   clientCredentialRules?: ClientCredentialRuleOverride[];
   updatedAt?: string;
@@ -125,6 +132,7 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   teamLeadBonusClientSharePercent: 100,
   teamLeadBonusPlatformSharePercent: 0,
   staffCompensation: { ...DEFAULT_STAFF_COMPENSATION_CONFIG },
+  staffMarketplaceCap: { ...DEFAULT_STAFF_MARKETPLACE_CAP_CONFIG },
   clientCredentialRules: [],
 };
 
@@ -242,6 +250,9 @@ export function normalizePlatformSettings(
     teamLeadBonusPlatformSharePercent: 0,
     staffCompensation: normalizeStaffCompensationConfig(
       input.staffCompensation ?? DEFAULT_STAFF_COMPENSATION_CONFIG,
+    ),
+    staffMarketplaceCap: normalizeStaffMarketplaceCapConfig(
+      input.staffMarketplaceCap ?? DEFAULT_STAFF_MARKETPLACE_CAP_CONFIG,
     ),
     clientCredentialRules: parseClientCredentialRuleOverrides(input.clientCredentialRules),
     updatedAt: input.updatedAt ?? new Date().toISOString(),

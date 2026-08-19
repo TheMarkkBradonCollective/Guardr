@@ -38,12 +38,21 @@ import { CityManagerPicker } from './CityManagerPicker';
 import { CityCredentialLinksEditor } from './CityCredentialLinksEditor';
 import { MapPin } from 'lucide-react';
 import type { CityCredentialResourceLinks } from '../../lib/cityCredentialLinks';
+import type { Client } from '../../types';
+import {
+  formatStaffCityCapSummary,
+  staffCityCapSnapshot,
+  type StaffMarketplaceCapConfig,
+} from '../../lib/staffMarketplaceCap';
 
 interface StaffCitiesPanelProps {
   currentUser: SessionUser;
   cities: PlatformCity[];
   actorManagedCities?: string[];
   staffRoster?: SecurityGuard[];
+  marketplaceGuards?: SecurityGuard[];
+  clients?: Client[];
+  staffMarketplaceCap?: StaffMarketplaceCapConfig;
   onUpdateCity: (
     cityId: string,
     patch: {
@@ -121,6 +130,9 @@ function CityDetailPanel({
   canRecommend,
   canEditStaffAccess,
   staffRoster,
+  marketplaceGuards,
+  clients,
+  staffMarketplaceCap,
   platformCities,
   currentUser,
   onUpdate,
@@ -132,6 +144,9 @@ function CityDetailPanel({
   canRecommend: boolean;
   canEditStaffAccess: boolean;
   staffRoster: SecurityGuard[];
+  marketplaceGuards: SecurityGuard[];
+  clients: Client[];
+  staffMarketplaceCap?: StaffMarketplaceCapConfig;
   platformCities: PlatformCity[];
   currentUser: SessionUser;
   onUpdate: (patch: {
@@ -144,6 +159,13 @@ function CityDetailPanel({
 }) {
   const directorValue = getDirectorActionValue(city);
   const managerValue = getManagerActionValue(city);
+  const capSnapshot = staffCityCapSnapshot(city.name, {
+    guards: marketplaceGuards,
+    clients,
+    staffRoster,
+    config: staffMarketplaceCap,
+    cityStatus: city.status,
+  });
 
   return (
     <div className="adm-city-detail space-y-4">
@@ -151,6 +173,17 @@ function CityDetailPanel({
         <p className="adm-card-eyebrow">{city.stateCode}</p>
         <h3 className="adm-card-title">{city.name}</h3>
         <p className="uber-workbench-subtitle">{CITY_STATUS_DESCRIPTIONS[city.status]}</p>
+      </div>
+      <div className="rounded-xl border border-brand-border px-3 py-2.5 space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
+          Staffing cap
+        </p>
+        <p className="text-sm">{formatStaffCityCapSummary(capSnapshot)}</p>
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          {capSnapshot.remainingSlots > 0
+            ? `${capSnapshot.remainingSlots} staff slot${capSnapshot.remainingSlots === 1 ? '' : 's'} remaining for this market.`
+            : 'This market is at its staffing cap. Add more active guards or clients before assigning more staff.'}
+        </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <WfBadge tone={STATUS_TONES[city.status]}>{CITY_STATUS_LABELS[city.status]}</WfBadge>
@@ -239,6 +272,9 @@ export function StaffCitiesPanel({
   cities,
   actorManagedCities = [],
   staffRoster = [],
+  marketplaceGuards = [],
+  clients = [],
+  staffMarketplaceCap,
   onUpdateCity,
   onAssignCityManager,
 }: StaffCitiesPanelProps) {
@@ -436,6 +472,9 @@ export function StaffCitiesPanel({
                   canRecommend={canRecommend}
                   canEditStaffAccess={canEditStaffAccessForCity(selectedCity.name)}
                   staffRoster={staffRoster}
+                  marketplaceGuards={marketplaceGuards}
+                  clients={clients}
+                  staffMarketplaceCap={staffMarketplaceCap}
                   platformCities={cities}
                   currentUser={currentUser}
                   onUpdate={(patch) => void applyUpdate(selectedCity, patch)}
@@ -599,6 +638,9 @@ export function StaffCitiesPanel({
                   canRecommend={canRecommend}
                   canEditStaffAccess={canEditStaffAccessForCity(city.name)}
                   staffRoster={staffRoster}
+                  marketplaceGuards={marketplaceGuards}
+                  clients={clients}
+                  staffMarketplaceCap={staffMarketplaceCap}
                   platformCities={cities}
                   currentUser={currentUser}
                   onUpdate={(patch) => void applyUpdate(city, patch)}
