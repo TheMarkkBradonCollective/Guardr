@@ -43,7 +43,7 @@ export function StaffClientApplicationReviewPanel({
   const handleDenyClient = async () => {
     if (
       !(await showAppConfirm({
-        title: 'Deny client application?',
+        title: 'Deny hiring-account application?',
         message: `${displayName} will not be able to use the platform until restored by staff.`,
         confirmLabel: 'Deny application',
         cancelLabel: 'Keep reviewing',
@@ -73,7 +73,7 @@ export function StaffClientApplicationReviewPanel({
   const handleRevokeClient = async () => {
     if (
       !(await showAppConfirm({
-        title: 'Revoke client application?',
+        title: 'Revoke hiring-account application?',
         message: `${displayName} will be suspended and cannot use the platform until restored by staff.`,
         confirmLabel: 'Revoke application',
         cancelLabel: 'Keep approved',

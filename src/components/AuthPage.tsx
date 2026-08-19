@@ -196,7 +196,7 @@ const AUTH_HERO_CONTENT: Record<'client' | 'guard' | 'staff', AuthHeroContent> =
   staff: {
     icon: Briefcase,
     headline: 'Run the platform. Keep operations moving.',
-    sub: 'Review applications, monitor jobs, and support clients and guards from one staff workspace.',
+    sub: 'Review applications, monitor jobs, and support hiring accounts and guards from one staff workspace.',
     features: [
       { icon: BadgeCheck, text: 'Approve applications and follow up on reports' },
       { icon: MapPin, text: 'Watch live coverage across open markets' },
@@ -441,7 +441,7 @@ export function AuthPage({
 
     if (isSignUp) {
       if (role !== 'guard' && role !== 'client' && role !== 'staff') {
-        setErrorMsg('Choose Guard, Client, or Staff from the previous screen to continue.');
+        setErrorMsg('Choose Guard, Hiring account, or Staff from the previous screen to continue.');
         return;
       }
       if (!acceptedTerms) {
@@ -852,7 +852,7 @@ export function AuthPage({
       } else if (signInAttempt.actualPath === 'guard') {
         setErrorMsg('This is a guard account. Use Log in as guard.');
       } else {
-        setErrorMsg('This is a client account. Use Log in as client.');
+        setErrorMsg('This is a hiring account. Use I need security to log in.');
       }
       return;
     }
@@ -1266,7 +1266,7 @@ export function AuthPage({
                   <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} compact />
 
                   <p className="uber-label">
-                    {clientKind === 'personal' ? 'Personal client' : 'Business client'}
+                    {clientKind === 'personal' ? 'Personal account' : 'Business account'}
                   </p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
                     {clientKind === 'personal'
@@ -1523,7 +1523,7 @@ export function AuthPage({
                     </div>
                     {clientSignupCities.length === 0 ? (
                       <p className="text-xs text-amber-400 mt-1.5">
-                        Guardr is not accepting new client applications in any city right now. Check back when a market opens.
+                        Guardr is not accepting new hiring-account applications in any city right now. Check back when a market opens.
                       </p>
                     ) : null}
                     {clientCityAccessMsg && (

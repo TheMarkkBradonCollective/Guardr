@@ -72,7 +72,7 @@ export function GuardSelfAuditModal({ open, onSubmit, onClose, onTriggerCamera }
       <div className="uber-overlay-sheet-body space-y-5">
         <p className="text-xs uber-text-muted leading-relaxed">
           Self-audit and location photo before you start the job. Skipping items from the previous screen is allowed but
-          automatically flagged for the client.
+          automatically flagged for the customer.
         </p>
 
         <div className="wf-list-card flex-col items-stretch !flex !flex-col gap-1">

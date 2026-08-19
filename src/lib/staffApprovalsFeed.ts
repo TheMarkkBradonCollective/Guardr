@@ -1,4 +1,5 @@
 import type { Certification, Client, ClientCredential, SecurityGuard, SecurityRequest } from '../types';
+import { accountKindLabel } from './audienceLabels';
 import { clientDisplayName } from './clientType';
 import type { AuditLogEntry, AuditAction } from './auditLog';
 import { isFieldGuardAccount, belongsInClientApplicationFeed, isSelfSubmittedGuardAccount } from './approvalSubmissions';
@@ -371,7 +372,7 @@ function appendClientCredentialItems(
 }
 
 function clientTypeSubtitle(client: Client): string {
-  return client.clientType === 'personal' ? 'Personal client' : 'Business client';
+  return accountKindLabel(client.clientType);
 }
 
 function credentialItems(

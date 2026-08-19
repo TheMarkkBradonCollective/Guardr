@@ -34,12 +34,12 @@ export function AuthFormHeader({
           ? 'Create your personal account'
           : isBusinessClient
             ? 'Create your business account'
-            : 'Create your client account'
+            : 'Create your account'
     : role === 'guard'
       ? 'Guard sign in'
       : role === 'staff'
         ? 'Staff sign in'
-        : 'Client sign in';
+        : 'Coverage sign in';
 
   const title = variant === 'sheet' ? sheetTitle : pageTitle;
 
@@ -49,10 +49,10 @@ export function AuthFormHeader({
       : role === 'staff'
         ? 'Staff workspace'
         : isPersonalClient
-          ? 'Personal client'
+          ? 'Personal account'
           : isBusinessClient
-            ? 'Business client'
-            : 'Client workspace';
+            ? 'Business account'
+            : 'Coverage workspace';
 
   const clientSignupSubtitle = isPersonalClient
     ? 'You hire and pay as an individual. Request coverage once or as often as you need — including recurring services.'

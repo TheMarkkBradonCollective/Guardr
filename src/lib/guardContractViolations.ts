@@ -177,7 +177,7 @@ function buildClientReportRows(guardId: string, requests: SecurityRequest[]): Gu
           { label: 'Category', value: title },
           { label: 'Reported', value: formatViolationDate(report.reportedAt) },
           {
-            label: 'Client note',
+            label: 'Customer note',
             value: report.description,
             highlight: true,
           },

@@ -110,10 +110,10 @@ const METRIC_TEMPLATES: Record<JobTypeRatingCategory, JobTypeMetricTemplate[]> =
     {
       id: 'client-rating',
       label: {
-        nightlife: 'Client rating',
-        events: 'Client rating',
-        sites: 'Client rating',
-        specialized: 'Client rating',
+        nightlife: 'Customer rating',
+        events: 'Customer rating',
+        sites: 'Customer rating',
+        specialized: 'Customer rating',
       },
       targetLabel: 'Stay above 4.5 ★',
       targetRate: 0.9,
@@ -197,10 +197,10 @@ const METRIC_TEMPLATES: Record<JobTypeRatingCategory, JobTypeMetricTemplate[]> =
     {
       id: 'client-rating',
       label: {
-        nightlife: 'Client rating',
-        events: 'Client rating',
-        sites: 'Client rating',
-        specialized: 'Client rating',
+        nightlife: 'Customer rating',
+        events: 'Customer rating',
+        sites: 'Customer rating',
+        specialized: 'Customer rating',
       },
       targetLabel: 'Stay above 4.5 ★',
       targetRate: 0.9,
@@ -335,10 +335,10 @@ const METRIC_TEMPLATES: Record<JobTypeRatingCategory, JobTypeMetricTemplate[]> =
     {
       id: 'client-rating',
       label: {
-        nightlife: 'Client rating',
-        events: 'Client rating',
-        sites: 'Client rating',
-        specialized: 'Client rating',
+        nightlife: 'Customer rating',
+        events: 'Customer rating',
+        sites: 'Customer rating',
+        specialized: 'Customer rating',
       },
       targetLabel: 'Stay above 4.5 ★',
       targetRate: 0.9,
@@ -512,7 +512,7 @@ const MODALITY_METRIC_LABELS: Record<
     uniform: 'Uniform compliance',
     attendance: 'Attendance',
     'incident-free': 'Incident-free record',
-    'client-rating': 'Client rating',
+    'client-rating': 'Customer rating',
     'lifetime-shifts': 'Lifetime standing shifts',
   },
   driving: {
@@ -521,7 +521,7 @@ const MODALITY_METRIC_LABELS: Record<
     uniform: 'Uniform compliance',
     attendance: 'Attendance',
     'incident-free': 'Incident-free record',
-    'client-rating': 'Client rating',
+    'client-rating': 'Customer rating',
     'lifetime-shifts': 'Lifetime patrol shifts',
   },
 };

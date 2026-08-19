@@ -59,7 +59,7 @@ export function jobPaymentLedger(req: SecurityRequest): JobPaymentLedgerLine[] {
   const lines: JobPaymentLedgerLine[] = [
     {
       party: 'client',
-      label: 'Client bill',
+      label: 'Hiring-account bill',
       amount: req.estimatedPayout,
       status: clientStatus,
       statusLabel: clientPaymentDisplay(req),
@@ -308,7 +308,7 @@ export function staffJobMoneySummary(req: SecurityRequest): { headline: string; 
 }
 
 export const PIPELINE_FLOW_STEPS = [
-  { step: 1, label: 'Client pays', description: 'Card checkout via Stripe' },
+  { step: 1, label: 'Hiring account pays', description: 'Card checkout via Stripe' },
   { step: 2, label: 'Job in progress', description: 'Funds stay secured until the job is complete' },
   { step: 3, label: 'Guard collects pay', description: 'Staff releases funds; the guard collects via bank transfer' },
 ] as const;

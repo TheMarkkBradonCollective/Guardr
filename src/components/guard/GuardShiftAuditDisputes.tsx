@@ -33,7 +33,7 @@ export function GuardShiftAuditDisputes({
           Shift audit violations
         </h3>
         <p className="guard-factors-subheading">
-          Dispute client or automatic flags within 48 hours. After that, unresolved items are auto-upheld.
+          Dispute customer or automatic flags within 48 hours. After that, unresolved items are auto-upheld.
         </p>
       </div>
       <div className="space-y-3">

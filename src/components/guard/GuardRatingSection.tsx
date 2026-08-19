@@ -309,7 +309,7 @@ export function GuardRatingSection({
           </div>
           <p className="guard-rating-empty-title">No performance data yet</p>
           <p className="guard-rating-empty-body">
-            Complete shifts and earn client reviews to unlock your tier and rating factors.
+            Complete shifts and earn customer reviews to unlock your tier and rating factors.
           </p>
         </div>
       </section>

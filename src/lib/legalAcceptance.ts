@@ -1,5 +1,6 @@
 import type { Client, SessionUser } from '../types';
 import type { SecurityGuard } from '../types';
+import { STAFF_HIRING_ACCOUNT_LABEL } from './audienceLabels';
 import { findGuardProfileForUser } from './guardDirectory';
 import type { LegalPageId } from './legalContent';
 import { CURRENT_LEGAL_VERSIONS, requiredLegalDocumentsForRole } from './legalContent';
@@ -126,7 +127,7 @@ function legalRoleForGuard(guard: SecurityGuard): LegalUserRole {
 }
 
 function legalRoleLabel(role: LegalUserRole): string {
-  if (role === 'client') return 'Client';
+  if (role === 'client') return STAFF_HIRING_ACCOUNT_LABEL;
   if (role === 'staff') return 'Staff';
   return 'Guard';
 }

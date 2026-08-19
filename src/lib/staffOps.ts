@@ -1,4 +1,5 @@
 import { Client, SecurityGuard, SecurityRequest, SupportTicket } from '../types';
+import { STAFF_HIRING_ACCOUNTS_LABEL } from './audienceLabels';
 import { computeLateClockOutHours, computeOvertimeAmount } from './shiftBilling';
 import { PLATFORM_FEE_PER_HOUR } from './payments';
 import {
@@ -220,7 +221,7 @@ export const APPROVAL_QUEUE_TAB_LABELS: Record<
   credentials: 'Credentials',
   'guard-accounts': 'Guards',
   'staff-accounts': 'Staff',
-  'client-accounts': 'Clients',
+  'client-accounts': STAFF_HIRING_ACCOUNTS_LABEL,
 };
 
 /** Map legacy queue ids and invalid values to a concrete approvals tab. */
@@ -401,7 +402,7 @@ export const LIVE_JOB_STATUS_LABEL: Record<LiveJobStatus, { emoji: string; label
   active: { emoji: '🟢', label: 'Active', className: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
   'in-progress': { emoji: '🔵', label: 'In Progress', className: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
   completed: { emoji: '⚫', label: 'Completed', className: 'text-slate-400 bg-slate-500/10 border-slate-500/30' },
-  'incident-flagged': { emoji: '📋', label: 'Client incident reported', className: 'text-slate-400 bg-slate-500/10 border-slate-500/30' },
+  'incident-flagged': { emoji: '📋', label: 'Hiring-account incident reported', className: 'text-slate-400 bg-slate-500/10 border-slate-500/30' },
 };
 
 export function computePlatformStats(
@@ -538,12 +539,12 @@ export function buildOverviewMetricCells(
       accent: false,
     },
     {
-      label: 'Active clients',
+      label: 'Active hiring accounts',
       value: String(stats.activeClients),
       sub:
         stats.activeClients === 0
-          ? 'No client accounts on the platform'
-          : `${stats.activeClients} client account${stats.activeClients === 1 ? '' : 's'} posting and managing jobs`,
+          ? 'No hiring accounts on the platform'
+          : `${stats.activeClients} hiring account${stats.activeClients === 1 ? '' : 's'} posting and managing jobs`,
       accent: false,
     },
     {
@@ -590,7 +591,7 @@ export function buildOverviewActionQueue(
     items.push({
       id: 'pending-jobs',
       title: 'Approve job offers before payment',
-      description: `${stats.pendingJobApprovals} client job offer${stats.pendingJobApprovals === 1 ? '' : 's'} waiting — client cannot pay until approved`,
+      description: `${stats.pendingJobApprovals} client job offer${stats.pendingJobApprovals === 1 ? '' : 's'} waiting — hiring account cannot pay until approved`,
       count: stats.pendingJobApprovals,
       section: 'jobs',
       tone: 'urgent',
@@ -600,7 +601,7 @@ export function buildOverviewActionQueue(
   if (stats.pendingScheduleChanges > 0) {
     items.push({
       id: 'pending-schedule-changes',
-      title: 'Approve client schedule changes',
+      title: 'Approve hiring-account schedule changes',
       description: `${stats.pendingScheduleChanges} paid job${stats.pendingScheduleChanges === 1 ? '' : 's'} with new times awaiting review`,
       count: stats.pendingScheduleChanges,
       section: 'jobs',
@@ -635,7 +636,7 @@ export function buildOverviewActionQueue(
     items.push({
       id: 'account-applications',
       title: 'Review account applications',
-      description: 'New guard and client sign-ups waiting for staff approval before activation',
+      description: 'New guard and hiring-account sign-ups waiting for staff approval before activation',
       count: stats.pendingAccountApplications,
       section: 'applications',
       tone: 'urgent',
@@ -690,7 +691,7 @@ export function buildOverviewActionQueue(
   if (openIncidents > 0) {
     items.push({
       id: 'incidents',
-      title: 'Review client incident reports',
+      title: 'Review hiring-account incident reports',
       description: 'Filed during job checkout — see what happened on site',
       count: openIncidents,
       section: 'incidents',
@@ -714,7 +715,7 @@ export function buildOverviewActionQueue(
     items.push({
       id: 'support',
       title: 'Reply to support tickets',
-      description: 'Clients or guards are waiting on staff',
+      description: 'Hiring accounts or guards are waiting on staff',
       count: supportCount,
       section: 'support',
       tone: 'normal',
@@ -824,8 +825,8 @@ export function buildPlatformActivityFeed(
         timestamp: violation.reportedAt,
         message:
           violation.target === 'guard'
-            ? `Client reported guard violation (${violation.category}) — ${site}`
-            : `Client reported job violation (${violation.category}) — ${site}`,
+            ? `Hiring account reported guard violation (${violation.category}) — ${site}`
+            : `Hiring account reported job violation (${violation.category}) — ${site}`,
         sortKey: new Date(violation.reportedAt).getTime(),
       });
     }

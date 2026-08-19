@@ -45,7 +45,7 @@ export const CLIENT_CREDENTIAL_CATALOG: ClientCredentialTypeDef[] = [
     applicableTo: ['personal'],
     requiredFor: [],
     alwaysRequired: true,
-    requiredForDescription: 'Required for every personal client account.',
+    requiredForDescription: 'Required for every personal hiring account.',
     description: 'A government-issued photo ID for the individual hiring Guardr.',
   },
   {
@@ -120,7 +120,7 @@ export const CLIENT_CREDENTIAL_CATALOG: ClientCredentialTypeDef[] = [
     applicableTo: ['business'],
     requiredFor: [],
     alwaysRequired: true,
-    requiredForDescription: 'Required for the authorized representative on every business client account.',
+    requiredForDescription: 'Required for the authorized representative on every business hiring account.',
     description: 'A government-issued photo ID for the person authorized to hire Guardr for the business.',
   },
   {
@@ -304,7 +304,7 @@ export function formatClientCredentialRequiredFor(type: ClientCredentialTypeDef)
 }
 
 export function formatClientCredentialApplicableTo(type: ClientCredentialTypeDef): string {
-  return type.applicableTo.map((kind) => (kind === 'personal' ? 'Personal clients' : 'Business clients')).join(', ');
+  return type.applicableTo.map((kind) => (kind === 'personal' ? 'Personal accounts' : 'Business accounts')).join(', ');
 }
 
 export function selectableJobTypesForCredentialRules(): { id: JobType; label: string }[] {

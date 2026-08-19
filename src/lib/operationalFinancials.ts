@@ -185,7 +185,7 @@ export function buildDirectorOperationsLines(
       value: `${clients.length} client${clients.length === 1 ? '' : 's'} · ${fieldGuards} field guard${fieldGuards === 1 ? '' : 's'} · ${staffCount} staff`,
     },
     {
-      label: 'Client collections',
+      label: 'Hiring-account collections',
       value: `${formatOperationalMoney(financials.grossIncomeCard)} via Stripe`,
     },
     {

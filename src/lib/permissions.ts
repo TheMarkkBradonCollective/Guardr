@@ -174,7 +174,7 @@ export const ROLE_PERMISSIONS: Record<PlatformRole, Permission[]> = {
 };
 
 export const ROLE_LABELS: Record<PlatformRole, string> = {
-  client: 'Client',
+  client: 'Hiring account',
   guard: 'Guard',
   support: 'Support',
   moderator: 'Moderator',
@@ -186,10 +186,10 @@ export const ROLE_LABELS: Record<PlatformRole, string> = {
 };
 
 export const ROLE_DESCRIPTIONS: Record<PlatformRole, string> = {
-  client: 'Individuals and businesses seeking security services.',
+  client: 'Individuals and businesses that hire and pay for security coverage.',
   guard: 'Independent licensed security professionals.',
   support: 'Handles support messages, reviews incident reports, and monitors platform activity.',
-  moderator: 'Approves guard and client applications, monitors activity, and escalates issues.',
+  moderator: 'Approves guard and hiring-account applications, monitors activity, and escalates issues.',
   administrator: 'Verifies credentials, reviews jobs and disputes, and manages daily operations.',
   manager: 'Executive operations — same command center as Director for payouts, jobs, financials, and live coverage. City actions follow your assigned markets.',
   director: 'Executive operations with global city markets and governance-adjacent controls shared with Founder.',
@@ -240,7 +240,7 @@ export const STAFF_PERMISSION_CATALOG: {
   group: string;
 }[] = [
   { permission: 'moderator.approve_guards', label: 'Approve guard applications', group: 'Applications' },
-  { permission: 'moderator.approve_clients', label: 'Approve client applications', group: 'Applications' },
+  { permission: 'moderator.approve_clients', label: 'Approve hiring-account applications', group: 'Applications' },
   { permission: 'moderator.access_support_inbox', label: 'Handle support messages', group: 'Communications' },
   { permission: 'moderator.access_messages', label: 'Access job & staff messages', group: 'Communications' },
   { permission: 'moderator.review_reports', label: 'Review incident reports', group: 'Monitoring' },

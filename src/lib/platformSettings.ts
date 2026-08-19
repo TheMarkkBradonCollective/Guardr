@@ -156,13 +156,13 @@ export function platformPaymentModeDescription(settings: PlatformSettings): stri
   const stripe = settings.paymentStripeEnabled;
   const square = settings.paymentSquareEnabled;
   if (stripe && square) {
-    return 'Clients can pay by card through Stripe or Square. Each processor must be connected in env before it can be enabled.';
+    return 'Hiring accounts can pay by card through Stripe or Square. Each processor must be connected in env before it can be enabled.';
   }
   if (stripe) {
-    return 'Clients pay online by card through Stripe checkout.';
+    return 'Hiring accounts pay online by card through Stripe checkout.';
   }
   if (square) {
-    return 'Clients pay online by card through Square checkout.';
+    return 'Hiring accounts pay online by card through Square checkout.';
   }
   return 'Enable at least one connected card processor below.';
 }

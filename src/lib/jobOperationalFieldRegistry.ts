@@ -405,7 +405,7 @@ export const OPERATIONAL_FIELD_SECTIONS: OperationalFieldSection[] = [
     title: 'Client requests & notes',
     description: 'Anything else your security team must know.',
     fields: [
-      { key: 'clientSpecialRequests', label: 'Client special requests', placeholder: 'Prior incidents, problem guests, neighborhood concerns...', type: 'text', rows: 4 },
+      { key: 'clientSpecialRequests', label: 'Special requests', placeholder: 'Prior incidents, problem guests, neighborhood concerns...', type: 'text', rows: 4 },
       { key: 'additionalNotes', label: 'Additional notes', placeholder: 'Anything we missed — guards see this after approval.', type: 'text', rows: 4 },
     ],
     lists: [

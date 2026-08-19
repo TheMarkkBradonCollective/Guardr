@@ -38,7 +38,7 @@ const TIER_REWARDS: Record<string, TierRewardItem[]> = {
     },
     {
       id: 'client-reviews',
-      title: 'Client review boost',
+      title: 'Customer review boost',
       description: 'Strong factor scores help you stand out on job applications.',
     },
     {

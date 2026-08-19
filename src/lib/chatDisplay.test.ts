@@ -6,6 +6,7 @@ import {
   displaySenderNameForViewer,
   maskReplySenderName,
 } from './chatDisplay';
+import { STAFF_HIRING_ACCOUNT_LABEL } from './audienceLabels';
 
 describe('chatDisplay staff privacy', () => {
   it('hides staff names from clients and guards', () => {
@@ -16,7 +17,7 @@ describe('chatDisplay staff privacy', () => {
       'Guardr · Founder'
     );
     assert.equal(
-      communityChatSenderLabel('client', 'director', 'Pat Director', 'Client'),
+      communityChatSenderLabel('client', 'director', 'Pat Director', STAFF_HIRING_ACCOUNT_LABEL),
       'Guardr · Director'
     );
     assert.equal(chatSenderLabelForViewer('client', 'moderator', 'Jane'), 'Moderator');

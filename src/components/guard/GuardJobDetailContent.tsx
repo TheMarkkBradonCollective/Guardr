@@ -132,13 +132,13 @@ export function GuardJobDetailContent({
 
               {hasApplied && job.status === 'open' && job.pendingGuardId === guard.id && (
                 <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5 font-semibold">
-                  Awaiting client confirmation for this job.
+                  Awaiting customer confirmation for this job.
                 </p>
               )}
 
               {hasApplied && job.status === 'open' && job.pendingGuardId !== guard.id && (
                 <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5">
-                  Application submitted. Guardr staff will review applicants and send the best fit for client approval.
+                  Application submitted. Guardr staff will review applicants and send the best fit for customer approval.
                 </p>
               )}
 
@@ -146,7 +146,7 @@ export function GuardJobDetailContent({
               {isDirectRequest && job.status === 'open' && !hasApplied && (
                 <div className="space-y-2.5">
                   <p className="text-sm text-brand-text-muted">
-                    A client requested you for this job. Accept to take it or decline to open it to other guards.
+                    A customer requested you for this job. Accept to take it or decline to open it to other guards.
                   </p>
                   {canAccept ? (
                     <div className="flex gap-2">

@@ -871,12 +871,12 @@ var EVENT_DEFAULTS = {
     body: event.body || "New message from another guard"
   }),
   client_message: (event) => ({
-    title: "Client chat",
-    body: event.body || "New message from another client"
+    title: "Hiring-account chat",
+    body: event.body || "New message from another hiring account"
   }),
   job_submitted: (event) => ({
     title: "New job request",
-    body: event.body || "A client submitted a job awaiting staff review"
+    body: event.body || "A hiring account submitted a job awaiting staff review"
   }),
   guard_application: (event) => ({
     title: "Guard application",
@@ -891,8 +891,8 @@ var EVENT_DEFAULTS = {
     body: event.body || "A guard account needs staff review"
   }),
   client_pending_approval: (event) => ({
-    title: "Client pending approval",
-    body: event.body || "A client account needs staff review"
+    title: "Hiring account pending approval",
+    body: event.body || "A hiring account needs staff review"
   }),
   credential_pending: (event) => ({
     title: "Credential review",
@@ -907,8 +907,8 @@ var EVENT_DEFAULTS = {
     body: event.body || "Your job invoice is ready for payment"
   }),
   client_cash_payment_requested: (event) => ({
-    title: "Client cash payment request",
-    body: event.body || "A client requested to pay in cash"
+    title: "Hiring-account cash payment request",
+    body: event.body || "A hiring account requested to pay in cash"
   }),
   guard_cash_payout_requested: (event) => ({
     title: "Guard cash payout request",
@@ -939,8 +939,8 @@ var EVENT_DEFAULTS = {
     body: event.body || "Your trusted guard status changed"
   }),
   client_trusted_status: (event) => ({
-    title: event.title ?? "Trusted client update",
-    body: event.body || "Your trusted client status changed"
+    title: event.title ?? "Trusted hiring-account update",
+    body: event.body || "Your trusted hiring-account status changed"
   }),
   job_relisted: (event) => ({
     title: "Job back on marketplace",
