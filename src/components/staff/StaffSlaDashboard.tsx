@@ -80,7 +80,7 @@ export function StaffSlaDashboard({ requests, guards, clients, tickets = [] }: S
       value: String(metrics.jobsCompletedThisWeek),
     },
     { key: 'guards', icon: Users, label: 'Active guards', value: String(metrics.activeGuardsCount) },
-    { key: 'clients', icon: Users, label: 'Active clients', value: String(metrics.activeClientsCount) },
+    { key: 'clients', icon: Users, label: 'Active hiring accounts', value: String(metrics.activeClientsCount) },
     {
       key: 'pending',
       icon: AlertTriangle,

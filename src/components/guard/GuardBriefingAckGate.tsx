@@ -21,7 +21,7 @@ export function GuardBriefingAckGate({ open, job, onAcknowledge }: GuardBriefing
             Complete briefing before starting
           </p>
           <p className="text-xs text-amber-700 dark:text-amber-300 mt-2 leading-relaxed">
-            You arrived without reviewing the job briefing. The client was not notified you were fully prepared.
+            You arrived without reviewing the job briefing. The customer was not notified you were fully prepared.
             Read the briefing now before starting paid coverage.
           </p>
         </div>

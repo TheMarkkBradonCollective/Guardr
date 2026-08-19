@@ -64,7 +64,7 @@ export const GUARD_APPLICATION_REVISION_DEFAULT_REASON =
   'Staff needs updates to your application before it can stay approved. Please review the note and resubmit.';
 
 export const CLIENT_APPLICATION_REVISION_DEFAULT_REASON =
-  'Staff needs updates to your client application before it can stay approved. Please review and resubmit.';
+  'Staff needs updates to your application before it can stay approved. Please review and resubmit.';
 
 /** Full application rejection — blocks the guard account. Returns null if cancelled. */
 export async function promptRejectGuardApplicationNote(): Promise<string | null> {
@@ -143,9 +143,9 @@ export async function promptRequestGuardApplicationRevisionNote(): Promise<strin
 /** Soft reopen — unlock submitted client application contact details. Returns null if cancelled. */
 export async function promptRequestClientApplicationRevisionNote(): Promise<string | null> {
   const confirmed = await showAppConfirm({
-    title: 'Request client application revision?',
+    title: 'Request hiring-account application revision?',
     message:
-      'Application details unlock so the client can fix issues. Approved applications return to Pending for re-review.',
+      'Application details unlock so the hiring account can fix issues. Approved applications return to Pending for re-review.',
     confirmLabel: 'Request revision',
     cancelLabel: 'Keep reviewing',
     tone: 'danger',
@@ -154,7 +154,7 @@ export async function promptRequestClientApplicationRevisionNote(): Promise<stri
 
   const reason = await showAppPrompt({
     title: 'What needs revision?',
-    message: 'This note is shown to the client with the revision request.',
+    message: 'This note is shown to the applicant with the revision request.',
     defaultValue: CLIENT_APPLICATION_REVISION_DEFAULT_REASON,
     multiline: true,
     confirmLabel: 'Send request',

@@ -1,4 +1,5 @@
 import { PlatformRole, ClientMessage, Client, SessionUser } from '../types';
+import { hiringAccountDisplayFallback } from './audienceLabels';
 import { isClientAccountActive } from './accountStatus';
 import { isStaffRole } from './permissions';
 import { ROLE_LABELS } from './permissions';
@@ -85,6 +86,6 @@ export function sortedClientMessages(messages: ClientMessage[]): ClientMessage[]
 /** Client chat bubble label — Guardr brand, role, then person's name. */
 export function clientChatSenderLabel(role: PlatformRole, name: string): string {
   const roleLabel = ROLE_LABELS[role] ?? role;
-  const displayName = name.trim() || 'Client';
+  const displayName = name.trim() || hiringAccountDisplayFallback('staff');
   return `Guardr · ${roleLabel} · ${displayName}`;
 }

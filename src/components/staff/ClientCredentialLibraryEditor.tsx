@@ -168,14 +168,14 @@ export function ClientCredentialLibraryEditor({
       ) : null}
       <LibraryGroup
         clientType="personal"
-        title="Personal clients"
+        title="Personal accounts"
         rules={activeRules}
         onChange={handleRulesChange}
         canEdit={canEdit}
       />
       <LibraryGroup
         clientType="business"
-        title="Business clients"
+        title="Business accounts"
         rules={activeRules}
         onChange={handleRulesChange}
         canEdit={canEdit}

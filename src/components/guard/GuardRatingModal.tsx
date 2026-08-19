@@ -22,7 +22,7 @@ export function GuardRatingModal({ open, clientName, onSubmit, onSkip }: GuardRa
   return (
     <AppModal open={open} align="center" position="absolute" zIndex={1004} onClose={onSkip} panelClassName="p-6 space-y-5">
       <div className="text-center">
-        <p className="text-sm font-medium uber-text-accent mb-2">Rate client</p>
+        <p className="text-sm font-medium uber-text-accent mb-2">Rate customer</p>
         <h3 className="font-bold text-lg">{clientName}</h3>
         <p className="text-sm uber-text-muted mt-1">How was this assignment?</p>
       </div>

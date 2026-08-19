@@ -81,9 +81,9 @@ test('buildPerformanceBreakdown includes client reviews and behavior rows', () =
 });
 
 test('formatReviewCount pluralizes correctly', () => {
-  assert.equal(formatReviewCount(0), 'No client reviews yet');
-  assert.equal(formatReviewCount(1), 'Based on 1 client review');
-  assert.equal(formatReviewCount(12), 'Based on 12 client reviews');
+  assert.equal(formatReviewCount(0), 'No customer reviews yet');
+  assert.equal(formatReviewCount(1), 'Based on 1 customer review');
+  assert.equal(formatReviewCount(12), 'Based on 12 customer reviews');
 });
 
 test('formatShiftSampleCount pluralizes correctly', () => {

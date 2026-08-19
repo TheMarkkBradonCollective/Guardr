@@ -141,7 +141,7 @@ export function GuardMyJobDetail({
           className="w-full app-button-outline !h-11 flex items-center justify-center gap-2"
         >
           <MessageCircle className="w-4 h-4" />
-          {chatEligible ? 'Message client' : 'View job chat'}
+          {chatEligible ? 'Message customer' : 'View job chat'}
         </button>
       )}
     </div>

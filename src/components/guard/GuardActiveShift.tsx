@@ -239,7 +239,7 @@ export function GuardActiveShift({
           <Block display="flex" alignItems="flex-start" gridGap="scale400" width="100%">
             <Navigation size={20} strokeWidth={1.5} style={{ flexShrink: 0, marginTop: '2px', color: theme.colors.accent }} />
             <Block>
-              <LabelSmall color="contentSecondary" margin={0}>Client contact</LabelSmall>
+              <LabelSmall color="contentSecondary" margin={0}>Customer contact</LabelSmall>
               <ParagraphSmall marginTop="scale100" margin={0} $style={{ fontWeight: 500 }}>{job.clientName}</ParagraphSmall>
             </Block>
           </Block>
@@ -261,7 +261,7 @@ export function GuardActiveShift({
         {phase === 'en-route' && (
           <Block display="flex" flexDirection="column" gridGap="scale400">
             <ParagraphXSmall color="contentSecondary" margin={0} $style={{ textAlign: 'center' }}>
-              Your location is shared with the client while you head to the site.
+              Your location is shared with the customer while you head to the site.
             </ParagraphXSmall>
             <SlideToConfirm
               label={gpsRequired && !onSite ? 'Must be on site to arrive' : 'Slide to arrive on site'}
@@ -297,7 +297,7 @@ export function GuardActiveShift({
                   Skip self audit · start job
                 </AppButton>
                 <ParagraphXSmall color="contentSecondary" margin={0} $style={{ textAlign: 'center' }}>
-                  Skipping flags missing start items automatically for client review.
+                  Skipping flags missing start items automatically for customer review.
                 </ParagraphXSmall>
               </>
             ) : (
@@ -351,7 +351,7 @@ export function GuardActiveShift({
               Skip self audit · start job
             </AppButton>
             <ParagraphXSmall color="contentSecondary" margin={0} $style={{ textAlign: 'center' }}>
-              Skipping flags missing start items automatically for client review.
+              Skipping flags missing start items automatically for customer review.
             </ParagraphXSmall>
           </Block>
         )}
@@ -434,7 +434,7 @@ export function GuardActiveShift({
                   disabled={!onOpenJobChat}
                   startEnhancer={<MessageCircle size={16} />}
                 >
-                  Message client
+                  Message customer
                 </AppButton>
               </Block>
             </Block>

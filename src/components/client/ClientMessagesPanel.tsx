@@ -162,7 +162,7 @@ export function ClientMessagesPanel({
   const communityRow: InboxRow = {
     id: 'client-community',
     channel: 'client-community',
-    title: 'Client chat',
+    title: 'Hiring-account chat',
     subtitle: '',
     preview: '',
     updatedAt: clientChannelUpdatedAt,
@@ -307,7 +307,7 @@ export function ClientMessagesPanel({
       if (activeView.kind === 'client-channel') {
         override = (
           <AppChatHeader
-            title="Client chat"
+            title="Community chat"
             onBack={backToList}
             trailing={shellHeaderTrailing}
           />
@@ -426,7 +426,7 @@ export function ClientMessagesPanel({
         <div className="h-full flex flex-col min-h-0 app-full-page-screen">
           {!embedHeaderInShell && (
             <AppChatHeader
-              title="Client chat"
+              title="Community chat"
               subtitle="All active clients and staff"
               onBack={backToList}
               hideBackOnDesktop
@@ -446,7 +446,7 @@ export function ClientMessagesPanel({
               teamChat
               clientChatLabels
               readOnly={!canPostClientChat}
-              readOnlyMessage="Client chat opens once your account is active on Guardr."
+              readOnlyMessage="Community chat opens once your account is active on Guardr."
             />
           </div>
         </div>

@@ -40,7 +40,7 @@ export async function confirmRemoveGuardTrusted(
 
 export async function confirmMarkClientTrusted(clientName: string): Promise<boolean> {
   return showAppConfirm({
-    title: 'Mark client as trusted?',
+    title: 'Mark hiring account as trusted?',
     message: `${clientName}'s non-cash job postings will skip the Guardr approval queue and open to guards immediately.`,
     confirmLabel: 'Mark trusted',
   });
@@ -94,7 +94,7 @@ export async function confirmApproveGuardProfile(guardName: string): Promise<boo
 
 export async function confirmApproveClientAccount(clientName: string): Promise<boolean> {
   return showAppConfirm({
-    title: 'Approve client account?',
+    title: 'Approve hiring account?',
     message: `Approve ${clientName} so they can post jobs on the platform.`,
     confirmLabel: 'Approve account',
   });

@@ -1,4 +1,5 @@
 import type { Client, ClientCredential, ClientCredentialStatus, JobType } from '../types';
+import { accountKindLabel } from './audienceLabels';
 import { clientDisplayName, normalizeClientType } from './clientType';
 import {
   catalogTypesForClientType,
@@ -237,5 +238,5 @@ export function resolvedClientCredentialType(
 }
 
 export function clientTypeLabelForCredential(clientType: Client['clientType']): string {
-  return normalizeClientType(clientType) === 'personal' ? 'Personal client' : 'Business client';
+  return accountKindLabel(normalizeClientType(clientType));
 }

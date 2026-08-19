@@ -104,14 +104,14 @@ export function StaffAddClientForm({
           className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Add client
+          Add hiring account
         </button>
       ) : null}
 
       <AppFormSheet
         open={open}
         onClose={closeForm}
-        title="Add client account"
+        title="Add hiring account"
         subtitle={`Default sign-in password: ${STAFF_PROVISIONED_DEFAULT_PASSWORD}`}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -190,7 +190,7 @@ export function StaffAddClientForm({
 
           <div className="flex flex-wrap gap-2">
             <button type="submit" disabled={saving} className="app-button-primary !w-auto !h-10 !px-5">
-              {saving ? 'Adding…' : 'Create client account'}
+              {saving ? 'Adding…' : 'Create hiring account'}
             </button>
             <button type="button" onClick={closeForm} className="app-button-outline !w-auto !h-10 !px-5">
               Cancel

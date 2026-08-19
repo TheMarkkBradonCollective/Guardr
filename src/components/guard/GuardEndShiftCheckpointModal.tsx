@@ -63,7 +63,7 @@ export function GuardEndShiftCheckpointModal({
       <div className="uber-overlay-sheet-body space-y-5">
         <p className="text-xs uber-text-muted leading-relaxed">
           Optional end self-audit, location photo, and activity report. Skipping any item is allowed but will be
-          automatically flagged for client review.
+          automatically flagged for customer review.
         </p>
 
         <div>
@@ -113,7 +113,7 @@ export function GuardEndShiftCheckpointModal({
             onChange={(e) => setReport(e.target.value)}
             rows={4}
             className="uber-input w-full text-sm min-h-[88px] resize-y"
-            placeholder="Summary of coverage, handoff notes, and anything the client should know."
+            placeholder="Summary of coverage, handoff notes, and anything the customer should know."
           />
         </div>
 

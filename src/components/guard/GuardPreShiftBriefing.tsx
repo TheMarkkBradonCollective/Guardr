@@ -127,7 +127,7 @@ export function GuardPreShiftBriefing({
             <div>
               <h3 className="font-bold text-sm">Acknowledge post orders</h3>
               <p className="text-xs uber-text-muted mt-1 leading-relaxed">
-                Confirm you have read the client&apos;s site instructions before heading to site.
+                Confirm you have read the customer&apos;s site instructions before heading to site.
               </p>
             </div>
             <SlideToConfirm

@@ -356,7 +356,7 @@ export function buildJobTypeRatingMetrics(
 
   rows.push({
     id: 'client-reviews',
-    label: 'Client rating',
+    label: 'Customer rating',
     valueDisplay: clientReviews.count > 0 ? starDisplay(clientReviews.average) : '—',
     targetLabel: 'Stay above 4.5 ★',
     status: clientStatus.status,
@@ -523,7 +523,7 @@ export function buildPerformanceBreakdown(
   if (clientReviews.count > 0) {
     rows.push({
       id: 'client-reviews',
-      label: 'Client reviews',
+      label: 'Customer reviews',
       score: clientReviews.average,
       percent: rateToPercent(clientReviews.average / 5),
     });
@@ -568,9 +568,9 @@ export function buildPerformanceBreakdown(
 }
 
 export function formatReviewCount(count: number): string {
-  if (count <= 0) return 'No client reviews yet';
-  if (count === 1) return 'Based on 1 client review';
-  return `Based on ${count} client reviews`;
+  if (count <= 0) return 'No customer reviews yet';
+  if (count === 1) return 'Based on 1 customer review';
+  return `Based on ${count} customer reviews`;
 }
 
 export function formatShiftSampleCount(count: number): string {
@@ -728,7 +728,7 @@ export function computePerformanceViolations(
   if (clientReported > 0) {
     violations.push({
       id: 'client-reported',
-      label: 'Client-reported violation',
+      label: 'Customer-reported violation',
       count: clientReported,
     });
   }

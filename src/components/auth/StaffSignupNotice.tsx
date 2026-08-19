@@ -23,7 +23,7 @@ export function StaffSignupNotice({ onApplyAsStaff, compact = false }: StaffSign
             Looking for a job at Guardr?
           </p>
           <p className="text-xs leading-relaxed text-brand-text-muted">
-            Guard and client accounts are for the security marketplace — independent contractor shifts
+            Guard and hiring accounts are for the security marketplace — independent contractor shifts
             and businesses hiring guards. Guardr does not hire through those paths. Platform staff
             (operations, support, review) apply separately.
           </p>

@@ -18,7 +18,7 @@ export function PostOrdersAckPanel({ job, guardId, onAcknowledge }: PostOrdersAc
       <div>
         <h3 className="font-bold text-sm">Review post orders before your shift</h3>
         <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
-          The client posted site instructions and orders. Acknowledge you have read them before clocking in.
+          The customer posted site instructions and orders. Acknowledge you have read them before clocking in.
         </p>
       </div>
       {job.siteInstructions?.trim() && (

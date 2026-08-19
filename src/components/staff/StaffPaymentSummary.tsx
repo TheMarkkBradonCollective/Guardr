@@ -29,7 +29,7 @@ export function StaffPaymentSummary({ summary, financials, variant = 'default' }
           ]
         : []),
       {
-        label: 'Client still owes',
+        label: 'Hiring account still owes',
         value: `$${summary.awaitingClientTotal.toFixed(2)}`,
         accent: summary.awaitingClient.length > 0,
       },

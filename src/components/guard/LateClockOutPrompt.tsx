@@ -120,7 +120,7 @@ export function LateClockOutPrompt({
         <>
           <h3 className="font-bold text-lg">When did you leave?</h3>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Pick the time you actually left the site. If it is after {formatWhen(endDate)}, the client
+            Pick the time you actually left the site. If it is after {formatWhen(endDate)}, the customer
             will need to confirm the overtime charge.
           </p>
           <label className="block space-y-1.5">
@@ -136,7 +136,7 @@ export function LateClockOutPrompt({
           </label>
           {adjustedHasOvertime && (
             <p className="text-xs text-amber-700 dark:text-amber-300">
-              This time is after your scheduled end — the client will need to confirm the overtime charge.
+              This time is after your scheduled end — the customer will need to confirm the overtime charge.
             </p>
           )}
           <div className="space-y-2">

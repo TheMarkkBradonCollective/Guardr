@@ -1,4 +1,5 @@
 import type { PlatformRole } from '../types';
+import { GUARD_CUSTOMER_LABEL, STAFF_HIRING_ACCOUNT_LABEL } from './audienceLabels';
 import { isStaffRole, ROLE_LABELS } from './permissions';
 import { isGuardrSupportSender } from './support';
 
@@ -28,7 +29,7 @@ export function communityChatSenderLabel(
   viewerRole: PlatformRole,
   senderRole: PlatformRole,
   senderName: string,
-  peerFallback: 'Guard' | 'Client'
+  peerFallback: 'Guard' | typeof GUARD_CUSTOMER_LABEL | typeof STAFF_HIRING_ACCOUNT_LABEL
 ): string {
   const roleLabel = ROLE_LABELS[senderRole] ?? senderRole;
   if (shouldMaskStaffIdentity(viewerRole) && isStaffRole(senderRole)) {
