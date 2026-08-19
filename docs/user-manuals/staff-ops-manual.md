@@ -190,13 +190,15 @@ Directors / Founders edit global fees in **Payment settings**.
 
 ## Part E — Shared staff pages
 
+**Create actions** (add customer, guard, staff, credential, job) appear **on each page** when your role allows — not as buttons in the left sidebar. **Management** and **Credentials** always show their add controls on desktop.
+
 | Page | Typical use |
 |------|-------------|
 | **Overview** | Queue counts and ops snapshot |
 | **Map** / **Jobs** | Live coverage, assignments, flags (e.g. **No Self Audit**) |
-| **Applications** | Client/guard application intake; job offer queue |
-| **Credentials** | Guard document verification |
-| **Clients** / **Guards** | Rosters, detail panels, suspend/trusted (by tier) |
+| **Applications** | Customer/guard application intake; job offer queue |
+| **Credentials** | Guard, staff, and customer document verification |
+| **Customers** / **Guards** | Rosters, detail panels, suspend/trusted (by tier) |
 | **Messages** / **Support** | Job/staff chat; support ticket inbox |
 | **Incidents** | Field reports |
 | **Disputes** | Overtime/payment disputes |
@@ -214,7 +216,7 @@ Directors / Founders edit global fees in **Payment settings**.
 | Map / Jobs | View | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Applications | — | Approve apps | + Job offers | ✓ | ✓ | ✓ |
 | Credentials | — | View queues | Verify | ✓ | ✓ | ✓ |
-| Clients / Guards | View | ✓ | + Suspend | ✓ | + Trusted | ✓ |
+| Customers / Guards | View | ✓ | + Suspend | ✓ | + Trusted | ✓ |
 | Messages / Incidents | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Stats (desktop) | — | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Disputes / Analytics | — | — | ✓ | ✓ | + Financials | ✓ |
@@ -281,7 +283,7 @@ Credential verification and day-to-day marketplace operations.
 ### Can (in addition to Moderator)
 
 - Verify government ID, guard card, COI, PTA/UOF, CE, and optional extras
-- Review **client** credential uploads on **Credentials → Clients** (government ID plus library items)
+- Review **customer** credential uploads on **Credentials → Customers** (government ID plus library items)
 - Approve or decline **job offers**
 - Handle **Disputes**; suspend/restore users
 - **Analytics**; general **Settings**
@@ -291,7 +293,7 @@ Credential verification and day-to-day marketplace operations.
 - **Reject with clear reason** when documents are unreadable, expired, or wrong type.
 - **Never verify** a credential you cannot read or that fails BSIS/insurance requirements.
 - Staff government ID without front/back/selfie photos is **not** verified — leave it **Pending upload** and keep the account restricted until photos are in.
-- Client library: government ID is always required (personal client, or business authorized representative). Other items are required only when **Required For** matches the job type. Manager+ edits that library on **Credentials → Clients**.
+- Customer credential library: government ID is always required (personal customer, or business authorized representative). Other items are required only when **Required For** matches the job type. Manager+ edits that library on **Permissions** (not on the Credentials page).
 - Job offer review: confirm location, schedule, pay, and requirements match marketplace policy before **Slide to approve job**.
 
 ### Cannot
@@ -374,7 +376,7 @@ Client posts → Admin+ reviews job offer → Open
 |-----------|------------|
 | Client or guard account pending | Moderator+ (application) |
 | Guard credentials uploaded | Administrator+ (verify) |
-| Client credentials uploaded | Administrator+ (Credentials → Clients) |
+| Customer credentials uploaded | Administrator+ (Credentials → Customers) |
 | Staff applicant pending | Director (app + ID) |
 | Staff with pending or missing ID | Staff uploads; Director verifies — roster shows Inactive; ops stay restricted until then |
 | Job offer pending review | Administrator+ |
