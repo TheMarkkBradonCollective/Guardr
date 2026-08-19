@@ -15,6 +15,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.130':
+    'UI terminology: guards see customer labels on shifts; staff ops see hiring accounts instead of clients; auth uses personal/business account wording. Internal client role unchanged.',
   '1.0.129':
     'Full platform release: CI-built sideload APK and Play AAB; web + PWA alignment for Aug 18 session (roster tabs, staff activation, client credentials, SQL catch-up).',
   '1.0.128':
