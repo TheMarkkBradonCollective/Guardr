@@ -19,8 +19,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Keep in sync with package.json via npm run generate:download-version
-        versionCode 230
-        versionName "1.0.130-beta"
+        versionCode 231
+        versionName "1.0.131-beta"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
