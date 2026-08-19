@@ -8,7 +8,6 @@ import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
 import { WfSearchBar } from '../ui/wireframe';
 import { useStaffShellCreateRegistration } from './StaffShellCreateContext';
-import { useLayoutFormFactor } from '../../surfaces';
 import {
   StaffGuardCredentialAddWizard,
   type StaffCredentialAddWizardSheetMeta,
@@ -60,8 +59,6 @@ export function StaffCredentialAddForGuardForm({
   onCredentialAdded,
 }: StaffCredentialAddForGuardFormProps) {
   const [open, setOpen] = useState(false);
-  const formFactor = useLayoutFormFactor();
-  const hideTrigger = formFactor === 'desktop';
   const [flowStep, setFlowStep] = useState<FlowStep>('credential');
   const [guardSearch, setGuardSearch] = useState('');
   const [selectedSection, setSelectedSection] = useState<CredentialViewSectionId | null>(null);
@@ -148,16 +145,14 @@ export function StaffCredentialAddForGuardForm({
 
   return (
     <>
-      {!hideTrigger ? (
-        <button
-          type="button"
-          onClick={openFlow}
-          className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add credential
-        </button>
-      ) : null}
+      <button
+        type="button"
+        onClick={openFlow}
+        className="app-button-primary !w-auto !h-9 !px-4 !text-sm inline-flex items-center gap-2"
+      >
+        <Plus className="w-4 h-4" />
+        Add credential
+      </button>
 
       <AppFormSheet open={open} onClose={closeFlow} title={sheetMeta.title} subtitle={sheetMeta.subtitle}>
         {flowStep === 'credential' && (

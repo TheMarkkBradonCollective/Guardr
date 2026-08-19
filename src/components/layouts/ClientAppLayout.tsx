@@ -19,7 +19,6 @@ import {
   FileText,
   Settings,
   Receipt,
-  Plus,
   LifeBuoy,
 } from 'lucide-react';
 import { useClientCapabilities } from '../client/ClientCapabilitiesContext';
@@ -271,15 +270,6 @@ export function ClientAppLayout({
       variant={activeView === 'map' ? 'dark' : 'default'}
       workspaceLabel="Client workspace"
       headerContext={headerContext}
-      sidebarPrimaryAction={
-        !accountPending
-          ? {
-              label: caps.postJobLabel,
-              icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
-              onClick: () => onNavigate?.('request'),
-            }
-          : undefined
-      }
       sidebarFooter={sidebarFooter}
     >
       {children}

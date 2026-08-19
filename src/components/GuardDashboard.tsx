@@ -72,7 +72,7 @@ import { SidebarFooterLinks } from './layouts/SidebarFooterLinks';
 import { AppModal, AppPageTransition } from './ui/motion/AppMotion';
 import { AppScreen, AppSubScreenHeader } from './ui/app/AppPrimitives';
 import { SlideToConfirm } from './ui/SlideToConfirm';
-import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays, Car, Plus, LifeBuoy } from 'lucide-react';
+import { AlertTriangle, Map, DollarSign, Briefcase, MessagesSquare, BookOpen, Users, BarChart3, SlidersHorizontal, CalendarDays, Car, LifeBuoy } from 'lucide-react';
 import {
   guardCanApplyToJob,
   guardCanViewJob,
@@ -1998,15 +1998,6 @@ export function GuardDashboard({
       hideBottomNav={showShiftOverlay}
       variant={shellVariant}
       workspaceLabel="Guard workspace"
-      sidebarPrimaryAction={
-        !accountNeedsActivation
-          ? {
-              label: 'Find jobs',
-              icon: <Plus size={16} strokeWidth={2.5} aria-hidden />,
-              onClick: () => setTab('map'),
-            }
-          : undefined
-      }
       sidebarFooter={
         <SidebarFooterLinks
           onOpenSettings={() => setTab('settings')}

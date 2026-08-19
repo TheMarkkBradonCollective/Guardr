@@ -200,7 +200,7 @@ export function StaffTeamPanel({
   const toolbar = !showDetailOnly ? (
     <>
       <div className="staff-ops-cta-stack">
-        {tier === 'operations' && canProposeStaff && onAddStaff && assignableRoles.length > 0 && (
+        {canProposeStaff && onAddStaff && assignableRoles.length > 0 && (
           <StaffAddStaffForm
             assignableRoles={assignableRoles}
             requiresDirectorApproval={requiresDirectorApproval}

@@ -717,7 +717,7 @@ export function StaffCredentials({
 
   const toolbar = !showDetailOnly ? (
     <>
-      {onAddCertification && audienceFilter === 'guards' ? (
+      {onAddCertification ? (
         <div className="staff-ops-cta-stack">
           <StaffCredentialAddForGuardForm
             guards={guards}
