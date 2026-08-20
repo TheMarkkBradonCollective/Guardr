@@ -20681,7 +20681,7 @@ textarea.uber-input {
 
 .staff-shell .staff-list-filter-tabs.app-inbox-tabs,
 .staff-shell .app-inbox-tabs {
-  margin-inline: -0.25rem;
+  margin-inline: 0;
   border-bottom-width: 1px;
   background: transparent !important;
   border-bottom-color: var(--brand-border) !important;

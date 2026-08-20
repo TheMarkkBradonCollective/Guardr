@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "fieldtest": "node scripts/field-test.mjs",
     "fieldtest:seed-staff": "node scripts/seed-field-test-staff.mjs",
+    "viewport:audit": "node scripts/viewport-audit.mjs",
     "generate:logos": "node scripts/generate-logo-assets.mjs",
     "generate:vapid-keys": "node scripts/generate-vapid-keys.mjs",
     "generate:walkie-chirp": "node scripts/generate-walkie-chirp.mjs",
