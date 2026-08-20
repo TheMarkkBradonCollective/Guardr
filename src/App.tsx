@@ -633,6 +633,10 @@ import {
   validateStaffCityAssignment,
 } from './lib/staffCityAccess';
 import {
+  assertStaffCityCapacity,
+  enforceStaffCityCapacityForMember,
+} from './lib/staffMarketplaceCap';
+import {
   canGuardClockIn,
   canGuardClockOut,
   guardClockInBlockedMessage,
@@ -4467,6 +4471,14 @@ export default function App() {
 
     if (role === 'staff' || (guard.isStaff && guard.staffRole)) {
       const staffRole = guard.staffRole ?? 'Support';
+      enforceStaffCityCapacityForMember({
+        staffRole,
+        nextManagedCities: guard.managedCities ?? [],
+        guards,
+        clients,
+        platformCities,
+        config: platformSettings.staffMarketplaceCap,
+      });
       try {
         await supabase.from('staff').insert({
           id: guard.id,
@@ -6085,6 +6097,14 @@ export default function App() {
       platformCities
     );
     validateStaffCityAssignment(staffRole ?? undefined, normalizedManagedCities, { platformCities });
+    enforceStaffCityCapacityForMember({
+      staffRole,
+      nextManagedCities: normalizedManagedCities,
+      guards,
+      clients,
+      platformCities,
+      config: platformSettings.staffMarketplaceCap,
+    });
     if (!currentUser || !canProposeStaffAccounts(currentUser)) {
       throw new Error('You do not have permission to add staff.');
     }
@@ -6197,6 +6217,16 @@ export default function App() {
     if (member.userStatus !== 'pending') {
       throw new Error('This staff account is not awaiting approval.');
     }
+
+    enforceStaffCityCapacityForMember({
+      staffRole: member.staffRole,
+      staffId,
+      nextManagedCities: member.managedCities ?? [],
+      guards,
+      clients,
+      platformCities,
+      config: platformSettings.staffMarketplaceCap,
+    });
 
     const approvedBase: SecurityGuard = { ...member, userStatus: 'approved' };
     const approved = withAutoStaffActivation(approvedBase);
@@ -6325,6 +6355,16 @@ export default function App() {
     validateStaffCityAssignment(staffRole ?? undefined, nextManagedCities, {
       staffId,
       platformCities,
+    });
+    enforceStaffCityCapacityForMember({
+      staffRole: staffRole ?? undefined,
+      staffId,
+      previousManagedCities: member.managedCities,
+      nextManagedCities,
+      guards,
+      clients,
+      platformCities,
+      config: platformSettings.staffMarketplaceCap,
     });
     const citiesToClearManager =
       member.staffRole === 'Manager' && staffRole !== 'Manager'
@@ -6491,6 +6531,16 @@ export default function App() {
       staffId,
       platformCities,
     });
+    enforceStaffCityCapacityForMember({
+      staffRole: member.staffRole,
+      staffId,
+      previousManagedCities: member.managedCities,
+      nextManagedCities: managedCities,
+      guards,
+      clients,
+      platformCities,
+      config: platformSettings.staffMarketplaceCap,
+    });
     if (!currentUser || !canAssignStaffCityAccess(currentUser)) {
       throw new Error('Only Directors and Founders can assign staff city access.');
     }
@@ -6531,6 +6581,7 @@ export default function App() {
 
     const previousManagerId = city.cityManagerId ?? null;
     const staffUpdates = new Map<string, string[]>();
+    const cityManagerClears: string[] = [];
 
     const queueStaffCities = (staffId: string, cities: string[]) => {
       staffUpdates.set(staffId, cities);
@@ -6558,13 +6609,29 @@ export default function App() {
         throw new Error('City manager must be a Manager staff account.');
       }
 
+      const alreadyAssigned = (manager.managedCities ?? []).some(
+        (name) => name.toLowerCase() === city.name.toLowerCase()
+      );
+      if (!alreadyAssigned) {
+        assertStaffCityCapacity([city.name], {
+          guards,
+          clients,
+          staffRoster: guards.filter((member) => member.isStaff),
+          platformCities,
+          config: platformSettings.staffMarketplaceCap,
+          excludeStaffId: managerId,
+        });
+      }
+
+      for (const otherCity of platformCities) {
+        if (otherCity.id !== cityId && otherCity.cityManagerId === managerId) {
+          cityManagerClears.push(otherCity.id);
+        }
+      }
+
       queueStaffCities(
         managerId,
-        normalizeStaffManagedCitiesForRole(
-          'Manager',
-          [...(manager.managedCities ?? []), city.name],
-          platformCities
-        )
+        normalizeStaffManagedCitiesForRole('Manager', [city.name], platformCities)
       );
     }
 
@@ -6579,7 +6646,13 @@ export default function App() {
     const previousGuards = guards;
 
     setPlatformCities((prev) => {
-      const next = prev.map((entry) => (entry.id === cityId ? updatedCity : entry));
+      const next = prev.map((entry) => {
+        if (entry.id === cityId) return updatedCity;
+        if (cityManagerClears.includes(entry.id)) {
+          return { ...entry, cityManagerId: null };
+        }
+        return entry;
+      });
       setPlatformCitiesCache(next);
       return next;
     });
@@ -6593,9 +6666,15 @@ export default function App() {
     }
 
     if (isDbConnected) {
+      const citiesToPersist = [
+        updatedCity,
+        ...platformCities
+          .filter((entry) => cityManagerClears.includes(entry.id))
+          .map((entry) => ({ ...entry, cityManagerId: null })),
+      ];
       const { error: cityError } = await supabase
         .from('platform_cities')
-        .upsert(platformCityToDbRow(updatedCity));
+        .upsert(citiesToPersist.map(platformCityToDbRow));
       if (cityError) {
         setPlatformCities(previousCities);
         setPlatformCitiesCache(previousCities);

@@ -631,7 +631,7 @@ export function StaffTeamDetailPanel({
         <section className="staff-detail-section space-y-2">
           <h3 className="text-sm font-semibold">City assignment</h3>
           <p className="text-xs text-brand-text-muted leading-relaxed">
-            City managers are assigned in Service Areas. Only one Manager may run each city.
+            City managers are assigned in Service Areas. Each Manager runs one city only.
           </p>
           <p className="text-sm">
             {memberManagedCities.length > 0 ? memberManagedCities.join(', ') : 'No city assigned yet'}

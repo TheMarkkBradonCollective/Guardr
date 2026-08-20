@@ -326,7 +326,13 @@ export function StaffAddStaffForm({
                 <label className="uber-label block mb-1">Role</label>
                 <select
                   value={role}
-                  onChange={(e) => setRole(e.target.value as StaffRole)}
+                  onChange={(e) => {
+                    const nextRole = e.target.value as StaffRole;
+                    setRole(nextRole);
+                    if (nextRole === 'Manager' && managedCities.length > 1) {
+                      setManagedCities(managedCities.slice(0, 1));
+                    }
+                  }}
                   className="uber-select w-full"
                 >
                   {assignableRoles.map((staffRole) => (
@@ -344,7 +350,7 @@ export function StaffAddStaffForm({
               <label className="uber-label block">City assignment</label>
               <p className="text-xs text-brand-text-muted">
                 {role === 'Manager'
-                  ? 'Managers are usually assigned as city managers in Service Areas. You can also select cities here when onboarding.'
+                  ? 'Managers are city managers — assign exactly one city here or in Service Areas.'
                   : 'Assign the cities this staff member may work in.'}
               </p>
               <StaffOperationsAccessPicker
@@ -353,6 +359,7 @@ export function StaffAddStaffForm({
                 selected={managedCities}
                 onChange={setManagedCities}
                 maxListHeightClassName="max-h-40"
+                mode={role === 'Manager' ? 'single' : 'multiple'}
               />
             </div>
           )}
