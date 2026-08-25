@@ -127,6 +127,7 @@ import { AppGuidePage } from './docs/AppGuidePage';
 import { AppBlockedAccessScreen } from './ui/app/AppBlockedAccess';
 import { STAFF_SECTION_ACCESS_MESSAGES, isStaffNavSectionAccessible } from '../lib/staffNavAccess';
 import { DevNotesPage } from './docs/DevNotesPage';
+import { BusinessPlanPage } from './docs/BusinessPlanPage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
@@ -1269,6 +1270,16 @@ export function StaffDashboard({
             title={STAFF_SECTION_ACCESS_MESSAGES['dev-updates']!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES['dev-updates']!.message}
             placeholders={['Release notes', 'Build history']}
+          />
+        );
+      case 'business-plan':
+        return showManagement ? (
+          <BusinessPlanPage />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES['business-plan']!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES['business-plan']!.message}
+            placeholders={['Executive summary', 'Financial projections']}
           />
         );
       case 'agreements':
