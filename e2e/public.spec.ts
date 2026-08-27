@@ -70,6 +70,14 @@ test.describe('Guardr public pages', () => {
     await expect(page.locator('body')).toContainText(/terms of service/i);
   });
 
+  test('equal opportunity page is reachable without employer language', async ({ page }) => {
+    await page.goto('/legal/equal-opportunity');
+    await waitForAppReady(page);
+    await expect(page.locator('body')).toContainText(/equal opportunity \/ veterans \/ disabled/i);
+    await expect(page.locator('body')).toContainText(/qualified applicants/i);
+    await expect(page.locator('body')).not.toContainText(/equal opportunity employer/i);
+  });
+
   test('sign-up terms checkbox is tappable on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 393, height: 727 });
     await page.goto('/?auth=sign-up&ar=guard');

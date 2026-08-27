@@ -8,6 +8,7 @@ import type { LegalPageId } from '../../../lib/legalContent';
 import { LegalEntityName } from '../../../components/SignatureSecurityBrand';
 import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import { LegalFooterLinks } from '../../legal/LegalFooterLinks';
+import { EqualOpportunityNotice } from '../../legal/EqualOpportunityNotice';
 import { CompanyPublicPlacard } from '../../public/CompanyPublicPlacard';
 import { LandingAppDownloads } from '../LandingAppDownloads';
 import { MobilityLandingNav, MobilityLandingHero } from './MobilityLandingChrome';
@@ -186,6 +187,9 @@ export function MobilityStyleLandingPage({
             </a>
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
           </Block>
+        </Block>
+        <Block marginTop="scale500" maxWidth="1280px" marginLeft="auto" marginRight="auto">
+          <EqualOpportunityNotice onOpenLegal={onOpenLegal} compact />
         </Block>
       </Block>
 

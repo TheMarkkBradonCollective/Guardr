@@ -11,6 +11,7 @@ export const LEGAL_LINK_ORDER: LegalPageId[] = [
   'ica',
   'client-agreement',
   'guard-conduct',
+  'equal-opportunity',
 ];
 
 export function legalLinkLabel(page: LegalPageId): string {
@@ -18,6 +19,7 @@ export function legalLinkLabel(page: LegalPageId): string {
   if (page === 'client-agreement') return 'Client Agreement';
   if (page === 'guard-conduct') return 'Guard Code of Conduct';
   if (page === 'terms') return 'Terms of Service';
+  if (page === 'equal-opportunity') return 'Equal Opportunity';
   return 'Privacy Policy';
 }
 

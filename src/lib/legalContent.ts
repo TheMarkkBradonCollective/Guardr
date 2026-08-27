@@ -10,7 +10,8 @@ export type LegalPageId =
   | 'privacy'
   | 'ica'
   | 'client-agreement'
-  | 'guard-conduct';
+  | 'guard-conduct'
+  | 'equal-opportunity';
 
 /** Bump when document text changes materially — triggers re-acceptance. */
 export const CURRENT_LEGAL_VERSIONS: Record<LegalPageId, string> = {
@@ -19,6 +20,7 @@ export const CURRENT_LEGAL_VERSIONS: Record<LegalPageId, string> = {
   ica: '2026-06-25',
   'client-agreement': '2026-06-25',
   'guard-conduct': '2026-06-25',
+  'equal-opportunity': '2026-08-27',
 };
 
 export function requiredLegalDocumentsForRole(role: 'guard' | 'client' | 'staff'): LegalPageId[] {
@@ -50,6 +52,12 @@ const PLATFORM_ROLE = `${LEGAL_ENTITY_NAME} ("${SITE_NAME}," "we," "us," or "our
 
 export const LEGAL_DISCLAIMER_SHORT =
   `${SITE_NAME} is a technology marketplace operated by ${LEGAL_ENTITY_NAME}. We do not provide security services, employ guards, or act as a private patrol operator or staffing agency.`;
+
+/** Public notice — not an employment policy. Avoids "employer" language. */
+export const EQUAL_OPPORTUNITY_HEADING = 'Equal Opportunity / Veterans / Disabled';
+
+export const EQUAL_OPPORTUNITY_STATEMENT =
+  'We provide equal opportunity and consider qualified applicants without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, disability, or protected veteran status.';
 
 export const LEGAL_TERMS: LegalDocument = {
   id: 'terms',
@@ -295,6 +303,28 @@ export const LEGAL_CLIENT_AGREEMENT: LegalDocument = {
   ],
 };
 
+export const LEGAL_EQUAL_OPPORTUNITY: LegalDocument = {
+  id: 'equal-opportunity',
+  title: EQUAL_OPPORTUNITY_HEADING,
+  updated: 'August 27, 2026',
+  intro: EQUAL_OPPORTUNITY_STATEMENT,
+  sections: [
+    {
+      title: '1. Scope',
+      paragraphs: [
+        `This notice applies to people who apply to use ${SITE_NAME} as independent security professionals, clients, or platform staff. It does not create an employment relationship with ${LEGAL_ENTITY_NAME}.`,
+        `${SITE_NAME} is a technology marketplace. Guards using the Platform are independent contractors, not employees of ${LEGAL_ENTITY_NAME}.`,
+      ],
+    },
+    {
+      title: '2. How we consider applicants',
+      paragraphs: [
+        EQUAL_OPPORTUNITY_STATEMENT,
+      ],
+    },
+  ],
+};
+
 export const LEGAL_GUARD_CONDUCT: LegalDocument = {
   id: 'guard-conduct',
   title: 'Guard Code of Conduct',
@@ -336,12 +366,14 @@ export const LEGAL_DOCUMENTS: Record<LegalPageId, LegalDocument> = {
   ica: LEGAL_ICA,
   'client-agreement': LEGAL_CLIENT_AGREEMENT,
   'guard-conduct': LEGAL_GUARD_CONDUCT,
+  'equal-opportunity': LEGAL_EQUAL_OPPORTUNITY,
 };
 
 export const LEGAL_PAGE_SIBLINGS: Partial<Record<LegalPageId, LegalPageId[]>> = {
-  terms: ['privacy', 'ica', 'client-agreement'],
-  privacy: ['terms'],
+  terms: ['privacy', 'ica', 'client-agreement', 'equal-opportunity'],
+  privacy: ['terms', 'equal-opportunity'],
   ica: ['terms', 'guard-conduct'],
   'client-agreement': ['terms'],
   'guard-conduct': ['ica', 'terms'],
+  'equal-opportunity': ['terms', 'privacy'],
 };

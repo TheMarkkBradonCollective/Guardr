@@ -48,6 +48,7 @@ import { legalDocumentLabel, requiredLegalDocumentsForRole } from '../lib/legalC
 import { LegalAcceptanceCheckbox } from './legal/LegalAcceptanceCheckbox';
 import { LegalDocumentLink } from './legal/LegalDocumentLink';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
+import { EqualOpportunityNotice } from './legal/EqualOpportunityNotice';
 import { DirectTopHeader } from './baseui/layout/DirectTopHeader';
 import {
   getStoredPassword,
@@ -973,6 +974,7 @@ export function AuthPage({
                     New staff start as Support. Sign in after submitting to upload government ID and connect
                     Stripe payouts while a Director reviews your application.
                   </p>
+                  <EqualOpportunityNotice onOpenLegal={onOpenLegal} />
                   <div>
                     <label className="uber-label block mb-2">Phone</label>
                     <div className="relative">
