@@ -174,7 +174,7 @@ export function defaultSelectableCity(
 
 export function normalizeManagedCities(
   cities: string[] | undefined,
-  available = getPlatformCities()
+  available: Array<{ name: string }> = getPlatformCities()
 ): string[] {
   if (!cities?.length) return [];
   const allowed = new Set(available.map((city) => city.name.toLowerCase()));

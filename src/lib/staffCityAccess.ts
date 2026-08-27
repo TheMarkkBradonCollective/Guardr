@@ -18,7 +18,7 @@ export const MANAGER_MAX_CITIES = 1;
 export function normalizeStaffManagedCitiesForRole(
   staffRole: StaffRole | undefined,
   cities: string[] | undefined,
-  available: PlatformCity[] = []
+  available: Array<{ name: string }> = []
 ): string[] {
   if (!staffRole || isExecutiveStaffRole(staffRole)) return [];
   const normalized = normalizeManagedCities(cities, available);
