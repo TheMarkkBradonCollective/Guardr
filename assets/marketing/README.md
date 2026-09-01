@@ -1,48 +1,24 @@
 # Guardr marketing kit
 
-Portable ads for the Sacramento launch. Guardr is a **marketplace**, not a security company.
+Black-and-white posters for the Sacramento launch. **People and cartoons** — not webpage layouts.
 
-**Never say “client.”** Say **people and businesses** (or “need security”). Guards are **independent contractors**.
+Guardr is a **marketplace**, not a security company. Never say “client.” Say **people and businesses**. Guards are **independent contractors**.
 
-## Quick use
-
-Finished files live in `assets/marketing/export/`:
+Finished files: `assets/marketing/export/`
 
 | File | Use |
 |---|---|
-| `sacramento-launch-square.png` | Instagram / LinkedIn / Facebook feed — **Sacramento post** |
-| `sacramento-launch-story.png` | Instagram / TikTok / Reels story |
-| `sacramento-launch-landscape.png` | Facebook / LinkedIn / OG share |
-| `ic-recruit-square.png` / `ic-recruit-story.png` | Independent contractor recruitment (photo, no app) |
-| `ic-app-preview-square.png` / `ic-app-preview-story.png` | Independent contractor ads **with in-app UI** |
-| `need-security-square.png` / `need-security-story.png` | People & businesses (photo) |
-| `need-security-app-preview-*.png` | People & businesses **with in-app UI** |
-| `platform-explainer-*.png` | Typographic “we are a platform” |
-| `real-app-ic-square.png` / `real-app-ic-story.png` | **Real in-app Shifts screenshot** (Sacramento) |
-| `landing-preview-landscape.png` / `landing-mobile-story.png` | Real homepage preview |
-| `carousel-01/02/03-*.png` | Instagram carousel (3 slides) |
-| `twitter-1600x900.png` | X / LinkedIn banner |
-| `og-image.png` | Website share card |
-| `flyer-sacramento.pdf` | Print flyer (letter) |
-| `flyer-independent-contractors.pdf` | Print flyer for contractors |
-| `business-card.png` | Digital card |
-| `*.jpg` | Same boards, smaller email-friendly copies |
+| `sacramento-launch-square.png` | **Sacramento post** — Capitol photo |
+| `sacramento-launch-story.png` | Story — Tower Bridge photo |
+| `ic-photo-square.png` / `ic-photo-story.png` | Independent contractors — **real people** |
+| `ic-cartoon-square.png` / `ic-cartoon-story.png` / `cartoon-capitol-story.png` | Independent contractors — **cartoons** |
+| `need-photo-square.png` / `need-photo-story.png` | People & businesses — **real people** |
+| `need-cartoon-square.png` | People & businesses — **cartoon** |
+| `platform-explainer-square.png` | Type-only, black field |
+| `carousel-01/02/03-*.png` | Instagram carousel |
+| `flyer-sacramento.pdf` | Print |
+| `flyer-independent-contractors.pdf` | Print for contractors |
 
-Captions for each post: [`copy.md`](./copy.md).
+Captions: [`copy.md`](./copy.md).
 
-Photos (no text) are in `photos/`. HTML boards: `templates/boards.html`.
-
-## Regenerate
-
-```bash
-npx playwright install chromium
-npm run generate:marketing
-```
-
-To also capture live app screens (needs `npm run dev`):
-
-```bash
-GUARDR_CAPTURE_APP=1 npm run generate:marketing
-```
-
-Live captures write to `screenshots/`.
+Regenerate: `npm run generate:marketing`

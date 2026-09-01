@@ -120,13 +120,11 @@ async function copyPublicKit() {
     'sacramento-launch-square.png',
     'sacramento-launch-story.png',
     'sacramento-launch-landscape.png',
-    'ic-recruit-square.png',
-    'need-security-square.png',
-    'ic-app-preview-square.png',
-    'need-security-app-preview-square.png',
+    'ic-photo-square.png',
+    'ic-cartoon-square.png',
+    'need-photo-square.png',
+    'need-cartoon-square.png',
     'og-image.png',
-    'real-app-ic-square.png',
-    'landing-preview-landscape.png',
   ];
   for (const file of featured) {
     await cp(path.join(OUT, file), path.join(PUBLIC_KIT, file)).catch(() => undefined);
@@ -134,6 +132,9 @@ async function copyPublicKit() {
 }
 
 async function main() {
+  const { rm } = await import('node:fs/promises');
+  await rm(OUT, { recursive: true, force: true });
+  await rm(PUBLIC_KIT, { recursive: true, force: true });
   await mkdir(OUT, { recursive: true });
   await mkdir(SHOTS, { recursive: true });
 
