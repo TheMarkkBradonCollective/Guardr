@@ -28,8 +28,8 @@ export function MobilityLandingNav({
   const isTablet = formFactor === 'tablet';
 
   const navLinks = [
-    { label: 'For clients',  onClick: () => onNavigateToAuth('client', 'sign-up') },
-    { label: 'For guards',   onClick: () => onNavigateToAuth('guard',  'sign-up') },
+    { label: 'Need security', onClick: () => onNavigateToAuth('client', 'sign-up') },
+    { label: 'Independent contractors', onClick: () => onNavigateToAuth('guard',  'sign-up') },
     { label: 'Safety',       onClick: () => onNavigateToAuth(undefined, 'sign-in') },
     { label: 'Company',      onClick: () => onNavigateToAuth(undefined, 'sign-in') },
   ] as const;

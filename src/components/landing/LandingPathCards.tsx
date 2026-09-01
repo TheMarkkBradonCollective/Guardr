@@ -37,7 +37,7 @@ export function LandingPathCards({ onNavigateToAuth, layout }: LandingPathCardsP
               Apply for a staff role
             </Block>
             <ParagraphMedium marginTop="0" marginBottom="0" color="contentSecondary">
-              Platform operations — not guard or client marketplace signup.
+              Platform operations — not marketplace signup for guards or people who need security.
             </ParagraphMedium>
           </Block>
           <AccentIcon icon={Briefcase} size={22} strokeWidth={1.75} />
@@ -68,7 +68,7 @@ export function LandingPathCards({ onNavigateToAuth, layout }: LandingPathCardsP
               I need security
             </Block>
             <ParagraphMedium marginTop="0" marginBottom="0" color="contentSecondary">
-              Hire as yourself or as a company — whoever pays is the client, not the type of location.
+              Hire as yourself or as a company — whoever pays is on the account, not the type of location.
             </ParagraphMedium>
           </Block>
           <AccentIcon icon={Building2} size={22} strokeWidth={1.75} />

@@ -43,7 +43,7 @@ export const HOW_IT_WORKS = [
     step: '01',
     icon: Navigation,
     title: 'Post or discover',
-    body: 'Clients post coverage needs with full site details. Guards browse open jobs on the map in real time.',
+    body: 'People and businesses post coverage needs with full site details. Independent contractors browse open jobs on the map in real time.',
   },
   {
     step: '02',
@@ -95,6 +95,6 @@ export const PLATFORM_HIGHLIGHTS: { icon: LucideIcon; title: string; body: strin
   {
     icon: Star,
     title: 'Reputation system',
-    body: 'Build a verified track record. Clients rate completed shifts; guards build their profile.',
+    body: 'Build a verified track record. Completed shifts are rated on the platform; independent contractors build their profile.',
   },
 ];

@@ -85,7 +85,7 @@ async function renderFeatureGraphic(iconMaster) {
   const titleSvg = Buffer.from(`
     <svg width="640" height="120" xmlns="http://www.w3.org/2000/svg">
       <text x="0" y="72" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="700" fill="#FFFFFF">Guardr</text>
-      <text x="0" y="112" font-family="Inter, Arial, sans-serif" font-size="28" fill="#B3B3B3">Security marketplace for guards &amp; clients</text>
+      <text x="0" y="112" font-family="Inter, Arial, sans-serif" font-size="22" fill="#B3B3B3">Security marketplace — independent contractors</text>
     </svg>
   `);
 

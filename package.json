@@ -21,6 +21,7 @@
     "generate:walkie-chirp": "node scripts/generate-walkie-chirp.mjs",
     "generate:android-icons": "node scripts/generate-android-icons.mjs",
     "generate:download-version": "node scripts/generate-download-version.mjs",
+    "generate:marketing": "node scripts/generate-marketing-assets.mjs",
     "docs:manuals-pdf": "node scripts/build-user-manual-pdfs.mjs",
     "apk:audit": "node scripts/audit-apk-parity.mjs",
     "play:check": "node scripts/check-play-readiness.mjs",

@@ -210,7 +210,7 @@ export function LandingBodySections({
           <LandingSectionHead
             badge="How it works"
             title="From post to paid shift"
-            lead="A direct marketplace — clients and guards arrange each job, with Guardr handling the tools."
+            lead="A direct marketplace — people and businesses arrange each job with independent contractors, with Guardr handling the tools."
           />
           <Block
             display="grid"
@@ -240,18 +240,18 @@ export function LandingBodySections({
             gridGap="scale600"
           >
             <FeatureColumn
-              badge="Client workspace"
+              badge="Need security"
               headline="Request coverage at your site"
-              lead="Post jobs with full site details, review licensed guards, and monitor active coverage — with dedicated messaging and support when you need it."
+              lead="Post jobs with full site details, review licensed independent contractors, and monitor active coverage — with dedicated messaging and support when you need it."
               features={CLIENT_FEATURES}
-              ctaLabel="Get started as a client"
+              ctaLabel="I need security"
               ctaVariant="primary"
               onCta={() => onNavigateToAuth('client', 'sign-up')}
             />
             <FeatureColumn
               badge="Guard workspace"
               headline="Work independently, get paid directly"
-              lead="Map-first job discovery, earnings tracking, digital credentials, and full shift tools. You contract per assignment — not an employee of Guardr or the client."
+              lead="Map-first job discovery, earnings tracking, digital credentials, and full shift tools. You contract per assignment — not an employee of Guardr."
               features={GUARD_FEATURES}
               ctaLabel="Create guard account"
               ctaVariant="outline"
@@ -311,11 +311,11 @@ export function LandingBodySections({
                 Transparent by design
               </HeadingMedium>
               <ParagraphMedium marginTop="0" marginBottom="scale600" color="contentSecondary">
-                {LEGAL_DISCLAIMER_SHORT} Each job is a direct arrangement between the client and the
-                independent guard they select. We do not guarantee placement, outcomes, or on-site performance.
+                {LEGAL_DISCLAIMER_SHORT} Each job is a direct arrangement between the person or business
+                who posted it and the independent contractor they select. We do not guarantee placement, outcomes, or on-site performance.
               </ParagraphMedium>
               <Block display="flex" flexWrap justifyContent="center" gridGap="scale300">
-                <GuardrTag kind="neutral">Clients contract per job</GuardrTag>
+                <GuardrTag kind="neutral">People and businesses contract per job</GuardrTag>
                 <GuardrTag kind="neutral">Guards choose assignments</GuardrTag>
                 <GuardrTag kind="neutral">Platform tools &amp; support</GuardrTag>
               </Block>
@@ -331,7 +331,7 @@ export function LandingBodySections({
               Policies &amp; data
             </HeadingMedium>
             <ParagraphMedium margin={0} color="contentSecondary">
-              Read how Guardr handles your data and the marketplace rules for clients and guards.
+              Read how Guardr handles your data and the marketplace rules for independent contractors and people who need security.
             </ParagraphMedium>
           </Block>
           <LegalInfoCards onOpenLegal={onOpenLegal} />
@@ -355,7 +355,7 @@ export function LandingBodySections({
               Ready when you are
             </HeadingMedium>
             <ParagraphMedium marginTop="0" marginBottom="scale600" color="contentSecondary">
-              Marketplace accounts for guards and clients — or apply to work at Guardr as platform staff.
+              Marketplace accounts for independent contractors and people or businesses who need security — or apply to work at Guardr as platform staff.
             </ParagraphMedium>
             <Block
               display="flex"
@@ -447,7 +447,7 @@ export function LandingHeroSection({
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <ParagraphMedium marginTop="0" marginBottom="scale600" color="contentSecondary" $style={{ fontWeight: 500, maxWidth: '32rem' }}>
-                Clients post jobs. Licensed guards choose assignments.
+                People and businesses post jobs. Independent contractors choose assignments.
                 Maps, messaging, and payments — all in one place.
               </ParagraphMedium>
             </motion.div>
