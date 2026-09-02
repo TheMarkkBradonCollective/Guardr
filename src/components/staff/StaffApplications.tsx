@@ -194,62 +194,50 @@ function ApplicationReviewMeta({ item }: { item?: ApprovalFeedItem }) {
   const activatedBy = item.activatedByEmail || item.activatedByName;
   const fallbackReviewer = item.reviewedByEmail || item.reviewedByName;
 
+  const rows: { label: string; value: string }[] = [];
+  rows.push({ label: 'Status', value: item.statusLabel });
+  if (item.submittedAt) {
+    rows.push({ label: 'Submitted', value: formatApprovalTimestamp(item.submittedAt) });
+  }
+  if (item.approvedAt || (approved && item.reviewedAt && !item.activatedAt)) {
+    rows.push({
+      label: 'Approved',
+      value: formatApprovalTimestamp(item.approvedAt ?? item.reviewedAt!),
+    });
+  }
+  if (approvedBy || (approved && fallbackReviewer && !activatedBy)) {
+    rows.push({ label: 'Approved by', value: approvedBy || fallbackReviewer || '—' });
+  }
+  if (item.activatedAt) {
+    rows.push({ label: 'Activated', value: formatApprovalTimestamp(item.activatedAt) });
+  }
+  if (activatedBy) {
+    rows.push({ label: 'Activated by', value: activatedBy });
+  }
+  if (item.reviewedAt && denied) {
+    rows.push({ label: 'Reviewed', value: formatApprovalTimestamp(item.reviewedAt) });
+  }
+  if (fallbackReviewer && denied) {
+    rows.push({ label: 'Reviewed by', value: fallbackReviewer });
+  }
+
   return (
-    <div className="app-list-subrow text-xs space-y-2 !pt-0">
-      <p>
-        <span className="detail-field-label !mb-0">Status</span>
-        <span className="text-sm font-medium">{item.statusLabel}</span>
-      </p>
-      {item.submittedAt && (
-        <p>
-          <span className="detail-field-label !mb-0">Submitted</span>
-          <span className="text-sm">{formatApprovalTimestamp(item.submittedAt)}</span>
-        </p>
-      )}
-      {(item.approvedAt || (approved && item.reviewedAt && !item.activatedAt)) && (
-        <p>
-          <span className="detail-field-label !mb-0">Approved</span>
-          <span className="text-sm">
-            {formatApprovalTimestamp(item.approvedAt ?? item.reviewedAt!)}
-          </span>
-        </p>
-      )}
-      {(approvedBy || (approved && fallbackReviewer && !activatedBy)) && (
-        <p>
-          <span className="detail-field-label !mb-0">Approved by</span>
-          <span className="text-sm">{approvedBy || fallbackReviewer}</span>
-        </p>
-      )}
-      {item.activatedAt && (
-        <p>
-          <span className="detail-field-label !mb-0">Activated</span>
-          <span className="text-sm">{formatApprovalTimestamp(item.activatedAt)}</span>
-        </p>
-      )}
-      {activatedBy && (
-        <p>
-          <span className="detail-field-label !mb-0">Activated by</span>
-          <span className="text-sm">{activatedBy}</span>
-        </p>
-      )}
-      {item.reviewedAt && denied && (
-        <p>
-          <span className="detail-field-label !mb-0">Reviewed</span>
-          <span className="text-sm">{formatApprovalTimestamp(item.reviewedAt)}</span>
-        </p>
-      )}
-      {fallbackReviewer && denied && (
-        <p>
-          <span className="detail-field-label !mb-0">Reviewed by</span>
-          <span className="text-sm">{fallbackReviewer}</span>
-        </p>
-      )}
+    <section className="staff-detail-section space-y-3">
+      <h3 className="text-sm font-semibold">Status</h3>
+      <div className="staff-detail-metrics staff-detail-metrics--2">
+        {rows.map((row) => (
+          <div key={row.label} className="staff-detail-metric">
+            <p className="wf-metric-label">{row.label}</p>
+            <p className="wf-metric-value">{row.value}</p>
+          </div>
+        ))}
+      </div>
       {!approvedBy && !activatedBy && !fallbackReviewer && !pending && approved && (
         <p className="text-sm text-brand-text-muted">
           Approver details are not on file for this application.
         </p>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -425,20 +413,18 @@ export function StaffApplications({
     if (kind === 'staff') {
       const member = guards.find((g) => g.id === entry.item.id && g.isStaff);
       if (!member) return null;
-      const title = member.badgeNumber || member.name || feedItem.title;
+      const title = member.name || member.badgeNumber || feedItem.title;
       const detailBody = (
-        <div className="staff-detail-pane space-y-4">
-          <ApplicationReviewMeta item={feedItem} />
-          <StaffStaffApplicationReviewPanel
-            member={member}
-            canReview={canApproveStaffAccounts}
-            onApproveStaffAccount={canApproveStaffAccounts ? onApproveStaffAccount : undefined}
-            onRejectStaffAccount={canApproveStaffAccounts ? onRejectStaffAccount : undefined}
-            onOpenStaffProfile={
-              isStaffMemberVisibleToViewer(currentUser, member) ? onOpenStaffProfile : undefined
-            }
-          />
-        </div>
+        <StaffStaffApplicationReviewPanel
+          member={member}
+          canReview={canApproveStaffAccounts}
+          onApproveStaffAccount={canApproveStaffAccounts ? onApproveStaffAccount : undefined}
+          onRejectStaffAccount={canApproveStaffAccounts ? onRejectStaffAccount : undefined}
+          onOpenStaffProfile={
+            isStaffMemberVisibleToViewer(currentUser, member) ? onOpenStaffProfile : undefined
+          }
+          reviewMeta={<ApplicationReviewMeta item={feedItem} />}
+        />
       );
 
       if (options?.onBack) {
@@ -465,21 +451,19 @@ export function StaffApplications({
       if (!guard) return null;
 
       const detailBody = (
-        <div className="staff-detail-pane space-y-4">
-          <ApplicationReviewMeta item={feedItem} />
-          <StaffGuardApplicationReviewPanel
-            guard={guard}
-            canReview={canApproveGuardAccounts || canManageGuardAccounts}
-            onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
-            onRejectGuardApplication={onRejectGuardApplication}
-            onRequestGuardApplicationRevision={
-              canApproveGuardAccounts || canManageGuardAccounts
-                ? onRequestGuardApplicationRevision
-                : undefined
-            }
-            onOpenGuardProfile={onOpenGuardProfile}
-          />
-        </div>
+        <StaffGuardApplicationReviewPanel
+          guard={guard}
+          canReview={canApproveGuardAccounts || canManageGuardAccounts}
+          onApproveGuardAccount={canApproveGuardAccounts ? onApproveGuardAccount : undefined}
+          onRejectGuardApplication={onRejectGuardApplication}
+          onRequestGuardApplicationRevision={
+            canApproveGuardAccounts || canManageGuardAccounts
+              ? onRequestGuardApplicationRevision
+              : undefined
+          }
+          onOpenGuardProfile={onOpenGuardProfile}
+          reviewMeta={<ApplicationReviewMeta item={feedItem} />}
+        />
       );
 
       if (options?.onBack) {
@@ -505,19 +489,17 @@ export function StaffApplications({
     if (!client) return null;
 
     const detailBody = (
-      <div className="staff-detail-pane space-y-4">
-        <ApplicationReviewMeta item={feedItem} />
-        <StaffClientApplicationReviewPanel
-          client={client}
-          canReview={canManageClientAccounts}
-          onApproveClient={onApproveClient}
-          onRejectClient={onRejectClient}
-          onRequestClientApplicationRevision={
-            canManageClientAccounts ? onRequestClientApplicationRevision : undefined
-          }
-          onOpenClientProfile={onOpenClientProfile}
-        />
-      </div>
+      <StaffClientApplicationReviewPanel
+        client={client}
+        canReview={canManageClientAccounts}
+        onApproveClient={onApproveClient}
+        onRejectClient={onRejectClient}
+        onRequestClientApplicationRevision={
+          canManageClientAccounts ? onRequestClientApplicationRevision : undefined
+        }
+        onOpenClientProfile={onOpenClientProfile}
+        reviewMeta={<ApplicationReviewMeta item={feedItem} />}
+      />
     );
 
     if (options?.onBack) {

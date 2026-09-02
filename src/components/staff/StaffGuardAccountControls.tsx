@@ -128,7 +128,9 @@ export function StaffGuardAccountControls({
 
   return (
     <section className={`staff-detail-section space-y-3 ${className}`.trim()}>
-      {leadingActions ? <div className="staff-detail-actions">{leadingActions}</div> : null}
+      {leadingActions ? (
+        <div className="staff-detail-actions staff-detail-actions--primary">{leadingActions}</div>
+      ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <WfSectionHeader title="Account access" className="!px-0 !mb-0" />

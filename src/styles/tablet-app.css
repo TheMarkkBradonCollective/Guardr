@@ -1478,3 +1478,47 @@ body.sf-tablet .uber-input,
 body.sf-tablet .uber-select {
   max-width: 100%;
 }
+
+/* Profile / application / staff detail — split-pane inspector, not a phone stack. */
+body.sf-tablet .staff-detail-header {
+  padding: 4px 0 16px;
+  gap: 16px;
+}
+
+body.sf-tablet .staff-detail-metrics,
+body.sf-tablet .staff-detail-metrics--2,
+body.sf-tablet .staff-detail-metrics--3 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px 18px;
+  margin-top: 12px;
+}
+
+body.sf-tablet .staff-account-access {
+  background: var(--sf-paper-sunken, #f4f4f4);
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: var(--sf-radius-card, 14px);
+  padding: 14px 16px !important;
+  margin: 12px 0;
+}
+
+body.sf-tablet .staff-detail-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body.sf-tablet .staff-detail-actions--primary {
+  grid-template-columns: 1fr !important;
+}
+
+body.sf-tablet .staff-detail-actions > * {
+  width: 100%;
+  min-height: var(--sf-button-h, 46px);
+  border-radius: var(--sf-radius-control, 10px);
+}
+
+html.theme-dark body.sf-tablet .staff-account-access {
+  background: var(--sf-paper-raised, #161616);
+  border-color: var(--sf-line, #2a2a2a);
+}

@@ -47,4 +47,12 @@ describe('tablet CSS independence', () => {
     assert.ok(css.includes('.staff-analytics-tablet-canvas'));
     assert.ok(css.includes('.sft-dev-notes-grid'));
   });
+
+  it('styles staff/application profile actions as a split-pane card, not a phone stack', () => {
+    assert.ok(css.includes('.staff-account-access'));
+    assert.ok(css.includes('.staff-detail-actions'));
+    assert.ok(css.includes('.staff-detail-metrics'));
+    assert.match(css, /body\.sf-tablet \.staff-account-access/);
+    assert.match(css, /body\.sf-tablet \.staff-detail-actions/);
+  });
 });

@@ -5231,6 +5231,45 @@ html.theme-light .staff-ops-btn-primary:hover {
   border-bottom: 1px solid var(--brand-border);
 }
 
+.staff-detail-header-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 0.875rem;
+  color: var(--brand-text-muted);
+}
+
+.staff-detail-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.staff-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.staff-detail-metrics--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.staff-detail-metric {
+  min-width: 0;
+}
+
+.staff-detail-metric .wf-metric-value {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .staff-detail-section {
   padding: 1.25rem;
   border-bottom: 1px solid var(--brand-border);
@@ -5320,12 +5359,17 @@ html.theme-light .staff-ops-btn-primary:hover {
 
 .staff-detail-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   width: 100%;
   align-items: stretch;
 }
 
+.staff-detail-actions--primary {
+  grid-template-columns: 1fr;
+}
+
+.staff-detail-actions > *,
 .staff-detail-actions > button,
 .staff-detail-actions > .app-button-primary,
 .staff-detail-actions > .app-button-outline,
@@ -21011,12 +21055,17 @@ body[data-form-factor="tablet"] .uber-app-shell {
 }
 
 .uber-app-shell .staff-detail-actions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   width: 100%;
 }
 
+.uber-app-shell .staff-detail-actions--primary {
+  grid-template-columns: 1fr;
+}
+
+.uber-app-shell .staff-detail-actions > *,
 .uber-app-shell .staff-detail-actions > button,
 .uber-app-shell .staff-detail-actions > .app-button-primary,
 .uber-app-shell .staff-detail-actions > .app-button-outline,

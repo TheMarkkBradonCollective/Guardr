@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { Client } from '../../types';
 import { clientTypeLabel, clientDisplayName } from '../../lib/clientType';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { WfBadge, WfSectionHeader } from '../ui/wireframe';
-import { Mail, Phone } from 'lucide-react';
+import { WfBadge } from '../ui/wireframe';
+import { AppButton } from '../ui/AppButton';
 import { CLIENT_ACCOUNT_STATUS_LABELS, getClientAccountStatus } from '../../lib/accountStatus';
 import { StaffClientApplicationSummary } from './StaffClientApplicationSummary';
+import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
+import { StaffAccountAccessSection } from './StaffAccountAccessSection';
 import { showAppConfirm } from '../ui/AppConfirm';
 import { confirmApproveClientAccount } from '../../lib/importantActionConfirm';
 import { promptRequestClientApplicationRevisionNote } from '../../lib/staffDocumentReview';
 import { showAppToast } from '../ui/AppToast';
+import { User } from 'lucide-react';
 
 interface StaffClientApplicationReviewPanelProps {
   client: Client;
@@ -18,6 +21,7 @@ interface StaffClientApplicationReviewPanelProps {
   onRejectClient: (id: string) => void | Promise<void>;
   onRequestClientApplicationRevision?: (id: string, reason?: string) => void | Promise<void>;
   onOpenClientProfile?: (clientId: string) => void;
+  reviewMeta?: React.ReactNode;
 }
 
 export function StaffClientApplicationReviewPanel({
@@ -27,6 +31,7 @@ export function StaffClientApplicationReviewPanel({
   onRejectClient,
   onRequestClientApplicationRevision,
   onOpenClientProfile,
+  reviewMeta,
 }: StaffClientApplicationReviewPanelProps) {
   const [actionPending, setActionPending] = useState(false);
   const accountStatus = getClientAccountStatus(client);
@@ -34,6 +39,7 @@ export function StaffClientApplicationReviewPanel({
   const isApproved = accountStatus === 'active';
   const displayName = clientDisplayName(client);
   const statusTone = isPending ? 'warning' : accountStatus === 'suspended' ? 'danger' : 'success';
+  const statusLabel = CLIENT_ACCOUNT_STATUS_LABELS[accountStatus];
 
   const handleApproveClient = async () => {
     if (!(await confirmApproveClientAccount(displayName))) return;
@@ -85,93 +91,106 @@ export function StaffClientApplicationReviewPanel({
     onRejectClient(client.id);
   };
 
+  const showReviewActions = canReview && (isPending || isApproved);
+
   return (
-    <div className="staff-detail-pane space-y-4">
-      <div className="flex items-start gap-4 pb-4 border-b border-brand-border">
-        <ProfileAvatar src={client.avatar} name={displayName} size="lg" rounded="xl" />
-        <div className="min-w-0 flex-1">
-          <h2 className="font-bold text-lg">{displayName}</h2>
-          {client.companyName && client.name !== client.companyName && (
-            <p className="text-sm text-brand-text-muted">{client.name}</p>
-          )}
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-text-muted">
-            <span className="inline-flex items-center gap-1">
-              <Mail className="w-4 h-4" />
-              {client.email}
-            </span>
-            {client.phone && (
-              <span className="inline-flex items-center gap-1">
-                <Phone className="w-4 h-4" />
-                {client.phone}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
+    <div className="staff-detail-pane">
+      <StaffDetailProfileHeader
+        avatar={<ProfileAvatar src={client.avatar} name={displayName} size="lg" rounded="xl" />}
+        name={displayName}
+        email={client.email}
+        metrics={[
+          { label: 'Account', value: statusLabel },
+          { label: 'Type', value: clientTypeLabel(client.clientType) },
+          ...(client.serviceCity
+            ? [
+                {
+                  label: 'Service city',
+                  value: client.serviceState
+                    ? `${client.serviceCity}, ${client.serviceState}`
+                    : client.serviceCity,
+                },
+              ]
+            : []),
+        ]}
+        badges={
+          <>
+            <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
             <WfBadge>{clientTypeLabel(client.clientType)}</WfBadge>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      {onOpenClientProfile && (
-        <button
-          type="button"
-          onClick={() => onOpenClientProfile(client.id)}
-          className="text-xs font-semibold text-brand-primary hover:underline"
-        >
-          View full client profile →
-        </button>
-      )}
-
-      <StaffClientApplicationSummary client={client} />
-
-      {canReview && (isPending || isApproved) && (
-        <section className="staff-detail-section space-y-2">
-          <WfSectionHeader title="Review actions" className="mb-0" />
-          <div className="app-action-row--equal">
+      <StaffAccountAccessSection
+        title="Application review"
+        badge={<WfBadge tone={statusTone}>{statusLabel}</WfBadge>}
+        leading={
+          onOpenClientProfile ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              onClick={() => onOpenClientProfile(client.id)}
+              startEnhancer={<User className="w-3.5 h-3.5" />}
+            >
+              View full client profile
+            </AppButton>
+          ) : undefined
+        }
+      >
+        {showReviewActions ? (
+          <>
             {isPending && (
               <>
-                <button
-                  type="button"
-                  onClick={() => void handleApproveClient()}
+                <AppButton
+                  variant="primary"
+                  size="sm"
+                  className="staff-action-btn--ok"
                   disabled={actionPending}
-                  className="app-button-primary app-btn-sm disabled:opacity-50"
+                  onClick={() => void handleApproveClient()}
                 >
                   Approve application
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleDenyClient()}
+                </AppButton>
+                <AppButton
+                  variant="danger"
+                  size="sm"
+                  className="staff-action-btn--danger"
                   disabled={actionPending}
-                  className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
+                  onClick={() => void handleDenyClient()}
                 >
                   Deny application
-                </button>
+                </AppButton>
               </>
             )}
             {(isPending || isApproved) && onRequestClientApplicationRevision && (
-              <button
-                type="button"
-                onClick={() => void handleRequestRevision()}
+              <AppButton
+                variant="outline"
+                size="sm"
+                className="staff-action-btn--warn"
                 disabled={actionPending}
-                className="app-button-outline app-btn-sm disabled:opacity-50"
+                onClick={() => void handleRequestRevision()}
               >
                 Request revision
-              </button>
+              </AppButton>
             )}
             {isApproved && (
-              <button
-                type="button"
-                onClick={() => void handleRevokeClient()}
+              <AppButton
+                variant="danger"
+                size="sm"
+                className="staff-action-btn--danger"
                 disabled={actionPending}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
+                onClick={() => void handleRevokeClient()}
               >
                 Revoke application
-              </button>
+              </AppButton>
             )}
-          </div>
-        </section>
-      )}
+          </>
+        ) : null}
+      </StaffAccountAccessSection>
+
+      {reviewMeta}
+
+      <StaffClientApplicationSummary client={client} />
     </div>
   );
 }

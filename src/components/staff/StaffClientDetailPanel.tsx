@@ -15,9 +15,11 @@ import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { JobListCard } from '../jobs/JobListCard';
 import { AppItemCardStack } from '../ui/app/AppPrimitives';
-import { ArrowLeft, Building2, Mail, Phone, Star } from 'lucide-react';
+import { ArrowLeft, Building2, Phone, Star } from 'lucide-react';
 import { CLIENT_ACCOUNT_STATUS_LABELS, getClientAccountStatus } from '../../lib/accountStatus';
 import { StaffClientApplicationSummary } from './StaffClientApplicationSummary';
+import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
+import { StaffAccountAccessSection } from './StaffAccountAccessSection';
 import { clientTypeLabel, clientDisplayName } from '../../lib/clientType';
 
 interface StaffClientDetailPanelProps {
@@ -120,31 +122,24 @@ export function StaffClientDetailPanel({
         </div>
       )}
 
-      <div className="flex items-start gap-4 pb-5 border-b border-brand-border">
-        <ProfileAvatar
-          src={client.avatar}
-          name={displayName}
-          size="lg"
-          rounded="xl"
-        />
-        <div className="min-w-0 flex-1">
-          <h2 className="font-bold text-lg">{displayName}</h2>
-          {client.companyName && client.name !== client.companyName && (
-            <p className="text-sm text-brand-text-muted">{client.name}</p>
-          )}
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-text-muted">
-            <span className="inline-flex items-center gap-1">
-              <Mail className="w-4 h-4" />
-              {client.email}
-            </span>
-            {client.phone && (
-              <span className="inline-flex items-center gap-1">
-                <Phone className="w-4 h-4" />
-                {client.phone}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2 mt-3">
+      <StaffDetailProfileHeader
+        avatar={
+          <ProfileAvatar
+            src={client.avatar}
+            name={displayName}
+            size="lg"
+            rounded="xl"
+          />
+        }
+        name={displayName}
+        email={client.email}
+        metrics={[
+          { label: 'Active jobs', value: activeJobs.length, accent: true },
+          { label: 'Completed', value: completedJobs.length },
+          { label: 'Total requests', value: client.totalRequests ?? clientRequests.length },
+        ]}
+        badges={
+          <>
             <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
             <WfBadge>{clientTypeLabel(client.clientType)}</WfBadge>
             {client.trusted && <WfBadge tone="primary">Trusted</WfBadge>}
@@ -154,29 +149,24 @@ export function StaffClientDetailPanel({
                 {client.rating}
               </WfBadge>
             )}
-          </div>
-        </div>
-      </div>
-
-      <section className="staff-detail-section grid grid-cols-3 gap-x-4 gap-y-3">
-        <div>
-          <p className="wf-metric-label">Active jobs</p>
-          <p className="wf-metric-value text-brand-primary">{activeJobs.length}</p>
-        </div>
-        <div>
-          <p className="wf-metric-label">Completed</p>
-          <p className="wf-metric-value">{completedJobs.length}</p>
-        </div>
-        <div>
-          <p className="wf-metric-label">Total requests</p>
-          <p className="wf-metric-value">{client.totalRequests ?? clientRequests.length}</p>
-        </div>
-      </section>
+          </>
+        }
+        contact={
+          client.phone ? (
+            <p className="staff-detail-header-email">
+              <Phone className="w-4 h-4 shrink-0" aria-hidden />
+              {client.phone}
+            </p>
+          ) : null
+        }
+      />
 
       {canManage && (
-        <section className="staff-detail-section space-y-2">
-          <WfSectionHeader title="Account controls" className="mb-0" />
-          <div className="staff-detail-actions">
+        <StaffAccountAccessSection
+          badge={
+            <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
+          }
+        >
             {isPending && (
               <AppButton variant="primary" size="sm" className="staff-action-btn--ok" onClick={() => void handleApproveClient()}>
                 Approve customer
@@ -218,8 +208,7 @@ export function StaffClientDetailPanel({
                 {deleting ? 'Deleting…' : 'Delete account'}
               </AppButton>
             )}
-          </div>
-        </section>
+        </StaffAccountAccessSection>
       )}
 
       <StaffClientApplicationSummary client={client} />

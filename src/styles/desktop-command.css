@@ -404,6 +404,41 @@ body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-actions {
   gap: 8px;
 }
 
+body[data-surface='desktop'] .staff-detail-actions--primary,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-actions--primary {
+  display: flex;
+}
+
+body[data-surface='desktop'] .staff-detail-actions > * {
+  width: auto;
+  min-width: 8.5rem;
+  flex: 0 1 auto;
+}
+
+body[data-surface='desktop'] .staff-detail-actions--primary > * {
+  width: auto;
+  min-width: 10rem;
+}
+
+body[data-surface='desktop'] .staff-detail-header {
+  padding: 0 0 1rem;
+  gap: 14px;
+}
+
+body[data-surface='desktop'] .staff-detail-metrics {
+  gap: 10px 20px;
+  margin-top: 10px;
+}
+
+body[data-surface='desktop'] .staff-detail-metrics .wf-metric-value {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+body[data-surface='desktop'] .staff-account-access {
+  padding-top: 0.75rem;
+}
+
 body[data-surface='desktop'] .staff-detail-actions button.staff-action-btn--ok,
 body[data-surface='desktop'] button.staff-action-btn--ok,
 body[data-surface='desktop'] .staff-detail-actions button.staff-action-btn--warn,

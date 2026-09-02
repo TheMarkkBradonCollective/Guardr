@@ -741,16 +741,16 @@ export function StaffGuardDetailPanel({
               <EditField label="Min hourly rate ($)" value={hourlyRate} onChange={setHourlyRate} type="number" min={0} />
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-x-4 gap-y-3 mt-3">
-              <div>
+            <div className="staff-detail-metrics staff-detail-metrics--3">
+              <div className="staff-detail-metric">
                 <p className="wf-metric-label">{GUARD_ICN_SHORT_LABEL}</p>
                 <p className="wf-metric-value">{guard.badgeNumber}</p>
               </div>
-              <div>
+              <div className="staff-detail-metric">
                 <p className="wf-metric-label">Rating</p>
                 <p className="wf-metric-value text-brand-primary">★ {guard.rating}</p>
               </div>
-              <div>
+              <div className="staff-detail-metric">
                 <p className="wf-metric-label">Completed</p>
                 <p className="wf-metric-value">{completedJobsCount}</p>
               </div>

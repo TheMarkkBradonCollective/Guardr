@@ -43,4 +43,11 @@ describe('desktop CSS independence', () => {
       'desktop must not inherit the tablet split-panel layout',
     );
   });
+
+  it('treats staff/application profile actions as compact outlined chips, not a phone grid', () => {
+    const commandCss = readFileSync(join(here, 'desktop-command.css'), 'utf8');
+    assert.match(commandCss, /body\[data-surface=['"]desktop['"]\] \.staff-detail-actions/);
+    assert.ok(commandCss.includes('flex-wrap: wrap'));
+    assert.ok(commandCss.includes('background-color: transparent !important'));
+  });
 });
