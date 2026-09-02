@@ -48,12 +48,17 @@ describe('tablet CSS independence', () => {
     assert.ok(css.includes('.sft-dev-notes-grid'));
   });
 
-  it('styles staff/application profile actions as a split-pane card, not a phone stack', () => {
+  it('styles staff/application profiles as a stacked sheet, piggybacking mobile', () => {
     assert.ok(css.includes('.staff-account-access'));
     assert.ok(css.includes('.staff-detail-actions'));
     assert.ok(css.includes('.staff-detail-metrics'));
     assert.match(css, /body\.sf-tablet \.staff-account-access/);
     assert.match(css, /body\.sf-tablet \.staff-detail-actions/);
-    assert.ok(css.includes('grid-template-columns: repeat(3, minmax(0, 1fr))'));
+    assert.match(css, /flex-direction: column/);
+    assert.equal(
+      /html body\.sf-tablet \.staff-detail-actions[\s\S]{0,180}grid-template-columns: repeat\(3/.test(css),
+      false,
+      'tablet profile actions must not use a 3-column inspector grid',
+    );
   });
 });

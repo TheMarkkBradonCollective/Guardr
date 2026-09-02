@@ -112,16 +112,11 @@ export function StaffGuardApplicationReviewPanel({
             <GuardRosterStatusBadges guard={guard} showTrusted={false} className="shrink-0" />
           </>
         }
-      />
-
-      <StaffAccountAccessSection
-        title="Application review"
-        leading={
+        editAction={
           onOpenGuardProfile ? (
             <AppButton
-              variant="primary"
+              variant="outline"
               size="sm"
-              fullWidth
               onClick={() => onOpenGuardProfile(guard.id)}
               startEnhancer={<User className="w-3.5 h-3.5" />}
             >
@@ -129,25 +124,32 @@ export function StaffGuardApplicationReviewPanel({
             </AppButton>
           ) : undefined
         }
+      />
+
+      <StaffAccountAccessSection
+        title="Application review"
+        leading={
+          showReviewActions && isPending && onApproveGuardAccount ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              className="staff-action-btn--ok"
+              disabled={!guardCanStaffApproveProfile(guard) || actionPending}
+              onClick={() => void handleApproveProfile()}
+              title={
+                activationChecklist.staffApprovalBlockers.length > 0
+                  ? activationChecklist.staffApprovalBlockers.join(' · ')
+                  : 'Approve guard application'
+              }
+            >
+              Approve application
+            </AppButton>
+          ) : undefined
+        }
       >
         {showReviewActions ? (
           <>
-            {isPending && onApproveGuardAccount && (
-              <AppButton
-                variant="primary"
-                size="sm"
-                className="staff-action-btn--ok"
-                disabled={!guardCanStaffApproveProfile(guard) || actionPending}
-                onClick={() => void handleApproveProfile()}
-                title={
-                  activationChecklist.staffApprovalBlockers.length > 0
-                    ? activationChecklist.staffApprovalBlockers.join(' · ')
-                    : 'Approve guard application'
-                }
-              >
-                Approve application
-              </AppButton>
-            )}
             {isPending && onRejectGuardApplication && (
               <AppButton
                 variant="danger"

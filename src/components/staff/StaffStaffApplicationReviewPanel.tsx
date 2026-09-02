@@ -103,16 +103,11 @@ export function StaffStaffApplicationReviewPanel({
             <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
           </>
         }
-      />
-
-      <StaffAccountAccessSection
-        title="Application review"
-        leading={
+        editAction={
           onOpenStaffProfile ? (
             <AppButton
-              variant="primary"
+              variant="outline"
               size="sm"
-              fullWidth
               onClick={() => onOpenStaffProfile(member.id)}
               startEnhancer={<User className="w-3.5 h-3.5" />}
             >
@@ -120,32 +115,35 @@ export function StaffStaffApplicationReviewPanel({
             </AppButton>
           ) : undefined
         }
+      />
+
+      <StaffAccountAccessSection
+        title="Application review"
+        leading={
+          showReviewActions && onApproveStaffAccount ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              className="staff-action-btn--ok"
+              disabled={actionPending}
+              onClick={() => void handleApprove()}
+            >
+              Approve application
+            </AppButton>
+          ) : undefined
+        }
       >
-        {showReviewActions ? (
-          <>
-            {onApproveStaffAccount && (
-              <AppButton
-                variant="primary"
-                size="sm"
-                className="staff-action-btn--ok"
-                disabled={actionPending}
-                onClick={() => void handleApprove()}
-              >
-                Approve application
-              </AppButton>
-            )}
-            {onRejectStaffAccount && (
-              <AppButton
-                variant="danger"
-                size="sm"
-                className="staff-action-btn--danger"
-                disabled={actionPending}
-                onClick={() => void handleReject()}
-              >
-                Deny application
-              </AppButton>
-            )}
-          </>
+        {showReviewActions && onRejectStaffAccount ? (
+          <AppButton
+            variant="danger"
+            size="sm"
+            className="staff-action-btn--danger"
+            disabled={actionPending}
+            onClick={() => void handleReject()}
+          >
+            Deny application
+          </AppButton>
         ) : null}
       </StaffAccountAccessSection>
 

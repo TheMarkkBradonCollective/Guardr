@@ -17,6 +17,8 @@ interface StaffDetailProfileHeaderProps {
   contact?: React.ReactNode;
   metrics?: StaffDetailMetric[];
   badges?: React.ReactNode;
+  /** Compact “Edit details” / “View full profile” control under the hero. */
+  editAction?: React.ReactNode;
   className?: string;
 }
 
@@ -29,6 +31,7 @@ export function StaffDetailProfileHeader({
   contact,
   metrics,
   badges,
+  editAction,
   className = '',
 }: StaffDetailProfileHeaderProps) {
   const regularCount = metrics?.filter((metric) => !metric.wide).length ?? 0;
@@ -37,38 +40,45 @@ export function StaffDetailProfileHeader({
 
   return (
     <div className={`staff-detail-header ${className}`.trim()}>
-      <div className="relative shrink-0">{avatar}</div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          {typeof name === 'string' ? <h2 className="font-bold text-lg">{name}</h2> : name}
-        </div>
-        {email ? (
-          <p className="staff-detail-header-email">
-            <Mail className="w-4 h-4 shrink-0" aria-hidden />
-            <span className="truncate">
-              {emailPrefix ? <span className="text-brand-text-muted">{emailPrefix}</span> : null}
-              {email}
-            </span>
-          </p>
-        ) : null}
-        {contact}
-        {metrics && metrics.length > 0 ? (
-          <div className={`staff-detail-metrics ${metricMod}`.trim()}>
-            {metrics.map((metric) => (
-              <div
-                key={metric.label}
-                className={`staff-detail-metric${metric.wide ? ' staff-detail-metric--wide' : ''}`}
-              >
-                <p className="wf-metric-label">{metric.label}</p>
-                <p className={`wf-metric-value${metric.accent ? ' text-brand-primary' : ''}`}>
-                  {metric.value}
-                </p>
-              </div>
-            ))}
+      <div className="staff-detail-identity">
+        <div className="staff-detail-avatar">{avatar}</div>
+        <div className="staff-detail-identity-copy">
+          <div className="staff-detail-name-row">
+            {typeof name === 'string' ? <h2 className="staff-detail-name">{name}</h2> : name}
           </div>
-        ) : null}
-        {badges ? <div className="staff-detail-header-badges">{badges}</div> : null}
+          {email ? (
+            <p className="staff-detail-header-email">
+              <Mail className="w-4 h-4 shrink-0" aria-hidden />
+              <span className="truncate">
+                {emailPrefix ? <span className="text-brand-text-muted">{emailPrefix}</span> : null}
+                {email}
+              </span>
+            </p>
+          ) : null}
+          {contact}
+        </div>
       </div>
+      {metrics && metrics.length > 0 ? (
+        <div className={`staff-detail-metrics ${metricMod}`.trim()}>
+          {metrics.map((metric) => (
+            <div
+              key={metric.label}
+              className={`staff-detail-metric${metric.wide ? ' staff-detail-metric--wide' : ''}`}
+            >
+              <p className="wf-metric-label">{metric.label}</p>
+              <p
+                className={`wf-metric-value staff-detail-metric-chip${
+                  metric.accent ? ' text-brand-primary' : ''
+                }`}
+              >
+                {metric.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {badges ? <div className="staff-detail-header-badges">{badges}</div> : null}
+      {editAction ? <div className="staff-detail-edit">{editAction}</div> : null}
     </div>
   );
 }

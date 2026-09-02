@@ -121,10 +121,6 @@ export function StaffGuardAccountControls({
 
   return (
     <section className={`staff-detail-section space-y-3 ${className}`.trim()}>
-      {leadingActions ? (
-        <div className="staff-detail-actions staff-detail-actions--primary">{leadingActions}</div>
-      ) : null}
-
       <WfSectionHeader title="Account access" className="!px-0 !mb-0" />
 
       {!canSuspend && (
@@ -134,7 +130,7 @@ export function StaffGuardAccountControls({
       )}
 
       {showAccessActions ? (
-        <div className="staff-detail-actions">
+        <div className="staff-detail-actions staff-detail-actions--list">
           {showApplicationActions && guardCanDenyApplication(status) && onRejectGuardApplication && (
             <AppButton
               variant="danger"
@@ -196,7 +192,11 @@ export function StaffGuardAccountControls({
         </div>
       ) : null}
 
-      {children ? <div className="staff-detail-actions">{children}</div> : null}
+      {children ? <div className="staff-detail-actions staff-detail-actions--list">{children}</div> : null}
+
+      {leadingActions ? (
+        <div className="staff-detail-actions staff-detail-actions--primary">{leadingActions}</div>
+      ) : null}
     </section>
   );
 }

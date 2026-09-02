@@ -44,10 +44,12 @@ describe('desktop CSS independence', () => {
     );
   });
 
-  it('treats staff/application profile actions as compact outlined chips, not a phone grid', () => {
+  it('docks staff/application profiles as a floating card over the canvas', () => {
     const commandCss = readFileSync(join(here, 'desktop-command.css'), 'utf8');
     assert.match(commandCss, /body\[data-surface=['"]desktop['"]\] \.staff-detail-actions/);
-    assert.ok(commandCss.includes('flex-wrap: wrap'));
+    assert.match(commandCss, /sfd-shell-canvas:has\(> \.staff-detail-pane\)/);
+    assert.ok(commandCss.includes('box-shadow: var(--shadow-float'));
+    assert.ok(commandCss.includes('flex-direction: column'));
     assert.ok(commandCss.includes('background-color: transparent !important'));
   });
 });

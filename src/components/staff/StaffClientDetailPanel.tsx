@@ -162,17 +162,19 @@ export function StaffClientDetailPanel({
       />
 
       {canManage && (
-        <StaffAccountAccessSection>
-            {isPending && (
-              <AppButton variant="primary" size="sm" className="staff-action-btn--ok" onClick={() => void handleApproveClient()}>
+        <StaffAccountAccessSection
+          leading={
+            isPending ? (
+              <AppButton variant="primary" size="sm" fullWidth className="staff-action-btn--ok" onClick={() => void handleApproveClient()}>
                 Approve customer
               </AppButton>
-            )}
-            {isSuspended && (
-              <AppButton variant="primary" size="sm" className="staff-action-btn--ok" onClick={() => void handleRestoreClient()}>
+            ) : isSuspended ? (
+              <AppButton variant="primary" size="sm" fullWidth className="staff-action-btn--ok" onClick={() => void handleRestoreClient()}>
                 Restore customer
               </AppButton>
-            )}
+            ) : undefined
+          }
+        >
             {!isPending && !isSuspended && (
               <AppButton variant="danger" size="sm" className="staff-action-btn--warn" onClick={() => void handleSuspendClient()}>
                 Suspend customer

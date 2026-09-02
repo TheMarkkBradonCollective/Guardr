@@ -117,16 +117,11 @@ export function StaffClientApplicationReviewPanel({
             <WfBadge>{clientTypeLabel(client.clientType)}</WfBadge>
           </>
         }
-      />
-
-      <StaffAccountAccessSection
-        title="Application review"
-        leading={
+        editAction={
           onOpenClientProfile ? (
             <AppButton
-              variant="primary"
+              variant="outline"
               size="sm"
-              fullWidth
               onClick={() => onOpenClientProfile(client.id)}
               startEnhancer={<User className="w-3.5 h-3.5" />}
             >
@@ -134,30 +129,37 @@ export function StaffClientApplicationReviewPanel({
             </AppButton>
           ) : undefined
         }
+      />
+
+      <StaffAccountAccessSection
+        title="Application review"
+        leading={
+          showReviewActions && isPending ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              className="staff-action-btn--ok"
+              disabled={actionPending}
+              onClick={() => void handleApproveClient()}
+            >
+              Approve application
+            </AppButton>
+          ) : undefined
+        }
       >
         {showReviewActions ? (
           <>
             {isPending && (
-              <>
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  className="staff-action-btn--ok"
-                  disabled={actionPending}
-                  onClick={() => void handleApproveClient()}
-                >
-                  Approve application
-                </AppButton>
-                <AppButton
-                  variant="danger"
-                  size="sm"
-                  className="staff-action-btn--danger"
-                  disabled={actionPending}
-                  onClick={() => void handleDenyClient()}
-                >
-                  Deny application
-                </AppButton>
-              </>
+              <AppButton
+                variant="danger"
+                size="sm"
+                className="staff-action-btn--danger"
+                disabled={actionPending}
+                onClick={() => void handleDenyClient()}
+              >
+                Deny application
+              </AppButton>
             )}
             {(isPending || isApproved) && onRequestClientApplicationRevision && (
               <AppButton

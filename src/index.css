@@ -5225,10 +5225,62 @@ html.theme-light .staff-ops-btn-primary:hover {
 
 .staff-detail-header {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
   gap: 1rem;
   padding: 1.25rem;
   border-bottom: 1px solid var(--brand-border);
+}
+
+.staff-detail-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.staff-detail-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.staff-detail-identity-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.staff-detail-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.staff-detail-name,
+.staff-detail-header h2 {
+  margin: 0;
+  font-family: var(--uber-font-display, var(--sf-font-display, inherit));
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.staff-detail-edit {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.staff-detail-edit > *,
+.staff-detail-edit button {
+  width: auto;
+}
+
+.staff-account-access-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .staff-detail-header-email {
@@ -22265,7 +22317,7 @@ body[data-surface="desktop"] .app-metric-cell-value {
 }
 
 body[data-surface="desktop"] .staff-detail-pane {
-  max-width: 52rem;
+  max-width: none;
 }
 
 .staff-shell .staff-overview-focus-band,

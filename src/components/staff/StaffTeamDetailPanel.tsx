@@ -34,7 +34,7 @@ import { AppButton } from '../ui/AppButton';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
 import { showAppToast } from '../ui/AppToast';
-import { ArrowLeft, Mail, Phone, Save, User } from 'lucide-react';
+import { ArrowLeft, Mail, Pencil, Phone, Save } from 'lucide-react';
 import { getStaffDisplayName } from '../../lib/staffProfile';
 import { getStaffRosterStatusLabel } from '../../lib/staffAccountActivation';
 import {
@@ -378,12 +378,7 @@ export function StaffTeamDetailPanel({
 
       <StaffDetailProfileHeader
         avatar={<ProfileAvatar src={member.avatar} name={displayName} size="lg" rounded="xl" />}
-        name={
-          <>
-            <h2 className="font-bold text-lg">{displayName}</h2>
-            {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
-          </>
-        }
+        name={displayName}
         email={member.email}
         emailPrefix="Work · "
         contact={
@@ -413,10 +408,23 @@ export function StaffTeamDetailPanel({
         ]}
         badges={
           <>
+            {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
             <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
             {isPending && <WfBadge tone="warning">Pending Director approval</WfBadge>}
             {isInactive && <WfBadge>Inactive</WfBadge>}
           </>
+        }
+        editAction={
+          canEditProfile && !isPending && !editingProfile ? (
+            <AppButton
+              variant="outline"
+              size="sm"
+              onClick={() => setEditingProfile(true)}
+              startEnhancer={<Pencil className="w-3.5 h-3.5" />}
+            >
+              Edit details
+            </AppButton>
+          ) : undefined
         }
       />
 
@@ -433,82 +441,72 @@ export function StaffTeamDetailPanel({
       <StaffAccountAccessSection
         title={isPending ? 'Application review' : 'Account access'}
         leading={
-          canEditProfile && !isPending ? (
-            editingProfile ? (
-              <>
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  fullWidth
-                  onClick={() => void handleProfileSave()}
-                  disabled={profileSaving}
-                  startEnhancer={<Save className="w-3.5 h-3.5" />}
-                >
-                  {profileSaving ? 'Saving…' : 'Save changes'}
-                </AppButton>
-                <AppButton
-                  variant="outline"
-                  size="sm"
-                  fullWidth
-                  disabled={profileSaving}
-                  onClick={() => {
-                    setEditingProfile(false);
-                    setProfileError('');
-                    setPhone(member.phone ?? '');
-                    setPersonalEmail(member.personalEmail ?? '');
-                    setStaffProfile({
-                      headline: member.headline ?? '',
-                      summary: member.summary ?? '',
-                      about: member.about ?? member.bio ?? '',
-                      specialties: member.specialties ?? [],
-                    });
-                  }}
-                >
-                  Cancel
-                </AppButton>
-              </>
-            ) : (
-              <AppButton
-                variant="primary"
-                size="sm"
-                fullWidth
-                onClick={() => setEditingProfile(true)}
-                startEnhancer={<User className="w-3.5 h-3.5" />}
-              >
-                Edit profile
-              </AppButton>
-            )
+          editingProfile ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              onClick={() => void handleProfileSave()}
+              disabled={profileSaving}
+              startEnhancer={<Save className="w-3.5 h-3.5" />}
+            >
+              {profileSaving ? 'Saving…' : 'Save changes'}
+            </AppButton>
+          ) : isPending && canApproveStaffAccounts && onApproveStaffAccount ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              className="staff-action-btn--ok"
+              onClick={() => void handleApproveApplication()}
+              disabled={reviewPending}
+            >
+              Approve application
+            </AppButton>
+          ) : !isPending && canModifyMember && accountStatus !== 'active' ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              className="staff-action-btn--ok"
+              onClick={() => void handleUpdateUserStatus('active')}
+            >
+              Restore account
+            </AppButton>
           ) : undefined
         }
-        leadingClassName={editingProfile ? '' : undefined}
       >
-        {isPending &&
-        canApproveStaffAccounts &&
-        (onApproveStaffAccount || onRejectStaffAccount) ? (
-          <>
-            {onApproveStaffAccount && (
-              <AppButton
-                variant="primary"
-                size="sm"
-                className="staff-action-btn--ok"
-                onClick={() => void handleApproveApplication()}
-                disabled={reviewPending}
-              >
-                Approve application
-              </AppButton>
-            )}
-            {onRejectStaffAccount && (
-              <AppButton
-                variant="danger"
-                size="sm"
-                className="staff-action-btn--danger"
-                onClick={() => void handleRejectApplication()}
-                disabled={reviewPending}
-              >
-                Deny application
-              </AppButton>
-            )}
-          </>
+        {editingProfile ? (
+          <AppButton
+            variant="outline"
+            size="sm"
+            fullWidth
+            disabled={profileSaving}
+            onClick={() => {
+              setEditingProfile(false);
+              setProfileError('');
+              setPhone(member.phone ?? '');
+              setPersonalEmail(member.personalEmail ?? '');
+              setStaffProfile({
+                headline: member.headline ?? '',
+                summary: member.summary ?? '',
+                about: member.about ?? member.bio ?? '',
+                specialties: member.specialties ?? [],
+              });
+            }}
+          >
+            Cancel
+          </AppButton>
+        ) : isPending && canApproveStaffAccounts && onRejectStaffAccount ? (
+          <AppButton
+            variant="danger"
+            size="sm"
+            className="staff-action-btn--danger"
+            onClick={() => void handleRejectApplication()}
+            disabled={reviewPending}
+          >
+            Deny application
+          </AppButton>
         ) : !isPending && canModifyMember ? (
           <>
             {accountStatus !== 'suspended' && (
@@ -529,16 +527,6 @@ export function StaffTeamDetailPanel({
                 onClick={() => void handleUpdateUserStatus('blocked')}
               >
                 Block
-              </AppButton>
-            )}
-            {accountStatus !== 'active' && (
-              <AppButton
-                variant="primary"
-                size="sm"
-                className="staff-action-btn--ok"
-                onClick={() => void handleUpdateUserStatus('active')}
-              >
-                Restore account
               </AppButton>
             )}
           </>
@@ -563,7 +551,7 @@ export function StaffTeamDetailPanel({
       )}
 
       {!isPending && (
-        <section className="staff-detail-section space-y-3">
+        <section className={`staff-detail-section space-y-3${editingProfile ? ' staff-detail-sheet' : ''}`}>
           <WfSectionHeader title="Team profile" className="!px-0 !mb-0" />
           {editingProfile ? (
             <>

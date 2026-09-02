@@ -4,8 +4,9 @@ import { WfSectionHeader } from '../ui/wireframe';
 interface StaffAccountAccessSectionProps {
   title?: string;
   badge?: React.ReactNode;
+  /** Primary commit CTA pinned to the bottom of the block (Approve, Restore, Save). */
   leading?: React.ReactNode;
-  /** Extra class for the leading action row. Default is full-width primary. */
+  /** Extra class for the footer CTA row. Default is full-width primary. */
   leadingClassName?: string;
   children?: React.ReactNode;
   className?: string;
@@ -13,8 +14,8 @@ interface StaffAccountAccessSectionProps {
 
 /**
  * Profile action block used on guard, staff, client, and application details.
- * `leading` is the full-width primary CTA (Edit profile / View full profile).
- * `children` are the colorful account-access actions.
+ * Secondary actions render as a stacked option list; `leading` is the full-width
+ * black footer CTA (Approve / Restore / Save).
  */
 export function StaffAccountAccessSection({
   title = 'Account access',
@@ -29,6 +30,15 @@ export function StaffAccountAccessSection({
 
   return (
     <section className={`staff-detail-section staff-account-access space-y-3 ${className}`.trim()}>
+      {hasChildren && (
+        <>
+          <div className="staff-account-access-head">
+            <WfSectionHeader title={title} className="!px-0 !mb-0" />
+            {badge}
+          </div>
+          <div className="staff-detail-actions staff-detail-actions--list">{children}</div>
+        </>
+      )}
       {leading ? (
         <div
           className={`staff-detail-actions ${leadingClassName ?? 'staff-detail-actions--primary'}`.trim()}
@@ -36,15 +46,6 @@ export function StaffAccountAccessSection({
           {leading}
         </div>
       ) : null}
-      {hasChildren && (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <WfSectionHeader title={title} className="!px-0 !mb-0" />
-            {badge}
-          </div>
-          <div className="staff-detail-actions">{children}</div>
-        </>
-      )}
     </section>
   );
 }
