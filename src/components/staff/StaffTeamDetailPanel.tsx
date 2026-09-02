@@ -29,7 +29,7 @@ import { isExecutiveStaffRole, staffRequiresCityAssignment } from '../../lib/sta
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { StaffProfileSection, type StaffProfilePayload } from '../profile/StaffProfileSection';
 import type { ProfileSavePayload } from '../profile/UserProfileScreen';
-import { WfBadge } from '../ui/wireframe';
+import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
@@ -564,7 +564,7 @@ export function StaffTeamDetailPanel({
 
       {!isPending && (
         <section className="staff-detail-section space-y-3">
-          <h3 className="text-sm font-semibold">Team profile</h3>
+          <WfSectionHeader title="Team profile" className="!px-0 !mb-0" />
           {editingProfile ? (
             <>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -607,7 +607,7 @@ export function StaffTeamDetailPanel({
       {(isPending || isInactive) && <StaffStaffApplicationSummary member={member} />}
 
       <section className="staff-detail-section space-y-3">
-        <h3 className="text-sm font-semibold">Platform role</h3>
+        <WfSectionHeader title="Platform role" className="!px-0 !mb-0" />
         <p className="text-xs text-brand-text-muted leading-relaxed">
           {ROLE_DESCRIPTIONS[platformRole]}
         </p>
@@ -670,7 +670,7 @@ export function StaffTeamDetailPanel({
 
       {memberIsExecutive && (
         <section className="staff-detail-section space-y-2">
-          <h3 className="text-sm font-semibold">Service areas</h3>
+          <WfSectionHeader title="Service areas" className="!px-0 !mb-0" />
           <p className="text-xs text-brand-text-muted leading-relaxed">
             Directors and Founders run the full platform and are not assigned to a single city.
           </p>
@@ -679,7 +679,7 @@ export function StaffTeamDetailPanel({
 
       {memberIsManager && memberRequiresCity && (
         <section className="staff-detail-section space-y-2">
-          <h3 className="text-sm font-semibold">City assignment</h3>
+          <WfSectionHeader title="City assignment" className="!px-0 !mb-0" />
           <p className="text-xs text-brand-text-muted leading-relaxed">
             City managers are assigned in Service Areas. Each Manager runs one city only.
           </p>
@@ -691,7 +691,7 @@ export function StaffTeamDetailPanel({
 
       {canEditMemberCityAccess && assignableCityNames.length > 0 && (
         <section className="staff-detail-section space-y-3">
-          <h3 className="text-sm font-semibold">City assignment</h3>
+          <WfSectionHeader title="City assignment" className="!px-0 !mb-0" />
           <p className="text-xs text-brand-text-muted leading-relaxed">
             Assign the cities this staff member may work in. Directors and Founders set city
             managers in Service Areas.
