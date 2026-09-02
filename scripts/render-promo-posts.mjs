@@ -530,52 +530,183 @@ function graphicHtml(post) {
   }
 
   if (layout === 'devices') {
+    // Product ad: phones fill and crop the frame. Type overlays. No site chrome.
     const phones = (post.phones || [])
-      .map((p, i) => `<div class="phone p${i}"><img src="${screenUrl(p)}" alt="" /></div>`)
-      .join('');
-    const bullets = (post.bullets || []).map((b) => `<li>${esc(b)}</li>`).join('');
-    const facts = (post.facts || [])
-      .map((f) => `<article><p class="kicker">${esc(f.kicker)}</p><h2>${esc(f.title)}</h2><p>${esc(f.body)}</p></article>`)
+      .map((src, i) => `<div class="phone p${i}"><img src="${screenUrl(src)}" alt="" /></div>`)
       .join('');
     const isStory = h > 1200;
     const isWide = w > h;
-    const twoCol = !isStory;
-    const rows = isStory ? '110px auto 1fr auto 120px' : '72px 1fr auto 96px';
+    const fmt = isStory ? 'story' : isWide ? 'wide' : 'sq';
     return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8" />
-<style>${bwCss(w, h)}
-.frame { grid-template-rows: ${rows}; ${twoCol ? 'grid-template-columns: 1.05fr 0.95fr;' : ''} }
-.bar { grid-column: 1 / -1; min-height: ${isStory ? 110 : 72}px; padding: 0 ${isStory ? 48 : 32}px; }
-.bar.foot { min-height: ${isStory ? 120 : 92}px; grid-column: 1 / -1; }
-.copy { padding: ${isStory ? '24px 48px 8px' : isWide ? '16px 20px 12px 32px' : '16px 14px 12px 32px'}; display: flex; flex-direction: column; justify-content: center; gap: 10px; min-height: 0; ${twoCol ? 'grid-row: 2; grid-column: 1;' : ''} }
-.copy h1 { font-size: ${isStory ? 62 : isWide ? 40 : 40}px; font-weight: 900; letter-spacing: -0.04em; line-height: 0.9; text-transform: uppercase; }
-.copy .lede { font-size: ${isStory ? 24 : 16}px; font-weight: 600; line-height: 1.3; }
-.copy .lede em { font-style: normal; font-weight: 800; }
-.copy ul { list-style: none; display: grid; gap: 6px; }
-.copy li { font-size: ${isStory ? 22 : 14}px; font-weight: 600; line-height: 1.3; padding-left: 16px; position: relative; }
-.copy li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; background: #fff; }
-.stage { position: relative; overflow: hidden; min-height: ${isStory ? 820 : 1}px; ${twoCol ? 'grid-row: 2; grid-column: 2;' : ''} }
-.phone { position: absolute; width: ${isStory ? 300 : isWide ? 210 : 248}px; }
-.phone img { width: 100%; display: block; border-radius: 34px; border: 9px solid #111; background: #000; box-shadow: 0 22px 50px rgba(0,0,0,0.55); }
-.phone.p0 { ${isStory ? 'left: 10%; top: 4px; transform: rotate(-6deg); z-index: 2;' : isWide ? 'right: 28px; top: 10px; transform: rotate(-8deg); z-index: 2;' : 'right: 16px; top: 14px; transform: rotate(-8deg); z-index: 2;'} }
-.phone.p1 { ${isStory ? 'right: 4%; bottom: 8px; width: 270px; transform: rotate(8deg); z-index: 1;' : isWide ? 'right: 158px; bottom: 4px; transform: rotate(7deg); z-index: 1;' : 'left: 4px; bottom: 10px; transform: rotate(9deg); z-index: 1;'} }
-.facts { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid rgba(255,255,255,0.22); grid-column: 1 / -1; }
-.facts article { padding: ${isStory ? '20px 32px' : '14px 16px'}; border-right: 1px solid rgba(255,255,255,0.22); }
-.facts article:last-child { border-right: 0; }
-.facts h2 { font-size: ${isStory ? 22 : 15}px; font-weight: 800; letter-spacing: -0.03em; margin: 4px 0 4px; }
-.facts p { font-size: ${isStory ? 16 : 12}px; font-weight: 500; color: #cfcfcf; line-height: 1.3; }
+<style>
+${fontFaceCss()}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
+.frame {
+  position: relative;
+  background: #000;
+  color: #fff;
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.glow {
+  position: absolute;
+  inset: 18% -20% -30% -20%;
+  background: radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0) 62%);
+  pointer-events: none;
+  z-index: 0;
+}
+.stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.phone { position: absolute; }
+.phone img {
+  display: block;
+  width: 100%;
+  border-radius: 58px;
+  border: 14px solid #0c0c0c;
+  box-shadow: 0 50px 110px rgba(0,0,0,0.85), 0 0 0 1px #2a2a2a;
+}
+.veil-top { display: none; }
+.veil-bot {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 52%;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(0deg, #000 0%, rgba(0,0,0,0.92) 38%, rgba(0,0,0,0) 100%);
+}
+.copy {
+  position: absolute;
+  z-index: 4;
+  left: 44px;
+  right: 44px;
+  top: auto;
+  bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.lock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+}
+.lock img { width: 24px; height: 24px; object-fit: contain; }
+.copy h1 {
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.84;
+  text-transform: uppercase;
+  max-width: 12ch;
+  text-shadow: 0 10px 32px rgba(0,0,0,0.9);
+}
+.lede {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.22;
+  color: #d2d2d2;
+  max-width: 22ch;
+  text-shadow: 0 6px 18px rgba(0,0,0,0.9);
+}
+.lede em { font-style: normal; color: #fff; font-weight: 800; }
+.note {
+  font-size: 15px;
+  font-weight: 600;
+  color: #8a8a8a;
+  max-width: 26ch;
+  line-height: 1.3;
+}
+
+.sq .phone.p0 {
+  width: 640px;
+  left: 26%;
+  top: -80px;
+  transform: rotate(8deg);
+  z-index: 2;
+}
+.sq .phone.p1 {
+  width: 520px;
+  left: -24%;
+  top: 40px;
+  transform: rotate(-11deg);
+  z-index: 1;
+}
+
+.story .copy { bottom: 72px; left: 56px; right: 56px; gap: 16px; }
+.story .lock { font-size: 16px; }
+.story .lock img { width: 32px; height: 32px; }
+.story .copy h1 { font-size: 88px; max-width: 10ch; }
+.story .lede { font-size: 30px; max-width: 16ch; }
+.story .note { font-size: 20px; }
+.story .veil-bot { height: 42%; }
+.story .phone.p0 {
+  width: 780px;
+  left: 18%;
+  top: -40px;
+  transform: rotate(8deg);
+  z-index: 2;
+}
+.story .phone.p1 {
+  width: 620px;
+  left: -28%;
+  top: 180px;
+  transform: rotate(-11deg);
+  z-index: 1;
+}
+
+.wide .copy {
+  bottom: 36px;
+  left: 40px;
+  right: 40%;
+  top: auto;
+}
+.wide .copy h1 { font-size: 52px; }
+.wide .lede { font-size: 20px; max-width: 20ch; }
+.wide .note { font-size: 14px; }
+.wide .veil-bot {
+  height: 100%;
+  width: 58%;
+  right: auto;
+  background: linear-gradient(90deg, #000 0%, rgba(0,0,0,0.72) 50%, rgba(0,0,0,0) 100%);
+}
+.wide .phone.p0 {
+  width: 420px;
+  left: auto;
+  right: -80px;
+  top: -70px;
+  transform: rotate(8deg);
+  z-index: 2;
+}
+.wide .phone.p1 {
+  width: 340px;
+  left: auto;
+  right: 220px;
+  top: 40px;
+  transform: rotate(-9deg);
+  z-index: 1;
+}
 </style></head>
 <body>
-<article class="frame">
-  ${barTop(post.eyebrow)}
-  <div class="copy">
-    <h1><span class="line">${esc(post.line1)}</span>${post.line2 ? `<span class="line">${esc(post.line2)}</span>` : ''}</h1>
-    <p class="lede">${post.ledeHtml}</p>
-    ${bullets ? `<ul>${bullets}</ul>` : ''}
-  </div>
+<article class="frame ${fmt}">
+  <div class="glow"></div>
   <div class="stage">${phones}</div>
-  ${facts ? `<section class="facts">${facts}</section>` : ''}
-  ${barFoot(post.cta)}
+  <div class="veil-top"></div>
+  <div class="veil-bot"></div>
+  <div class="copy">
+    <div class="lock"><img src="${logoUrl}" alt="" /><span>GUARDR</span></div>
+    <h1>${esc(post.line1)}${post.line2 ? `<br/>${esc(post.line2)}` : ''}</h1>
+    <p class="lede">${post.ledeHtml}</p>
+    ${post.note ? `<p class="note">${esc(post.note)}</p>` : ''}
+  </div>
 </article>
 </body></html>`;
   }
@@ -912,89 +1043,45 @@ const POSTS = [
     kind: 'graphic',
     layout: 'devices',
     ...SQ,
-    eyebrow: 'Read this first',
-    line1: 'GUARDR IS',
-    line2: 'THE PLATFORM.',
-    ledeHtml:
-      'Guards and businesses use it to find each other and <em>contract directly per job</em>.',
-    bullets: [
-      'Starting focused — growing guard supply first.',
-      'Get verified, then both sides run independently.',
-      'Not a staffing agency. Not dispatch.',
-    ],
+    line1: 'THE PLATFORM.',
+    line2: '',
+    ledeHtml: 'Guards and businesses find each other and <em>contract directly per job</em>.',
+    note: 'Starting focused. Growing supply. Independent once verified.',
     phones: ['screen-map.png', 'screen-post.png'],
-    facts: [
-      { kicker: 'Businesses', title: 'Post the job', body: 'Site, hours, rate, requirements.' },
-      { kicker: 'Guards', title: 'Apply on the map', body: 'Licensed. You choose the shift.' },
-      { kicker: 'Together', title: 'Contract direct', body: 'Pay and track in the app.' },
-    ],
-    cta: 'Get started',
+    phoneCaps: ['Pick a guard', 'Post a job'],
   },
   {
     file: 'instagram/ig-marketplace.png',
     kind: 'graphic',
     layout: 'devices',
     ...SQ,
-    eyebrow: 'California',
-    line1: 'SECURITY',
-    line2: 'MARKETPLACE',
-    ledeHtml: 'Post coverage. Hire licensed guards. Or browse open shifts and apply.',
-    bullets: [
-      'Map-first — see who’s nearby.',
-      'Credentials checked before anyone goes live.',
-      'In-app pay, check-in photos, shift tracking.',
-    ],
-    phones: ['screen-home.png', 'screen-map.png'],
-    facts: [
-      { kicker: 'Clients', title: 'I need security', body: 'Post a job. Pick your guard.' },
-      { kicker: 'Guards', title: "I'm a guard", body: 'Open shifts on your schedule.' },
-      { kicker: 'Live', title: 'www.guardr.co', body: 'Free to sign up.' },
-    ],
-    cta: 'Book now',
+    line1: 'POST A JOB.',
+    line2: 'PICK A GUARD.',
+    ledeHtml: 'Licensed California coverage — maps, messaging, and pay in the app.',
+    phones: ['screen-map.png', 'screen-post.png'],
+    phoneCaps: ['Available nearby', 'Post coverage'],
   },
   {
     file: 'instagram/ig-how-it-works.png',
     kind: 'graphic',
     layout: 'devices',
     ...SQ,
-    eyebrow: 'How it works',
-    line1: 'POST. PICK.',
-    line2: 'PAY.',
-    ledeHtml: 'Three steps. You stay in control of who works the site.',
-    bullets: [
-      'Post site, time, rate, and requirements.',
-      'Review licensed applicants — you approve.',
-      'Pay in the app. Track the shift live.',
-    ],
+    line1: 'POST.',
+    line2: 'PICK. PAY.',
+    ledeHtml: 'You approve who works the site. Guards choose the shift.',
     phones: ['screen-post.png', 'screen-map.png'],
-    facts: [
-      { kicker: '01', title: 'Post', body: 'Coverage you need tonight or later.' },
-      { kicker: '02', title: 'Pick', body: 'Credentials on the profile.' },
-      { kicker: '03', title: 'Pay', body: 'Clock-in photos + reports.' },
-    ],
-    cta: 'Get started',
+    phoneCaps: ['Post coverage', 'Pick from the map'],
   },
   {
     file: 'instagram/ig-coverage-types.png',
     kind: 'graphic',
     layout: 'devices',
     ...SQ,
-    eyebrow: 'Coverage you can post',
-    line1: 'EVENTS TO',
-    line2: 'JOB SITES.',
-    ledeHtml: 'One marketplace for licensed California coverage — per shift, not a contract with an agency.',
-    bullets: [
-      'Event · nightlife · venues',
-      'Construction · retail · campus',
-      'Executive protection · site patrol',
-    ],
-    phones: ['screen-shifts.png', 'screen-post.png'],
-    facts: [
-      { kicker: 'Required', title: 'BSIS card', body: 'ID, COI, 32-hr training on file.' },
-      { kicker: 'Region', title: 'California', body: 'Credential checks before go-live.' },
-      { kicker: 'Model', title: 'Per job', body: 'Independent contractors.' },
-    ],
-    cta: 'Post a job',
+    line1: 'OPEN SHIFTS.',
+    line2: 'ON THE MAP.',
+    ledeHtml: 'Nightclub, retail, site, campus — apply to what fits. No forced dispatch.',
+    phones: ['screen-shifts.png', 'screen-map.png'],
+    phoneCaps: ['Open shifts', 'On the map'],
   },
   {
     file: 'stories/story-event.png',
@@ -1025,67 +1112,34 @@ const POSTS = [
     kind: 'graphic',
     layout: 'devices',
     ...ST,
-    eyebrow: 'Read this first',
-    line1: 'THE',
-    line2: 'PLATFORM.',
-    ledeHtml:
-      'Guards and businesses find each other here and <em>contract directly per job</em>.',
-    bullets: [
-      'Starting focused — growing guard supply.',
-      'Verified, then both sides operate independently.',
-      'Not an agency. Not forced dispatch.',
-    ],
+    line1: 'THE PLATFORM.',
+    line2: '',
+    ledeHtml: 'Guards and businesses find each other and <em>contract directly per job</em>.',
+    note: 'Starting focused. Independent once verified.',
     phones: ['screen-map.png', 'screen-post.png'],
-    facts: [
-      { kicker: 'Post', title: 'The job', body: 'Site, hours, rate.' },
-      { kicker: 'Pick', title: 'Your guard', body: 'Licensed profiles.' },
-      { kicker: 'Pay', title: 'In the app', body: 'Track the shift.' },
-    ],
-    cta: 'Get started',
+    phoneCaps: ['Pick a guard', 'Post a job'],
   },
   {
     file: 'stories/story-tagline.png',
     kind: 'graphic',
     layout: 'devices',
     ...ST,
-    eyebrow: 'Guardr',
     line1: 'ANYTIME.',
     line2: 'ANYWHERE.',
-    ledeHtml: 'Security when you need it — post coverage or pick up a shift.',
-    bullets: [
-      'Businesses post the job.',
-      'Licensed guards apply on the map.',
-      'You contract direct, per job.',
-    ],
-    phones: ['screen-home.png', 'screen-map.png'],
-    facts: [
-      { kicker: 'Clients', title: 'Post a job', body: 'Pick who works.' },
-      { kicker: 'Guards', title: 'Find work', body: 'Your schedule.' },
-      { kicker: 'CA', title: 'Verified', body: 'Then go live.' },
-    ],
-    cta: 'Book now',
+    ledeHtml: 'Security when you need it. Post coverage or pick up a shift.',
+    phones: ['screen-map.png', 'screen-shifts.png'],
+    phoneCaps: ['Nearby guards', 'Open shifts'],
   },
   {
     file: 'stories/story-how-it-works.png',
     kind: 'graphic',
     layout: 'devices',
     ...ST,
-    eyebrow: 'How it works',
     line1: 'POST.',
     line2: 'PICK. PAY.',
-    ledeHtml: 'You approve who works your site. Guards choose which shifts to take.',
-    bullets: [
-      'Post coverage with site and rate.',
-      'Review licensed applicants.',
-      'Pay and track — check-in photos included.',
-    ],
+    ledeHtml: 'You approve who works. Guards choose which shifts to take.',
     phones: ['screen-post.png', 'screen-shifts.png'],
-    facts: [
-      { kicker: '01', title: 'Post', body: 'The coverage.' },
-      { kicker: '02', title: 'Pick', body: 'The guard.' },
-      { kicker: '03', title: 'Pay', body: 'The shift.' },
-    ],
-    cta: 'Get started',
+    phoneCaps: ['Post the job', 'Apply to a shift'],
   },
   {
     file: 'landscape/wide-event.png',
@@ -1143,64 +1197,34 @@ const POSTS = [
     kind: 'graphic',
     layout: 'devices',
     ...WD,
-    eyebrow: 'Read this first',
-    line1: 'GUARDR IS',
-    line2: 'THE PLATFORM.',
-    ledeHtml:
-      'Guards and businesses find each other and <em>contract directly per job</em>. Starting focused. Growing supply. Independent once verified.',
-    bullets: [
-      'Not a staffing agency or PPO dispatch.',
-      'Both sides operate on their own after go-live.',
-    ],
+    line1: 'THE PLATFORM.',
+    line2: '',
+    ledeHtml: 'Guards and businesses find each other and <em>contract directly per job</em>.',
+    note: 'Starting focused. Independent once verified.',
     phones: ['screen-map.png', 'screen-post.png'],
-    facts: [
-      { kicker: 'Clients', title: 'Post + pick', body: 'You approve who works the site.' },
-      { kicker: 'Guards', title: 'Apply + get paid', body: 'Choose shifts. No forced dispatch.' },
-      { kicker: 'Guardr', title: 'The rails', body: 'Credentials, chat, pay, tracking.' },
-    ],
-    cta: 'Get started',
+    phoneCaps: ['Pick a guard', 'Post a job'],
   },
   {
     file: 'landscape/wide-marketplace.png',
     kind: 'graphic',
     layout: 'devices',
     ...WD,
-    eyebrow: 'California',
-    line1: 'SECURITY',
-    line2: 'MARKETPLACE',
-    ledeHtml: 'Post coverage. Hire licensed guards. Maps, messaging, and payments in one place.',
-    bullets: [
-      'Event, venue, retail, construction, campus.',
-      'BSIS card, ID, COI, training — then live.',
-    ],
-    phones: ['screen-home.png', 'screen-map.png'],
-    facts: [
-      { kicker: 'Post a job', title: 'Clients', body: 'Site, hours, rate, requirements.' },
-      { kicker: 'Find work', title: 'Guards', body: 'Open shifts on the map.' },
-      { kicker: 'Contract', title: 'Direct', body: 'Per job, in the app.' },
-    ],
-    cta: 'Book now',
+    line1: 'POST A JOB.',
+    line2: 'PICK A GUARD.',
+    ledeHtml: 'Licensed California coverage. Maps, messaging, and pay in one app.',
+    phones: ['screen-map.png', 'screen-post.png'],
+    phoneCaps: ['Nearby', 'Post it'],
   },
   {
     file: 'landscape/wide-guards.png',
     kind: 'graphic',
     layout: 'devices',
     ...WD,
-    eyebrow: "I'm a guard",
     line1: 'OPEN SHIFTS',
     line2: 'ON THE MAP.',
-    ledeHtml: 'Licensed CA guards browse jobs, apply to what fits, get paid through Guardr.',
-    bullets: [
-      'No forced dispatch — you pick the shift.',
-      'Upload card, ID, COI, training. Staff verifies.',
-    ],
+    ledeHtml: 'Licensed CA guards apply to what fits. No forced dispatch.',
     phones: ['screen-shifts.png', 'screen-map.png'],
-    facts: [
-      { kicker: 'Need', title: 'Guard card', body: 'CA BSIS + COI on file.' },
-      { kicker: 'Do', title: 'Apply', body: 'Jobs that fit your night.' },
-      { kicker: 'Get', title: 'Paid', body: 'Stripe payouts in the app.' },
-    ],
-    cta: 'Sign up free',
+    phoneCaps: ['Open shifts', 'On the map'],
   },
 ];
 
