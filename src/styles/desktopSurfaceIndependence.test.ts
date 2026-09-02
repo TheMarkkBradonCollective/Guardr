@@ -52,6 +52,14 @@ describe('desktop CSS independence', () => {
     assert.ok(commandCss.includes('width: 100% !important'));
     assert.ok(commandCss.includes('width: 100%'));
     assert.match(commandCss, /\.staff-detail-pane:has\(> \.staff-detail-header\)/);
+    assert.match(
+      commandCss,
+      /\.staff-detail-pane:has\(> \.staff-detail-header\)[\s\S]{0,280}grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/,
+    );
+    assert.match(
+      commandCss,
+      /\.staff-detail-pane:has\(> \.staff-detail-header\) > \.staff-account-access[\s\S]{0,80}grid-column: 1 \/ -1/,
+    );
     assert.equal(
       /sfd-shell-canvas > \.staff-detail-pane[\s\S]{0,240}max-width: 420px/.test(commandCss),
       false,

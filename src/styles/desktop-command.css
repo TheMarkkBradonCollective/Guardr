@@ -399,7 +399,7 @@ body[data-surface='desktop'] .staff-overview-role-badge--director {
 
 /* ── Profile workbench: full-width command layout ─────────────────────────
    Desktop is a workspace, not a phone column. Identity runs as a header band
-   across the canvas; records and account actions sit in two columns. */
+   across the canvas; records sit in two columns under a command bar. */
 
 body[data-surface='desktop'] .sfd-shell-canvas:has(> .staff-detail-pane),
 body[data-surface='desktop'] .sfd-shell-canvas:has(> .sfp-staff-profile-preview) {
@@ -407,7 +407,7 @@ body[data-surface='desktop'] .sfd-shell-canvas:has(> .sfp-staff-profile-preview)
   flex-direction: column;
   align-items: stretch;
   padding: 0;
-  background: var(--sf-paper, #fff);
+  background: var(--sf-paper-sunken, #f6f6f6);
 }
 
 body[data-surface='desktop'] .sfd-shell-canvas:has(> .staff-detail-pane) > *,
@@ -427,16 +427,16 @@ body[data-surface='desktop'] .sfd-shell-canvas > .sfp-staff-profile-preview {
   height: 100%;
   min-height: 0;
   margin: 0;
-  padding: 20px 32px 32px;
+  padding: 28px 40px 40px;
   overflow: auto;
-  background: var(--sf-paper, #fff) !important;
+  background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
 }
 
 body[data-surface='desktop'] .sfd-panel--secondary {
-  background: var(--sf-paper, #fff);
+  background: var(--sf-paper-sunken, #f6f6f6);
   padding: 0;
 }
 
@@ -445,9 +445,9 @@ body[data-surface='desktop'] .sfd-panel--secondary > .staff-detail-pane {
   max-width: none;
   height: 100%;
   margin: 0;
-  padding: 20px 24px 28px;
+  padding: 24px 28px 32px;
   overflow: auto;
-  background: var(--sf-paper, #fff) !important;
+  background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -469,11 +469,14 @@ body[data-surface='desktop'] .staff-detail-pane .staff-detail-pane {
   box-shadow: none;
 }
 
-/* Record that owns a header becomes a full-width command workbench. */
+/* Record that owns a header becomes a two-column command workbench. */
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 24px;
+  row-gap: 0;
+  align-items: start;
+  align-content: start;
   width: 100% !important;
   max-width: none !important;
 }
@@ -482,12 +485,32 @@ body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .a
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-guard-detail-tabs,
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-header,
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-guard-detail-top-bar--sticky,
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: none;
+}
+
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-section:not(.staff-account-access) {
+  grid-column: auto;
+  min-width: 0;
+  margin: 12px 0 0;
+  padding: 22px 24px !important;
+  border: 1px solid var(--sf-line) !important;
+  border-bottom: 1px solid var(--sf-line) !important;
+  border-radius: 12px;
+  background: var(--sf-paper, #fff);
+}
+
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access + .staff-detail-section:last-child {
+  grid-column: 1 / -1;
+}
+
 body[data-surface='desktop'] .staff-detail-header,
 body[data-surface='desktop'] .staff-account-access,
 body[data-surface='desktop'] .staff-detail-section {
   width: 100%;
   max-width: none;
-  grid-column: auto;
 }
 
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access {
@@ -504,9 +527,12 @@ body[data-surface='desktop'] .staff-detail-header {
   flex-wrap: wrap;
   align-items: flex-start;
   width: 100%;
-  padding: 8px 0 20px;
+  margin: 0 0 16px;
+  padding: 20px 24px;
   gap: 16px 32px;
-  border-bottom: 1px solid var(--sf-line);
+  border: 1px solid var(--sf-line);
+  border-radius: 12px;
+  background: var(--sf-paper, #fff);
 }
 
 body[data-surface='desktop'] .staff-detail-identity {
@@ -591,11 +617,11 @@ body[data-surface='desktop'] .staff-account-access {
   gap: 12px 16px;
   width: 100% !important;
   box-sizing: border-box;
-  padding: 12px 16px !important;
-  margin: 16px 0 8px !important;
+  padding: 14px 20px !important;
+  margin: 0 0 4px !important;
   border: 1px solid var(--sf-line) !important;
-  border-radius: 8px !important;
-  background: var(--sf-paper-sunken, #f6f6f6) !important;
+  border-radius: 12px !important;
+  background: var(--sf-paper, #fff) !important;
 }
 
 body[data-surface='desktop'] .staff-account-access > * + * {
@@ -611,11 +637,12 @@ body[data-surface='desktop'] .staff-account-access .staff-detail-actions--primar
   margin-top: 0;
 }
 
-body[data-surface='desktop'] .staff-detail-section:not(.staff-account-access) {
-  padding: 20px 0 !important;
+body[data-surface='desktop'] .staff-detail-section .grid.gap-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 16px 28px;
 }
 
-body[data-surface='desktop'] .staff-detail-section .grid.gap-4 {
+body[data-surface='desktop'] .staff-account-access + .staff-detail-section:last-child .grid.gap-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
 }
 

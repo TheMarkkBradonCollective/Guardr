@@ -244,12 +244,19 @@ html body.sf-tablet .staff-detail-section .wf-metric-value {
   word-break: break-word;
 }
 
-html body.sf-tablet .split-detail-pane .grid,
-html body.sf-tablet .staff-detail-pane .grid,
+html body.sf-tablet .split-detail-pane .grid:not(.staff-detail-header):not(.staff-detail-metrics):not(.staff-detail-actions),
+html body.sf-tablet .staff-detail-pane .grid:not(.staff-detail-header):not(.staff-detail-metrics):not(.staff-detail-actions):not(.staff-detail-actions--list),
 html body.sf-tablet .staff-detail-section.grid,
 html body.sf-tablet .split-detail-pane [class*="grid-cols-"],
 html body.sf-tablet .staff-detail-pane [class*="grid-cols-"] {
   grid-template-columns: minmax(0, 1fr) !important;
+}
+
+/* Inspector fields sit two-up — beat the generic 1-col flatten above. */
+html body.sf-tablet .staff-detail-section:not(.staff-account-access) .grid,
+html body.sf-tablet .staff-detail-section:not(.staff-account-access) [class*="grid-cols-"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 16px 20px;
 }
 
 html body.sf-tablet .split-detail-pane .grid > *,
@@ -1480,25 +1487,34 @@ body.sf-tablet .uber-select {
 }
 
 /* ── Profile / application / staff detail ─────────────────────────────────
-   Tablet piggybacks the mobile sheet: stacked hero, chip metrics, option
-   rows, one black footer CTA. Not a 3-column inspector card.
+   Tablet is an inspector, not a phone sheet and not a desktop workbench.
+   Identity sits two-up beside the metrics; actions live in a sunken card
+   as a two-column touch grid.
    ────────────────────────────────────────────────────────────────────────── */
+body.sf-tablet .sfp-staff-profile-preview,
+body.sf-tablet .split-detail-pane.staff-detail-pane,
+.sfp-stage[data-surface='tablet'] .sfp-staff-profile-preview {
+  padding: 20px 24px 28px;
+}
+
 body.sf-tablet .staff-detail-header,
 .sfp-stage[data-surface='tablet'] .staff-detail-header {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 8px 0 24px;
-  gap: 16px;
-  border-bottom: none;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding: 4px 0 20px;
+  gap: 16px 24px;
+  border-bottom: 1px solid var(--sf-line);
 }
 
 body.sf-tablet .staff-detail-identity,
 .sfp-stage[data-surface='tablet'] .staff-detail-identity {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
-  gap: 16px;
+  flex: 1 1 280px;
+  gap: 14px;
 }
 
 body.sf-tablet .staff-detail-name,
@@ -1506,10 +1522,10 @@ body.sf-tablet .staff-detail-header h2,
 .sfp-stage[data-surface='tablet'] .staff-detail-name,
 .sfp-stage[data-surface='tablet'] .staff-detail-header h2 {
   font-family: var(--sf-font-display);
-  font-size: var(--sf-type-display, 30px);
+  font-size: var(--sf-type-heading, 19px);
   font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.12;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 body.sf-tablet .staff-detail-metrics,
@@ -1518,36 +1534,44 @@ body.sf-tablet .staff-detail-metrics--3,
 .sfp-stage[data-surface='tablet'] .staff-detail-metrics,
 .sfp-stage[data-surface='tablet'] .staff-detail-metrics--2,
 .sfp-stage[data-surface='tablet'] .staff-detail-metrics--3 {
-  display: flex !important;
-  flex-wrap: wrap;
-  grid-template-columns: none !important;
-  gap: 8px;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  flex: 1 1 240px;
+  gap: 10px 12px;
   margin-top: 0;
+}
+
+body.sf-tablet .staff-detail-metric,
+.sfp-stage[data-surface='tablet'] .staff-detail-metric {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--sf-line);
+  border-radius: 12px;
+  background: var(--sf-paper, #fff);
+}
+
+body.sf-tablet .staff-detail-metric--wide,
+.sfp-stage[data-surface='tablet'] .staff-detail-metric--wide {
+  grid-column: 1 / -1;
 }
 
 body.sf-tablet .staff-detail-metric-chip,
 body.sf-tablet .staff-detail-metrics .wf-metric-value,
 .sfp-stage[data-surface='tablet'] .staff-detail-metric-chip,
 .sfp-stage[data-surface='tablet'] .staff-detail-metrics .wf-metric-value {
-  display: inline-block;
-  width: fit-content;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: var(--uber-accent-100, var(--sf-paper-muted, #eee));
+  display: block;
+  width: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   font-family: var(--sf-font-display);
-  font-size: var(--sf-type-heading, 19px);
+  font-size: var(--sf-type-subheading, 16px);
   font-weight: 700;
 }
 
-html body.sf-tablet .staff-account-access,
-html body.sf-tablet .uber-app-shell .staff-account-access,
-.sfp-stage[data-surface='tablet'] .staff-account-access {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 16px 0 !important;
-  margin: 0;
-  box-shadow: none !important;
+body.sf-tablet .staff-detail-edit,
+.sfp-stage[data-surface='tablet'] .staff-detail-edit {
+  margin-left: auto;
 }
 
 body.sf-tablet .staff-detail-edit button,
@@ -1563,16 +1587,31 @@ body.sf-tablet .staff-detail-edit > *,
   color: var(--sf-ink) !important;
 }
 
+html body.sf-tablet .staff-account-access,
+html body.sf-tablet .uber-app-shell .staff-account-access,
+.sfp-stage[data-surface='tablet'] .staff-account-access {
+  background: var(--sf-paper-sunken) !important;
+  border: 1px solid var(--sf-line) !important;
+  border-radius: var(--sf-radius-card, 14px) !important;
+  padding: 16px !important;
+  margin: 16px 0;
+  box-shadow: none !important;
+}
+
 html body.sf-tablet .staff-detail-actions,
 html body.sf-tablet .staff-detail-actions--list,
-html body.sf-tablet .staff-detail-actions--primary,
 .sfp-stage[data-surface='tablet'] .staff-detail-actions,
-.sfp-stage[data-surface='tablet'] .staff-detail-actions--list,
-.sfp-stage[data-surface='tablet'] .staff-detail-actions--primary {
-  display: flex !important;
-  flex-direction: column;
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--list {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 8px;
-  grid-template-columns: none !important;
+}
+
+html body.sf-tablet .staff-detail-actions--primary,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--primary {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  margin-top: 8px;
 }
 
 html body.sf-tablet .staff-detail-actions > *,
@@ -1589,13 +1628,18 @@ html body.sf-tablet .staff-detail-actions > *:last-child:nth-child(3),
   font-weight: 600;
 }
 
+html body.sf-tablet .staff-detail-actions--list > *:last-child:nth-child(odd),
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--list > *:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 html body.sf-tablet .staff-detail-actions--list > *,
 html body.sf-tablet .staff-detail-actions--list button,
 .sfp-stage[data-surface='tablet'] .staff-detail-actions--list > *,
 .sfp-stage[data-surface='tablet'] .staff-detail-actions--list button {
   width: 100% !important;
-  min-height: var(--sf-row-h, 60px) !important;
-  justify-content: flex-start !important;
+  min-height: var(--sf-button-h, 46px) !important;
+  justify-content: center !important;
 }
 
 html body.sf-tablet .staff-detail-actions--primary > *,
@@ -1606,4 +1650,20 @@ html body.sf-tablet .staff-detail-actions--primary button,
   min-height: var(--sf-button-h, 46px) !important;
   justify-content: center !important;
   font-weight: 700 !important;
+}
+
+html body.sf-tablet .staff-detail-section:not(.staff-account-access) .grid.gap-4,
+.sfp-stage[data-surface='tablet'] .staff-detail-section:not(.staff-account-access) .grid.gap-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* Edit form on tablet is a card, not a phone bottom sheet. */
+body.sf-tablet .staff-detail-sheet,
+.sfp-stage[data-surface='tablet'] .staff-detail-sheet {
+  margin-top: 0;
+  padding: 20px !important;
+  border: 1px solid var(--sf-line) !important;
+  border-radius: var(--sf-radius-card, 14px) !important;
+  background: var(--sf-paper) !important;
+  box-shadow: none !important;
 }
