@@ -2174,7 +2174,7 @@ body[data-surface='mobile'] .staff-detail-identity {
 body[data-surface='mobile'] .staff-detail-name,
 body[data-surface='mobile'] .staff-detail-header h2 {
   font-family: var(--sf-font-display);
-  font-size: var(--sf-type-display);
+  font-size: var(--sf-type-display) !important;
   font-weight: 700;
   letter-spacing: var(--sf-tracking-display);
   line-height: 1.12;
@@ -2235,12 +2235,23 @@ body[data-surface='mobile'] .staff-detail-header-badges {
 }
 
 body[data-surface='mobile'] .staff-detail-edit {
+  display: block;
   margin-top: 0;
+  width: fit-content;
+  max-width: 100%;
+}
+
+body[data-surface='mobile'] .staff-detail-edit > * {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: 100%;
+  flex: 0 0 auto !important;
 }
 
 body[data-surface='mobile'] .staff-detail-edit button,
-body[data-surface='mobile'] .staff-detail-edit > * {
+body[data-surface='mobile'] .staff-detail-edit [role='button'] {
   width: auto !important;
+  min-width: 0 !important;
   min-height: 36px !important;
   padding: 0 12px !important;
   border-radius: 8px !important;

@@ -5266,13 +5266,19 @@ html.theme-light .staff-ops-btn-primary:hover {
 }
 
 .staff-detail-edit {
-  display: flex;
-  justify-content: flex-start;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
 }
 
-.staff-detail-edit > *,
+.staff-detail-edit > * {
+  display: inline-flex !important;
+  width: auto !important;
+  flex: 0 0 auto !important;
+}
+
 .staff-detail-edit button {
-  width: auto;
+  width: auto !important;
 }
 
 .staff-account-access-head {
