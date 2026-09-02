@@ -27,11 +27,14 @@ export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSu
   const platformRole = staffRole ? staffRoleToPlatformRole(staffRole) : 'finance';
   const cities = (member.managedCities ?? []).filter(Boolean);
   const hasIntake = staffHasApplicationIntake(member);
+  const roleTitle = ROLE_LABELS[platformRole];
   const requestedRoleLabel = isFinanceDesk
     ? `Finance desk — ${ROLE_LABELS.finance}`
     : member.sideRole === 'Finance' && staffRole
-      ? `${staffRole} + Finance — ${ROLE_LABELS[platformRole]}`
-      : `${staffRole} — ${ROLE_LABELS[platformRole]}`;
+      ? `${staffRole} + Finance — ${roleTitle}`
+      : roleTitle === staffRole
+        ? `${staffRole}`
+        : `${staffRole} — ${roleTitle}`;
 
   return (
     <section className="staff-detail-section space-y-4">
