@@ -493,7 +493,7 @@ body[data-surface='desktop'] .staff-detail-section {
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 12px 16px;
 }
