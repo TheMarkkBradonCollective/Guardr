@@ -196,183 +196,487 @@ ${post.extraCss || ''}
 </body></html>`;
 }
 
-function graphicCss(w, h) {
+function bwCss(w, h) {
   return `
 ${RESET}
 html, body, .frame { width: ${w}px; height: ${h}px; }
 .frame {
   position: relative;
   overflow: hidden;
-  background: var(--ink);
+  background: #000;
+  display: grid;
+  color: #fff;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 54px 54px;
 }
-.corner {
-  position: absolute;
-  top: 0; left: 0;
-  width: 88px; height: 88px;
-  background: linear-gradient(135deg, var(--grey) 0%, var(--grey) 50%, transparent 50%);
-  z-index: 4;
-}
-.corner img {
-  position: absolute;
-  top: 12px; left: 12px;
-  width: 32px; height: 32px;
-  object-fit: contain;
-}
-.left {
-  position: relative;
-  z-index: 2;
-  width: 62%;
-  height: 100%;
-  padding: 72px 28px 48px 64px;
-  display: flex;
-  flex-direction: column;
-}
-.eyebrow {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 18px;
-}
-.headline { line-height: 0.92; margin-bottom: 22px; }
-.line1 { display: block; font-size: 62px; font-weight: 900; }
-.line2 { display: block; margin-top: 4px; font-size: 48px; font-weight: 800; color: #cfcfcf; }
-.sub {
-  max-width: 520px;
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: #e8e8e8;
-  margin-bottom: 28px;
-}
-.cta {
-  display: inline-flex;
+.frame.invert {
   background: #fff;
   color: #000;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
+}
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 44px;
+  border-bottom: 1px solid rgba(255,255,255,0.22);
+  min-height: 88px;
+  background: #000;
+}
+.invert .bar { background: #fff; border-color: rgba(0,0,0,0.16); }
+.invert .brand img { filter: invert(1); }
+.bar.foot {
+  border-bottom: 0;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  background: #fff;
+  color: #000;
+  min-height: 108px;
+}
+.invert .bar.foot {
+  background: #000;
+  color: #fff;
+  border-top-color: rgba(0,0,0,0.16);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.brand img { width: 44px; height: 44px; object-fit: contain; }
+.bar-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+}
+.invert .bar-label { color: #555; }
+.hero {
+  padding: 28px 44px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hero h1 {
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 0.86;
+  text-transform: uppercase;
+}
+.hero .line { display: block; }
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  border-bottom: 1px solid rgba(255,255,255,0.22);
+}
+.invert .cols { border-color: rgba(0,0,0,0.16); }
+.cols article {
+  padding: 32px 36px 36px;
+  border-right: 1px solid rgba(255,255,255,0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.invert .cols article { border-color: rgba(0,0,0,0.16); }
+.cols article:last-child { border-right: 0; }
+.kicker {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+}
+.invert .kicker { color: #555; }
+.cols h2 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.cols p {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #d4d4d4;
+}
+.invert .cols p { color: #333; }
+.cta {
+  display: inline-flex;
+  align-items: center;
+  background: #000;
+  color: #fff;
   font-size: 16px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 14px 28px;
-  border-radius: 4px;
-  width: fit-content;
-  margin-bottom: 18px;
+  padding: 16px 28px;
 }
-.tag {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--muted);
-  max-width: 460px;
-  line-height: 1.4;
-  margin-bottom: 0;
-}
+.invert .bar.foot .cta, .bar.foot .cta { background: #000; color: #fff; }
+.invert .bar.foot .cta { background: #fff; color: #000; }
 .site {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--muted);
-}
-.dot { width: 10px; height: 10px; background: #fff; flex-shrink: 0; }
-.mark {
-  position: absolute;
-  right: 72px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 300px; height: 300px;
-  border: 3px solid var(--grey);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-}
-.mark::before {
-  content: '';
-  position: absolute;
-  inset: 28px;
-  border: 2px solid var(--grey-dark);
-  border-radius: 50%;
-}
-.mark img { width: 128px; height: 128px; position: relative; z-index: 1; object-fit: contain; }
-.pin {
-  position: absolute;
-  width: 14px; height: 14px;
-  background: #fff;
-  border-radius: 50%;
-  z-index: 2;
-}
-.pin.a { top: 54px; left: 128px; }
-.pin.b { bottom: 72px; right: 64px; }
-.pin.c { top: 150px; right: 48px; }
-.steps { list-style: none; display: grid; gap: 16px; margin: 8px 0 28px; }
-.steps li {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 22px;
-  font-weight: 700;
-}
-.num {
-  width: 36px; height: 36px;
-  border: 2px solid #fff;
-  display: grid; place-items: center;
   font-size: 16px;
-  font-weight: 800;
-  flex-shrink: 0;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
-.services { list-style: none; display: grid; gap: 10px; margin: 4px 0 28px; }
-.services li {
-  font-size: 22px;
-  font-weight: 600;
-  display: flex;
+.steps-rows {
+  display: grid;
+  grid-template-rows: 1fr 1fr 1fr;
+  min-height: 0;
+}
+.step {
+  display: grid;
+  grid-template-columns: 140px 1fr;
   align-items: center;
+  padding: 0 44px;
+  border-top: 1px solid rgba(255,255,255,0.22);
   gap: 12px;
 }
-.services li::before {
-  content: '';
-  width: 8px; height: 8px;
-  background: #fff;
-  flex-shrink: 0;
+.invert .step { border-color: rgba(0,0,0,0.16); }
+.step:nth-child(even) { background: rgba(255,255,255,0.04); }
+.invert .step:nth-child(even) { background: rgba(0,0,0,0.04); }
+.step .num {
+  font-size: 92px;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 1;
 }
+.step h2 {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  line-height: 0.95;
+}
+.step p {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 500;
+  color: #cfcfcf;
+}
+.invert .step p { color: #333; }
+.cells {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  min-height: 0;
+}
+.cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 28px 36px;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  border-right: 1px solid rgba(255,255,255,0.22);
+}
+.invert .cell { border-color: rgba(0,0,0,0.16); }
+.cell:nth-child(even) { border-right: 0; }
+.cell:nth-child(odd) { background: rgba(255,255,255,0.03); }
+.invert .cell:nth-child(odd) { background: rgba(0,0,0,0.03); }
+.cell .idx {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #8a8a8a;
+  margin-bottom: 8px;
+}
+.cell h2 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.lede {
+  padding: 0 44px 8px;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.25;
+  max-width: 980px;
+}
+.lede em { font-style: normal; font-weight: 800; }
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  min-height: 0;
+}
+.invert .split { border-color: rgba(0,0,0,0.16); }
+.split > div {
+  padding: 28px 44px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+.split > div:first-child { border-right: 1px solid rgba(255,255,255,0.22); }
+.invert .split > div:first-child { border-color: rgba(0,0,0,0.16); }
+.split h2 {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.split p {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #d0d0d0;
+}
+.invert .split p { color: #333; }
 `;
 }
 
-function graphicHtml(post) {
-  const { w, h } = post;
-  const extra = post.list
-    ? post.listType === 'steps'
-      ? `<ol class="steps">${post.list
-          .map((item, i) => `<li><span class="num">${i + 1}</span><span>${esc(item)}</span></li>`)
-          .join('')}</ol>`
-      : `<ul class="services">${post.list.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>`
-    : `<p class="sub">${esc(post.sub)}</p>`;
+function barTop(label) {
+  return `<header class="bar">
+    <div class="brand"><img src="${logoUrl}" alt="" /><span>Guardr</span></div>
+    <span class="bar-label">${esc(label)}</span>
+  </header>`;
+}
+
+function barFoot(cta, site = SITE) {
+  return `<footer class="bar foot">
+    <div class="cta">${esc(cta)}</div>
+    <span class="site">${esc(site)}</span>
+  </footer>`;
+}
+
+function bwPage(w, h, inner, extraClass = '') {
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8" />
-<style>${graphicCss(w, h)}${post.extraCss || ''}</style></head>
+<style>${bwCss(w, h)}</style></head>
 <body>
-<article class="frame">
-  <div class="corner"><img src="${logoBlackUrl}" alt="" /></div>
-  <div class="left">
-    <p class="eyebrow">${esc(post.eyebrow)}</p>
-    <h1 class="headline">
-      <span class="line1">${esc(post.line1)}</span>
-      <span class="line2">${esc(post.line2)}</span>
-    </h1>
-    ${extra}
-    <div class="cta">${esc(post.cta)}</div>
-    <p class="tag">${esc(post.tag || TAGLINE)}</p>
-    <div class="site"><span class="dot"></span><span>${esc(post.site || SITE)}</span></div>
-  </div>
-  <div class="mark" aria-hidden="true">
-    <span class="pin a"></span><span class="pin b"></span><span class="pin c"></span>
-    <img src="${logoUrl}" alt="" />
-  </div>
+<article class="frame ${extraClass}" style="grid-template-rows: auto 1fr auto;">
+  ${inner}
 </article>
 </body></html>`;
+}
+
+function graphicHtml(post) {
+  const { w, h, layout } = post;
+  const invert = post.invert ? 'invert' : '';
+
+  if (layout === 'poster') {
+    const cols = (post.cols || [])
+      .map(
+        (c) => `<article><p class="kicker">${esc(c.kicker)}</p><h2>${esc(c.title)}</h2><p>${esc(c.body)}</p></article>`,
+      )
+      .join('');
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" />
+<style>${bwCss(w, h)}
+.hero h1 { font-size: ${post.heroSize || 128}px; }
+.frame { grid-template-rows: 88px minmax(280px, 1fr) minmax(220px, auto) 108px; }
+</style></head>
+<body>
+<article class="frame ${invert}">
+  ${barTop(post.eyebrow)}
+  <section class="hero">
+    <h1><span class="line">${esc(post.line1)}</span><span class="line">${esc(post.line2)}</span></h1>
+  </section>
+  <section class="cols">${cols}</section>
+  ${barFoot(post.cta)}
+</article>
+</body></html>`;
+  }
+
+  if (layout === 'steps') {
+    const rows = (post.steps || [])
+      .map(
+        (s, i) => `<div class="step"><div class="num">${String(i + 1).padStart(2, '0')}</div>
+      <div><h2>${esc(s.title)}</h2><p>${esc(s.body)}</p></div></div>`,
+      )
+      .join('');
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" />
+<style>${bwCss(w, h)}
+.frame { grid-template-rows: 88px 1fr 108px; }
+</style></head>
+<body>
+<article class="frame ${invert}">
+  ${barTop(post.eyebrow)}
+  <section class="steps-rows">${rows}</section>
+  ${barFoot(post.cta)}
+</article>
+</body></html>`;
+  }
+
+  if (layout === 'grid') {
+    const cells = (post.cells || [])
+      .map(
+        (c, i) => `<div class="cell"><span class="idx">${String(i + 1).padStart(2, '0')}</span><h2>${esc(c)}</h2></div>`,
+      )
+      .join('');
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" />
+<style>${bwCss(w, h)}
+.frame { grid-template-rows: 88px 1fr 108px; }
+</style></head>
+<body>
+<article class="frame ${invert}">
+  ${barTop(post.eyebrow)}
+  <section class="cells">${cells}</section>
+  ${barFoot(post.cta)}
+</article>
+</body></html>`;
+  }
+
+  if (layout === 'platform') {
+    const heroSize = post.heroSize || 92;
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" />
+<style>${bwCss(w, h)}
+.hero h1 { font-size: ${heroSize}px; }
+.frame { grid-template-rows: 88px auto auto 1fr 108px; }
+.lede { padding-top: 8px; padding-bottom: 28px; }
+</style></head>
+<body>
+<article class="frame ${invert}">
+  ${barTop(post.eyebrow || 'The platform')}
+  <section class="hero">
+    <h1><span class="line">${esc(post.line1)}</span><span class="line">${esc(post.line2)}</span></h1>
+  </section>
+  <p class="lede">${post.ledeHtml}</p>
+  <section class="split">
+    <div><h2>${esc(post.leftTitle)}</h2><p>${esc(post.leftBody)}</p></div>
+    <div><h2>${esc(post.rightTitle)}</h2><p>${esc(post.rightBody)}</p></div>
+  </section>
+  ${barFoot(post.cta)}
+</article>
+</body></html>`;
+  }
+
+  if (layout === 'story-fill') {
+    const blocks = (post.blocks || [])
+      .map(
+        (b, i) => `<div class="step" style="grid-template-columns: 120px 1fr;">
+      <div class="num">${b.num || String(i + 1).padStart(2, '0')}</div>
+      <div><h2>${esc(b.title)}</h2><p>${esc(b.body)}</p></div></div>`,
+      )
+      .join('');
+    const rows = ['110px'];
+    if (post.line1) rows.push(post.blocks?.length ? 'auto' : '1fr');
+    if (post.ledeHtml) rows.push('auto');
+    if (post.blocks?.length) rows.push('1fr');
+    rows.push('120px');
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" />
+<style>${bwCss(w, h)}
+.frame { grid-template-rows: ${rows.join(' ')}; }
+.bar { min-height: 110px; padding: 0 48px; }
+.bar.foot { min-height: 120px; }
+.brand { font-size: 28px; }
+.brand img { width: 56px; height: 56px; }
+.hero { padding: 36px 48px 12px; }
+.hero h1 { font-size: ${post.heroSize || 96}px; }
+.lede { font-size: 30px; padding: 0 48px 28px; }
+.step { padding: 0 48px; }
+.step h2 { font-size: 48px; }
+.step p { font-size: 26px; }
+.step .num { font-size: 88px; }
+.cta { font-size: 18px; padding: 18px 32px; }
+.site { font-size: 18px; }
+</style></head>
+<body>
+<article class="frame ${invert}">
+  ${barTop(post.eyebrow)}
+  ${
+    post.line1
+      ? `<section class="hero"><h1><span class="line">${esc(post.line1)}</span><span class="line">${esc(post.line2 || '')}</span></h1></section>`
+      : ''
+  }
+  ${post.ledeHtml ? `<p class="lede">${post.ledeHtml}</p>` : ''}
+  ${blocks ? `<section class="steps-rows">${blocks}</section>` : ''}
+  ${barFoot(post.cta)}
+</article>
+</body></html>`;
+  }
+
+  if (layout === 'story-platform') {
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" />
+<style>${bwCss(w, h)}
+.frame { grid-template-rows: 110px auto auto 1fr 120px; }
+.bar { min-height: 110px; padding: 0 48px; }
+.bar.foot { min-height: 120px; }
+.brand { font-size: 28px; }
+.brand img { width: 56px; height: 56px; }
+.hero { padding: 40px 48px 12px; }
+.hero h1 { font-size: 92px; }
+.lede { font-size: 32px; padding: 12px 48px 36px; }
+.split { grid-template-rows: 1fr 1fr; grid-template-columns: 1fr; }
+.split > div { padding: 36px 48px; border-right: 0; border-top: 1px solid rgba(255,255,255,0.22); }
+.split > div:first-child { border-right: 0; }
+.split h2 { font-size: 34px; }
+.split p { font-size: 24px; }
+.cta { font-size: 18px; padding: 18px 32px; }
+.site { font-size: 18px; }
+</style></head>
+<body>
+<article class="frame">
+  ${barTop(post.eyebrow || 'The platform')}
+  <section class="hero">
+    <h1><span class="line">${esc(post.line1)}</span><span class="line">${esc(post.line2)}</span></h1>
+  </section>
+  <p class="lede">${post.ledeHtml}</p>
+  <section class="split">
+    <div><h2>${esc(post.leftTitle)}</h2><p>${esc(post.leftBody)}</p></div>
+    <div><h2>${esc(post.rightTitle)}</h2><p>${esc(post.rightBody)}</p></div>
+  </section>
+  ${barFoot(post.cta)}
+</article>
+</body></html>`;
+  }
+
+  if (layout === 'wide-platform' || layout === 'wide-poster') {
+    const isPlatform = layout === 'wide-platform';
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" />
+<style>${bwCss(w, h)}
+.frame { grid-template-columns: 1.15fr 0.85fr; grid-template-rows: 72px 1fr 88px; }
+.bar { grid-column: 1 / -1; min-height: 72px; padding: 0 36px; }
+.bar.foot { min-height: 88px; }
+.hero { padding: 24px 36px 16px; }
+.hero h1 { font-size: ${isPlatform ? 58 : 72}px; }
+.lede { font-size: 22px; padding: 0 36px 16px; }
+.side {
+  border-left: 1px solid rgba(255,255,255,0.22);
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+}
+.side > div { padding: 22px 32px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.side > div:first-child { border-bottom: 1px solid rgba(255,255,255,0.22); }
+.side h2 { font-size: 22px; font-weight: 900; letter-spacing: -0.03em; text-transform: uppercase; }
+.side p { font-size: 16px; font-weight: 500; line-height: 1.35; color: #d0d0d0; }
+.cols { grid-column: 1 / -1; }
+.main { display: flex; flex-direction: column; min-height: 0; }
+</style></head>
+<body>
+<article class="frame">
+  ${barTop(post.eyebrow)}
+  <div class="main">
+    <section class="hero">
+      <h1><span class="line">${esc(post.line1)}</span><span class="line">${esc(post.line2)}</span></h1>
+    </section>
+    ${post.ledeHtml ? `<p class="lede">${post.ledeHtml}</p>` : ''}
+  </div>
+  <aside class="side">
+    <div><h2>${esc(post.leftTitle)}</h2><p>${esc(post.leftBody)}</p></div>
+    <div><h2>${esc(post.rightTitle)}</h2><p>${esc(post.rightBody)}</p></div>
+  </aside>
+  ${barFoot(post.cta)}
+</article>
+</body></html>`;
+  }
+
+  return bwPage(w, h, `${barTop(post.eyebrow)}<section class="hero"><h1>${esc(post.line1)}</h1></section>${barFoot(post.cta)}`);
 }
 
 function storyCss(w, h) {
@@ -552,57 +856,59 @@ const POSTS = [
     cta: 'Book now',
   },
   {
+    file: 'instagram/ig-platform.png',
+    kind: 'graphic',
+    layout: 'platform',
+    ...SQ,
+    heroSize: 96,
+    eyebrow: 'Read this first',
+    line1: 'GUARDR IS',
+    line2: 'THE PLATFORM.',
+    ledeHtml:
+      'Guards and businesses use it to find each other and <em>contract directly per job</em>.',
+    leftTitle: 'Starting focused.',
+    leftBody: "We're growing guard supply first — then coverage demand.",
+    rightTitle: 'Then independent.',
+    rightBody: "Once you're verified and on the platform, both sides operate on their own.",
+    cta: 'Get started',
+  },
+  {
     file: 'instagram/ig-marketplace.png',
     kind: 'graphic',
+    layout: 'poster',
     ...SQ,
-    extraCss: `
-      .left { width: 58%; padding: 96px 24px 56px 64px; }
-      .line1 { font-size: 58px; }
-      .line2 { font-size: 46px; }
-      .mark { right: 56px; width: 280px; height: 280px; }
-    `,
-    eyebrow: 'Guardr',
+    heroSize: 118,
+    eyebrow: 'California',
     line1: 'SECURITY',
     line2: 'MARKETPLACE',
-    sub: 'Clients post jobs. Licensed guards choose assignments. Maps, messaging, and payments — one platform.',
+    cols: [
+      { kicker: 'Businesses', title: 'Post the job.', body: 'Site, schedule, rate, and requirements — you post it.' },
+      { kicker: 'Guards', title: 'Apply to work.', body: 'Licensed pros browse the map and choose the shift.' },
+      { kicker: 'Together', title: 'Contract direct.', body: 'You pick who works. Pay and track in the app.' },
+    ],
     cta: 'Book now',
   },
   {
     file: 'instagram/ig-how-it-works.png',
     kind: 'graphic',
+    layout: 'steps',
     ...SQ,
-    extraCss: `
-      .left { width: 70%; padding: 88px 24px 48px 64px; }
-      .line1 { font-size: 52px; }
-      .line2 { font-size: 40px; }
-      .mark { right: 36px; width: 240px; height: 240px; }
-      .mark img { width: 108px; height: 108px; }
-    `,
     eyebrow: 'How it works',
-    line1: 'POST.',
-    line2: 'PICK. PAY.',
-    listType: 'steps',
-    list: ['Post the coverage you need', 'Review licensed applicants', 'Pay and track in the app'],
+    steps: [
+      { title: 'Post', body: 'The coverage you need — site, time, and pay.' },
+      { title: 'Pick', body: 'Review licensed applicants. You approve who works.' },
+      { title: 'Pay', body: 'Track the shift in the app. Pay through Guardr.' },
+    ],
     cta: 'Get started',
   },
   {
     file: 'instagram/ig-coverage-types.png',
     kind: 'graphic',
+    layout: 'grid',
+    invert: true,
     ...SQ,
-    extraCss: `
-      .left { width: 68%; padding: 72px 20px 40px 64px; }
-      .line1 { font-size: 44px; }
-      .line2 { font-size: 36px; }
-      .services { gap: 8px; }
-      .services li { font-size: 22px; }
-      .mark { right: 40px; width: 240px; height: 240px; }
-      .mark img { width: 108px; height: 108px; }
-    `,
-    eyebrow: 'California',
-    line1: 'COVERAGE',
-    line2: 'YOU CAN POST',
-    listType: 'bullets',
-    list: [
+    eyebrow: 'Coverage you can post',
+    cells: [
       'Event security',
       'Construction sites',
       'Retail protection',
@@ -637,35 +943,48 @@ const POSTS = [
     cta: 'Sign up free',
   },
   {
-    file: 'stories/story-tagline.png',
-    kind: 'story',
+    file: 'stories/story-platform.png',
+    kind: 'graphic',
+    layout: 'story-platform',
     ...ST,
-    extraCss: `
-      .dim { background: #000; }
-      .copy { bottom: 120px; }
-      .line1 { font-size: 70px; }
-      .line2 { font-size: 56px; }
-    `,
+    eyebrow: 'Read this first',
+    line1: 'GUARDR IS',
+    line2: 'THE PLATFORM.',
+    ledeHtml:
+      'Guards and businesses use it to find each other and <em>contract directly per job</em>.',
+    leftTitle: 'Starting focused.',
+    leftBody: "We're growing guard supply first — then coverage demand.",
+    rightTitle: 'Then independent.',
+    rightBody: "Once you're verified and on the platform, both sides operate on their own.",
+    cta: 'Get started',
+  },
+  {
+    file: 'stories/story-tagline.png',
+    kind: 'graphic',
+    layout: 'story-fill',
+    ...ST,
+    heroSize: 108,
     eyebrow: 'Guardr',
     line1: 'ANYTIME.',
     line2: 'ANYWHERE.',
-    sub: 'Security, when you need it. Map-first marketplace for licensed California guards.',
+    blocks: [
+      { title: 'Businesses post.', body: 'Coverage, site, schedule, and pay.' },
+      { title: 'Guards apply.', body: 'Licensed. Verified. Independent contractors.' },
+      { title: 'You contract.', body: 'Direct, per job, in the app.' },
+    ],
     cta: 'Book now',
   },
   {
     file: 'stories/story-how-it-works.png',
-    kind: 'story',
+    kind: 'graphic',
+    layout: 'story-fill',
     ...ST,
-    extraCss: `
-      .dim { background: #000; }
-      .line1 { font-size: 64px; }
-      .line2 { font-size: 52px; }
-      .sub { white-space: pre-line; }
-    `,
     eyebrow: 'How it works',
-    line1: 'POST. PICK.',
-    line2: 'PAY & TRACK.',
-    sub: '1. Post the coverage you need\n2. Review licensed applicants\n3. Pay and track in the app',
+    blocks: [
+      { title: 'Post', body: 'The coverage you need — site, time, and pay.' },
+      { title: 'Pick', body: 'Review licensed applicants. You approve who works.' },
+      { title: 'Pay', body: 'Track the shift in the app. Pay through Guardr.' },
+    ],
     cta: 'Get started',
   },
   {
@@ -720,45 +1039,49 @@ const POSTS = [
     cta: 'Get started',
   },
   {
+    file: 'landscape/wide-platform.png',
+    kind: 'graphic',
+    layout: 'wide-platform',
+    ...WD,
+    eyebrow: 'Read this first',
+    line1: 'GUARDR IS',
+    line2: 'THE PLATFORM.',
+    ledeHtml:
+      'Guards and businesses use it to find each other and <em>contract directly per job</em>.',
+    leftTitle: 'Starting focused.',
+    leftBody: "We're growing guard supply first — then coverage demand.",
+    rightTitle: 'Then independent.',
+    rightBody: "Once verified and on the platform, both sides operate independently.",
+    cta: 'Get started',
+  },
+  {
     file: 'landscape/wide-marketplace.png',
     kind: 'graphic',
+    layout: 'wide-poster',
     ...WD,
-    extraCss: `
-      .left { padding: 48px 24px 32px 56px; }
-      .line1 { font-size: 48px; }
-      .line2 { font-size: 38px; }
-      .sub { font-size: 18px; margin-bottom: 18px; }
-      .cta { font-size: 14px; padding: 12px 22px; margin-bottom: 12px; }
-      .tag { font-size: 14px; }
-      .mark { right: 56px; width: 240px; height: 240px; }
-      .mark img { width: 108px; height: 108px; }
-      .eyebrow { margin-bottom: 12px; }
-    `,
-    eyebrow: 'Guardr',
+    eyebrow: 'California',
     line1: 'SECURITY',
     line2: 'MARKETPLACE',
-    sub: 'Clients post jobs. Licensed guards choose assignments. Maps, messaging, and payments — all in one place.',
+    ledeHtml: 'Clients post jobs. Licensed guards choose assignments. You contract directly.',
+    leftTitle: 'Businesses post.',
+    leftBody: 'Site, schedule, rate, and requirements — you post the coverage you need.',
+    rightTitle: 'Guards apply.',
+    rightBody: 'Licensed pros browse the map, apply to what fits, and get paid through Guardr.',
     cta: 'Book now',
   },
   {
     file: 'landscape/wide-guards.png',
     kind: 'graphic',
+    layout: 'wide-poster',
     ...WD,
-    extraCss: `
-      .left { padding: 48px 24px 32px 56px; }
-      .line1 { font-size: 44px; }
-      .line2 { font-size: 36px; }
-      .sub { font-size: 18px; margin-bottom: 18px; }
-      .cta { font-size: 14px; padding: 12px 22px; margin-bottom: 12px; }
-      .tag { font-size: 14px; }
-      .mark { right: 56px; width: 240px; height: 240px; }
-      .mark img { width: 108px; height: 108px; }
-      .eyebrow { margin-bottom: 12px; }
-    `,
     eyebrow: "I'm a guard",
     line1: 'OPEN SHIFTS',
     line2: 'ON THE MAP.',
-    sub: 'Licensed CA guards browse jobs, apply to what fits, and get paid through the platform. You choose the shift.',
+    ledeHtml: 'Licensed CA guards browse jobs, apply to what fits, and get paid through the platform.',
+    leftTitle: 'You choose.',
+    leftBody: 'No forced dispatch. Apply to the shifts that fit your schedule.',
+    rightTitle: 'Get verified.',
+    rightBody: 'Guard card, ID, COI, and training — then you go live on the map.',
     cta: 'Sign up free',
   },
 ];
@@ -845,8 +1168,10 @@ async function main() {
   await mkdir(path.join(OUT, 'instagram'), { recursive: true });
   await mkdir(path.join(OUT, 'stories'), { recursive: true });
   await mkdir(path.join(OUT, 'landscape'), { recursive: true });
-  for (let i = 0; i < POSTS.length; i += 1) {
-    const post = POSTS[i];
+  const bwOnly = process.argv.includes('--bw');
+  const list = bwOnly ? POSTS.filter((p) => p.kind === 'graphic') : POSTS;
+  for (let i = 0; i < list.length; i += 1) {
+    const post = list[i];
     await screenshot(htmlFor(post), path.join(OUT, post.file), post.w, post.h, i);
   }
   console.log('done — posts in', OUT);
