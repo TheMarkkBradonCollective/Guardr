@@ -410,6 +410,14 @@ body[data-surface='desktop'] .sfd-shell-canvas:has(> .sfp-staff-profile-preview)
   background: var(--sf-paper, #fff);
 }
 
+body[data-surface='desktop'] .sfd-shell-canvas:has(> .staff-detail-pane) > *,
+body[data-surface='desktop'] .sfd-shell-canvas:has(> .sfp-staff-profile-preview) > * {
+  flex: 1 1 auto;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0;
+}
+
 body[data-surface='desktop'] .sfd-shell-canvas > .staff-detail-pane,
 body[data-surface='desktop'] .sfd-shell-canvas > .sfp-staff-profile-preview {
   display: flex;
@@ -594,8 +602,12 @@ body[data-surface='desktop'] .staff-account-access > * + * {
   margin-top: 0 !important;
 }
 
+body[data-surface='desktop'] .staff-account-access .staff-detail-actions--list {
+  flex: 1 1 auto;
+}
+
 body[data-surface='desktop'] .staff-account-access .staff-detail-actions--primary {
-  margin-left: auto;
+  margin-left: auto !important;
   margin-top: 0;
 }
 

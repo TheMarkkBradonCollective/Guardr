@@ -22322,8 +22322,13 @@ body[data-surface="desktop"] .app-metric-cell-value {
   margin-bottom: 0 !important;
 }
 
-body[data-surface="desktop"] .staff-detail-pane {
-  max-width: none;
+body[data-surface='desktop'] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+body[data-surface='desktop'] .sfd-shell-canvas .app-screen,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-pane,
+body[data-surface='desktop'] .sfd-shell-canvas .sfp-staff-profile-preview {
+  max-width: none !important;
+  margin-inline: 0 !important;
+  width: 100% !important;
 }
 
 .staff-shell .staff-overview-focus-band,
