@@ -127,7 +127,6 @@ export function StaffGuardApplicationReviewPanel({
 
       <StaffAccountAccessSection
         title="Application review"
-        badge={<WfBadge tone={statusTone}>{statusLabel}</WfBadge>}
         leading={
           onOpenGuardProfile ? (
             <AppButton

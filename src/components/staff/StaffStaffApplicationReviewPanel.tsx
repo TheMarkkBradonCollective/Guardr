@@ -48,6 +48,8 @@ export function StaffStaffApplicationReviewPanel({
           : 'default';
   const statusLabel = getStaffRosterStatusLabel(member);
   const memberManagedCities = (member.managedCities ?? []).filter(Boolean);
+  const roleLabel = ROLE_LABELS[staffRoleToPlatformRole(staffRole)];
+  const roleBadge = roleLabel === staffRole ? staffRole : `${staffRole} — ${roleLabel}`;
 
   const handleApprove = async () => {
     if (!onApproveStaffAccount) return;
@@ -98,9 +100,7 @@ export function StaffStaffApplicationReviewPanel({
         ]}
         badges={
           <>
-            <WfBadge tone="primary">
-              {staffRole} — {ROLE_LABELS[staffRoleToPlatformRole(staffRole)]}
-            </WfBadge>
+            <WfBadge tone="primary">{roleBadge}</WfBadge>
             <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
           </>
         }
@@ -108,7 +108,6 @@ export function StaffStaffApplicationReviewPanel({
 
       <StaffAccountAccessSection
         title="Application review"
-        badge={<WfBadge tone={statusTone}>{statusLabel}</WfBadge>}
         leading={
           onOpenStaffProfile ? (
             <AppButton

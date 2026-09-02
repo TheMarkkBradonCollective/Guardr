@@ -162,11 +162,7 @@ export function StaffClientDetailPanel({
       />
 
       {canManage && (
-        <StaffAccountAccessSection
-          badge={
-            <WfBadge tone={statusTone}>{CLIENT_ACCOUNT_STATUS_LABELS[accountStatus]}</WfBadge>
-          }
-        >
+        <StaffAccountAccessSection>
             {isPending && (
               <AppButton variant="primary" size="sm" className="staff-action-btn--ok" onClick={() => void handleApproveClient()}>
                 Approve customer

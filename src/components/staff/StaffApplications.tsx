@@ -23,7 +23,7 @@ import { AppBlockedAccessScreen } from '../ui/app/AppBlockedAccess';
 import { clientDisplayName } from '../../lib/clientType';
 import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
 import { ListDetailLayout, useSplitListDetail } from '../ui/app/ListDetailLayout';
-import { WfBadge, WfSearchBar } from '../ui/wireframe';
+import { WfBadge, WfSearchBar, WfSectionHeader } from '../ui/wireframe';
 import { Building2, ChevronRight, Search, Shield, UserCheck } from 'lucide-react';
 import { StaffGuardApplicationReviewPanel } from './StaffGuardApplicationReviewPanel';
 import { StaffClientApplicationReviewPanel } from './StaffClientApplicationReviewPanel';
@@ -195,7 +195,6 @@ function ApplicationReviewMeta({ item }: { item?: ApprovalFeedItem }) {
   const fallbackReviewer = item.reviewedByEmail || item.reviewedByName;
 
   const rows: { label: string; value: string }[] = [];
-  rows.push({ label: 'Status', value: item.statusLabel });
   if (item.submittedAt) {
     rows.push({ label: 'Submitted', value: formatApprovalTimestamp(item.submittedAt) });
   }
@@ -221,9 +220,11 @@ function ApplicationReviewMeta({ item }: { item?: ApprovalFeedItem }) {
     rows.push({ label: 'Reviewed by', value: fallbackReviewer });
   }
 
+  if (rows.length === 0) return null;
+
   return (
     <section className="staff-detail-section space-y-3">
-      <h3 className="text-sm font-semibold">Status</h3>
+      <WfSectionHeader title="Review history" className="!px-0 !mb-0" />
       <div className="staff-detail-metrics staff-detail-metrics--2">
         {rows.map((row) => (
           <div key={row.label} className="staff-detail-metric">

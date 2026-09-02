@@ -2150,41 +2150,66 @@ body[data-surface='mobile'] .sfm-shell .uber-section-header {
   }
 }
 
-/* ── Profile / application / staff detail (phone: stacked, 2-col actions) ── */
+/* ── Profile / application / staff detail ─────────────────────────────────
+   One scrolling column. The identity block reads first, then a single primary
+   CTA at full width in the thumb zone, then the secondary actions two-up.
+   ────────────────────────────────────────────────────────────────────────── */
 
 body[data-surface='mobile'] .staff-detail-header {
-  padding: 4px 0 16px;
-  gap: 14px;
+  padding: 4px 0 20px;
+  gap: 16px;
   border-bottom: 1px solid var(--sf-line);
 }
 
 body[data-surface='mobile'] .staff-detail-header h2 {
+  font-family: var(--sf-font-display);
   font-size: var(--sf-type-heading);
+  font-weight: 700;
   letter-spacing: var(--sf-tracking-display);
+  line-height: 1.2;
+}
+
+body[data-surface='mobile'] .staff-detail-header-email {
+  font-size: var(--sf-type-label);
+  color: var(--sf-ink-secondary);
 }
 
 body[data-surface='mobile'] .staff-detail-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 16px;
-  margin-top: 14px;
+  gap: 16px;
+  margin-top: 16px;
 }
 
 body[data-surface='mobile'] .staff-detail-metrics--3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+body[data-surface='mobile'] .staff-detail-metrics .wf-metric-label {
+  font-size: var(--sf-type-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sf-ink-tertiary);
+}
+
 body[data-surface='mobile'] .staff-detail-pane .wf-metric-value,
 body[data-surface='mobile'] .staff-detail-metrics .wf-metric-value {
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-subheading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+body[data-surface='mobile'] .staff-detail-section {
+  padding: 20px 0 !important;
 }
 
 body[data-surface='mobile'] .staff-detail-actions {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 body[data-surface='mobile'] .staff-detail-actions--primary {
@@ -2195,5 +2220,6 @@ body[data-surface='mobile'] .staff-detail-actions > * {
   width: 100%;
   min-height: var(--sf-button-h, 52px);
   border-radius: var(--sf-radius-control, 12px);
-  font-weight: 700;
+  font-size: var(--sf-type-label);
+  font-weight: 600;
 }

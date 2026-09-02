@@ -24,7 +24,8 @@ export function StaffAccountAccessSection({
   children,
   className = '',
 }: StaffAccountAccessSectionProps) {
-  if (!leading && !children) return null;
+  const hasChildren = React.Children.toArray(children).some(Boolean);
+  if (!leading && !hasChildren) return null;
 
   return (
     <section className={`staff-detail-section staff-account-access space-y-3 ${className}`.trim()}>
@@ -35,13 +36,15 @@ export function StaffAccountAccessSection({
           {leading}
         </div>
       ) : null}
-      {(badge || children) && (
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <WfSectionHeader title={title} className="!px-0 !mb-0" />
-          {badge}
-        </div>
+      {hasChildren && (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <WfSectionHeader title={title} className="!px-0 !mb-0" />
+            {badge}
+          </div>
+          <div className="staff-detail-actions">{children}</div>
+        </>
       )}
-      {children ? <div className="staff-detail-actions">{children}</div> : null}
     </section>
   );
 }

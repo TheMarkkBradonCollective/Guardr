@@ -124,7 +124,6 @@ export function StaffClientApplicationReviewPanel({
 
       <StaffAccountAccessSection
         title="Application review"
-        badge={<WfBadge tone={statusTone}>{statusLabel}</WfBadge>}
         leading={
           onOpenClientProfile ? (
             <AppButton

@@ -1,4 +1,4 @@
-import type { SecurityGuard } from '../../types';
+import type { SecurityGuard } from '../types';
 
 /** Static staff member for the surface preview harness. */
 export const PREVIEW_STAFF_MEMBER: SecurityGuard = {

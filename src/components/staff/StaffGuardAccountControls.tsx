@@ -1,7 +1,7 @@
 import { showAppToast } from '../ui/AppToast';
 import React, { useState } from 'react';
 import type { SecurityGuard } from '../../types';
-import { GUARD_USER_STATUS_LABELS, getGuardUserStatus, type GuardUserStatus } from '../../lib/accountStatus';
+import { getGuardUserStatus } from '../../lib/accountStatus';
 import {
   guardCanBlockAccount,
   guardCanDeactivateAccount,
@@ -18,7 +18,7 @@ import {
   promptDenyGuardApplicationNote,
 } from '../../lib/staffDocumentReview';
 import { guardCanStaffActivateAccount } from '../../lib/guardAccountActivation';
-import { WfBadge, WfSectionHeader } from '../ui/wireframe';
+import { WfSectionHeader } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 
 interface StaffGuardAccountControlsProps {
@@ -31,13 +31,6 @@ interface StaffGuardAccountControlsProps {
   leadingActions?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
-}
-
-function statusBadgeTone(status: GuardUserStatus): 'success' | 'warning' | 'danger' | 'default' {
-  if (status === 'active') return 'success';
-  if (status === 'pending' || status === 'approved') return 'warning';
-  if (status === 'suspended' || status === 'blocked') return 'danger';
-  return 'default';
 }
 
 /** Suspend, block, restore, and deny pending guard applications. */
@@ -132,10 +125,7 @@ export function StaffGuardAccountControls({
         <div className="staff-detail-actions staff-detail-actions--primary">{leadingActions}</div>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <WfSectionHeader title="Account access" className="!px-0 !mb-0" />
-        <WfBadge tone={statusBadgeTone(status)}>{GUARD_USER_STATUS_LABELS[status]}</WfBadge>
-      </div>
+      <WfSectionHeader title="Account access" className="!px-0 !mb-0" />
 
       {!canSuspend && (
         <p className="text-xs text-brand-text-muted leading-relaxed">

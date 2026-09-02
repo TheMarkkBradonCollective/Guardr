@@ -433,21 +433,6 @@ export function StaffTeamDetailPanel({
         <>
       <StaffAccountAccessSection
         title={isPending ? 'Application review' : 'Account access'}
-        badge={
-          <WfBadge
-            tone={
-              isPending
-                ? 'warning'
-                : accountStatus === 'suspended' || accountStatus === 'blocked'
-                  ? 'danger'
-                  : accountStatus === 'active'
-                    ? 'success'
-                    : 'default'
-            }
-          >
-            {rosterStatusLabel}
-          </WfBadge>
-        }
         leading={
           canEditProfile && !isPending ? (
             editingProfile ? (

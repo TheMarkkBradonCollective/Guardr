@@ -397,46 +397,73 @@ body[data-surface='desktop'] .staff-overview-role-badge--director {
 
 /* ── Actions: no green / amber / red fills ───────────────────────────────── */
 
+/* Pointer-driven, information-dense: actions are a compact inline chip row
+   sized to their labels, not a touch grid. */
 body[data-surface='desktop'] .staff-detail-actions,
-body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-actions {
+body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-actions,
+body[data-surface='desktop'] .staff-detail-actions--primary,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-actions--primary {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-body[data-surface='desktop'] .staff-detail-actions--primary,
-body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-actions--primary {
-  display: flex;
-}
-
 body[data-surface='desktop'] .staff-detail-actions > * {
   width: auto;
-  min-width: 8.5rem;
-  flex: 0 1 auto;
+  min-width: 0;
+  flex: 0 0 auto;
 }
 
-body[data-surface='desktop'] .staff-detail-actions--primary > * {
-  width: auto;
-  min-width: 10rem;
+body[data-surface='desktop'] .staff-detail-actions > * button,
+body[data-surface='desktop'] .staff-detail-actions > button {
+  min-height: 36px;
+  border-radius: var(--sf-radius-control, 6px);
+  font-size: var(--sf-type-label, 12px);
+  font-weight: 600;
 }
 
 body[data-surface='desktop'] .staff-detail-header {
-  padding: 0 0 1rem;
-  gap: 14px;
+  padding: 0 0 16px;
+  gap: 16px;
+}
+
+body[data-surface='desktop'] .staff-detail-header h2 {
+  font-size: var(--sf-type-title, 21px);
+  letter-spacing: -0.02em;
 }
 
 body[data-surface='desktop'] .staff-detail-metrics {
-  gap: 10px 20px;
-  margin-top: 10px;
+  gap: 8px 32px;
+  margin-top: 12px;
+}
+
+/* Metric strip runs inline on one row — the desktop has the width for it. */
+body[data-surface='desktop'] .staff-detail-metrics,
+body[data-surface='desktop'] .staff-detail-metrics--2,
+body[data-surface='desktop'] .staff-detail-metrics--3 {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+body[data-surface='desktop'] .staff-detail-metric {
+  min-width: 7rem;
+}
+
+body[data-surface='desktop'] .staff-detail-metric--wide {
+  flex: 1 1 100%;
+}
+
+body[data-surface='desktop'] .staff-detail-metrics .wf-metric-label {
+  font-size: var(--sf-type-caption, 11px);
 }
 
 body[data-surface='desktop'] .staff-detail-metrics .wf-metric-value {
-  font-size: 1rem;
+  font-size: var(--sf-type-subheading, 15px);
   font-weight: 700;
 }
 
 body[data-surface='desktop'] .staff-account-access {
-  padding-top: 0.75rem;
+  padding: 16px 0;
 }
 
 body[data-surface='desktop'] .staff-detail-actions button.staff-action-btn--ok,
