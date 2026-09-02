@@ -1,6 +1,6 @@
 import React from 'react';
 import { Client } from '../../types';
-import { WfBadge } from '../ui/wireframe';
+import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { Globe, MapPin } from 'lucide-react';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 import { clientTypeLabel } from '../../lib/clientType';
@@ -9,7 +9,7 @@ function IntakeField({ label, value }: { label: string; value: string | number |
   if (!value && value !== 0) return null;
   return (
     <div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-0.5">{label}</p>
+      <p className="uber-label text-xs">{label}</p>
       <p className="text-sm text-brand-text leading-relaxed">{String(value)}</p>
     </div>
   );
@@ -41,8 +41,8 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
 
   if (!hasApplicationData) {
     return (
-      <section className="staff-detail-section space-y-2 !px-0">
-        <p className="text-sm font-semibold text-brand-text">Application details</p>
+      <section className="staff-detail-section space-y-2">
+        <WfSectionHeader title="Application details" className="!px-0 !mb-0" />
         <p className="text-xs text-brand-text-muted">
           {clientTypeLabel(client.clientType)} — billed to the{' '}
           {client.clientType === 'personal' ? 'individual' : 'organization'}
@@ -57,9 +57,9 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
   }
 
   return (
-    <section className="staff-detail-section space-y-4 !px-0">
+    <section className="staff-detail-section space-y-4">
       <div>
-        <p className="text-sm font-semibold text-brand-text">Application details</p>
+        <WfSectionHeader title="Application details" className="!px-0 !mb-0" />
         <p className="text-xs text-brand-text-muted mt-0.5">
           {clientTypeLabel(client.clientType)} — billed to the{' '}
           {client.clientType === 'personal' ? 'individual' : 'organization'}
@@ -68,14 +68,14 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
 
       {(client.businessType || client.businessLicense || client.website || client.industries?.length) && (
         <div className="space-y-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Business</p>
+          <p className="staff-detail-subhead">Business</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             <IntakeField label="Business type" value={client.businessType} />
             <IntakeField label="License / EIN" value={client.businessLicense} />
           </div>
           {client.industries?.length ? (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Industries</p>
+              <p className="uber-label text-xs mb-1">Industries</p>
               <div className="flex flex-wrap gap-1.5">
                 {client.industries.map((i) => (
                   <WfBadge key={i}>{i}</WfBadge>
@@ -105,10 +105,10 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
         client.estimatedStartDate ||
         client.budgetRange) && (
         <div className="space-y-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Security needs</p>
+          <p className="staff-detail-subhead">Security needs</p>
           {client.serviceDescription && (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Description</p>
+              <p className="uber-label text-xs mb-1">Description</p>
               <p className="text-sm text-brand-text leading-relaxed whitespace-pre-wrap">{client.serviceDescription}</p>
             </div>
           )}
@@ -131,7 +131,7 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
           </div>
           {client.serviceTypes?.length ? (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Service types</p>
+              <p className="uber-label text-xs mb-1">Service types</p>
               <div className="flex flex-wrap gap-1.5">
                 {client.serviceTypes.map((s) => (
                   <WfBadge key={s}>{s}</WfBadge>
@@ -141,7 +141,7 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
           ) : null}
           {client.serviceFrequencies?.length ? (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Frequency</p>
+              <p className="uber-label text-xs mb-1">Frequency</p>
               <div className="flex flex-wrap gap-1.5">
                 {client.serviceFrequencies.map((f) => (
                   <WfBadge key={f}>{f}</WfBadge>
@@ -154,7 +154,7 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
 
       {(client.serviceCity || client.propertyTypes?.length) && (
         <div className="space-y-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Location & site</p>
+          <p className="staff-detail-subhead">Location & site</p>
           {client.serviceCity && (
             <div className="inline-flex items-center gap-1.5 text-sm">
               <MapPin className="w-3.5 h-3.5 text-brand-primary" />
@@ -166,7 +166,7 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
           )}
           {client.propertyTypes?.length ? (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">Property types</p>
+              <p className="uber-label text-xs mb-1">Property types</p>
               <div className="flex flex-wrap gap-1.5">
                 {client.propertyTypes.map((p) => (
                   <WfBadge key={p}>{p}</WfBadge>
@@ -183,7 +183,7 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
         client.priorSecurityProvider ||
         client.specialRequirements) && (
         <div className="space-y-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Background</p>
+          <p className="staff-detail-subhead">Background</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             <IntakeField label="Referred by" value={client.referredBy} />
             <IntakeField label="How they heard" value={client.howHeardAboutUs} />
@@ -201,7 +201,7 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
           </div>
           {client.specialRequirements && (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">
+              <p className="uber-label text-xs mb-1">
                 Special requirements
               </p>
               <p className="text-sm text-brand-text leading-relaxed whitespace-pre-wrap">

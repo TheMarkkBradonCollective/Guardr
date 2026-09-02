@@ -2223,3 +2223,7 @@ body[data-surface='mobile'] .staff-detail-actions > * {
   font-size: var(--sf-type-label);
   font-weight: 600;
 }
+
+body[data-surface='mobile'] .staff-detail-actions > *:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}

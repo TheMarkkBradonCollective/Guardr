@@ -1537,3 +1537,10 @@ html body.sf-tablet .staff-detail-actions > *,
   font-size: var(--sf-type-label, 13px);
   font-weight: 600;
 }
+
+/* Three-up row already fills; a trailing pair item stretches instead of
+   leaving a third of the row empty. */
+html body.sf-tablet .staff-detail-actions > *:last-child:nth-child(2),
+.sfp-stage[data-surface='tablet'] .staff-detail-actions > *:last-child:nth-child(2) {
+  grid-column: 2 / -1;
+}

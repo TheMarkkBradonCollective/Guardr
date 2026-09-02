@@ -5285,6 +5285,15 @@ html.theme-light .staff-ops-btn-primary:hover {
   border-bottom: 1px solid var(--brand-border);
 }
 
+/* Sub-group label inside a detail section (Business, Security needs, …). */
+.staff-detail-subhead {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
+}
+
 .staff-detail-section {
   padding: 1.25rem;
   border-bottom: 1px solid var(--brand-border);
@@ -5391,6 +5400,11 @@ html.theme-light .staff-ops-btn-primary:hover {
 .staff-detail-actions > .app-button-danger {
   width: 100%;
   min-width: 0;
+}
+
+/* An odd trailing action would otherwise sit half-width and alone on its row. */
+.staff-detail-actions > *:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 .staff-guard-detail-top-bar--sticky {
