@@ -1538,9 +1538,14 @@ html body.sf-tablet .staff-detail-actions > *,
   font-weight: 600;
 }
 
-/* Three-up row already fills; a trailing pair item stretches instead of
-   leaving a third of the row empty. */
+/* Two actions split the row; exactly three fill the three columns instead of
+   leaving the last one empty and pushing a full-width orphan underneath. */
 html body.sf-tablet .staff-detail-actions > *:last-child:nth-child(2),
 .sfp-stage[data-surface='tablet'] .staff-detail-actions > *:last-child:nth-child(2) {
   grid-column: 2 / -1;
+}
+
+html body.sf-tablet .staff-detail-actions > *:last-child:nth-child(3),
+.sfp-stage[data-surface='tablet'] .staff-detail-actions > *:last-child:nth-child(3) {
+  grid-column: auto;
 }
