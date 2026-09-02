@@ -48,7 +48,7 @@ describe('desktop CSS independence', () => {
     const commandCss = readFileSync(join(here, 'desktop-command.css'), 'utf8');
     assert.match(commandCss, /body\[data-surface=['"]desktop['"]\] \.staff-detail-actions/);
     assert.match(commandCss, /sfd-shell-canvas:has\(> \.staff-detail-pane\)/);
-    assert.ok(commandCss.includes('grid-template-columns: minmax(0, 1fr) minmax(280px, 340px)'));
+    assert.ok(commandCss.includes('grid-template-columns: repeat(2, minmax(0, 1fr))'));
     assert.ok(commandCss.includes('width: 100%'));
     assert.match(commandCss, /\.staff-detail-pane:has\(> \.staff-detail-header\)/);
     assert.equal(

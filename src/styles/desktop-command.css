@@ -414,8 +414,8 @@ body[data-surface='desktop'] .sfd-shell-canvas > .staff-detail-pane,
 body[data-surface='desktop'] .sfd-shell-canvas > .sfp-staff-profile-preview {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: none;
+  width: 100% !important;
+  max-width: none !important;
   height: 100%;
   min-height: 0;
   margin: 0;
@@ -461,34 +461,38 @@ body[data-surface='desktop'] .staff-detail-pane .staff-detail-pane {
   box-shadow: none;
 }
 
-/* Record that owns a header becomes a two-column workbench. */
+/* Record that owns a header becomes a full-width command workbench. */
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 32px;
   row-gap: 0;
   align-items: start;
-  width: 100%;
-  max-width: none;
+  width: 100% !important;
+  max-width: none !important;
 }
 
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .app-subscreen-header,
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-guard-detail-tabs,
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-header,
-body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-guard-detail-top-bar--sticky {
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-guard-detail-top-bar--sticky,
+body[data-surface='desktop'] .staff-detail-header {
   grid-column: 1 / -1;
 }
 
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access {
-  grid-column: 2;
-  grid-row: 2 / span 40;
-  position: sticky;
-  top: 16px;
-  align-self: start;
+  grid-column: 1 / -1;
+  grid-row: auto;
+  position: static;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
 }
 
 body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-section:not(.staff-account-access) {
-  grid-column: 1;
+  grid-column: auto;
 }
 
 body[data-surface='desktop'] .staff-detail-header {
@@ -577,10 +581,20 @@ body[data-surface='desktop'] .staff-detail-edit > * {
 }
 
 body[data-surface='desktop'] .staff-account-access {
-  padding: 20px !important;
+  padding: 12px 16px !important;
+  margin: 16px 0 8px !important;
   border: 1px solid var(--sf-line) !important;
   border-radius: 8px !important;
   background: var(--sf-paper-sunken, #f6f6f6) !important;
+}
+
+body[data-surface='desktop'] .staff-account-access > * + * {
+  margin-top: 0 !important;
+}
+
+body[data-surface='desktop'] .staff-account-access .staff-detail-actions--primary {
+  margin-left: auto;
+  margin-top: 0;
 }
 
 body[data-surface='desktop'] .staff-detail-section:not(.staff-account-access) {
