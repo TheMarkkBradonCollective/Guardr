@@ -1667,3 +1667,87 @@ body.sf-tablet .staff-detail-sheet,
   background: var(--sf-paper) !important;
   box-shadow: none !important;
 }
+
+/* Inspector body: white cards on the sunken canvas, two-up under the header. */
+body.sf-tablet .sfp-staff-profile-preview,
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header),
+.sfp-stage[data-surface='tablet'] .sfp-staff-profile-preview {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header),
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 0;
+  align-items: start;
+  align-content: start;
+}
+
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .app-subscreen-header,
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-guard-detail-tabs,
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-header,
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access,
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-header,
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .staff-detail-header,
+.sfp-stage[data-surface='tablet'] .staff-detail-header {
+  margin-bottom: 16px;
+  padding: 16px 18px 18px;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-card, 14px);
+  background: var(--sf-paper, #fff);
+}
+
+html body.sf-tablet .staff-account-access,
+html body.sf-tablet .uber-app-shell .staff-account-access,
+.sfp-stage[data-surface='tablet'] .staff-account-access {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--sf-paper, #fff) !important;
+}
+
+html body.sf-tablet .staff-account-access-head,
+.sfp-stage[data-surface='tablet'] .staff-account-access-head {
+  grid-column: 1 / -1;
+}
+
+html body.sf-tablet .staff-account-access .staff-detail-actions--list,
+html body.sf-tablet .staff-account-access .staff-detail-actions--primary,
+.sfp-stage[data-surface='tablet'] .staff-account-access .staff-detail-actions--list,
+.sfp-stage[data-surface='tablet'] .staff-account-access .staff-detail-actions--primary {
+  display: contents !important;
+}
+
+html body.sf-tablet .staff-account-access .staff-detail-actions--list > *:last-child:nth-child(odd),
+.sfp-stage[data-surface='tablet'] .staff-account-access .staff-detail-actions--list > *:last-child:nth-child(odd) {
+  grid-column: auto;
+}
+
+html body.sf-tablet .staff-account-access:not(:has(.staff-detail-actions--list > :only-child)) .staff-detail-actions--primary > *,
+.sfp-stage[data-surface='tablet'] .staff-account-access:not(:has(.staff-detail-actions--list > :only-child)) .staff-detail-actions--primary > * {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-section:not(.staff-account-access),
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-section:not(.staff-account-access) {
+  grid-column: auto;
+  min-width: 0;
+  margin: 16px 0 0;
+  padding: 18px 18px !important;
+  border: 1px solid var(--sf-line) !important;
+  border-bottom: 1px solid var(--sf-line) !important;
+  border-radius: var(--sf-radius-card, 14px);
+  background: var(--sf-paper, #fff);
+}
+
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access + .staff-detail-section:last-child,
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access + .staff-detail-section:last-child {
+  grid-column: 1 / -1;
+}

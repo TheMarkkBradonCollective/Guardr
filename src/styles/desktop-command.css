@@ -642,8 +642,9 @@ body[data-surface='desktop'] .staff-detail-section .grid.gap-4 {
   gap: 16px 28px;
 }
 
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access + .staff-detail-section:last-child .grid.gap-4,
 body[data-surface='desktop'] .staff-account-access + .staff-detail-section:last-child .grid.gap-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
 }
 
 /* Compact chip row — pointer density, not a phone stack of full-width rows. */

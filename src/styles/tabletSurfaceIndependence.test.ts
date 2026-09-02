@@ -59,7 +59,11 @@ describe('tablet CSS independence', () => {
       css,
       /html body\.sf-tablet \.staff-detail-actions[\s\S]{0,400}grid-template-columns: repeat\(2/,
     );
-    assert.match(css, /body\.sf-tablet \.staff-account-access[\s\S]{0,400}sf-paper-sunken/);
+    assert.match(
+      css,
+      /staff-detail-pane:has\(> \.staff-detail-header\)[\s\S]{0,240}grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/,
+    );
+    assert.match(css, /body\.sf-tablet \.staff-account-access[\s\S]{0,400}sf-paper/);
     assert.match(css, /body\.sf-tablet \.staff-detail-metric[\s\S]{0,280}border-radius: 12px/);
     assert.equal(
       /html body\.sf-tablet \.staff-detail-actions[\s\S]{0,180}grid-template-columns: repeat\(3/.test(css),
