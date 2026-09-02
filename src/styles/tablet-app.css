@@ -1494,25 +1494,31 @@ body.sf-tablet .staff-detail-metrics--3 {
   margin-top: 12px;
 }
 
-body.sf-tablet .staff-account-access {
-  background: var(--sf-paper-sunken, #f4f4f4);
-  border: 1px solid var(--sf-line, #e2e2e2);
-  border-radius: var(--sf-radius-card, 14px);
+html body.sf-tablet .staff-account-access,
+html body.sf-tablet .uber-app-shell .staff-account-access,
+.sfp-stage[data-surface='tablet'] .staff-account-access {
+  background: #ececec !important;
+  border: 1px solid var(--sf-line, #e2e2e2) !important;
+  border-radius: var(--sf-radius-card, 14px) !important;
   padding: 14px 16px !important;
   margin: 12px 0;
+  border-bottom: none !important;
 }
 
-body.sf-tablet .staff-detail-actions {
+html body.sf-tablet .staff-detail-actions,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions {
   display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
-body.sf-tablet .staff-detail-actions--primary {
+html body.sf-tablet .staff-detail-actions--primary,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--primary {
   grid-template-columns: 1fr !important;
 }
 
-body.sf-tablet .staff-detail-actions > * {
+html body.sf-tablet .staff-detail-actions > *,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions > * {
   width: 100%;
   min-height: var(--sf-button-h, 46px);
   border-radius: var(--sf-radius-control, 10px);

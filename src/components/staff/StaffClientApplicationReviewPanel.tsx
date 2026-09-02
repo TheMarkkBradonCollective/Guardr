@@ -109,6 +109,7 @@ export function StaffClientApplicationReviewPanel({
                   value: client.serviceState
                     ? `${client.serviceCity}, ${client.serviceState}`
                     : client.serviceCity,
+                  wide: true,
                 },
               ]
             : []),

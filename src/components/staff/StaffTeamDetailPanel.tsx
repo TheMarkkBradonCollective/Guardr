@@ -409,7 +409,7 @@ export function StaffTeamDetailPanel({
           { label: 'Staff ID', value: member.badgeNumber || '—' },
           { label: 'Account', value: rosterStatusLabel },
           ...(memberManagedCities.length > 0
-            ? [{ label: 'Service areas', value: memberManagedCities.join(', ') }]
+            ? [{ label: 'Service areas', value: memberManagedCities.join(', '), wide: true }]
             : []),
         ]}
         badges={

@@ -5266,8 +5266,11 @@ html.theme-light .staff-ops-btn-primary:hover {
 }
 
 .staff-detail-metric .wf-metric-value {
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.staff-detail-metric--wide {
+  grid-column: 1 / -1;
 }
 
 .staff-detail-section {

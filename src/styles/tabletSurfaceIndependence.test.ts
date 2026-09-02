@@ -54,5 +54,6 @@ describe('tablet CSS independence', () => {
     assert.ok(css.includes('.staff-detail-metrics'));
     assert.match(css, /body\.sf-tablet \.staff-account-access/);
     assert.match(css, /body\.sf-tablet \.staff-detail-actions/);
+    assert.ok(css.includes('grid-template-columns: repeat(3, minmax(0, 1fr))'));
   });
 });

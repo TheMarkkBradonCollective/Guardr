@@ -5,6 +5,8 @@ export interface StaffDetailMetric {
   label: string;
   value: React.ReactNode;
   accent?: boolean;
+  /** Span the full metric row (e.g. service areas). */
+  wide?: boolean;
 }
 
 interface StaffDetailProfileHeaderProps {
@@ -29,9 +31,9 @@ export function StaffDetailProfileHeader({
   badges,
   className = '',
 }: StaffDetailProfileHeaderProps) {
-  const metricCount = metrics?.length ?? 0;
+  const regularCount = metrics?.filter((metric) => !metric.wide).length ?? 0;
   const metricMod =
-    metricCount >= 3 ? 'staff-detail-metrics--3' : metricCount === 2 ? 'staff-detail-metrics--2' : '';
+    regularCount >= 3 ? 'staff-detail-metrics--3' : regularCount === 2 ? 'staff-detail-metrics--2' : '';
 
   return (
     <div className={`staff-detail-header ${className}`.trim()}>
@@ -53,7 +55,10 @@ export function StaffDetailProfileHeader({
         {metrics && metrics.length > 0 ? (
           <div className={`staff-detail-metrics ${metricMod}`.trim()}>
             {metrics.map((metric) => (
-              <div key={metric.label} className="staff-detail-metric">
+              <div
+                key={metric.label}
+                className={`staff-detail-metric${metric.wide ? ' staff-detail-metric--wide' : ''}`}
+              >
                 <p className="wf-metric-label">{metric.label}</p>
                 <p className={`wf-metric-value${metric.accent ? ' text-brand-primary' : ''}`}>
                   {metric.value}

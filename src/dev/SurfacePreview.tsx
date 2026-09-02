@@ -12,15 +12,26 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Bell, Monitor, Smartphone, Tablet } from 'lucide-react';
-import { SurfaceProvider, useSurface } from '../surfaces/SurfaceProvider';
+import { Bell, Monitor, Smartphone, Tablet, UserCheck } from 'lucide-react';
+import { useSurface } from '../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../surfaces/SurfaceAppShell';
 import { SURFACE_KINDS, surfaceLabel, type SurfaceKind } from '../surfaces/surfaceKind';
 import { GUARD_DESTINATIONS, STAFF_DESTINATIONS } from './surfacePreviewData';
+import type { SurfaceDestination } from '../surfaces/surfaceNavigation';
 import { MobileShiftsScreen } from './surfaces/MobileShiftsScreen';
 import { TabletShiftsScreen } from './surfaces/TabletShiftsScreen';
 import { DesktopOperationsScreen } from './surfaces/DesktopOperationsScreen';
+import { StaffProfilePreviewScreen } from './surfaces/StaffProfilePreviewScreen';
 import './surfacePreview.css';
+
+const PROFILE_DEST: SurfaceDestination = {
+  id: 'profiles',
+  label: 'Profiles',
+  icon: UserCheck,
+  section: 'Operations',
+  mobileRank: 0,
+  tabletQuick: true,
+};
 
 const SURFACE_ICON: Record<SurfaceKind, typeof Monitor> = {
   mobile: Smartphone,
@@ -29,14 +40,18 @@ const SURFACE_ICON: Record<SurfaceKind, typeof Monitor> = {
 };
 
 export default function SurfacePreview() {
-  const [surface, setSurface] = useState<SurfaceKind>('mobile');
+  const { setSurface } = useSurface();
+  const [surface, setLocalSurface] = useState<SurfaceKind>('mobile');
+
+  useEffect(() => {
+    setSurface(surface);
+    return () => setSurface(null);
+  }, [surface, setSurface]);
 
   return (
     <>
       <div className="sfp-stage" data-surface={surface}>
-        <SurfaceProvider forceSurface={surface}>
-          <PreviewApp />
-        </SurfaceProvider>
+        <PreviewApp />
       </div>
       <div className="sfp-switcher" role="group" aria-label="Preview surface">
         {SURFACE_KINDS.map((kind) => {
@@ -46,7 +61,7 @@ export default function SurfacePreview() {
               key={kind}
               type="button"
               data-active={kind === surface ? 'true' : undefined}
-              onClick={() => setSurface(kind)}
+              onClick={() => setLocalSurface(kind)}
             >
               <Icon size={14} strokeWidth={2.25} aria-hidden />
               <span>{surfaceLabel(kind)}</span>
@@ -61,21 +76,27 @@ export default function SurfacePreview() {
 function PreviewApp() {
   const { surface } = useSurface();
   const staff = surface === 'desktop';
-  const [activeId, setActiveId] = useState(staff ? 'jobs' : 'myJobs');
+  const wantsProfiles =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('page') === 'profiles';
+  const [activeId, setActiveId] = useState(
+    wantsProfiles ? 'profiles' : staff ? 'jobs' : 'myJobs'
+  );
+  const destinations = [PROFILE_DEST, ...(staff ? STAFF_DESTINATIONS : GUARD_DESTINATIONS)];
 
-  // Guards live on mobile, staff live on the desktop operations centre, so the
-  // harness swaps the destination set with the surface rather than pretending one
-  // role uses all three identically.
   useEffect(() => {
-    setActiveId(surface === 'desktop' ? 'jobs' : 'myJobs');
+    const showProfiles =
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('page') === 'profiles';
+    setActiveId(showProfiles ? 'profiles' : surface === 'desktop' ? 'jobs' : 'myJobs');
   }, [surface]);
 
   return (
     <SurfaceAppShell
-      title={staff ? 'Jobs' : 'Shifts'}
+      title={activeId === 'profiles' ? 'Staff' : staff ? 'Jobs' : 'Shifts'}
       breadcrumb={staff ? 'Operations' : undefined}
       workspaceLabel={staff ? 'Staff operations' : 'Guard workspace'}
-      destinations={staff ? STAFF_DESTINATIONS : GUARD_DESTINATIONS}
+      destinations={destinations}
       activeId={activeId}
       onNavigate={setActiveId}
       notifications={
@@ -94,7 +115,9 @@ function PreviewApp() {
       navFooter={<p className="sfp-nav-footer">Guardr preview build</p>}
       hideChrome={surface === 'mobile'}
     >
-      {surface === 'mobile' ? (
+      {activeId === 'profiles' ? (
+        <StaffProfilePreviewScreen />
+      ) : surface === 'mobile' ? (
         <MobileShiftsScreen />
       ) : surface === 'tablet' ? (
         <TabletShiftsScreen />
