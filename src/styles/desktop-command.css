@@ -397,75 +397,61 @@ body[data-surface='desktop'] .staff-overview-role-badge--director {
 
 /* ── Actions: no green / amber / red fills ───────────────────────────────── */
 
-/* ── Profile card: Uber ride-request panel over the canvas ──────────────── */
+/* ── Profile workbench: full-width command layout ─────────────────────────
+   Desktop is a workspace, not a phone column. Identity runs as a header band
+   across the canvas; records and account actions sit in two columns. */
 
-/* Map-like canvas behind a lone profile (preview and pushed detail). */
 body[data-surface='desktop'] .sfd-shell-canvas:has(> .staff-detail-pane),
 body[data-surface='desktop'] .sfd-shell-canvas:has(> .sfp-staff-profile-preview) {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
-  justify-content: flex-start;
-  padding: 16px 20px;
-  background-color: var(--sf-paper-sunken, #f6f6f6);
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.65) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.65) 1px, transparent 1px);
-  background-size: 56px 56px;
-}
-
-html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas:has(> .staff-detail-pane),
-html[data-theme='dark'] body[data-surface='desktop'] .sfd-shell-canvas:has(> .staff-detail-pane),
-html.theme-dark body[data-surface='desktop'] .sfd-shell-canvas:has(> .sfp-staff-profile-preview),
-html[data-theme='dark'] body[data-surface='desktop'] .sfd-shell-canvas:has(> .sfp-staff-profile-preview) {
-  background-color: #111111;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  padding: 0;
+  background: var(--sf-paper, #fff);
 }
 
 body[data-surface='desktop'] .sfd-shell-canvas > .staff-detail-pane,
 body[data-surface='desktop'] .sfd-shell-canvas > .sfp-staff-profile-preview {
-  width: min(420px, 100%);
-  max-width: 420px;
-  height: auto;
-  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
   margin: 0;
-  padding: 16px 20px 20px;
+  padding: 20px 32px 32px;
   overflow: auto;
   background: var(--sf-paper, #fff) !important;
-  border: 1px solid var(--sf-line, #eee) !important;
-  border-radius: 12px !important;
-  box-shadow: var(--shadow-float, 0 8px 32px rgba(0, 0, 0, 0.12)) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 body[data-surface='desktop'] .sfd-panel--secondary {
-  background-color: var(--sf-paper-sunken, #f6f6f6);
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.65) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.65) 1px, transparent 1px);
-  background-size: 56px 56px;
-  padding: 16px;
+  background: var(--sf-paper, #fff);
+  padding: 0;
 }
 
 body[data-surface='desktop'] .sfd-panel--secondary > .staff-detail-pane {
   width: 100%;
-  max-width: 440px;
+  max-width: none;
   height: 100%;
   margin: 0;
-  padding: 16px 20px 20px;
+  padding: 20px 24px 28px;
   overflow: auto;
   background: var(--sf-paper, #fff) !important;
-  border: 1px solid var(--sf-line, #eee) !important;
-  border-radius: 12px !important;
-  box-shadow: var(--shadow-float, 0 8px 32px rgba(0, 0, 0, 0.12)) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
-body[data-surface='desktop'] .staff-detail-pane .staff-detail-pane,
-body[data-surface='desktop'] .sfp-staff-profile-preview .staff-detail-pane {
-  width: auto;
+body[data-surface='desktop'] .sfp-staff-profile-preview > .staff-detail-pane,
+body[data-surface='desktop'] .staff-detail-pane .staff-detail-pane {
+  width: 100%;
   max-width: none;
   height: auto;
-  max-height: none;
+  min-height: 0;
+  flex: 1 1 auto;
   margin: 0;
   padding: 0;
   overflow: visible;
@@ -475,11 +461,44 @@ body[data-surface='desktop'] .sfp-staff-profile-preview .staff-detail-pane {
   box-shadow: none;
 }
 
+/* Record that owns a header becomes a two-column workbench. */
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  column-gap: 32px;
+  row-gap: 0;
+  align-items: start;
+  width: 100%;
+  max-width: none;
+}
+
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .app-subscreen-header,
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-guard-detail-tabs,
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-header,
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-guard-detail-top-bar--sticky {
+  grid-column: 1 / -1;
+}
+
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access {
+  grid-column: 2;
+  grid-row: 2 / span 40;
+  position: sticky;
+  top: 16px;
+  align-self: start;
+}
+
+body[data-surface='desktop'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-section:not(.staff-account-access) {
+  grid-column: 1;
+}
+
 body[data-surface='desktop'] .staff-detail-header {
   display: flex;
-  flex-direction: column;
-  padding: 0 0 16px;
-  gap: 12px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  width: 100%;
+  padding: 8px 0 20px;
+  gap: 16px 32px;
   border-bottom: 1px solid var(--sf-line);
 }
 
@@ -487,7 +506,9 @@ body[data-surface='desktop'] .staff-detail-identity {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 12px;
+  flex: 1 1 280px;
+  min-width: 240px;
+  gap: 14px;
 }
 
 body[data-surface='desktop'] .staff-detail-name,
@@ -502,13 +523,15 @@ body[data-surface='desktop'] .staff-detail-metrics,
 body[data-surface='desktop'] .staff-detail-metrics--2,
 body[data-surface='desktop'] .staff-detail-metrics--3 {
   display: flex;
+  flex: 1 1 220px;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 8px 28px;
   margin-top: 0;
+  align-self: center;
 }
 
 body[data-surface='desktop'] .staff-detail-metric {
-  min-width: 0;
+  min-width: 7rem;
 }
 
 body[data-surface='desktop'] .staff-detail-metric--wide {
@@ -521,12 +544,24 @@ body[data-surface='desktop'] .staff-detail-metrics .wf-metric-label {
 
 body[data-surface='desktop'] .staff-detail-metrics .wf-metric-value,
 body[data-surface='desktop'] .staff-detail-metric-chip {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: var(--uber-accent-50, #f6f6f6);
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   font-size: var(--sf-type-subheading, 15px);
   font-weight: 700;
+}
+
+body[data-surface='desktop'] .staff-detail-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0;
+}
+
+body[data-surface='desktop'] .staff-detail-edit {
+  margin-left: auto;
 }
 
 body[data-surface='desktop'] .staff-detail-edit button,
@@ -542,10 +577,21 @@ body[data-surface='desktop'] .staff-detail-edit > * {
 }
 
 body[data-surface='desktop'] .staff-account-access {
-  padding: 16px 0 0;
+  padding: 20px !important;
+  border: 1px solid var(--sf-line) !important;
+  border-radius: 8px !important;
+  background: var(--sf-paper-sunken, #f6f6f6) !important;
 }
 
-/* Ride-option list inside the floating card, not a wrapping chip row. */
+body[data-surface='desktop'] .staff-detail-section:not(.staff-account-access) {
+  padding: 20px 0 !important;
+}
+
+body[data-surface='desktop'] .staff-detail-section .grid.gap-4 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Compact chip row — pointer density, not a phone stack of full-width rows. */
 body[data-surface='desktop'] .staff-detail-actions,
 body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-actions,
 body[data-surface='desktop'] .staff-detail-actions--list,
@@ -554,36 +600,32 @@ body[data-surface='desktop'] .staff-detail-actions--primary,
 body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-actions--primary,
 body[data-surface='desktop'] .uber-app-shell .staff-detail-actions {
   display: flex !important;
-  flex-direction: column;
-  flex-wrap: nowrap;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
   grid-template-columns: none !important;
 }
 
 body[data-surface='desktop'] .staff-detail-actions > * {
-  width: 100%;
+  width: auto;
   min-width: 0;
   flex: 0 0 auto;
 }
 
 body[data-surface='desktop'] .staff-detail-actions--list > * button,
-body[data-surface='desktop'] .staff-detail-actions--list > button {
-  width: 100%;
-  min-height: 48px;
-  justify-content: flex-start;
-  border-radius: var(--sf-radius-control, 8px);
-  font-size: var(--sf-type-label, 13px);
-  font-weight: 600;
-}
-
+body[data-surface='desktop'] .staff-detail-actions--list > button,
 body[data-surface='desktop'] .staff-detail-actions--primary > * button,
 body[data-surface='desktop'] .staff-detail-actions--primary > button,
 body[data-surface='desktop'] .staff-detail-actions--primary > * {
-  width: 100%;
-  min-height: 48px;
-  border-radius: var(--sf-radius-control, 8px);
-  font-size: var(--sf-type-label, 13px);
-  font-weight: 700;
+  width: auto;
+  min-height: 36px;
+  border-radius: var(--sf-radius-control, 6px);
+  font-size: var(--sf-type-label, 12px);
+  font-weight: 600;
+}
+
+body[data-surface='desktop'] .staff-detail-actions--primary {
+  margin-top: 4px;
 }
 
 /* The affirmative action keeps the black primary fill here too — only density

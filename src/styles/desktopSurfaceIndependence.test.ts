@@ -44,12 +44,18 @@ describe('desktop CSS independence', () => {
     );
   });
 
-  it('docks staff/application profiles as a floating card over the canvas', () => {
+  it('lays out staff/application profiles as a full-width command workbench', () => {
     const commandCss = readFileSync(join(here, 'desktop-command.css'), 'utf8');
     assert.match(commandCss, /body\[data-surface=['"]desktop['"]\] \.staff-detail-actions/);
     assert.match(commandCss, /sfd-shell-canvas:has\(> \.staff-detail-pane\)/);
-    assert.ok(commandCss.includes('box-shadow: var(--shadow-float'));
-    assert.ok(commandCss.includes('flex-direction: column'));
+    assert.ok(commandCss.includes('grid-template-columns: minmax(0, 1fr) minmax(280px, 340px)'));
+    assert.ok(commandCss.includes('width: 100%'));
+    assert.match(commandCss, /\.staff-detail-pane:has\(> \.staff-detail-header\)/);
+    assert.equal(
+      /sfd-shell-canvas > \.staff-detail-pane[\s\S]{0,240}max-width: 420px/.test(commandCss),
+      false,
+      'desktop profile panes must not be a 420px phone card',
+    );
     assert.ok(commandCss.includes('background-color: transparent !important'));
   });
 });
