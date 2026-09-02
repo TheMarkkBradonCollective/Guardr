@@ -93,9 +93,8 @@ export function StaffStaffApplicationReviewPanel({
         emailPrefix="Work · "
         metrics={[
           { label: 'Staff ID', value: member.badgeNumber || '—' },
-          { label: 'Account', value: statusLabel },
           ...(memberManagedCities.length > 0
-            ? [{ label: 'Service areas', value: memberManagedCities.join(', '), wide: true }]
+            ? [{ label: 'Service areas', value: memberManagedCities.join(', ') }]
             : []),
         ]}
         badges={

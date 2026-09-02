@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { SecurityGuard } from '../../types';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { WfBadge } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
-import { getGuardUserStatus, GUARD_USER_STATUS_LABELS } from '../../lib/accountStatus';
+import { getGuardUserStatus } from '../../lib/accountStatus';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { StaffGuardApplicationSummary } from './StaffGuardApplicationSummary';
 import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
@@ -50,15 +49,6 @@ export function StaffGuardApplicationReviewPanel({
   const isPending = guardAccountStatus === 'pending';
   const isApprovedOrActive =
     guardAccountStatus === 'approved' || guardAccountStatus === 'active';
-  const statusLabel = GUARD_USER_STATUS_LABELS[guardAccountStatus];
-  const statusTone =
-    isPending
-      ? 'warning'
-      : guardAccountStatus === 'suspended' || guardAccountStatus === 'blocked'
-        ? 'danger'
-        : guardAccountStatus === 'active' || guardAccountStatus === 'approved'
-          ? 'success'
-          : 'default';
 
   const handleApproveProfile = async () => {
     if (!onApproveGuardAccount || !guardCanStaffApproveProfile(guard)) return;
@@ -114,8 +104,7 @@ export function StaffGuardApplicationReviewPanel({
         email={guard.email}
         metrics={[
           { label: GUARD_ICN_SHORT_LABEL, value: guard.badgeNumber || '—' },
-          { label: 'Account', value: statusLabel },
-          { label: 'Rating', value: `★ ${guard.rating}`, accent: true },
+          { label: 'Rating', value: `★ ${guard.rating}` },
         ]}
         badges={
           <>

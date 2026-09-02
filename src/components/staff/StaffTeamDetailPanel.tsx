@@ -407,9 +407,8 @@ export function StaffTeamDetailPanel({
         }
         metrics={[
           { label: 'Staff ID', value: member.badgeNumber || '—' },
-          { label: 'Account', value: rosterStatusLabel },
           ...(memberManagedCities.length > 0
-            ? [{ label: 'Service areas', value: memberManagedCities.join(', '), wide: true }]
+            ? [{ label: 'Service areas', value: memberManagedCities.join(', ') }]
             : []),
         ]}
         badges={

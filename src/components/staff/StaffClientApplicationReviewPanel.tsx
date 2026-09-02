@@ -99,21 +99,18 @@ export function StaffClientApplicationReviewPanel({
         avatar={<ProfileAvatar src={client.avatar} name={displayName} size="lg" rounded="xl" />}
         name={displayName}
         email={client.email}
-        metrics={[
-          { label: 'Account', value: statusLabel },
-          { label: 'Type', value: clientTypeLabel(client.clientType) },
-          ...(client.serviceCity
+        metrics={
+          client.serviceCity
             ? [
                 {
                   label: 'Service city',
                   value: client.serviceState
                     ? `${client.serviceCity}, ${client.serviceState}`
                     : client.serviceCity,
-                  wide: true,
                 },
               ]
-            : []),
-        ]}
+            : undefined
+        }
         badges={
           <>
             <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
