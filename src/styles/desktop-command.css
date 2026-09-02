@@ -466,8 +466,8 @@ body[data-surface='desktop'] .staff-account-access {
   padding: 16px 0;
 }
 
-body[data-surface='desktop'] .staff-detail-actions button.staff-action-btn--ok,
-body[data-surface='desktop'] button.staff-action-btn--ok,
+/* The affirmative action keeps the black primary fill here too — only density
+   changes per surface. Reversible actions stay neutral outlines. */
 body[data-surface='desktop'] .staff-detail-actions button.staff-action-btn--warn,
 body[data-surface='desktop'] .staff-detail-actions .staff-action-btn--warn {
   background-color: transparent !important;
@@ -476,7 +476,6 @@ body[data-surface='desktop'] .staff-detail-actions .staff-action-btn--warn {
   color: var(--sf-ink) !important;
 }
 
-body[data-surface='desktop'] .staff-detail-actions button.staff-action-btn--ok:hover:not(:disabled),
 body[data-surface='desktop'] .staff-detail-actions .staff-action-btn--warn:hover:not(:disabled) {
   background-color: var(--sf-paper-sunken) !important;
   border-color: var(--sf-ink) !important;
