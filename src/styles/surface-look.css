@@ -1,0 +1,520 @@
+/* ============================================================================
+   Surface look — the visual product language of each application.
+   ============================================================================
+   Brand colour stays Guardr black / white / grey. Layouts, navigation models,
+   and flows stay intact. What changes: canvas, elevation, radius, type, and
+   how paper sits on the page — so mobile, tablet, and desktop cannot be
+   mistaken for one another.
+
+   Loaded last so these rules win. All selectors are scoped to data-surface.
+   ========================================================================= */
+
+/* ── Look tokens (authored per surface; dark theme remaps fills only) ──── */
+
+html body[data-surface='mobile'] {
+  --look-canvas: #ffffff;
+  --look-tile: #f3f3f3;
+  --look-tile-strong: #ececec;
+  --look-paper: #ffffff;
+  --look-hover: #ececec;
+  --look-card-radius: 18px;
+  --look-card-pad: 18px 20px;
+  --look-card-border: none;
+  --look-card-shadow: none;
+  --look-input-bg: #f3f3f3;
+  --look-input-radius: 14px;
+  --look-input-border: none;
+  --look-chrome-shadow: 0 -10px 32px rgba(0, 0, 0, 0.1);
+  --look-header-shadow: none;
+  --look-section-radius: 18px;
+  --look-section-pad: 16px 18px;
+  --look-section-border: none;
+  --look-section-bg: #f3f3f3;
+}
+
+html.theme-dark body[data-surface='mobile'],
+html[data-theme='dark'] body[data-surface='mobile'] {
+  --look-canvas: #0a0a0a;
+  --look-tile: #161616;
+  --look-tile-strong: #1c1c1c;
+  --look-paper: #0a0a0a;
+  --look-hover: #1c1c1c;
+  --look-input-bg: #161616;
+  --look-section-bg: #161616;
+  --look-chrome-shadow: 0 -10px 32px rgba(0, 0, 0, 0.45);
+}
+
+html body[data-surface='tablet'] {
+  --look-canvas: #f0f0f0;
+  --look-tile: #ffffff;
+  --look-tile-strong: #f7f7f7;
+  --look-paper: #ffffff;
+  --look-hover: #f7f7f7;
+  --look-card-radius: 16px;
+  --look-card-pad: 14px 16px;
+  --look-card-border: 1px solid var(--sf-line);
+  --look-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --look-input-bg: #ffffff;
+  --look-input-radius: 10px;
+  --look-input-border: 1px solid var(--sf-line-strong);
+  --look-chrome-shadow: 4px 0 24px rgba(0, 0, 0, 0.05);
+  --look-header-shadow: 0 1px 0 var(--sf-line);
+  --look-section-radius: 16px;
+  --look-section-pad: 18px 18px;
+  --look-section-border: 1px solid var(--sf-line);
+  --look-section-bg: #ffffff;
+}
+
+html.theme-dark body[data-surface='tablet'],
+html[data-theme='dark'] body[data-surface='tablet'] {
+  --look-canvas: #111111;
+  --look-tile: #161616;
+  --look-tile-strong: #1c1c1c;
+  --look-paper: #161616;
+  --look-hover: #1c1c1c;
+  --look-input-bg: #161616;
+  --look-section-bg: #161616;
+  --look-card-shadow: none;
+  --look-chrome-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+}
+
+html body[data-surface='desktop'] {
+  --look-canvas: #e8e8e8;
+  --look-tile: #ffffff;
+  --look-tile-strong: #f7f7f7;
+  --look-paper: #ffffff;
+  --look-hover: #fafafa;
+  --look-card-radius: 6px;
+  --look-card-pad: 10px 14px;
+  --look-card-border: 1px solid var(--sf-line);
+  --look-card-shadow: none;
+  --look-input-bg: #ffffff;
+  --look-input-radius: 4px;
+  --look-input-border: 1px solid var(--sf-line-strong);
+  --look-chrome-shadow: none;
+  --look-header-shadow: 0 1px 0 var(--sf-line);
+  --look-section-radius: 8px;
+  --look-section-pad: 16px 18px;
+  --look-section-border: 1px solid var(--sf-line);
+  --look-section-bg: #ffffff;
+}
+
+html.theme-dark body[data-surface='desktop'],
+html[data-theme='dark'] body[data-surface='desktop'] {
+  --look-canvas: #000000;
+  --look-tile: #0a0a0a;
+  --look-tile-strong: #141414;
+  --look-paper: #0a0a0a;
+  --look-hover: #141414;
+  --look-input-bg: #0a0a0a;
+  --look-section-bg: #0a0a0a;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE — field sheet. Edge-to-edge white, tonal tiles, huge type, no
+   chrome furniture. Lists are stacked grey cards. Borders are rare.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+html body[data-surface='mobile'] .sfm-shell,
+html body[data-surface='mobile'] .sfm-shell-canvas,
+html body[data-surface='mobile'] .sfm-screen,
+html body[data-surface='mobile'] .sfm-screen-scroll {
+  background: var(--look-canvas);
+}
+
+html body[data-surface='mobile'] .sfm-tabbar {
+  border-top: none;
+  box-shadow: var(--look-chrome-shadow);
+  background: var(--look-paper);
+}
+
+html body[data-surface='mobile'] .sfm-tab[data-active='true'] .sfm-tab-icon {
+  transform: scale(1.08);
+}
+
+html body[data-surface='mobile'] .sfm-shell-header,
+html body[data-surface='mobile'] .sfm-shell-extension,
+html body[data-surface='mobile'] .sfm-screen-head {
+  border-bottom: none;
+  background: var(--look-canvas);
+}
+
+html body[data-surface='mobile'] .sfm-shell-title,
+html body[data-surface='mobile'] .payments-page-title,
+html body[data-surface='mobile'] .sfm-shell h1,
+html body[data-surface='mobile'] .sfm-screen-hero-title,
+html body[data-surface='mobile'] .app-screen-header-title,
+html body[data-surface='mobile'] .app-screen-header h1,
+html body[data-surface='mobile'] .app-dashboard-hero-title {
+  font-family: var(--sf-font-display);
+  font-weight: 800;
+  letter-spacing: var(--sf-tracking-display);
+}
+
+html body[data-surface='mobile'] .sfm-screen-hero-title,
+html body[data-surface='mobile'] .payments-page-header h1,
+html body[data-surface='mobile'] .payments-page-title {
+  font-size: var(--sf-type-display) !important;
+  line-height: 1.08;
+}
+
+html body[data-surface='mobile'] .payments-page-header,
+html body[data-surface='mobile'] .sfm-shell .app-screen-header:not(.app-screen-header--map) {
+  border-bottom: none;
+  background: transparent;
+}
+
+html body[data-surface='mobile'] .sfm-card,
+html body[data-surface='mobile'] .sfm-shell .app-item-card,
+html body[data-surface='mobile'] .sfm-shell .uber-card,
+html body[data-surface='mobile'] .sfm-shell .wf-list-card,
+html body[data-surface='mobile'] .payments-page .app-item-card,
+html body[data-surface='mobile'] .staff-payments-panel .app-item-card {
+  padding: var(--look-card-pad);
+  border: var(--look-card-border) !important;
+  border-radius: var(--look-card-radius) !important;
+  background: var(--look-tile) !important;
+  box-shadow: var(--look-card-shadow) !important;
+}
+
+html body[data-surface='mobile'] .sfm-card--accent {
+  background: var(--sf-accent) !important;
+  color: var(--sf-accent-ink) !important;
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-item-card-stack,
+html body[data-surface='mobile'] .payments-page .app-item-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+html body[data-surface='mobile'] .sfm-row {
+  margin: 0 0 8px;
+  padding: 14px 16px;
+  border-bottom: none;
+  border-radius: 16px;
+  background: var(--look-tile);
+}
+
+html body[data-surface='mobile'] .sfm-row[data-interactive='true']:active {
+  background: var(--look-hover);
+}
+
+html body[data-surface='mobile'] .sfm-stat {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--look-tile);
+}
+
+html body[data-surface='mobile'] .sfm-screen-action-bar {
+  border-top: none;
+  box-shadow: var(--look-chrome-shadow);
+}
+
+html body[data-surface='mobile'] .staff-detail-section:not(.staff-account-access),
+html body[data-surface='mobile'] .sfm-shell .app-form-section,
+html body[data-surface='mobile'] .sfm-shell .uber-section,
+html body[data-surface='mobile'] .staff-payments-summary {
+  margin: 12px 0 0;
+  padding: var(--look-section-pad) !important;
+  border: var(--look-section-border) !important;
+  border-radius: var(--look-section-radius);
+  background: var(--look-section-bg);
+}
+
+html body[data-surface='mobile'] .staff-account-access {
+  background: transparent !important;
+}
+
+html body[data-surface='mobile'] .sfm-shell input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='file']),
+html body[data-surface='mobile'] .sfm-shell select,
+html body[data-surface='mobile'] .sfm-shell textarea,
+html body[data-surface='mobile'] .sfm-shell .uber-input,
+html body[data-surface='mobile'] .sfm-shell .uber-select {
+  min-height: var(--sf-input-h);
+  border: var(--look-input-border) !important;
+  border-radius: var(--look-input-radius) !important;
+  background: var(--look-input-bg) !important;
+  font-size: 16px;
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-list-row,
+html body[data-surface='mobile'] .sfm-shell .app-empty-state,
+html body[data-surface='mobile'] .sfm-empty {
+  border: none;
+  border-radius: 18px;
+  background: var(--look-tile);
+}
+
+html body[data-surface='mobile'] .sfm-empty {
+  padding: 48px 24px;
+}
+
+html body[data-surface='mobile'] .staff-detail-metrics .wf-metric-value,
+html body[data-surface='mobile'] .staff-detail-pane .wf-metric-value,
+html body[data-surface='mobile'] .staff-detail-metric-chip {
+  background: var(--look-tile-strong);
+  border-radius: 10px;
+}
+
+html body[data-surface='mobile'] .sfm-sheet {
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.14);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TABLET — paper inspector. Warm grey canvas, white 16px cards, labelled
+   rail, two-up fields. Touch-sized but not a stretched phone.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+html body[data-surface='tablet'] .sft-shell,
+html body[data-surface='tablet'] .sft-shell-canvas,
+html body[data-surface='tablet'] .sft-shell-main {
+  background: var(--look-canvas);
+}
+
+html body[data-surface='tablet'] .sft-rail {
+  background: var(--look-paper);
+  border-right: 1px solid var(--sf-line);
+  box-shadow: var(--look-chrome-shadow);
+}
+
+html body[data-surface='tablet'] .sft-rail-item[data-active='true'] {
+  background: var(--look-tile-strong);
+  border-radius: 12px;
+}
+
+html body[data-surface='tablet'] .sft-shell-header,
+html body[data-surface='tablet'] .sft-shell-extension,
+html body[data-surface='tablet'] .payments-page-header {
+  background: var(--look-paper);
+  box-shadow: var(--look-header-shadow);
+  border-bottom-color: var(--sf-line);
+}
+
+html body[data-surface='tablet'] .sft-shell-context,
+html body[data-surface='tablet'] .payments-page-header h1,
+html body[data-surface='tablet'] .payments-page-title {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-heading) !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+html body[data-surface='tablet'] .sft-card,
+html body[data-surface='tablet'] .sft-shell-canvas .app-item-card,
+html body[data-surface='tablet'] .sft-shell-canvas .uber-card,
+html body[data-surface='tablet'] .sft-shell-canvas .wf-list-card,
+html body[data-surface='tablet'] .payments-page .app-item-card,
+html body[data-surface='tablet'] .split-list-pane .app-item-card,
+html body[data-surface='tablet'] .staff-payments-panel .app-item-card {
+  padding: var(--look-card-pad);
+  border: var(--look-card-border) !important;
+  border-radius: var(--look-card-radius) !important;
+  background: var(--look-tile) !important;
+  box-shadow: var(--look-card-shadow) !important;
+}
+
+html body[data-surface='tablet'] .sft-shell-canvas .app-item-card-stack,
+html body[data-surface='tablet'] .payments-page .app-item-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+html body[data-surface='tablet'] .tablet-split-panel,
+html body[data-surface='tablet'] .sft-split,
+html body[data-surface='tablet'] .uber-workbench-split {
+  gap: 12px;
+  padding: 12px;
+  background: transparent;
+}
+
+html body[data-surface='tablet'] .split-list-pane,
+html body[data-surface='tablet'] .split-detail-pane,
+html body[data-surface='tablet'] .uber-workbench-list,
+html body[data-surface='tablet'] .uber-workbench-detail,
+html body[data-surface='tablet'] .sft-panel,
+html body[data-surface='tablet'] .sft-empty {
+  border: var(--look-section-border);
+  border-radius: var(--look-section-radius);
+  background: var(--look-paper);
+  box-shadow: var(--look-card-shadow);
+}
+
+html body[data-surface='tablet'] .staff-detail-section:not(.staff-account-access),
+html body[data-surface='tablet'] .sft-shell-canvas .app-form-section,
+html body[data-surface='tablet'] .staff-payments-summary {
+  padding: var(--look-section-pad) !important;
+  border: var(--look-section-border) !important;
+  border-radius: var(--look-section-radius);
+  background: var(--look-section-bg);
+  box-shadow: var(--look-card-shadow);
+}
+
+html body[data-surface='tablet'] .sft-shell-canvas input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='file']),
+html body[data-surface='tablet'] .sft-shell-canvas select,
+html body[data-surface='tablet'] .sft-shell-canvas textarea,
+html body[data-surface='tablet'] .sft-shell-canvas .uber-input,
+html body[data-surface='tablet'] .sft-shell-canvas .uber-select {
+  min-height: var(--sf-input-h);
+  border: var(--look-input-border) !important;
+  border-radius: var(--look-input-radius) !important;
+  background: var(--look-input-bg) !important;
+}
+
+html body[data-surface='tablet'] .sft-shell-canvas .uber-workbench-table {
+  border: 1px solid var(--sf-line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--look-paper);
+}
+
+html body[data-surface='tablet'] .sft-shell-canvas .uber-workbench-table th,
+html body[data-surface='tablet'] .sft-shell-canvas .uber-workbench-table td {
+  padding: 12px 14px;
+}
+
+html body[data-surface='tablet'] .sft-shell-canvas .app-list-row {
+  border-radius: 12px;
+}
+
+html body[data-surface='tablet'] .payments-page {
+  background: var(--look-canvas);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DESKTOP — operations centre. Cooler sunken canvas, hairline 6px cards,
+   compact chips, hover rows, pointer density. Not a wide tablet.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+html body[data-surface='desktop'] .sfd-shell,
+html body[data-surface='desktop'] .sfd-shell-canvas {
+  background: var(--look-canvas);
+}
+
+html body[data-surface='desktop'] .sfd-sidebar {
+  background: var(--look-paper);
+  border-right: 1px solid var(--sf-line);
+}
+
+html body[data-surface='desktop'] .sfd-shell-header,
+html body[data-surface='desktop'] .sfd-topbar,
+html body[data-surface='desktop'] .payments-page-header {
+  background: var(--look-paper);
+  box-shadow: var(--look-header-shadow);
+}
+
+html body[data-surface='desktop'] .payments-page-header h1,
+html body[data-surface='desktop'] .payments-page-title,
+html body[data-surface='desktop'] .sfd-shell-canvas .app-screen-header-title,
+html body[data-surface='desktop'] .sfd-shell-canvas .app-screen-header h1 {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-title) !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+html body[data-surface='desktop'] .sfd-card,
+html body[data-surface='desktop'] .sfd-shell-canvas .app-item-card,
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-card,
+html body[data-surface='desktop'] .sfd-shell-canvas .wf-list-card,
+html body[data-surface='desktop'] .payments-page .app-item-card,
+html body[data-surface='desktop'] .staff-payments-panel .app-item-card {
+  padding: var(--look-card-pad);
+  border: var(--look-card-border) !important;
+  border-radius: var(--look-card-radius) !important;
+  background: var(--look-tile) !important;
+  box-shadow: none !important;
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .app-item-card:hover,
+html body[data-surface='desktop'] .payments-page .app-item-card:hover,
+html body[data-surface='desktop'] .sfd-table-row:hover,
+html body[data-surface='desktop'] .sfd-shell-canvas .app-list-row:hover {
+  background: var(--look-hover) !important;
+  border-color: var(--sf-line-strong) !important;
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .app-item-card-stack,
+html body[data-surface='desktop'] .payments-page .app-item-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table,
+html body[data-surface='desktop'] .sfd-table {
+  border: 1px solid var(--sf-line);
+  border-radius: var(--look-card-radius);
+  overflow: hidden;
+  background: var(--look-paper);
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table th,
+html body[data-surface='desktop'] .sfd-table-head {
+  padding: 8px 14px;
+  background: var(--look-tile-strong);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sf-ink-tertiary);
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table td {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-table tbody tr:hover td {
+  background: var(--look-hover);
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='file']),
+html body[data-surface='desktop'] .sfd-shell-canvas select,
+html body[data-surface='desktop'] .sfd-shell-canvas textarea,
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-input,
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-select {
+  min-height: 36px;
+  border: var(--look-input-border) !important;
+  border-radius: var(--look-input-radius) !important;
+  background: var(--look-input-bg) !important;
+  font-size: 13px;
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-list,
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-detail,
+html body[data-surface='desktop'] .sfd-shell-canvas .sfd-panel,
+html body[data-surface='desktop'] .sfd-card {
+  border: var(--look-section-border);
+  border-radius: var(--look-card-radius);
+  background: var(--look-paper);
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench-split {
+  gap: 10px;
+  padding: 12px 16px 16px;
+}
+
+html body[data-surface='desktop'] .staff-detail-section:not(.staff-account-access),
+html body[data-surface='desktop'] .sfd-shell-canvas .app-form-section,
+html body[data-surface='desktop'] .staff-payments-summary {
+  padding: var(--look-section-pad) !important;
+  border: var(--look-section-border) !important;
+  border-radius: var(--look-section-radius);
+  background: var(--look-section-bg);
+}
+
+html body[data-surface='desktop'] .payments-page {
+  background: var(--look-canvas);
+}
+
+html body[data-surface='desktop'] .sfd-sidebar-item[data-active='true'] {
+  background: var(--look-tile-strong);
+}
+
+html body[data-surface='desktop'] .staff-account-access-section.staff-account-access--leading .staff-account-access-actions {
+  padding-top: 0;
+}

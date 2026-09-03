@@ -56,6 +56,9 @@ export const PREVIEW_JOB = {
   durationHours: 8,
   guardsNeeded: 1,
   status: 'open',
+  hourlyRate: 28,
+  guardPay: 23,
+  platformFeePerHour: 5,
   estimatedPayout: 224,
   requiredCertifications: [],
 } as SecurityRequest;
