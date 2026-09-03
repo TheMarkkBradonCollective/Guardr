@@ -1,6 +1,7 @@
 import React, { isValidElement, cloneElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { Bell, ChevronLeft, ChevronRight, Circle, Menu, type LucideIcon } from 'lucide-react';
 import { buildMobileNavigation, groupDestinationsBySection, type SurfaceDestination } from '../surfaceNavigation';
+import { triggerHaptic } from '../../lib/platform/nativeHaptics';
 import { MobileBottomTabs } from './kit/MobileBottomTabs';
 import { MobileDrawerNav } from './kit/MobileDrawerNav';
 import { MobileSheet } from './kit/MobileSheet';
@@ -121,14 +122,25 @@ export function MobileAppShell({
           ) : (
             <header className="sfm-shell-header">
               {onBack ? (
-                <button type="button" className="sfm-icon-btn" onClick={onBack} aria-label="Back">
+                <button
+                  type="button"
+                  className="sfm-icon-btn"
+                  onClick={() => {
+                    void triggerHaptic('light');
+                    onBack();
+                  }}
+                  aria-label="Back"
+                >
                   <ChevronLeft size={24} strokeWidth={2.25} aria-hidden />
                 </button>
               ) : showDrawer ? (
                 <button
                   type="button"
                   className="sfm-icon-btn"
-                  onClick={() => setDrawerOpen(true)}
+                  onClick={() => {
+                    void triggerHaptic('light');
+                    setDrawerOpen(true);
+                  }}
                   aria-label="Open menu"
                   aria-expanded={drawerOpen}
                 >
@@ -146,7 +158,10 @@ export function MobileAppShell({
                   <button
                     type="button"
                     className="sfm-icon-btn sfm-noti-btn"
-                    onClick={() => openAccountSheet('notifications')}
+                    onClick={() => {
+                      void triggerHaptic('light');
+                      openAccountSheet('notifications');
+                    }}
                     aria-label={
                       notificationUnread > 0
                         ? `Notifications, ${notificationUnread} unread`
@@ -165,7 +180,10 @@ export function MobileAppShell({
                   <button
                     type="button"
                     className="sfm-shell-identity sfm-shell-identity--header"
-                    onClick={() => openAccountSheet('main')}
+                    onClick={() => {
+                      void triggerHaptic('light');
+                      openAccountSheet('main');
+                    }}
                     aria-label="Account"
                   >
                     {identity}
@@ -174,7 +192,10 @@ export function MobileAppShell({
                   <button
                     type="button"
                     className="sfm-icon-btn"
-                    onClick={() => openAccountSheet('main')}
+                    onClick={() => {
+                      void triggerHaptic('light');
+                      openAccountSheet('main');
+                    }}
                     aria-label="Account menu"
                   >
                     <Bell size={20} strokeWidth={2.25} aria-hidden />
@@ -214,6 +235,11 @@ export function MobileAppShell({
           workspaceLabel={workspaceLabel}
           footer={navFooter}
           primaryAction={drawerPrimaryAction}
+          identity={identity}
+          onIdentityClick={() => {
+            setDrawerOpen(false);
+            openAccountSheet('main');
+          }}
         />
       ) : null}
 

@@ -11,6 +11,7 @@ export const LEGAL_LINK_ORDER: LegalPageId[] = [
   'ica',
   'client-agreement',
   'guard-conduct',
+  'equal-opportunity',
 ];
 
 export function legalLinkLabel(page: LegalPageId): string {
@@ -18,12 +19,13 @@ export function legalLinkLabel(page: LegalPageId): string {
   if (page === 'client-agreement') return 'Client Agreement';
   if (page === 'guard-conduct') return 'Guard Code of Conduct';
   if (page === 'terms') return 'Terms of Service';
+  if (page === 'equal-opportunity') return 'Equal Opportunity';
   return 'Privacy Policy';
 }
 
 export function LegalFooterLinks({ onOpenLegal, className = '' }: LegalFooterLinksProps) {
   return (
-    <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-xs ${className}`}>
+    <div className={`legal-footer-links flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-xs ${className}`}>
       {LEGAL_LINK_ORDER.map((page) => (
         <button
           key={page}

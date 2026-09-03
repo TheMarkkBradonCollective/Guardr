@@ -7,7 +7,7 @@ import { DashboardHero, DashboardZone, MetricCell, MetricStrip } from '../../bas
 import { GuardrSegmented } from '../../baseui/GuardrSegmented';
 import { formControlOverrides, inputOverrides, textareaOverrides } from '../../baseui/primitives/fieldStyles';
 import { AppButton } from '../AppButton';
-import { useLayoutFormFactor } from '../../../surfaces';
+import { useLayoutFormFactor, useSurfaceKind } from '../../../surfaces';
 
 /** Shared type for reply-to context (also exported from ChatThreadPanel) */
 export type ChatReplyContext = { senderName: string; body: string };
@@ -18,6 +18,7 @@ export function AppEmptyState({
   dashed = false,
   icon,
   title,
+  message,
   action,
 }: {
   children?: React.ReactNode;
@@ -25,8 +26,10 @@ export function AppEmptyState({
   dashed?: boolean;
   icon?: React.ReactNode;
   title?: string;
+  message?: React.ReactNode;
   action?: React.ReactNode;
 }) {
+  const body = children ?? message;
   if (icon || title) {
     return (
       <Block
@@ -53,9 +56,9 @@ export function AppEmptyState({
             {title}
           </ParagraphMedium>
         )}
-        {children && (
+        {body && (
           <LabelSmall margin={0} className="app-empty-state-body" $style={{ color: 'contentSecondary' }}>
-            {children}
+            {body}
           </LabelSmall>
         )}
         {action}
@@ -122,14 +125,22 @@ export function formatBackToLabel(destinationOrLabel: string): string {
   return `Back to ${trimmed}`;
 }
 
+/** Visible back copy: native apps say “Back”; the aria label keeps the destination. */
+export function visibleBackLabel(destinationOrLabel: string, compact: boolean): string {
+  return compact ? 'Back' : formatBackToLabel(destinationOrLabel);
+}
+
 export function AppSubScreenHeader({
   title,
+  subtitle,
   onBack,
   backLabel = 'previous',
   wrapTitle = true,
   hideTitle = false,
+  trailing,
 }: {
   title: string;
+  subtitle?: string;
   onBack: () => void;
   /** Destination name ("Guards") or full phrase ("Back to Guards"). */
   backLabel?: string;
@@ -137,17 +148,28 @@ export function AppSubScreenHeader({
   wrapTitle?: boolean;
   /** Back control only — title lives in the scrolling page body. */
   hideTitle?: boolean;
+  trailing?: React.ReactNode;
 }) {
-  const label = formatBackToLabel(backLabel);
+  const compact = useSurfaceKind() === 'mobile';
+  const ariaLabel = formatBackToLabel(backLabel);
+  const label = visibleBackLabel(backLabel, compact);
   return (
     <div
-      className={`app-subscreen-header app-subscreen-header--shrink${wrapTitle && !hideTitle ? ' app-subscreen-header--wrap' : ''}${hideTitle ? ' app-subscreen-header--back-only' : ''}`}
+      className={`app-subscreen-header app-subscreen-header--shrink${wrapTitle && !hideTitle ? ' app-subscreen-header--wrap' : ''}${hideTitle ? ' app-subscreen-header--back-only' : ''}${trailing ? ' app-subscreen-header--with-trailing' : ''}`}
     >
-      <button type="button" onClick={onBack} className="app-subscreen-back">
+      <button type="button" onClick={onBack} className="app-subscreen-back" aria-label={ariaLabel}>
         <ArrowLeft className="w-4 h-4" aria-hidden />
         {label}
       </button>
-      {!hideTitle ? <h1 className="app-subscreen-title flex-1 min-w-0">{title}</h1> : null}
+      {!hideTitle ? (
+        <div className="flex-1 min-w-0">
+          <h1 className="app-subscreen-title">{title}</h1>
+          {subtitle ? <p className="app-subscreen-subtitle">{subtitle}</p> : null}
+        </div>
+      ) : trailing ? (
+        <span className="flex-1" aria-hidden />
+      ) : null}
+      {trailing ? <div className="app-subscreen-trailing">{trailing}</div> : null}
     </div>
   );
 }
@@ -554,6 +576,7 @@ export function AppChatHeader({
 }) {
   const formFactor = useLayoutFormFactor();
   const hideBack = hideBackOnDesktop && formFactor !== 'mobile';
+  const compact = formFactor === 'mobile';
 
   return (
     <div className="app-chat-header app-chat-header--with-back-label">
@@ -562,9 +585,10 @@ export function AppChatHeader({
           type="button"
           onClick={onBack}
           className={`app-subscreen-back ${hideBack ? 'hidden' : ''}`}
+          aria-label={formatBackToLabel(backLabel)}
         >
           <ArrowLeft className="w-4 h-4" aria-hidden />
-          {formatBackToLabel(backLabel)}
+          {visibleBackLabel(backLabel, compact)}
         </button>
       ) : (
         <span className="w-0 shrink-0" aria-hidden />

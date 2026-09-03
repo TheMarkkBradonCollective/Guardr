@@ -6,6 +6,7 @@ import type { ShellKind } from '../../lib/platform/shellKind';
 import type { ExperienceTier } from '../../lib/platform/experienceTier';
 import { AppButton } from '../ui/AppButton';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
+import { EqualOpportunityNotice } from '../legal/EqualOpportunityNotice';
 import type { LegalPageId } from '../../lib/legalContent';
 
 /** Soft full-bleed wash — no grid, icons, or glow blobs. */
@@ -120,6 +121,7 @@ export function AppWelcomeSignInDock({
 
       <div className="app-welcome-legal">
         <LegalFooterLinks onOpenLegal={onOpenLegal} className="justify-center" />
+        <EqualOpportunityNotice onOpenLegal={onOpenLegal} compact align="center" className="mt-3" />
       </div>
     </div>
   );

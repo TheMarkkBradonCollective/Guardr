@@ -1,14 +1,23 @@
 import type { JobGuardSuggestion, SecurityRequest } from '../types';
+import type { GuardJobView } from './guardJobView';
 import type { ScheduleJob } from './guardSchedule';
 import { guardHasJobTeamAssociation, isMultiGuardJob, mergeJobSlots } from './guardTeams';
 import { guardScheduleConflictError } from './guardSchedule';
+
+type SuggestionJob = Pick<SecurityRequest, 'id' | 'status' | 'assignedGuardId'> & {
+  pendingGuardId?: string | null;
+  guardsNeeded?: number;
+  guardSlots?: SecurityRequest['guardSlots'];
+  guardSuggestions?: SecurityRequest['guardSuggestions'];
+};
 
 function newSuggestionId(jobId: string, suggestedGuardId: string, suggestedAt: string): string {
   return `${jobId}-suggest-${suggestedGuardId}-${suggestedAt}`;
 }
 
-export function pendingGuardSuggestions(job: SecurityRequest): JobGuardSuggestion[] {
-  return (job.guardSuggestions ?? []).filter((s) => s.status === 'pending');
+export function pendingGuardSuggestions(job: SuggestionJob | GuardJobView): JobGuardSuggestion[] {
+  const suggestions = 'guardSuggestions' in job ? job.guardSuggestions : undefined;
+  return (suggestions ?? []).filter((s) => s.status === 'pending');
 }
 
 export function suggestGuardForJob(
@@ -83,7 +92,7 @@ export function markGuardSuggestionPlaced(
   return { ...job, guardSuggestions: nextSuggestions };
 }
 
-export function suggestionEligibleForJob(job: SecurityRequest): boolean {
+export function suggestionEligibleForJob(job: SuggestionJob | GuardJobView): boolean {
   if (job.status !== 'open' || job.assignedGuardId) return false;
   if (isMultiGuardJob(job)) {
     const slots = mergeJobSlots(job, job.guardSlots);

@@ -25,9 +25,16 @@ export function formatDuration(hours: number): string {
   return `${wholeHours}h ${minutes}m`;
 }
 
-export function formatShiftRange(startDate: string, endDate: string): string {
+export function formatShiftRange(startDate: string, endDate: string): string;
+export function formatShiftRange(job: { startDate: string; endDate: string }): string;
+export function formatShiftRange(
+  startDateOrJob: string | { startDate: string; endDate: string },
+  endDate?: string,
+): string {
+  const startDate = typeof startDateOrJob === 'string' ? startDateOrJob : startDateOrJob.startDate;
+  const resolvedEnd = typeof startDateOrJob === 'string' ? endDate ?? '' : startDateOrJob.endDate;
   const start = new Date(startDate);
-  const end = new Date(endDate);
+  const end = new Date(resolvedEnd);
   const dateOpts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
   const timeOpts: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit' };
 

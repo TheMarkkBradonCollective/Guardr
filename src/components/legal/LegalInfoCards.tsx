@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, FileText, Shield } from 'lucide-react';
+import { ChevronRight, FileText, Scale, Shield } from 'lucide-react';
 import type { LegalPageId } from '../../lib/legalContent';
 import { LEGAL_DOCUMENTS } from '../../lib/legalContent';
 
@@ -9,7 +9,7 @@ interface LegalInfoCardsProps {
 }
 
 const CARD_COPY: Partial<
-  Record<LegalPageId, { icon: typeof FileText; title: string; description: string }>
+  Record<LegalPageId, { icon: typeof FileText; title: string; description: string; readLabel?: string }>
 > = {
   privacy: {
     icon: Shield,
@@ -21,15 +21,21 @@ const CARD_COPY: Partial<
     title: 'Terms of service',
     description: 'Marketplace rules for clients, guards, and staff.',
   },
+  'equal-opportunity': {
+    icon: Scale,
+    title: 'Equal opportunity',
+    description: 'How we consider qualified applicants, including veterans and people with disabilities.',
+    readLabel: 'Read equal opportunity notice',
+  },
 };
 
 export function LegalInfoCards({ onOpenLegal, className = '' }: LegalInfoCardsProps) {
   return (
     <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${className}`}>
-      {(['privacy', 'terms'] as const).map((id) => {
+      {(['privacy', 'terms', 'equal-opportunity'] as const).map((id) => {
         const card = CARD_COPY[id];
         if (!card) return null;
-        const { icon: Icon, title, description } = card;
+        const { icon: Icon, title, description, readLabel } = card;
         return (
           <button
             key={id}
@@ -45,7 +51,7 @@ export function LegalInfoCards({ onOpenLegal, className = '' }: LegalInfoCardsPr
                 <p className="font-bold text-sm text-brand-text tracking-tight">{title}</p>
                 <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">{description}</p>
                 <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-primary">
-                  Read {LEGAL_DOCUMENTS[id].title.toLowerCase()}
+                  {readLabel ?? `Read ${LEGAL_DOCUMENTS[id].title.toLowerCase()}`}
                   <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                 </p>
               </div>

@@ -710,3 +710,95 @@ html body[data-surface='desktop'] .sfd-shell-canvas .mx-auto.max-w-4xl {
   margin-inline: 0 !important;
   width: 100%;
 }
+
+/* Native product finish — public + account surfaces on the phone sheet. */
+
+html body[data-surface='mobile'] .sfm-account-group,
+html body[data-surface='mobile'] .sfm-more-list {
+  border: none;
+  border-radius: var(--look-card-radius);
+  background: var(--look-tile);
+}
+
+html body[data-surface='mobile'] .sfm-account-row,
+html body[data-surface='mobile'] .sfm-more-row {
+  border-bottom-color: transparent;
+  background: transparent;
+}
+
+html body[data-surface='mobile'] .sfm-account-row:active,
+html body[data-surface='mobile'] .sfm-more-row:active {
+  background: var(--look-hover);
+}
+
+html body[data-surface='mobile'] .sfm-confirm-panel,
+html body[data-surface='mobile'] .sfm-tutorial-prompt,
+html body[data-surface='mobile'] .tutorial-step-panel-inner {
+  background: var(--look-paper) !important;
+  border-color: transparent !important;
+  box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.14);
+}
+
+html body[data-surface='mobile'] .auth-sheet-fields .uber-input,
+html body[data-surface='mobile'] .auth-sheet-fields .uber-select,
+html body[data-surface='mobile'] .auth-form-page-form .auth-sheet-fields .uber-input,
+html body[data-surface='mobile'] .auth-form-page-form .auth-sheet-fields .uber-select {
+  min-height: 52px;
+  border: var(--look-input-border) !important;
+  border-radius: var(--look-input-radius) !important;
+  background: var(--look-input-bg) !important;
+}
+
+html body[data-surface='mobile'] .auth-sheet-role-row,
+html body[data-surface='mobile'] .app-welcome-role-row {
+  border: none;
+  border-radius: 16px;
+  background: var(--look-tile);
+}
+
+html body[data-surface='mobile'] .sfm-shell .settings-section {
+  margin: 0 16px 12px;
+  padding: var(--look-section-pad) !important;
+  border: none !important;
+  border-radius: var(--look-section-radius);
+  background: var(--look-section-bg);
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-chat-bubble-outgoing {
+  background: var(--sf-ink);
+  color: var(--sf-ink-inverse);
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-chat-bubble-incoming,
+html body[data-surface='mobile'] .sfm-shell .app-chat-bubble-staff {
+  background: var(--look-tile);
+  color: var(--sf-ink);
+}
+
+html body[data-surface='mobile'] .sfm-drawer-identity-btn {
+  padding: 12px 8px;
+  border-radius: 16px;
+}
+
+html body[data-surface='mobile'] .sfm-drawer-identity-btn:active {
+  background: var(--look-tile);
+}
+
+html body[data-surface='mobile'] .sfm-auth-nav {
+  background: color-mix(in srgb, var(--look-paper) 86%, transparent);
+}
+
+html body[data-surface='mobile'] .legal-footer-link {
+  color: var(--sf-ink);
+}
+
+html body[data-surface='mobile'] .legal-footer-links {
+  background: var(--look-tile);
+  border-radius: var(--look-card-radius);
+  padding: 4px 16px;
+}
+
+html body[data-surface='mobile'] .theme-toggle-icon:active,
+html body[data-surface='mobile'] .auth-form-page-guide:active {
+  background: var(--look-hover);
+}

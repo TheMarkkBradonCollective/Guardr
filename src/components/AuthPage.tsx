@@ -31,12 +31,21 @@ import {
 } from 'lucide-react';
 import { PersonNameFields } from './profile/PersonNameFields';
 import { ThemeToggle } from './ui/ThemeToggle';
-import { AppErrorBanner, AppSubScreenHeader } from './ui/app/AppPrimitives';
+import { AppErrorBanner, AppSubScreenHeader, formatBackToLabel } from './ui/app/AppPrimitives';
 import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
-import { AuthFormHeader } from './auth/AuthFormChrome';
+import { AuthFormHeader, AuthMobileTopBar } from './auth/AuthFormChrome';
 import { StaffSignupNotice } from './auth/StaffSignupNotice';
 import { ClientSignupIntake } from './auth/clientSignup/ClientSignupIntake';
+import type { ReferralPerson } from './auth/clientSignup/types';
+import {
+  BUSINESS_TYPE_OPTIONS,
+  ENGAGEMENT_TYPE_OPTIONS,
+  HOW_HEARD_OPTIONS,
+  INDUSTRY_OPTIONS,
+  PROPERTY_TYPE_OPTIONS,
+  SERVICE_TYPE_OPTIONS,
+} from '../lib/clientSignupOptions';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS, type ClientType } from '../types';
 import { isOrganizationClientType, isSecurityCompanyClientType, normalizeClientType } from '../lib/clientType';
@@ -49,6 +58,7 @@ import { legalDocumentLabel, requiredLegalDocumentsForRole } from '../lib/legalC
 import { LegalAcceptanceCheckbox } from './legal/LegalAcceptanceCheckbox';
 import { LegalDocumentLink } from './legal/LegalDocumentLink';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
+import { EqualOpportunityNotice } from './legal/EqualOpportunityNotice';
 import { DirectTopHeader } from './baseui/layout/DirectTopHeader';
 import {
   getStoredPassword,
@@ -810,7 +820,14 @@ export function AuthPage({
 
   const authTopbarActions = (
     <>
-      {onChangeTheme ? <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" /> : null}
+      {onChangeTheme ? (
+        <ThemeToggle
+          value={themeMode}
+          onChange={onChangeTheme}
+          size="sm"
+          variant={surface === 'mobile' ? 'icon' : 'segmented'}
+        />
+      ) : null}
       {onOpenGuide ? (
         <button
           type="button"
@@ -891,7 +908,7 @@ export function AuthPage({
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                     aria-pressed={showPassword}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-text-muted hover:text-brand-text p-1"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-text-muted hover:text-brand-text p-1 auth-password-toggle"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -905,6 +922,7 @@ export function AuthPage({
                     New staff start as Support. Sign in after submitting to upload government ID and connect
                     Stripe payouts while a Director reviews your application.
                   </p>
+                  <EqualOpportunityNotice onOpenLegal={onOpenLegal} />
                   <div>
                     <label className="uber-label block mb-2">Phone</label>
                     <div className="relative">
@@ -1790,13 +1808,23 @@ export function AuthPage({
         </>
       ) : (
         <div className="auth-role-choice-page auth-form-page">
-          <DirectTopHeader onBrandClick={onBackToHome} trailing={authTopbarActions} />
-          <AppSubScreenHeader
-            title=""
-            hideTitle
-            onBack={handleAuthBack}
-            backLabel={authBackLabel}
-          />
+          {surface === 'mobile' ? (
+            <AuthMobileTopBar
+              onBack={handleAuthBack}
+              backAriaLabel={formatBackToLabel(authBackLabel)}
+              trailing={authTopbarActions}
+            />
+          ) : (
+            <>
+              <DirectTopHeader onBrandClick={onBackToHome} trailing={authTopbarActions} />
+              <AppSubScreenHeader
+                title=""
+                hideTitle
+                onBack={handleAuthBack}
+                backLabel={authBackLabel}
+              />
+            </>
+          )}
           <main className="auth-role-choice-main">
             <section
               className="auth-role-choice-hero auth-form-page-hero"

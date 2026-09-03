@@ -1,6 +1,8 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Download, LogOut, LucideIcon, Settings, User, Bell, ChevronLeft } from 'lucide-react';
+import { ChevronDown, ChevronRight, Download, LogOut, LucideIcon, Settings, User, Bell, ChevronLeft } from 'lucide-react';
+import { showAppConfirm } from '../ui/AppConfirm';
+import { triggerHaptic } from '../../lib/platform/nativeHaptics';
 import type { UserNotification } from '../../types';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -155,8 +157,18 @@ export function AccountMenu({
   };
 
   const handleSignOut = () => {
-    close();
-    onSignOut();
+    void (async () => {
+      const confirmed = await showAppConfirm({
+        title: 'Sign out?',
+        message: 'You can sign back in anytime to pick up where you left off.',
+        confirmLabel: 'Sign out',
+        cancelLabel: 'Stay signed in',
+        tone: 'danger',
+      });
+      if (!confirmed) return;
+      close();
+      onSignOut();
+    })();
   };
 
   if (presentation === 'sheet') {
@@ -192,23 +204,50 @@ export function AccountMenu({
             ) : null}
             <div className="sfm-account-group">
               {!hideProfile ? (
-                <button type="button" role="menuitem" className="sfm-account-row" onClick={handleProfile}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="sfm-account-row"
+                  onClick={() => {
+                    void triggerHaptic('light');
+                    handleProfile();
+                  }}
+                >
                   <User size={20} strokeWidth={1.75} aria-hidden />
-                  <span>Profile</span>
+                  <span className="sfm-account-row-label">Profile</span>
+                  <ChevronRight size={18} strokeWidth={2} className="sfm-account-row-chevron" aria-hidden />
                 </button>
               ) : null}
               {showNotifications ? (
-                <button type="button" role="menuitem" className="sfm-account-row" onClick={openNotifications}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="sfm-account-row"
+                  onClick={() => {
+                    void triggerHaptic('light');
+                    openNotifications();
+                  }}
+                >
                   <Bell size={20} strokeWidth={1.75} aria-hidden />
                   <span className="sfm-account-row-label">Notifications</span>
                   {unread > 0 ? (
                     <span className="sfm-account-count">{unread > 99 ? '99+' : unread}</span>
                   ) : null}
+                  <ChevronRight size={18} strokeWidth={2} className="sfm-account-row-chevron" aria-hidden />
                 </button>
               ) : null}
-              <button type="button" role="menuitem" className="sfm-account-row" onClick={handleSettings}>
+              <button
+                type="button"
+                role="menuitem"
+                className="sfm-account-row"
+                onClick={() => {
+                  void triggerHaptic('light');
+                  handleSettings();
+                }}
+              >
                 <Settings size={20} strokeWidth={1.75} aria-hidden />
-                <span>Settings</span>
+                <span className="sfm-account-row-label">Settings</span>
+                <ChevronRight size={18} strokeWidth={2} className="sfm-account-row-chevron" aria-hidden />
               </button>
             </div>
             {extraLinks.length > 0 ? (
@@ -221,31 +260,45 @@ export function AccountMenu({
                     className="sfm-account-row"
                     data-active={link.active ? 'true' : undefined}
                     onClick={() => {
+                      void triggerHaptic('light');
                       link.onClick();
                       close();
                     }}
                   >
                     <link.icon size={20} strokeWidth={1.75} aria-hidden />
-                    <span>{link.label}</span>
+                    <span className="sfm-account-row-label">{link.label}</span>
+                    <ChevronRight size={18} strokeWidth={2} className="sfm-account-row-chevron" aria-hidden />
                   </button>
                 ))}
               </div>
             ) : null}
             <div className="sfm-account-group">
               {onOpenDownload ? (
-                <button type="button" role="menuitem" className="sfm-account-row" onClick={handleDownload}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="sfm-account-row"
+                  onClick={() => {
+                    void triggerHaptic('light');
+                    handleDownload();
+                  }}
+                >
                   <Download size={20} strokeWidth={1.75} aria-hidden />
-                  <span>{installMenuLabel}</span>
+                  <span className="sfm-account-row-label">{installMenuLabel}</span>
+                  <ChevronRight size={18} strokeWidth={2} className="sfm-account-row-chevron" aria-hidden />
                 </button>
               ) : null}
               <button
                 type="button"
                 role="menuitem"
                 className="sfm-account-row sfm-account-row--danger"
-                onClick={handleSignOut}
+                onClick={() => {
+                  void triggerHaptic('warning');
+                  handleSignOut();
+                }}
               >
                 <LogOut size={20} strokeWidth={1.75} aria-hidden />
-                <span>Sign out</span>
+                <span className="sfm-account-row-label">Sign out</span>
               </button>
             </div>
             {footer ? <div className="sfm-account-footer">{footer}</div> : null}

@@ -8,6 +8,12 @@ import {
   missingLegalDocuments,
   resolveLegalAcceptanceUserId,
 } from './legalAcceptance';
+import {
+  EQUAL_OPPORTUNITY_HEADING,
+  EQUAL_OPPORTUNITY_STATEMENT,
+  LEGAL_DOCUMENTS,
+  requiredLegalDocumentsForRole,
+} from './legalContent';
 import type { Client, SecurityGuard, SessionUser } from '../types';
 
 const guardUser: SessionUser = {
@@ -118,5 +124,25 @@ describe('legalAcceptance', () => {
     const incomplete = report.filter((row) => !row.complete);
     assert.equal(incomplete.some((row) => row.userId === 'guard-row-1'), true);
     assert.equal(incomplete.some((row) => row.userId === 'client-1'), true);
+  });
+});
+
+describe('equal opportunity notice', () => {
+  it('does not describe the platform as an employer', () => {
+    assert.match(EQUAL_OPPORTUNITY_HEADING, /equal opportunity/i);
+    assert.match(EQUAL_OPPORTUNITY_HEADING, /veterans/i);
+    assert.match(EQUAL_OPPORTUNITY_HEADING, /disabled/i);
+    assert.doesNotMatch(EQUAL_OPPORTUNITY_HEADING, /employer/i);
+    assert.doesNotMatch(EQUAL_OPPORTUNITY_STATEMENT, /employer/i);
+    assert.match(EQUAL_OPPORTUNITY_STATEMENT, /qualified applicants/i);
+    assert.match(EQUAL_OPPORTUNITY_STATEMENT, /protected veteran status/i);
+  });
+
+  it('is published as a legal page without forcing re-acceptance', () => {
+    assert.equal(LEGAL_DOCUMENTS['equal-opportunity']?.title, EQUAL_OPPORTUNITY_HEADING);
+    assert.equal(LEGAL_DOCUMENTS['equal-opportunity']?.intro, EQUAL_OPPORTUNITY_STATEMENT);
+    for (const role of ['guard', 'client', 'staff'] as const) {
+      assert.equal(requiredLegalDocumentsForRole(role).includes('equal-opportunity'), false);
+    }
   });
 });

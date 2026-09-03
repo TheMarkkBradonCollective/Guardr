@@ -12,6 +12,7 @@ function sidebarLegalLabel(page: LegalPageId): string {
   if (page === 'privacy') return 'Privacy';
   if (page === 'ica') return 'ICA';
   if (page === 'client-agreement') return 'Client Agmt';
+  if (page === 'equal-opportunity') return 'EEO';
   return 'Conduct';
 }
 

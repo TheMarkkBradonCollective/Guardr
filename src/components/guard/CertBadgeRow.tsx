@@ -17,9 +17,11 @@ interface CertBadgeRowProps {
   jobState?: string;
   /** Client profile — only Guardr-verified supplemental credentials. */
   clientMode?: boolean;
+  max?: number;
+  className?: string;
 }
 
-export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', clientMode = false }: CertBadgeRowProps) {
+export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', clientMode = false, max, className }: CertBadgeRowProps) {
   const supplemental = getSupplementalCredentialsOnFile(guard, { verifiedOnly: clientMode });
   const licensedStates = getVerifiedLicensedStates(guard);
   const progress = getQualificationProgress(guard, jobState);
@@ -63,7 +65,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
   }
 
   return (
-    <div className="space-y-3">
+    <div className={`space-y-3 ${className ?? ''}`.trim()}>
       {progress.level !== 'none' && (
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary bg-brand-primary/15 border border-brand-primary/30 px-2.5 py-1 rounded-full">
           <Shield className="w-3.5 h-3.5" />
@@ -84,7 +86,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">Required to work</p>
           <div className="flex flex-wrap gap-1.5">
-            {requiredRows.map(({ id, label, onFile, expired, verified }) => (
+            {(max != null ? requiredRows.slice(0, max) : requiredRows).map(({ id, label, onFile, expired, verified }) => (
               <span
                 key={id}
                 className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${
@@ -127,7 +129,7 @@ export function CertBadgeRow({ guard, showCaBaseline = true, jobState = 'CA', cl
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-text-muted mb-2">Additional qualifications</p>
           <div className="flex flex-wrap gap-1.5">
-            {supplemental.map(({ id, label, verified }) => (
+            {(max != null ? supplemental.slice(0, Math.max(0, max - requiredRows.length)) : supplemental).map(({ id, label, verified }) => (
               <span
                 key={id}
                 className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${
