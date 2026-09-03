@@ -723,7 +723,7 @@ h1 .long {
           ? `<ul class="menu-list">${menu}</ul>`
           : '';
     const mark =
-      shot === 'close' ? `<img class="mark" src="${logoUrl}" alt="" />` : '';
+      shot === 'close' || shot === 'floor' ? `<img class="mark" src="${logoUrl}" alt="" />` : '';
     return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8" />
 <style>
@@ -863,6 +863,12 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .shot-close .lede { font-size: 26px; max-width: 16ch; }
 .shot-close .note { color: #fff; font-size: 18px; font-weight: 700; letter-spacing: 0.08em; }
 
+/* FLOOR — phone in front, type at the bottom */
+.shot-floor .device { width: 520px; left: auto; right: -70px; top: -20px; transform: rotate(-7deg); }
+.shot-floor .copy { top: auto; bottom: 48px; width: 58%; max-width: 640px; gap: 12px; }
+.shot-floor .copy h1 { font-size: 72px; max-width: 12ch; }
+.shot-floor .lede { font-size: 24px; max-width: 18ch; }
+
 /* BILLBOARD — type is the graphic, phone supports */
 .shot-billboard .copy { top: 48px; bottom: auto; gap: 16px; max-width: 640px; }
 .shot-billboard .copy h1 { font-size: 96px; max-width: 9ch; }
@@ -899,6 +905,10 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .story.shot-close .device { width: 680px; right: -90px; top: 220px; transform: rotate(-7deg); }
 .story.shot-close .copy { top: 110px; width: 78%; max-width: none; }
 .story.shot-close .copy h1.stacked { font-size: 78px; }
+.story.shot-floor .device { width: 720px; right: -80px; top: 40px; transform: rotate(-7deg); }
+.story.shot-floor .copy { bottom: 88px; width: 78%; max-width: none; }
+.story.shot-floor .copy h1 { font-size: 88px; }
+.story.shot-floor .lede { font-size: 28px; }
 .story.shot-billboard .copy { top: 96px; }
 .story.shot-billboard .copy h1 { font-size: 110px; }
 .story.shot-billboard .lede { font-size: 32px; }
@@ -920,6 +930,10 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .wide.shot-hero.flip .copy { left: auto; right: 48px; align-items: flex-end; text-align: right; }
 .wide.shot-hero.flip .lede { text-align: right; }
 .wide.shot-hero.flip .device { right: auto; left: -90px; transform: rotate(-8deg); }
+.wide.shot-floor .device { width: 400px; right: -60px; top: -70px; transform: rotate(-7deg); }
+.wide.shot-floor .copy { top: auto; bottom: 32px; width: 52%; max-width: none; }
+.wide.shot-floor .copy h1 { font-size: 48px; }
+.wide.shot-floor .lede { font-size: 18px; }
 .wide.shot-billboard .copy { top: 50%; bottom: auto; transform: translateY(-50%); }
 .wide.shot-billboard .copy h1 { font-size: 58px; }
 .wide.shot-billboard .lede { font-size: 20px; }
@@ -1232,15 +1246,12 @@ function carouselCover(dir) {
 }
 
 function whoFinds(file, dims) {
-  const isWide = dims.w > dims.h;
   return phoneAd(file, dims, {
-    kicker: 'WHO CAN FIND A GUARD',
-    line1: 'PERSONAL.',
-    line2: 'BUSINESS.',
-    line3: 'SECURITY COMPANIES.',
-    lede: 'Licensed California guards. You pick who works.',
+    line1: 'FIND A GUARD.',
+    line2: 'YOU PICK.',
+    lede: 'Whoever is hiring finds licensed guards on the map.',
     screen: 'screen-who-hiring.png',
-    shot: isWide ? 'hero' : 'close',
+    shot: 'floor',
   });
 }
 
