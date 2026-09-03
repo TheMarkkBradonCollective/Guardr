@@ -25,6 +25,7 @@ interface GuardJobCardProps {
   onDeclineDirectJob?: () => void;
   onApplyAsLead?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
+  onSuggestGuard?: (guardId: string) => void | Promise<void>;
   onRemoveGuard?: (guardId: string) => void | Promise<void>;
   onUpdateCrewProfile?: (patch: {
     crewName: string;
@@ -53,6 +54,7 @@ export function GuardJobCard({
   onDeclineDirectJob,
   onApplyAsLead,
   onInviteGuard,
+  onSuggestGuard,
   onRemoveGuard,
   onUpdateCrewProfile,
   onAcceptInvite,
@@ -126,6 +128,7 @@ export function GuardJobCard({
       onDeclineDirectJob={onDeclineDirectJob}
       onApplyAsLead={onApplyAsLead}
       onInviteGuard={onInviteGuard}
+      onSuggestGuard={onSuggestGuard}
       onRemoveGuard={onRemoveGuard}
       onUpdateCrewProfile={onUpdateCrewProfile}
       onAcceptInvite={onAcceptInvite}

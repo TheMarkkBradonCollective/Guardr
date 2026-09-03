@@ -259,7 +259,16 @@ import {
   staffApproveIndependentSlot,
   applyTrustedRevocationToJobs,
   jobAffectedByTrustedRevocation,
+  inviteGuardToTeamSlot,
+  acceptTeamInvite,
+  declineTeamInvite,
+  removeInvitedGuardFromTeam,
 } from './lib/guardTeamFlow';
+import {
+  dismissGuardSuggestion,
+  markGuardSuggestionPlaced,
+  suggestGuardForJob,
+} from './lib/guardSuggestions';
 import {
   markAllNotificationsRead,
   markNotificationClicked,
@@ -275,6 +284,7 @@ import {
 import {
   persistJobGuardSlots,
   persistJobSlotMeta,
+  persistGuardSuggestions,
   teamJobReadyForAcceptance,
 } from './lib/guardTeamDb';
 import {
@@ -2825,6 +2835,7 @@ export default function App() {
           requiredCertifications: r.required_certifications || [],
           minGuardQualification: r.min_guard_qualification === 'active' ? 'active' : 'pending',
           applicants: r.applicants || [],
+          guardSuggestions: Array.isArray(r.guard_suggestions) ? r.guard_suggestions : [],
           ratingGiven: r.rating_given ?? undefined,
           reviewText: r.review_text ?? undefined,
           tipAmount: r.tip_amount != null ? Number(r.tip_amount) : undefined,
@@ -10237,6 +10248,173 @@ export default function App() {
     appToast('Guard declined — slot reopened.', 'success');
   };
 
+  const persistJobSuggestions = async (job: SecurityRequest) => {
+    setRequests((prev) => prev.map((r) => (r.id === job.id ? job : r)));
+    if (isDbConnected) {
+      await persistGuardSuggestions(supabase, job.id, job.guardSuggestions ?? []);
+    }
+  };
+
+  const handleInviteTeamGuard = async (requestId: string, guardId: string) => {
+    if (!activeGuardId) return;
+    const job = requests.find((r) => r.id === requestId);
+    const invitee = guards.find((g) => g.id === guardId);
+    if (!job || !invitee) return;
+    const result = inviteGuardToTeamSlot(job, activeGuardId, guardId, requests, invitee.name);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'standing_crew_invite',
+        guardId,
+        guardName: invitee.name,
+        recipientUserId: guardId,
+        requestId,
+        title: 'Job team invite',
+        body: `${guards.find((g) => g.id === activeGuardId)?.name ?? 'A guard'} invited you to "${job.title}".`,
+      });
+    }
+    appToast(`Invite sent to ${invitee.name}.`, 'success');
+  };
+
+  const handleAcceptTeamInvite = async (requestId: string) => {
+    if (!activeGuardId) return;
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = acceptTeamInvite(job, activeGuardId, requests);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    const { job: nextJob, slots: nextSlots } = await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: job.clientId,
+        requestId,
+        guardId: activeGuardId,
+        guardName: activeGuard?.name,
+        title: 'Guard accepted team invite',
+        body: `${activeGuard?.name ?? 'A guard'} accepted an invite for "${job.title}" and awaits your approval.`,
+      });
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: activeGuardId,
+        requestId,
+        body: `You accepted the invite for "${job.title}" — awaiting client confirmation.`,
+      });
+    }
+    appToast('Invite accepted — awaiting client approval.', 'success');
+    await finalizeTeamJobIfReady(nextJob, nextSlots);
+  };
+
+  const handleDeclineTeamInvite = async (requestId: string) => {
+    if (!activeGuardId) return;
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const inviterId = job.guardSlots?.find(
+      (s) => s.guardId === activeGuardId && s.status === 'invited'
+    )?.invitedByGuardId;
+    const result = declineTeamInvite(job, activeGuardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser && inviterId) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: inviterId,
+        requestId,
+        body: `${activeGuard?.name ?? 'A guard'} declined your invite for "${job.title}".`,
+      });
+    }
+    appToast('Invite declined.', 'info');
+  };
+
+  const handleRemoveTeamGuard = async (requestId: string, guardId: string) => {
+    if (!activeGuardId) return;
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = removeInvitedGuardFromTeam(job, activeGuardId, guardId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistTeamJobUpdate(result.job, result.slots);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: guardId,
+        requestId,
+        body: `Your invite for "${job.title}" was withdrawn.`,
+      });
+    }
+    appToast('Invite removed.', 'success');
+  };
+
+  const handleSuggestTeamGuard = async (requestId: string, suggestedGuardId: string) => {
+    if (!activeGuardId) return;
+    const job = requests.find((r) => r.id === requestId);
+    const suggested = guards.find((g) => g.id === suggestedGuardId);
+    if (!job || !suggested) return;
+    const result = suggestGuardForJob(job, activeGuardId, suggestedGuardId, requests, suggested.name);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistJobSuggestions(result.job);
+    if (currentUser) {
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: suggestedGuardId,
+        requestId,
+        guardId: suggestedGuardId,
+        guardName: suggested.name,
+        title: 'Guard suggestion',
+        body: `${activeGuard?.name ?? 'A guard'} suggested you for "${job.title}". Apply if interested — the client still approves.`,
+      });
+      void reportPushEvent(currentUser, {
+        type: 'assignment',
+        recipientUserId: job.clientId,
+        requestId,
+        guardId: suggestedGuardId,
+        guardName: suggested.name,
+        title: 'Guard suggestion',
+        body: `${activeGuard?.name ?? 'A guard'} suggested ${suggested.name} for "${job.title}". Review in your job listing.`,
+      });
+    }
+    appToast(`Suggestion sent to ${suggested.name} and the client.`, 'success');
+  };
+
+  const handleClientRequestSuggestedGuard = async (requestId: string, guardId: string) => {
+    await proposeGuardForClientApproval(requestId, guardId);
+    setRequests((prev) => {
+      const job = prev.find((r) => r.id === requestId);
+      if (!job) return prev;
+      const next = markGuardSuggestionPlaced(job, guardId);
+      if (isDbConnected) {
+        void persistGuardSuggestions(supabase, requestId, next.guardSuggestions ?? []);
+      }
+      return prev.map((r) => (r.id === requestId ? next : r));
+    });
+  };
+
+  const handleDismissGuardSuggestion = async (requestId: string, suggestionId: string) => {
+    const job = requests.find((r) => r.id === requestId);
+    if (!job) return;
+    const result = dismissGuardSuggestion(job, suggestionId);
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    await persistJobSuggestions(result.job);
+    appToast('Suggestion dismissed.', 'info');
+  };
+
   const proposeGuardForClientApproval = async (
     requestId: string,
     guardId: string,
@@ -13276,6 +13454,11 @@ export default function App() {
           onSubmitVehicle={(profile) => handleSubmitGuardVehicle(profile)}
           onAcceptJob={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
+          onInviteTeamGuard={handleInviteTeamGuard}
+          onSuggestTeamGuard={handleSuggestTeamGuard}
+          onAcceptTeamInvite={handleAcceptTeamInvite}
+          onDeclineTeamInvite={handleDeclineTeamInvite}
+          onRemoveTeamGuard={handleRemoveTeamGuard}
           feeConfig={platformSettings.feeConfig}
           onSubmitPriceOffer={(requestId, input) =>
             void handleSubmitPriceOffer(requestId, activeGuardId, input, 'guard')
@@ -13582,6 +13765,8 @@ export default function App() {
               onDenyPendingGuard={handleClientDenyPendingGuard}
               onApproveTeamSlot={handleClientApproveTeamSlot}
               onDenyTeamSlot={handleClientDenyTeamSlot}
+              onRequestSuggestedGuard={handleClientRequestSuggestedGuard}
+              onDismissGuardSuggestion={handleDismissGuardSuggestion}
               onRequestReplacement={handleRequestReplacement}
               onSubmitPriceOffer={(requestId, guardId, input) =>
                 void handleSubmitPriceOffer(requestId, guardId, input, 'client')

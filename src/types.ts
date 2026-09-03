@@ -1160,6 +1160,16 @@ export interface JobGuardSlot {
   updatedAt?: string;
 }
 
+export type JobGuardSuggestionStatus = 'pending' | 'dismissed' | 'placed';
+
+export interface JobGuardSuggestion {
+  id: string;
+  suggestedGuardId: string;
+  suggestedByGuardId: string;
+  suggestedAt: string;
+  status: JobGuardSuggestionStatus;
+}
+
 export interface SecurityRequest {
   id: string;
   title: string;
@@ -1306,6 +1316,8 @@ export interface SecurityRequest {
   scheduleChangeExtraAmount?: number;
   /** Per-slot roster for multi-guard jobs */
   guardSlots?: JobGuardSlot[];
+  /** Peer guard suggestions awaiting client review */
+  guardSuggestions?: JobGuardSuggestion[];
   /** marketplace = open post for any guard; direct = client sent from a guard profile */
   requestType?: RequestType;
   /** Set only when requestType is direct */

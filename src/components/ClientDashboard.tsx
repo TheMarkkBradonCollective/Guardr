@@ -94,6 +94,8 @@ interface ClientDashboardProps {
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  onRequestSuggestedGuard?: (requestId: string, guardId: string) => void | Promise<void>;
+  onDismissGuardSuggestion?: (requestId: string, suggestionId: string) => void | Promise<void>;
   onApproveFullTeam?: (requestId: string) => void | Promise<void>;
   onDenyFullTeam?: (requestId: string) => void | Promise<void>;
   onRequestReplacement?: (requestId: string, reasonNote?: string) => void | Promise<void>;
@@ -190,6 +192,8 @@ export function ClientDashboard({
   onDenyPendingGuard,
   onApproveTeamSlot,
   onDenyTeamSlot,
+  onRequestSuggestedGuard,
+  onDismissGuardSuggestion,
   onApproveFullTeam,
   onDenyFullTeam,
   onRequestReplacement,
@@ -433,6 +437,8 @@ export function ClientDashboard({
         onDenyPendingGuard={onDenyPendingGuard}
         onApproveTeamSlot={onApproveTeamSlot}
         onDenyTeamSlot={onDenyTeamSlot}
+        onRequestSuggestedGuard={onRequestSuggestedGuard}
+        onDismissGuardSuggestion={onDismissGuardSuggestion}
         onApproveFullTeam={onApproveFullTeam}
         onDenyFullTeam={onDenyFullTeam}
         onRequestReplacement={onRequestReplacement}
@@ -803,6 +809,8 @@ export function ClientDashboard({
         onDenyPendingGuard={onDenyPendingGuard}
         onApproveTeamSlot={onApproveTeamSlot}
         onDenyTeamSlot={onDenyTeamSlot}
+        onRequestSuggestedGuard={onRequestSuggestedGuard}
+        onDismissGuardSuggestion={onDismissGuardSuggestion}
         onApproveFullTeam={onApproveFullTeam}
         onDenyFullTeam={onDenyFullTeam}
         onRequestReplacement={onRequestReplacement}

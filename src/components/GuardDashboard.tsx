@@ -172,6 +172,7 @@ interface GuardDashboardProps {
   onDeclineDirectJob?: (requestId: string) => void | Promise<void>;
   onApplyAsTeamLead?: (requestId: string) => void | Promise<void>;
   onInviteTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
+  onSuggestTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
   onRemoveTeamGuard?: (requestId: string, guardId: string) => void | Promise<void>;
   onAcceptTeamInvite?: (requestId: string) => void | Promise<void>;
   onDeclineTeamInvite?: (requestId: string) => void | Promise<void>;
@@ -337,6 +338,7 @@ export function GuardDashboard({
   onDeclineDirectJob,
   onApplyAsTeamLead,
   onInviteTeamGuard,
+  onSuggestTeamGuard,
   onRemoveTeamGuard,
   onAcceptTeamInvite,
   onDeclineTeamInvite,
@@ -1498,6 +1500,11 @@ export function GuardDashboard({
                   ? (guardId) => void onInviteTeamGuard(selectedJob.id, guardId)
                   : undefined
               }
+              onSuggestGuard={
+                onSuggestTeamGuard
+                  ? (guardId) => void onSuggestTeamGuard(selectedJob.id, guardId)
+                  : undefined
+              }
               onRemoveGuard={
                 onRemoveTeamGuard
                   ? (guardId) => void onRemoveTeamGuard(selectedJob.id, guardId)
@@ -1580,6 +1587,7 @@ export function GuardDashboard({
                 onDeclineDirectJob={onDeclineDirectJob}
                 onApplyAsLead={onApplyAsTeamLead}
                 onInviteGuard={onInviteTeamGuard}
+                onSuggestGuard={onSuggestTeamGuard}
                 onRemoveGuard={onRemoveTeamGuard}
                 onUpdateCrewProfile={undefined}
                 onAcceptInvite={onAcceptTeamInvite}

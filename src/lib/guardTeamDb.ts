@@ -36,6 +36,18 @@ export async function persistJobSlotMeta(
 /** @deprecated Use persistJobSlotMeta */
 export const persistJobTeamMeta = persistJobSlotMeta;
 
+export async function persistGuardSuggestions(
+  supabase: { from: (table: string) => any },
+  jobId: string,
+  suggestions: SecurityRequest['guardSuggestions']
+): Promise<void> {
+  const { error } = await supabase
+    .from('security_requests')
+    .update({ guard_suggestions: suggestions ?? [] })
+    .eq('id', jobId);
+  if (error) throw error;
+}
+
 export function teamJobReadyForAcceptance(
   job: SecurityRequest,
   slots: JobGuardSlot[]

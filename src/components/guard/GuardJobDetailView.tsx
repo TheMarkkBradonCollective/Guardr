@@ -15,6 +15,7 @@ export interface GuardJobDetailViewProps {
   onDeclineDirectJob?: () => void | Promise<void>;
   onApplyAsLead?: () => void | Promise<void>;
   onInviteGuard?: (guardId: string) => void | Promise<void>;
+  onSuggestGuard?: (guardId: string) => void | Promise<void>;
   onRemoveGuard?: (guardId: string) => void | Promise<void>;
   onUpdateCrewProfile?: (patch: {
     crewName: string;
@@ -46,6 +47,7 @@ export function GuardJobDetailView({
   onDeclineDirectJob,
   onApplyAsLead,
   onInviteGuard,
+  onSuggestGuard,
   onRemoveGuard,
   onUpdateCrewProfile,
   onAcceptInvite,
@@ -70,6 +72,7 @@ export function GuardJobDetailView({
           onDeclineDirectJob={onDeclineDirectJob}
           onApplyAsLead={onApplyAsLead}
           onInviteGuard={onInviteGuard}
+          onSuggestGuard={onSuggestGuard}
           onRemoveGuard={onRemoveGuard}
           onUpdateCrewProfile={onUpdateCrewProfile}
           onAcceptInvite={onAcceptInvite}

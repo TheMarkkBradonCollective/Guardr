@@ -43,6 +43,7 @@ import {
   isIndependentGuardPendingForClient,
   hasIndependentSlotsPendingClient,
 } from '../../lib/guardTeams';
+import { pendingGuardSuggestions } from '../../lib/guardSuggestions';
 import { isJobChatEligible, threadForRequest } from '../../lib/jobChat';
 import { showAppToast } from '../ui/AppToast';
 import { showAppConfirm } from '../ui/AppConfirm';
@@ -121,6 +122,8 @@ export interface ClientJobActionsPanelProps {
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  onRequestSuggestedGuard?: (requestId: string, guardId: string) => void | Promise<void>;
+  onDismissGuardSuggestion?: (requestId: string, suggestionId: string) => void | Promise<void>;
   onApproveFullTeam?: (requestId: string) => void | Promise<void>;
   onDenyFullTeam?: (requestId: string) => void | Promise<void>;
   onOpenJobChat?: (requestId: string) => void;
@@ -169,6 +172,8 @@ export function ClientJobActionsPanel({
   onDenyPendingGuard,
   onApproveTeamSlot,
   onDenyTeamSlot,
+  onRequestSuggestedGuard,
+  onDismissGuardSuggestion,
   onApproveFullTeam,
   onDenyFullTeam,
   onOpenJobChat,
@@ -184,6 +189,7 @@ export function ClientJobActionsPanel({
   const pendingGuard = req.pendingGuardId ? guards.find((g) => g.id === req.pendingGuardId) : undefined;
   const awaitingClientGuard = isIndependentGuardPendingForClient(req);
   const independentSlotsPending = hasIndependentSlotsPendingClient(req);
+  const guardSuggestions = pendingGuardSuggestions(req);
 
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewNote, setReviewNote] = useState('');
@@ -359,6 +365,56 @@ export function ClientJobActionsPanel({
             onApproveSlot={onApproveTeamSlot ? (slotId) => void onApproveTeamSlot(req.id, slotId) : undefined}
             onDenySlot={onDenyTeamSlot ? (slotId) => void onDenyTeamSlot(req.id, slotId) : undefined}
           />
+        )}
+
+        {req.status === 'open' && guardSuggestions.length > 0 && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-3 space-y-3">
+            <p className="text-sm font-semibold text-brand-text">Guard suggestions</p>
+            <p className="text-xs text-brand-text-muted leading-relaxed">
+              Other guards recommended these profiles. Review and request approval — nothing is booked until you confirm.
+            </p>
+            <div className="space-y-2">
+              {guardSuggestions.map((suggestion) => {
+                const suggested = guards.find((g) => g.id === suggestion.suggestedGuardId);
+                const suggester = guards.find((g) => g.id === suggestion.suggestedByGuardId);
+                if (!suggested) return null;
+                return (
+                  <div
+                    key={suggestion.id}
+                    className="flex flex-wrap items-center gap-3 rounded-lg border border-brand-border/80 bg-brand-surface px-3 py-2.5"
+                  >
+                    <ProfileAvatar src={suggested.avatar} name={suggested.name} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-brand-text">{suggested.name}</p>
+                      <p className="text-xs text-brand-text-muted">
+                        Suggested by {suggester?.name ?? 'a guard'}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {onRequestSuggestedGuard && (
+                        <AppButton
+                          variant="primary"
+                          size="sm"
+                          onClick={() => void onRequestSuggestedGuard(req.id, suggested.id)}
+                        >
+                          Review & request
+                        </AppButton>
+                      )}
+                      {onDismissGuardSuggestion && (
+                        <AppButton
+                          variant="outline"
+                          size="sm"
+                          onClick={() => void onDismissGuardSuggestion(req.id, suggestion.id)}
+                        >
+                          Dismiss
+                        </AppButton>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {showEditActions && isJobScheduleLocked(req) && !canClientReschedulePaidSchedule(req) && (
