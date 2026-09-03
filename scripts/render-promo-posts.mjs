@@ -1239,7 +1239,7 @@ function whoFinds(file, dims) {
     line2: 'BUSINESS.',
     line3: 'SECURITY COMPANIES.',
     lede: 'Licensed California guards. You pick who works.',
-    screen: 'screen-signin.png',
+    screen: 'screen-who-hiring.png',
     shot: isWide ? 'hero' : 'close',
   });
 }

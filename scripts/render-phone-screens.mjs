@@ -208,6 +208,10 @@ html, body { width: 390px; height: 844px; overflow: hidden; font-family: Inter, 
   font-size: 14px; font-weight: 600; color: #111;
 }
 .auth-hero { background: #f6f6f6; padding: 20px 20px 24px; }
+.auth-kicker {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #6a6a6a; margin-bottom: 10px;
+}
 .auth-hero h1 {
   font-size: 30px; font-weight: 800;
   letter-spacing: -0.04em; line-height: 1.05;
@@ -249,6 +253,7 @@ const svg = {
   arrowL: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>`,
   arrowR: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`,
   shieldLg: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3z"/></svg>`,
+  building: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 21V5h10v16M14 9h6v12M8 9h2M8 13h2M8 17h2M17 13h2M17 17h2"/></svg>`,
 };
 
 const mapSvg = `
@@ -493,41 +498,32 @@ const SCREENS = [
     ),
   },
   {
-    file: 'screen-signin.png',
+    file: 'screen-who-hiring.png',
     html: authPage(`
       <div class="auth-head"><img src="${LOGO}" alt=""/>Guardr</div>
-      <div class="auth-back">${svg.arrowL} Back to Home</div>
+      <div class="auth-back">${svg.arrowL} Back to role selection</div>
       <div class="auth-hero">
-        <h1>Log in to your account</h1>
-        <p>Choose the workspace that matches how you use Guardr.</p>
+        <p class="auth-kicker">Log in as customer</p>
+        <h1>Who is hiring?</h1>
+        <p>This is the person or organization that contracts and pays for coverage — not the type of location.</p>
       </div>
       <div class="auth-opts">
-        <div class="opt">
-          <div class="icrow">${svg.shieldLg}</div>
-          <div class="opt-row">
-            <div>
-              <h2>Log in as guard</h2>
-              <p>Independent contractor — your marketplace jobs and earnings.</p>
-            </div>
-            <span class="go">${svg.arrowR}</span>
-          </div>
-        </div>
         <div class="opt">
           <div class="icrow">${svg.user}</div>
           <div class="opt-row">
             <div>
-              <h2>Log in as customer</h2>
-              <p>Personal or business — whoever is hiring and paying for coverage.</p>
+              <h2>Personal</h2>
+              <p>You hire and pay as yourself. Request coverage once or as often as you need — including recurring services. The job can still be at a venue or business site.</p>
             </div>
             <span class="go">${svg.arrowR}</span>
           </div>
         </div>
         <div class="opt">
-          <div class="icrow">${svg.briefcase}</div>
+          <div class="icrow">${svg.building}</div>
           <div class="opt-row">
             <div>
-              <h2>Log in as staff</h2>
-              <p>Guardr platform team — operations and support workspace.</p>
+              <h2>Business</h2>
+              <p>A company, venue, or organization is the contracting party and pays. Extra tools for sites, staffing, and team access. You can still post a private event if the business is hiring.</p>
             </div>
             <span class="go">${svg.arrowR}</span>
           </div>
