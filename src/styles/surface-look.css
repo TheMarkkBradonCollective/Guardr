@@ -518,3 +518,57 @@ html body[data-surface='desktop'] .payments-page {
 html body[data-surface='desktop'] .staff-account-access-section.staff-account-access--leading .staff-account-access-actions {
   padding-top: 0;
 }
+
+/* ── Full canvas: no phone column on any signed-in desktop page ─────────── */
+
+html body[data-surface='desktop'] .sfd-shell-canvas .app-screen,
+html body[data-surface='desktop'] .sfd-shell-canvas .app-screen--wide,
+html body[data-surface='desktop'] .sfd-shell-canvas .app-page,
+html body[data-surface='desktop'] .sfd-shell-canvas .client-content-shell,
+html body[data-surface='desktop'] .sfd-shell-canvas .client-form-shell,
+html body[data-surface='desktop'] .sfd-shell-canvas .guard-form-shell,
+html body[data-surface='desktop'] .sfd-shell-canvas .client-home-screen,
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-form-wizard,
+html body[data-surface='desktop'] .sfd-shell-canvas .adm-form-wizard,
+html body[data-surface='desktop'] .sfd-shell-canvas .adm-form-page,
+html body[data-surface='desktop'] .sfd-shell-canvas .adm-pending-page,
+html body[data-surface='desktop'] .sfd-shell-canvas .adm-page,
+html body[data-surface='desktop'] .sfd-shell-canvas .payments-page,
+html body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-pane,
+html body[data-surface='desktop'] .sfd-shell-canvas .staff-mgmt-panel,
+html body[data-surface='desktop'] .sfd-shell-canvas .staff-overview,
+html body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop,
+html body[data-surface='desktop'] .sfd-shell-canvas .staff-overview-desktop-command,
+html body[data-surface='desktop'] .sfd-shell-canvas .uber-workbench,
+html body[data-surface='desktop'] .sfd-shell-canvas .dashboard-content,
+html body[data-surface='desktop'] .sfd-shell-canvas .desktop-workspace-canvas-inner,
+html body[data-surface='desktop'] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+html body[data-surface='desktop'] .role-app-shell .app-screen--wide,
+html body[data-surface='desktop'] .client-content-shell,
+html body[data-surface='desktop'] .client-form-shell,
+html body[data-surface='desktop'] .guard-form-shell,
+html body[data-surface='desktop'] .client-home-screen {
+  max-width: none !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .max-w-lg,
+html body[data-surface='desktop'] .sfd-shell-canvas .max-w-xl,
+html body[data-surface='desktop'] .sfd-shell-canvas .max-w-2xl,
+html body[data-surface='desktop'] .sfd-shell-canvas .max-w-3xl,
+html body[data-surface='desktop'] .sfd-shell-canvas .max-w-4xl,
+html body[data-surface='desktop'] .sfd-shell-canvas .max-w-5xl,
+html body[data-surface='desktop'] .sfd-shell-canvas .max-w-6xl,
+html body[data-surface='desktop'] .sfd-shell-canvas .max-w-7xl {
+  max-width: none !important;
+}
+
+html body[data-surface='desktop'] .sfd-shell-canvas .mx-auto.max-w-lg,
+html body[data-surface='desktop'] .sfd-shell-canvas .mx-auto.max-w-xl,
+html body[data-surface='desktop'] .sfd-shell-canvas .mx-auto.max-w-2xl,
+html body[data-surface='desktop'] .sfd-shell-canvas .mx-auto.max-w-3xl,
+html body[data-surface='desktop'] .sfd-shell-canvas .mx-auto.max-w-4xl {
+  margin-inline: 0 !important;
+  width: 100%;
+}

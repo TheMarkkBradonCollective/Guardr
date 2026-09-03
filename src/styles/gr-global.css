@@ -565,8 +565,8 @@ html.theme-dark .uber-overlay-sheet-title { color: var(--uber-text, #fff); }
 
 /* Desktop workspace */
 body[data-surface="desktop"] .uber-form-wizard {
-  max-width: min(52rem, 100%);
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 1.25rem 1.25rem 0;
 }
 

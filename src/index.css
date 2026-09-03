@@ -18530,17 +18530,17 @@ body[data-form-factor="tablet"] .role-app-shell--docked .role-main > .app-screen
 }
 
 body[data-surface="desktop"] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
-  max-width: 52rem;
-  margin-inline: auto;
+  max-width: none;
+  margin-inline: 0;
 }
 
 body[data-surface="desktop"] .role-app-shell .app-screen--wide {
-  max-width: 68rem;
+  max-width: none;
 }
 
 body[data-surface="desktop"] .client-content-shell {
-  max-width: min(1100px, 100%);
-  margin-inline: auto;
+  max-width: none;
+  margin-inline: 0;
 }
 
 body[data-form-factor="tablet"] .client-content-shell {
@@ -18550,8 +18550,8 @@ body[data-form-factor="tablet"] .client-content-shell {
 
 body[data-surface="desktop"] .client-form-shell,
 body[data-surface="desktop"] .guard-form-shell {
-  max-width: min(44rem, 100%);
-  margin-inline: auto;
+  max-width: none;
+  margin-inline: 0;
 }
 
 body[data-form-factor="tablet"] .client-form-shell,
@@ -22375,17 +22375,23 @@ body[data-surface='desktop'] .sfd-shell-canvas .sfp-staff-profile-preview {
 
 body[data-surface="desktop"] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
 body[data-surface="desktop"] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
-  max-width: 62rem !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  width: 100% !important;
 }
 
 body[data-surface="desktop"] .role-app-shell .app-screen--wide,
 body[data-surface="desktop"] .role-app-shell .app-screen--wide,
 body[data-surface="desktop"] .role-app-shell .client-home-screen {
-  max-width: 78rem !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  width: 100% !important;
 }
 
 body[data-surface="desktop"] .client-content-shell {
-  max-width: min(1280px, 100%) !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  width: 100% !important;
 }
 
 body[data-surface="desktop"] .app-dashboard-split {

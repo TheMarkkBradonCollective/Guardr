@@ -58,4 +58,13 @@ describe('surface look layer', () => {
       'active desktop nav items must not use the light tile fill',
     );
   });
+
+  it('unboxes signed-in desktop pages so they fill the canvas', () => {
+    assert.match(css, /\.adm-form-page/);
+    assert.match(css, /\.client-form-shell/);
+    assert.match(
+      css,
+      /body\[data-surface='desktop'\][\s\S]{0,80}\.app-screen[\s\S]{0,500}max-width: none !important/,
+    );
+  });
 });

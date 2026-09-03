@@ -74,4 +74,26 @@ describe('desktop CSS independence', () => {
     assert.match(commandCss, /\.role-app-shell \.app-screen[\s\S]{0,160}max-width: none/);
     assert.match(commandCss, /\.app-form-section \.grid[\s\S]{0,400}repeat\(2/);
   });
+
+  it('does not letterbox signed-in desktop pages into a phone column', () => {
+    const indexCss = readFileSync(join(here, '../index.css'), 'utf8');
+    const lookCss = readFileSync(join(here, 'surface-look.css'), 'utf8');
+
+    assert.equal(
+      /body\[data-surface=["']desktop["']\][\s\S]{0,180}\.app-screen[\s\S]{0,120}max-width:\s*52rem/.test(indexCss),
+      false,
+      'desktop app-screen must not be capped at 52rem',
+    );
+    assert.equal(
+      /body\[data-surface=["']desktop["']\][\s\S]{0,180}\.app-screen[\s\S]{0,120}max-width:\s*62rem/.test(indexCss),
+      false,
+      'desktop app-screen must not be capped at 62rem',
+    );
+    assert.match(
+      lookCss,
+      /body\[data-surface='desktop'\][\s\S]{0,80}\.app-screen[\s\S]{0,400}max-width: none !important/,
+    );
+    assert.match(lookCss, /\.adm-form-page/);
+    assert.match(lookCss, /\.client-form-shell/);
+  });
 });
