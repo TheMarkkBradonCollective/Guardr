@@ -270,6 +270,144 @@ html body[data-surface='mobile'] .sfm-sheet {
   box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.14);
 }
 
+/* ── Full mobile experience: every signed-in page is a stacked field sheet ─ */
+
+html body[data-surface='mobile'] .sfm-shell .staff-detail-pane,
+html body[data-surface='mobile'] .sfm-shell .payments-page,
+html body[data-surface='mobile'] .sfm-shell .app-screen,
+html body[data-surface='mobile'] .sfm-shell .app-page,
+html body[data-surface='mobile'] .sfm-shell .client-content-shell,
+html body[data-surface='mobile'] .sfm-shell .client-form-shell,
+html body[data-surface='mobile'] .sfm-shell .guard-form-shell,
+html body[data-surface='mobile'] .sfm-shell .adm-form-page,
+html body[data-surface='mobile'] .sfm-shell .adm-page,
+html body[data-surface='mobile'] .sfm-shell .staff-mgmt-panel,
+html body[data-surface='mobile'] .sfm-shell .staff-roster-panel,
+html body[data-surface='mobile'] .sfm-shell .uber-workbench,
+html body[data-surface='mobile'] .sfm-shell .sfp-staff-profile-preview {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+}
+
+html body[data-surface='mobile'] .sfm-shell .tablet-split-panel,
+html body[data-surface='mobile'] .sfm-shell .uber-workbench-split,
+html body[data-surface='mobile'] .sfm-shell .app-messages-split,
+html body[data-surface='mobile'] .sfm-shell .desktop-master-detail,
+html body[data-surface='mobile'] .sfm-shell .adm-workbench-split {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-columns: none !important;
+  gap: 12px;
+  height: auto;
+  min-height: 0;
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-form-section .grid,
+html body[data-surface='mobile'] .sfm-shell .app-form-grid,
+html body[data-surface='mobile'] .sfm-shell form .grid.gap-4,
+html body[data-surface='mobile'] .sfm-shell form .grid.gap-3,
+html body[data-surface='mobile'] .sfm-shell .staff-detail-section .grid,
+html body[data-surface='mobile'] .sfm-shell .sft-form-page-body .grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-list-row,
+html body[data-surface='mobile'] .sfm-shell .uber-job-row,
+html body[data-surface='mobile'] .sfm-shell .uber-feed-row,
+html body[data-surface='mobile'] .sfm-shell .uber-payment-row,
+html body[data-surface='mobile'] .sfm-shell .app-inbox-row {
+  border: none !important;
+  border-radius: 16px !important;
+  background: var(--look-tile) !important;
+  min-height: var(--sf-row-h);
+  padding: 14px 16px;
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-dashboard-zone,
+html body[data-surface='mobile'] .sfm-shell .settings-section,
+html body[data-surface='mobile'] .sfm-shell .adm-card,
+html body[data-surface='mobile'] .sfm-shell .job-client-header,
+html body[data-surface='mobile'] .sfm-shell .staff-payments-body section {
+  padding: var(--look-section-pad);
+  border: none !important;
+  border-radius: var(--look-section-radius);
+  background: var(--look-section-bg);
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-inbox-tabs,
+html body[data-surface='mobile'] .sfm-shell .staff-list-filter-tabs,
+html body[data-surface='mobile'] .staff-guard-detail-tabs,
+html body[data-surface='mobile'] .sfm-segmented {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  margin: 0 0 12px;
+  border: none;
+  border-radius: 14px;
+  background: var(--look-tile);
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-inbox-tab,
+html body[data-surface='mobile'] .sfm-shell .staff-list-filter-tabs button,
+html body[data-surface='mobile'] .sfm-segmented-btn {
+  flex: 1;
+  min-height: 40px;
+  border: none !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-inbox-tab-active,
+html body[data-surface='mobile'] .sfm-shell .app-inbox-tab.app-inbox-tab-active,
+html body[data-surface='mobile'] .sfm-segmented-btn[data-active='true'] {
+  background: var(--look-paper) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-inbox-tab-active::after {
+  display: none;
+}
+
+html body[data-surface='mobile'] .sfm-drawer {
+  border-right: none;
+  box-shadow: 16px 0 40px rgba(0, 0, 0, 0.18);
+}
+
+html body[data-surface='mobile'] .sfm-drawer-head {
+  border-bottom: none;
+}
+
+html body[data-surface='mobile'] .sfm-drawer-row {
+  min-height: 52px;
+  border-radius: 14px;
+}
+
+html body[data-surface='mobile'] .sfm-drawer-row[data-active='true'] {
+  background: var(--look-tile);
+}
+
+html body[data-surface='mobile'] .sfm-shell table.adm-table tr,
+html body[data-surface='mobile'] .sfm-shell table.app-table tr,
+html body[data-surface='mobile'] .sfm-shell table.uber-workbench-table tr {
+  border: none !important;
+  background: var(--look-tile) !important;
+}
+
+html body[data-surface='mobile'] .sfm-shell .app-form-actions,
+html body[data-surface='mobile'] .sfm-shell .app-action-row,
+html body[data-surface='mobile'] .sfm-shell .request-flow-footer,
+html body[data-surface='mobile'] .sfm-shell .staff-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+html body[data-surface='mobile'] .sfm-fab {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    TABLET — paper inspector. Warm grey canvas, white 16px cards, labelled
    rail, two-up fields. Touch-sized but not a stretched phone.

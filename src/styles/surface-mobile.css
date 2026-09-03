@@ -2361,3 +2361,42 @@ body[data-surface='mobile'] .sfm-shell .app-action-row--equal {
   flex-direction: column;
   gap: 8px;
 }
+
+/* ── Full phone canvas: product pages fill the sheet, not a workbench ───── */
+
+body[data-surface='mobile'] .sfm-shell .staff-detail-pane,
+body[data-surface='mobile'] .sfp-staff-profile-preview {
+  width: 100%;
+  max-width: 100%;
+  padding: 8px 16px calc(28px + var(--sf-safe-bottom));
+  box-sizing: border-box;
+}
+
+body[data-surface='mobile'] .sfm-shell .tablet-split-panel,
+body[data-surface='mobile'] .sfm-shell .desktop-master-detail,
+body[data-surface='mobile'] .sfm-shell .adm-workbench-split {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+body[data-surface='mobile'] .sfm-shell .split-list-pane,
+body[data-surface='mobile'] .sfm-shell .split-detail-pane,
+body[data-surface='mobile'] .sfm-shell .uber-workbench-list,
+body[data-surface='mobile'] .sfm-shell .uber-workbench-detail {
+  width: 100%;
+  max-width: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-form-section .grid,
+body[data-surface='mobile'] .sfm-shell .app-form-grid,
+body[data-surface='mobile'] .sfm-shell form .grid.gap-4,
+body[data-surface='mobile'] .sfm-shell form .grid.gap-3 {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+body[data-surface='mobile'] .staff-guard-detail-tabs {
+  padding: 0 0 12px;
+}

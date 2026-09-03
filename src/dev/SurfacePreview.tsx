@@ -163,7 +163,12 @@ function PreviewApp() {
       }
       primaryAction={{ label: staff ? 'Create job' : 'Post availability', onClick: () => undefined }}
       navFooter={<p className="sfp-nav-footer">Guardr preview build</p>}
-      hideChrome={surface === 'mobile'}
+      hideChrome={
+        surface === 'mobile' &&
+        activeId !== 'profiles' &&
+        activeId !== 'job-detail' &&
+        activeId !== 'payments-preview'
+      }
     >
       {activeId === 'profiles' ? (
         <StaffProfilePreviewScreen />
