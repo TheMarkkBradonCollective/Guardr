@@ -8,6 +8,7 @@ import type { AuthSignupPick, AuthViewRole } from '../../lib/appNavigation';
 import type { ClientType } from '../../types';
 import { DirectTopHeader } from '../baseui/layout/DirectTopHeader';
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { AuthMobileTopBar } from './AuthFormChrome';
 import { FONT_DISPLAY } from '../../theme/typography';
 
 const HEADING_FONT = FONT_DISPLAY;
@@ -300,8 +301,19 @@ export function AuthRoleChoicePage({
       flexDirection="column"
       overflow="hidden"
     >
-      <DirectTopHeader onBrandClick={onBack} />
-      {onBack ? <AppSubScreenHeader title="" hideTitle onBack={onBack} backLabel={backLabel} /> : null}
+      {isMobile ? (
+        onBack ? (
+          <AuthMobileTopBar
+            onBack={onBack}
+            backAriaLabel={backLabel === 'Back' ? 'Back' : 'Back to Home'}
+          />
+        ) : null
+      ) : (
+        <>
+          <DirectTopHeader onBrandClick={onBack} />
+          {onBack ? <AppSubScreenHeader title="" hideTitle onBack={onBack} backLabel={backLabel} /> : null}
+        </>
+      )}
 
       <Block as="main" className="auth-role-choice-main">
         <Block as="section" aria-label={copy.ariaLabel} className="auth-role-choice-hero">
@@ -318,7 +330,7 @@ export function AuthRoleChoicePage({
             alignItems="center"
           >
             <Block>
-              {copy.kicker ? (
+              {copy.kicker && !(isMobile && copy.kicker.toLowerCase() === copy.heading.toLowerCase()) ? (
                 <Block
                   as="p"
                   margin={0}

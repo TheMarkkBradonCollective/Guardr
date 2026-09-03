@@ -3,7 +3,39 @@ import { Block } from 'baseui/block';
 import { HeadingLarge, LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
 import type { LucideIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { LandingBadge } from '../landing/LandingPrimitives';
+import { triggerHaptic } from '../../lib/platform/nativeHaptics';
+
+/** Phone-only auth chrome: back + wordmark + optional 44px utilities. */
+export function AuthMobileTopBar({
+  onBack,
+  backAriaLabel,
+  trailing,
+}: {
+  onBack: () => void;
+  backAriaLabel: string;
+  trailing?: React.ReactNode;
+}) {
+  return (
+    <header className="sfm-auth-nav">
+      <button
+        type="button"
+        className="sfm-auth-nav-back"
+        onClick={() => {
+          void triggerHaptic('light');
+          onBack();
+        }}
+        aria-label={backAriaLabel}
+      >
+        <ArrowLeft className="w-5 h-5" aria-hidden />
+        <span>Back</span>
+      </button>
+      <p className="sfm-auth-nav-wordmark">Guardr</p>
+      <div className="sfm-auth-nav-actions">{trailing}</div>
+    </header>
+  );
+}
 
 export function AuthFormHeader({
   role,

@@ -783,3 +783,22 @@ html body[data-surface='mobile'] .sfm-drawer-identity-btn {
 html body[data-surface='mobile'] .sfm-drawer-identity-btn:active {
   background: var(--look-tile);
 }
+
+html body[data-surface='mobile'] .sfm-auth-nav {
+  background: color-mix(in srgb, var(--look-paper) 86%, transparent);
+}
+
+html body[data-surface='mobile'] .legal-footer-link {
+  color: var(--sf-ink);
+}
+
+html body[data-surface='mobile'] .legal-footer-links {
+  background: var(--look-tile);
+  border-radius: var(--look-card-radius);
+  padding: 4px 16px;
+}
+
+html body[data-surface='mobile'] .theme-toggle-icon:active,
+html body[data-surface='mobile'] .auth-form-page-guide:active {
+  background: var(--look-hover);
+}

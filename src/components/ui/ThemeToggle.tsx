@@ -13,10 +13,37 @@ interface ThemeToggleProps {
   onChange: (mode: ThemeMode) => void;
   size?: 'sm' | 'md';
   className?: string;
+  /** Single moon/sun control for compact nav bars. */
+  variant?: 'segmented' | 'icon';
 }
 
-export function ThemeToggle({ value, onChange, size = 'md', className = '' }: ThemeToggleProps) {
+export function ThemeToggle({
+  value,
+  onChange,
+  size = 'md',
+  className = '',
+  variant = 'segmented',
+}: ThemeToggleProps) {
   const compact = size === 'sm';
+
+  if (variant === 'icon') {
+    const next = value === 'dark' ? 'light' : 'dark';
+    const Icon = value === 'dark' ? Sun : Moon;
+    return (
+      <button
+        type="button"
+        className={`theme-toggle-icon ${className}`.trim()}
+        aria-label={`Switch to ${next} appearance`}
+        title={next === 'dark' ? 'Dark' : 'Light'}
+        onClick={() => {
+          void triggerHaptic('light');
+          onChange(next);
+        }}
+      >
+        <Icon className="w-5 h-5" strokeWidth={2} aria-hidden />
+      </button>
+    );
+  }
 
   return (
     <div

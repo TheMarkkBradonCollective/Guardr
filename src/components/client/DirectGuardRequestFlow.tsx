@@ -253,9 +253,9 @@ export function DirectGuardRequestFlow({
         </div>
 
         <div className="app-subscreen-header app-subscreen-header--wrap">
-          <button type="button" onClick={goBack} className="app-subscreen-back">
+          <button type="button" onClick={goBack} className="app-subscreen-back" aria-label={step === 1 ? 'Back to Guards' : `Back to ${STEP_LABELS[step - 2]}`}>
             <ArrowLeft className="w-4 h-4" aria-hidden />
-            {step === 1 ? 'Back to Guards' : `Back to ${STEP_LABELS[step - 2]}`}
+            {formFactor === 'mobile' ? 'Back' : step === 1 ? 'Back to Guards' : `Back to ${STEP_LABELS[step - 2]}`}
           </button>
           <div className="w-full min-w-0">
             <p className="text-sm text-brand-text-muted">

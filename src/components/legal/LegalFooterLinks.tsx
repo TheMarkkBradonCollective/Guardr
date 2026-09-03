@@ -23,7 +23,7 @@ export function legalLinkLabel(page: LegalPageId): string {
 
 export function LegalFooterLinks({ onOpenLegal, className = '' }: LegalFooterLinksProps) {
   return (
-    <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-xs ${className}`}>
+    <div className={`legal-footer-links flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-xs ${className}`}>
       {LEGAL_LINK_ORDER.map((page) => (
         <button
           key={page}

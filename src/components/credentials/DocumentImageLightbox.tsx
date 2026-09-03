@@ -24,6 +24,7 @@ export function DocumentImageLightbox({
         open={open}
         onClose={onClose}
         align="center"
+        lockAlign
         zIndex={2300}
         ariaLabelledBy="document-lightbox"
         panelClassName="document-lightbox-panel--fullscreen"
@@ -50,7 +51,14 @@ export function DocumentImageLightbox({
   }
 
   return (
-    <AppModal open={open} onClose={onClose} align="center" zIndex={2300} ariaLabelledBy="document-lightbox">
+    <AppModal
+      open={open}
+      onClose={onClose}
+      align="center"
+      lockAlign
+      zIndex={2300}
+      ariaLabelledBy="document-lightbox"
+    >
       <div
         className="document-lightbox-shell"
         style={{ minHeight: '40vh', background: 'var(--brand-bg, #ffffff)', cursor: 'zoom-out' }}

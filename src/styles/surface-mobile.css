@@ -2930,6 +2930,185 @@ body[data-surface='mobile'] .sfm-drawer-identity-btn .sfm-shell-avatar {
   font-size: 14px !important;
 }
 
+/* ── Native auth nav, legal list, compact back, public phone column ──────── */
+
+body[data-surface='mobile'] .sfm-auth-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: calc(52px + var(--sf-safe-top));
+  padding: var(--sf-safe-top) 12px 4px 8px;
+  background: color-mix(in srgb, var(--sf-paper) 86%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+body[data-surface='mobile'] .sfm-auth-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 0 10px 0 4px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--sf-ink);
+  font-size: 17px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body[data-surface='mobile'] .sfm-auth-nav-back:active {
+  opacity: 0.55;
+}
+
+body[data-surface='mobile'] .sfm-auth-nav-wordmark {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--sf-ink);
+  pointer-events: none;
+}
+
+body[data-surface='mobile'] .sfm-auth-nav-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 88px;
+  justify-content: flex-end;
+}
+
+body[data-surface='mobile'] .theme-toggle-icon,
+body[data-surface='mobile'] .auth-form-page-guide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sf-ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body[data-surface='mobile'] .theme-toggle-icon:active,
+body[data-surface='mobile'] .auth-form-page-guide:active {
+  background: var(--sf-paper-muted);
+}
+
+body[data-surface='mobile'] .app-subscreen-back {
+  min-height: 44px;
+  padding: 0 8px 0 2px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--sf-ink);
+  gap: 2px;
+}
+
+body[data-surface='mobile'] .app-subscreen-trailing {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+body[data-surface='mobile'] .app-subscreen-header--with-trailing {
+  justify-content: space-between;
+}
+
+body[data-surface='mobile'] .legal-footer-links {
+  display: flex !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  width: 100%;
+  padding: 4px 0 8px;
+}
+
+body[data-surface='mobile'] .legal-footer-link {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  color: var(--sf-ink);
+  border-bottom: 1px solid var(--sf-line);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body[data-surface='mobile'] .legal-footer-link:last-child {
+  border-bottom: none;
+}
+
+body[data-surface='mobile'] .legal-document-page > header {
+  padding-top: var(--sf-safe-top);
+  background: color-mix(in srgb, var(--sf-paper) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+}
+
+body[data-surface='mobile'] .legal-document-page > header .max-w-3xl {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+body[data-surface='mobile'] input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']),
+body[data-surface='mobile'] select,
+body[data-surface='mobile'] textarea {
+  font-size: 16px !important;
+}
+
+body[data-surface='mobile'] .uber-landing-menu-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+body[data-surface='mobile'] .auth-password-toggle {
+  width: 44px;
+  height: 44px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body[data-surface='mobile'] .uber-landing-mobile-menu {
+  padding-bottom: 8px;
+}
+
+@media (min-width: 744px) {
+  body[data-surface='mobile'] .auth-experience:not(.dsk-auth),
+  body[data-surface='mobile'] .auth-role-choice-page:not(.auth-form-page),
+  body[data-surface='mobile'] .uber-style-landing--mobile,
+  body[data-surface='mobile'] .app-welcome,
+  body[data-surface='mobile'] .legal-document-page {
+    position: relative;
+    width: 440px;
+    max-width: 100vw;
+    margin-inline: auto;
+    min-height: 100dvh;
+    box-shadow: 0 0 0 1px var(--sf-line);
+    overflow-x: hidden;
+  }
+}
+
 @media (orientation: landscape) and (max-height: 500px) {
   body[data-surface='mobile'] .auth-role-choice-hero {
     display: none;
