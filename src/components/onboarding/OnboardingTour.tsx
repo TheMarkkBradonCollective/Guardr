@@ -47,6 +47,7 @@ function TutorialPrompt({
 }) {
   const surface = useSurfaceKind();
   const sheet = surface === 'mobile';
+  const tablet = surface === 'tablet';
 
   return (
     <AppModal
@@ -55,9 +56,9 @@ function TutorialPrompt({
       align={sheet ? 'bottom' : 'center'}
       zIndex={9998}
       ariaLabelledBy="tutorial-prompt-title"
-      panelClassName={sheet ? 'sfm-tutorial-prompt' : undefined}
+      panelClassName={sheet ? 'sfm-tutorial-prompt' : tablet ? 'sft-tutorial-prompt' : undefined}
     >
-      <Block padding={sheet ? 'scale600' : 'scale800'} className={sheet ? 'sfm-tutorial-prompt-inner' : 'w-full max-w-lg'}>
+      <Block padding={sheet ? 'scale600' : 'scale800'} className={sheet ? 'sfm-tutorial-prompt-inner' : tablet ? 'sft-tutorial-prompt-inner' : 'w-full max-w-lg'}>
         {sheet ? <div className="sfm-confirm-grabber" aria-hidden /> : null}
         <Block display="flex" alignItems="center" gridGap="scale300" marginBottom="scale400">
           <AccentIcon icon={Sparkles} size={20} />
@@ -101,11 +102,16 @@ function TutorialStepPanel({
   onNext: () => void;
   onBack: () => void;
 }) {
+  const surface = useSurfaceKind();
   const step = tour.steps[stepIndex];
   const isLastStep = stepIndex >= tour.steps.length - 1;
 
   return (
-    <div className="tutorial-step-panel" role="dialog" aria-live="polite">
+    <div
+      className={`tutorial-step-panel${surface === 'tablet' ? ' sft-tutorial-step' : ''}`}
+      role="dialog"
+      aria-live="polite"
+    >
       <div className="tutorial-step-panel-inner">
         <p className="text-xs font-bold uppercase tracking-wider text-brand-primary mb-1">
           Step {stepIndex + 1} of {tour.steps.length}

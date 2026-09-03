@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, Circle, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useMediaQuery } from '../../lib/platform';
+import { triggerHaptic } from '../../lib/platform/nativeHaptics';
 import { buildTabletNavigation, type SurfaceDestination } from '../surfaceNavigation';
 import { Logo } from '../../components/Logo';
 import type { SurfaceShellProps } from '../surfaceShellTypes';
@@ -71,7 +72,10 @@ export function TabletAppShell({
                     item={item}
                     active={item.id === activeId}
                     expanded={railExpanded}
-                    onSelect={() => onNavigate(item.id)}
+                    onSelect={() => {
+                      void triggerHaptic('light');
+                      onNavigate(item.id);
+                    }}
                   />
                 ))}
               </div>
@@ -83,7 +87,10 @@ export function TabletAppShell({
             <button
               type="button"
               className="sft-rail-toggle"
-              onClick={() => setRailExpanded((value) => !value)}
+              onClick={() => {
+                void triggerHaptic('light');
+                setRailExpanded((value) => !value);
+              }}
               aria-expanded={railExpanded}
               aria-label={railExpanded ? 'Collapse navigation' : 'Expand navigation'}
             >
@@ -106,7 +113,15 @@ export function TabletAppShell({
             <header className="sft-shell-header" aria-label={title}>
               <div className="sft-shell-header-lead">
                 {onBack ? (
-                  <button type="button" className="sft-icon-btn" onClick={onBack} aria-label="Back">
+                  <button
+                    type="button"
+                    className="sft-icon-btn"
+                    onClick={() => {
+                      void triggerHaptic('light');
+                      onBack();
+                    }}
+                    aria-label="Back"
+                  >
                     <ChevronLeft size={22} strokeWidth={2.25} aria-hidden />
                   </button>
                 ) : null}

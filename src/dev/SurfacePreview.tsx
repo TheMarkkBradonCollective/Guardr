@@ -97,6 +97,7 @@ export default function SurfacePreview() {
 function PreviewApp() {
   const { surface } = useSurface();
   const desktopSurface = surface === 'desktop';
+  const tabletSurface = surface === 'tablet';
   const previewPage =
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') : null;
   const [activeId, setActiveId] = useState(
@@ -160,14 +161,14 @@ function PreviewApp() {
       notifications={
         <button
           type="button"
-          className={desktopSurface ? 'sfd-icon-btn' : 'sfm-icon-btn'}
+          className={desktopSurface ? 'sfd-icon-btn' : tabletSurface ? 'sft-icon-btn' : 'sfm-icon-btn'}
           aria-label="Notifications"
         >
           <Bell size={desktopSurface ? 16 : 20} strokeWidth={2} aria-hidden />
         </button>
       }
       accountMenu={
-        surface === 'mobile' ? (
+        surface === 'mobile' || tabletSurface ? (
           <AccountMenu
             userName="Marcus Trent"
             userSubtitle={staffWorkspace ? 'Staff operations' : 'Guard · independent contractor'}
@@ -176,6 +177,7 @@ function PreviewApp() {
             onSignOut={() => undefined}
             themeMode={themeMode}
             onChangeTheme={setThemeMode}
+            triggerVariant={tabletSurface ? 'tablet' : 'default'}
           />
         ) : (
           <div className="sfp-account">MT</div>

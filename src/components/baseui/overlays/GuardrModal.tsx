@@ -2,7 +2,6 @@ import React from 'react';
 import { Modal, Drawer } from '../baseuiShims';
 import { modalOverrides, sheetOverrides } from './overlayStyles';
 import { useOverlayCloseGate, useReturnFocusOnClose } from './overlayStack';
-import { prefersMobileGestureUi, useDevice } from '../../../lib/platform';
 import { useSurfaceKind } from '../../../surfaces/SurfaceProvider';
 
 export interface GuardrModalProps {
@@ -33,18 +32,17 @@ export function GuardrModal({
   dismissable = true,
   lockAlign = false,
 }: GuardrModalProps) {
-  const { viewSurface } = useDevice();
   const surface = useSurfaceKind();
-  const gestureUi = prefersMobileGestureUi(viewSurface);
   const gatedClose = useOverlayCloseGate(open, onClose, dismissable);
   useReturnFocusOnClose(open);
 
   const mobileSurface = surface === 'mobile';
   const resolvedAlign = mobileSurface && !lockAlign ? 'bottom' : align;
-  // The mobile application always presents as a sheet — including a letterboxed
-  // `?ui=mobile` preview on a desktop pointer, where gestureUi would otherwise
-  // stay false and keep a centered website dialog.
-  const useBottomSheet = resolvedAlign === 'bottom' && (gestureUi || mobileSurface);
+  // Bottom sheets belong to the mobile application only. Tablet uses centered
+  // dialogs (and docked side panels elsewhere) even when gestureUi is true for
+  // browser-tablet / installed tablets. The mobile surface still sheets when
+  // letterboxed on a desktop pointer (`?ui=mobile`), where gestureUi is false.
+  const useBottomSheet = resolvedAlign === 'bottom' && mobileSurface;
 
   if (useBottomSheet) {
     return (
