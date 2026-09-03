@@ -24,6 +24,8 @@ import { DesktopOperationsScreen } from './surfaces/DesktopOperationsScreen';
 import { StaffProfilePreviewScreen } from './surfaces/StaffProfilePreviewScreen';
 import { JobPreviewScreen } from './surfaces/JobPreviewScreen';
 import { PaymentsPreviewScreen } from './surfaces/PaymentsPreviewScreen';
+import { AccountMenu } from '../components/layouts/AccountMenu';
+import type { ThemeMode } from '../lib/platform/theme';
 import './surfacePreview.css';
 
 const PROFILE_DEST: SurfaceDestination = {
@@ -108,6 +110,7 @@ function PreviewApp() {
             ? 'jobs'
             : 'myJobs'
   );
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
   const staffWorkspace =
     desktopSurface ||
     activeId === 'profiles' ||
@@ -163,7 +166,21 @@ function PreviewApp() {
           <Bell size={desktopSurface ? 16 : 20} strokeWidth={2} aria-hidden />
         </button>
       }
-      accountMenu={<div className="sfp-account">MT</div>}
+      accountMenu={
+        surface === 'mobile' ? (
+          <AccountMenu
+            userName="Marcus Trent"
+            userSubtitle={staffWorkspace ? 'Staff operations' : 'Guard · independent contractor'}
+            onOpenProfile={() => setActiveId('profiles')}
+            onOpenSettings={() => setActiveId('profiles')}
+            onSignOut={() => undefined}
+            themeMode={themeMode}
+            onChangeTheme={setThemeMode}
+          />
+        ) : (
+          <div className="sfp-account">MT</div>
+        )
+      }
       identity={
         <span className="sfp-identity">
           <span className="sfp-avatar">MT</span>
@@ -172,12 +189,7 @@ function PreviewApp() {
       }
       primaryAction={{ label: staffWorkspace ? 'Create job' : 'Post availability', onClick: () => undefined }}
       navFooter={<p className="sfp-nav-footer">Guardr preview build</p>}
-      hideChrome={
-        surface === 'mobile' &&
-        activeId !== 'profiles' &&
-        activeId !== 'job-detail' &&
-        activeId !== 'payments-preview'
-      }
+      hideChrome={false}
     >
       {activeId === 'profiles' ? (
         <StaffProfilePreviewScreen />

@@ -145,6 +145,7 @@ interface AppModalProps {
   ariaLabelledBy?: string;
   position?: 'fixed' | 'absolute';
   dismissable?: boolean;
+  lockAlign?: boolean;
 }
 
 /** Base Web modal / bottom sheet with overlay stack integration */

@@ -7,6 +7,7 @@ import {
   LegalEntityName,
   highlightSignatureSecurityBrand,
 } from '../SignatureSecurityBrand';
+import { useSurfaceKind } from '../../surfaces';
 
 interface LegalPageProps {
   page: LegalPageId;
@@ -20,18 +21,20 @@ export function LegalPage({ page, onBack, onOpenLegal, headerRight }: LegalPageP
   const siblings = (LEGAL_PAGE_SIBLINGS[page] ?? (page === 'terms' ? ['privacy'] : ['terms'])).filter(
     (id) => id !== page
   );
+  const compactBack = useSurfaceKind() === 'mobile';
 
   return (
-    <div className="page-shell min-h-screen">
+    <div className="page-shell min-h-screen legal-document-page">
       <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-brand-bg/95 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={onBack}
             className="app-subscreen-back"
+            aria-label="Back to Home"
           >
             <ArrowLeft className="w-4 h-4" aria-hidden />
-            Back to Home
+            {compactBack ? 'Back' : 'Back to Home'}
           </button>
           <div className="flex items-center gap-3">
             {headerRight}

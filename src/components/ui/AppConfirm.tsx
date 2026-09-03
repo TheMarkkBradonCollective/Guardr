@@ -6,6 +6,7 @@ import { Textarea } from 'baseui/textarea';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { GuardrInput } from '../baseui/GuardrInput';
 import { GuardrModal } from '../baseui/overlays/GuardrModal';
+import { useSurfaceKind } from '../../surfaces';
 
 export type AppConfirmTone = 'default' | 'danger';
 export type AppAlertTone = 'default' | 'warning';
@@ -114,34 +115,91 @@ export function showAppAlert(options: AppAlertOptions): Promise<void> {
   });
 }
 
+function ConfirmActions({
+  sheet,
+  primaryLabel,
+  cancelLabel,
+  danger = false,
+  primaryType = 'button',
+  onPrimary,
+  onCancel,
+}: {
+  sheet: boolean;
+  primaryLabel: string;
+  cancelLabel?: string;
+  danger?: boolean;
+  primaryType?: 'button' | 'submit';
+  onPrimary?: () => void;
+  onCancel?: () => void;
+}) {
+  const size = sheet ? 'default' : 'compact';
+  const primary = (
+    <GuardrButton
+      kind={danger ? 'danger' : 'primary'}
+      size={size}
+      fullWidth={sheet}
+      type={primaryType}
+      onClick={onPrimary}
+    >
+      {primaryLabel}
+    </GuardrButton>
+  );
+  const cancel = cancelLabel ? (
+    <GuardrButton kind="secondary" size={size} fullWidth={sheet} type="button" onClick={onCancel}>
+      {cancelLabel}
+    </GuardrButton>
+  ) : null;
+
+  if (sheet) {
+    return (
+      <div className="sfm-confirm-actions">
+        {primary}
+        {cancel}
+      </div>
+    );
+  }
+
+  return (
+    <Block display="flex" gridGap="scale400" justifyContent="flex-end" flexWrap>
+      {cancel}
+      {primary}
+    </Block>
+  );
+}
+
 function ConfirmDialogBody({
   options,
   onConfirm,
   onCancel,
+  sheet,
 }: {
   options: AppConfirmOptions;
   onConfirm: () => void;
   onCancel: () => void;
+  sheet: boolean;
 }) {
   const titleId = useId();
   const danger = options.tone === 'danger';
 
   return (
-    <Block padding="scale800" className="app-confirm-dialog">
-      <HeadingSmall id={titleId} marginTop="0" marginBottom="scale400">
+    <Block padding={sheet ? '0' : 'scale800'} className={`app-confirm-dialog${sheet ? ' sfm-confirm' : ''}`}>
+      {sheet ? <div className="sfm-confirm-grabber" aria-hidden /> : null}
+      <HeadingSmall id={titleId} marginTop="0" marginBottom="scale400" className="app-confirm-title">
         {options.title}
       </HeadingSmall>
       {options.message ? (
-        <ParagraphMedium $style={{ color: 'contentSecondary', marginBottom: 'scale600' }}>{options.message}</ParagraphMedium>
+        <ParagraphMedium className="app-confirm-message" $style={{ color: 'contentSecondary', marginBottom: 'scale600' }}>
+          {options.message}
+        </ParagraphMedium>
       ) : null}
-      <Block display="flex" gridGap="scale400" justifyContent="flex-end" flexWrap>
-        <GuardrButton kind="secondary" size="compact" onClick={onCancel}>
-          {options.cancelLabel ?? 'Cancel'}
-        </GuardrButton>
-        <GuardrButton kind={danger ? 'danger' : 'primary'} size="compact" onClick={onConfirm}>
-          {options.confirmLabel ?? 'Confirm'}
-        </GuardrButton>
-      </Block>
+      <ConfirmActions
+        sheet={sheet}
+        danger={danger}
+        primaryLabel={options.confirmLabel ?? 'Confirm'}
+        cancelLabel={options.cancelLabel ?? 'Cancel'}
+        onPrimary={onConfirm}
+        onCancel={onCancel}
+      />
     </Block>
   );
 }
@@ -150,10 +208,12 @@ function PromptDialogBody({
   options,
   onSubmit,
   onCancel,
+  sheet,
 }: {
   options: AppPromptOptions;
   onSubmit: (value: string) => void;
   onCancel: () => void;
+  sheet: boolean;
 }) {
   const titleId = useId();
   const [value, setValue] = useState(options.defaultValue ?? '');
@@ -182,12 +242,20 @@ function PromptDialogBody({
   };
 
   return (
-    <Block as="form" padding="scale800" className="app-confirm-dialog" onSubmit={handleSubmit}>
-      <HeadingSmall id={titleId} marginTop="0" marginBottom="scale400">
+    <Block
+      as="form"
+      padding={sheet ? '0' : 'scale800'}
+      className={`app-confirm-dialog${sheet ? ' sfm-confirm' : ''}`}
+      onSubmit={handleSubmit}
+    >
+      {sheet ? <div className="sfm-confirm-grabber" aria-hidden /> : null}
+      <HeadingSmall id={titleId} marginTop="0" marginBottom="scale400" className="app-confirm-title">
         {options.title}
       </HeadingSmall>
       {options.message ? (
-        <ParagraphMedium $style={{ color: 'contentSecondary', marginBottom: 'scale500' }}>{options.message}</ParagraphMedium>
+        <ParagraphMedium className="app-confirm-message" $style={{ color: 'contentSecondary', marginBottom: 'scale500' }}>
+          {options.message}
+        </ParagraphMedium>
       ) : null}
       {options.multiline ? (
         <Textarea
@@ -214,14 +282,13 @@ function PromptDialogBody({
       {error ? (
         <ParagraphMedium $style={{ color: 'negative', fontSize: '12px', marginTop: 'scale300' }}>{error}</ParagraphMedium>
       ) : null}
-      <Block display="flex" gridGap="scale400" justifyContent="flex-end" marginTop="scale600" flexWrap>
-        <GuardrButton kind="secondary" size="compact" type="button" onClick={onCancel}>
-          {options.cancelLabel ?? 'Cancel'}
-        </GuardrButton>
-        <GuardrButton kind="primary" size="compact" type="submit">
-          {options.confirmLabel ?? 'Continue'}
-        </GuardrButton>
-      </Block>
+      <ConfirmActions
+        sheet={sheet}
+        primaryLabel={options.confirmLabel ?? 'Continue'}
+        cancelLabel={options.cancelLabel ?? 'Cancel'}
+        primaryType="submit"
+        onCancel={onCancel}
+      />
     </Block>
   );
 }
@@ -229,35 +296,38 @@ function PromptDialogBody({
 function AlertDialogBody({
   options,
   onClose,
+  sheet,
 }: {
   options: AppAlertOptions;
   onClose: () => void;
+  sheet: boolean;
 }) {
   const titleId = useId();
   const warning = options.tone === 'warning';
 
   return (
     <Block
-      padding="scale800"
-      className={`app-confirm-dialog${warning ? ' app-confirm-dialog--warning' : ''}`}
+      padding={sheet ? '0' : 'scale800'}
+      className={`app-confirm-dialog${warning ? ' app-confirm-dialog--warning' : ''}${sheet ? ' sfm-confirm' : ''}`}
     >
-      <HeadingSmall id={titleId} marginTop="0" marginBottom="scale400">
+      {sheet ? <div className="sfm-confirm-grabber" aria-hidden /> : null}
+      <HeadingSmall id={titleId} marginTop="0" marginBottom="scale400" className="app-confirm-title">
         {options.title}
       </HeadingSmall>
       {options.message ? (
-        <ParagraphMedium $style={{ color: 'contentSecondary', marginBottom: 'scale600' }}>{options.message}</ParagraphMedium>
+        <ParagraphMedium className="app-confirm-message" $style={{ color: 'contentSecondary', marginBottom: 'scale600' }}>
+          {options.message}
+        </ParagraphMedium>
       ) : null}
-      <Block display="flex" justifyContent="flex-end">
-        <GuardrButton kind="primary" size="compact" onClick={onClose}>
-          {options.confirmLabel ?? 'OK'}
-        </GuardrButton>
-      </Block>
+      <ConfirmActions sheet={sheet} primaryLabel={options.confirmLabel ?? 'OK'} onPrimary={onClose} />
     </Block>
   );
 }
 
 export function AppConfirmHost() {
   const [request, setRequest] = useState<DialogRequest | null>(null);
+  const surface = useSurfaceKind();
+  const sheet = surface === 'mobile';
 
   useEffect(() => subscribe(setRequest), []);
 
@@ -268,21 +338,29 @@ export function AppConfirmHost() {
   };
 
   const dialog = (
-    <GuardrModal open align="center" onClose={handleClose} panelClassName="app-confirm-panel" zIndex={2200}>
+    <GuardrModal
+      open
+      align={sheet ? 'bottom' : 'center'}
+      onClose={handleClose}
+      panelClassName={sheet ? 'app-confirm-panel sfm-confirm-panel' : 'app-confirm-panel'}
+      zIndex={2200}
+    >
       {request.kind === 'confirm' ? (
         <ConfirmDialogBody
           options={request.options}
           onCancel={handleClose}
           onConfirm={() => dismissCurrent(true)}
+          sheet={sheet}
         />
       ) : request.kind === 'prompt' ? (
         <PromptDialogBody
           options={request.options}
           onCancel={handleClose}
           onSubmit={(value) => dismissCurrent(value)}
+          sheet={sheet}
         />
       ) : (
-        <AlertDialogBody options={request.options} onClose={handleClose} />
+        <AlertDialogBody options={request.options} onClose={handleClose} sheet={sheet} />
       )}
     </GuardrModal>
   );

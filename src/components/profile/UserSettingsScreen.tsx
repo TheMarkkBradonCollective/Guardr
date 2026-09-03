@@ -66,8 +66,8 @@ export function UserSettingsScreen({
 
       <AppSettingsHead>About</AppSettingsHead>
       <AppSettingsSection>
-        <p className="text-sm text-brand-text-muted">
-          Running on {surfaceLabel}
+        <p className="text-sm text-brand-text-muted leading-relaxed">
+          Guardr {surfaceLabel} · notifications, manuals, and legal live here.
         </p>
       </AppSettingsSection>
     </>

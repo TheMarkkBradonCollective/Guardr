@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { ChevronRight, Circle, type LucideIcon } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { ChevronRight, Circle, X, type LucideIcon } from 'lucide-react';
+import { triggerHaptic } from '../../../lib/platform/nativeHaptics';
 import type { SurfaceDestination } from '../../surfaceNavigation';
 
 export interface MobileDrawerNavProps {
@@ -11,10 +12,12 @@ export interface MobileDrawerNavProps {
   workspaceLabel?: string;
   footer?: React.ReactNode;
   primaryAction?: React.ReactNode;
+  identity?: React.ReactNode;
+  onIdentityClick?: () => void;
 }
 
 /**
- * Left slide-in navigation for mobile roles with a large destination catalog (staff).
+ * Left slide-in navigation for mobile roles with a large destination catalog.
  * Replaces the bottom tab bar — every section is reachable from one hamburger menu.
  */
 export function MobileDrawerNav({
@@ -26,7 +29,11 @@ export function MobileDrawerNav({
   workspaceLabel,
   footer,
   primaryAction,
+  identity,
+  onIdentityClick,
 }: MobileDrawerNavProps) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -40,6 +47,7 @@ export function MobileDrawerNav({
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
     return () => {
       document.body.style.overflow = prev;
     };
@@ -56,11 +64,44 @@ export function MobileDrawerNav({
       <aside
         className="sfm-drawer"
         data-open={open ? 'true' : undefined}
-        aria-label="Staff navigation"
+        role="dialog"
+        aria-modal={open ? 'true' : undefined}
+        aria-label="Main menu"
         aria-hidden={!open}
+        inert={!open ? true : undefined}
       >
         <div className="sfm-drawer-head">
-          {workspaceLabel ? <p className="sfm-drawer-workspace">{workspaceLabel}</p> : null}
+          <div className="sfm-drawer-head-row">
+            {workspaceLabel ? <p className="sfm-drawer-workspace">{workspaceLabel}</p> : <span />}
+            <button
+              ref={closeRef}
+              type="button"
+              className="sfm-icon-btn"
+              onClick={() => {
+                void triggerHaptic('light');
+                onClose();
+              }}
+              aria-label="Close menu"
+            >
+              <X size={20} strokeWidth={2.25} aria-hidden />
+            </button>
+          </div>
+          {identity ? (
+            <button
+              type="button"
+              className="sfm-drawer-identity-btn"
+              onClick={() => {
+                void triggerHaptic('light');
+                onIdentityClick?.();
+              }}
+            >
+              {identity}
+              <span className="sfm-drawer-identity-copy">
+                <span className="sfm-drawer-identity-action">Account & settings</span>
+              </span>
+              <ChevronRight size={18} strokeWidth={2} className="sfm-drawer-row-chevron" aria-hidden />
+            </button>
+          ) : null}
           {primaryAction ? <div className="sfm-drawer-primary">{primaryAction}</div> : null}
         </div>
 
@@ -103,7 +144,11 @@ function DrawerRow({
       type="button"
       className="sfm-drawer-row"
       data-active={active ? 'true' : undefined}
-      onClick={onSelect}
+      aria-current={active ? 'page' : undefined}
+      onClick={() => {
+        if (!active) void triggerHaptic('light');
+        onSelect();
+      }}
     >
       <span className="sfm-drawer-row-icon">
         <Icon size={20} strokeWidth={2} aria-hidden />

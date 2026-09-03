@@ -7,6 +7,7 @@ import { shouldOfferTutorialPrompt, type TutorialPersistedState } from '../../li
 import { AppModal } from '../ui/motion/AppMotion';
 import { AppButton } from '../ui/AppButton';
 import { AccentIcon } from '../baseui/dashboard';
+import { useSurfaceKind } from '../../surfaces';
 
 export interface TutorialNavigationHandlers {
   onGuardTab?: (tab: string) => void;
@@ -44,9 +45,20 @@ function TutorialPrompt({
   onStart: () => void;
   onDecline: () => void;
 }) {
+  const surface = useSurfaceKind();
+  const sheet = surface === 'mobile';
+
   return (
-    <AppModal open onClose={onDecline} align="center" zIndex={9998} ariaLabelledBy="tutorial-prompt-title">
-      <Block padding="scale800" className="w-full max-w-lg">
+    <AppModal
+      open
+      onClose={onDecline}
+      align={sheet ? 'bottom' : 'center'}
+      zIndex={9998}
+      ariaLabelledBy="tutorial-prompt-title"
+      panelClassName={sheet ? 'sfm-tutorial-prompt' : undefined}
+    >
+      <Block padding={sheet ? 'scale600' : 'scale800'} className={sheet ? 'sfm-tutorial-prompt-inner' : 'w-full max-w-lg'}>
+        {sheet ? <div className="sfm-confirm-grabber" aria-hidden /> : null}
         <Block display="flex" alignItems="center" gridGap="scale300" marginBottom="scale400">
           <AccentIcon icon={Sparkles} size={20} />
           <LabelSmall margin={0} $style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
@@ -65,7 +77,7 @@ function TutorialPrompt({
           <li>Sample jobs and requests are not sent live</li>
           <li>Restart anytime from Guide → Interactive tutorial</li>
         </ul>
-        <Block display="flex" flexDirection={['column', 'column', 'row']} gridGap="scale300">
+        <Block display="flex" flexDirection={sheet ? 'column' : ['column', 'column', 'row']} gridGap="scale300">
           <AppButton type="button" variant="primary" fullWidth onClick={onStart}>
             Start tutorial
           </AppButton>
@@ -116,7 +128,7 @@ function TutorialStepPanel({
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
           )}
-          <button type="button" onClick={onNext} className="app-button-primary app-btn-sm flex-1 flex items-center justify-center gap-1">
+          <button type="button" onClick={onNext} className="app-button-primary app-btn-sm flex-1 flex items-center justify-center gap-1 min-h-11">
             {isLastStep ? 'Finish tutorial' : 'Next'}
             {!isLastStep && <ChevronRight className="w-4 h-4" />}
           </button>

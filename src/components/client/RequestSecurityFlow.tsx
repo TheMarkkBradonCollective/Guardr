@@ -344,9 +344,9 @@ export function RequestSecurityFlow({
     <ResponsivePage screenClassName="h-full min-h-0">
     <div className={`h-full flex flex-col animate-fade-in client-content-shell client-form-shell${formFactor === 'desktop' ? ' uber-form-wizard sfd-form-wizard' : ''}${isTablet ? ' sft-request-flow' : ''}`}>
       <div className="app-subscreen-header app-subscreen-header--wrap shrink-0">
-        <button type="button" onClick={goBack} className="app-subscreen-back">
+        <button type="button" onClick={goBack} className="app-subscreen-back" aria-label={step === 1 ? 'Back to Home' : `Back to ${STEP_LABELS[step - 2]}`}>
           <ArrowLeft className="w-4 h-4" aria-hidden />
-          {step === 1 ? 'Back to Home' : `Back to ${STEP_LABELS[step - 2]}`}
+          {formFactor === 'mobile' ? 'Back' : step === 1 ? 'Back to Home' : `Back to ${STEP_LABELS[step - 2]}`}
         </button>
         <div className="w-full min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-brand-text-muted mb-2">

@@ -3,6 +3,7 @@ import { Modal, Drawer } from '../baseuiShims';
 import { modalOverrides, sheetOverrides } from './overlayStyles';
 import { useOverlayCloseGate, useReturnFocusOnClose } from './overlayStack';
 import { prefersMobileGestureUi, useDevice } from '../../../lib/platform';
+import { useSurfaceKind } from '../../../surfaces/SurfaceProvider';
 
 export interface GuardrModalProps {
   open: boolean;
@@ -16,6 +17,8 @@ export interface GuardrModalProps {
   position?: 'fixed' | 'absolute';
   /** When false, backdrop tap, Escape, and system back do not close. */
   dismissable?: boolean;
+  /** Keep `align` even on the mobile surface (image lightbox, etc.). */
+  lockAlign?: boolean;
 }
 
 export function GuardrModal({
@@ -28,14 +31,20 @@ export function GuardrModal({
   zIndex = 1100,
   ariaLabelledBy,
   dismissable = true,
+  lockAlign = false,
 }: GuardrModalProps) {
   const { viewSurface } = useDevice();
+  const surface = useSurfaceKind();
   const gestureUi = prefersMobileGestureUi(viewSurface);
   const gatedClose = useOverlayCloseGate(open, onClose, dismissable);
   useReturnFocusOnClose(open);
 
-  // Website desktop: never use slide-up drawers — center the dialog instead.
-  const useBottomSheet = align === 'bottom' && gestureUi;
+  const mobileSurface = surface === 'mobile';
+  const resolvedAlign = mobileSurface && !lockAlign ? 'bottom' : align;
+  // The mobile application always presents as a sheet — including a letterboxed
+  // `?ui=mobile` preview on a desktop pointer, where gestureUi would otherwise
+  // stay false and keep a centered website dialog.
+  const useBottomSheet = resolvedAlign === 'bottom' && (gestureUi || mobileSurface);
 
   if (useBottomSheet) {
     return (
