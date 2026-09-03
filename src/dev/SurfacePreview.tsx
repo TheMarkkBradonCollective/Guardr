@@ -94,7 +94,7 @@ export default function SurfacePreview() {
 
 function PreviewApp() {
   const { surface } = useSurface();
-  const staff = surface === 'desktop';
+  const desktopSurface = surface === 'desktop';
   const previewPage =
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') : null;
   const [activeId, setActiveId] = useState(
@@ -104,15 +104,20 @@ function PreviewApp() {
         ? 'job-detail'
         : previewPage === 'payments'
           ? 'payments-preview'
-          : staff
+          : desktopSurface
             ? 'jobs'
             : 'myJobs'
   );
+  const staffWorkspace =
+    desktopSurface ||
+    activeId === 'profiles' ||
+    activeId === 'job-detail' ||
+    activeId === 'payments-preview';
   const destinations = [
     PROFILE_DEST,
     JOB_DEST,
     PAYMENTS_DEST,
-    ...(staff ? STAFF_DESTINATIONS : GUARD_DESTINATIONS),
+    ...(staffWorkspace ? STAFF_DESTINATIONS : GUARD_DESTINATIONS),
   ];
 
   useEffect(() => {
@@ -140,18 +145,22 @@ function PreviewApp() {
             ? 'Jobs'
             : activeId === 'payments-preview'
               ? 'Payments'
-              : staff
+              : staffWorkspace
                 ? 'Jobs'
                 : 'Shifts'
       }
-      breadcrumb={staff ? 'Operations' : undefined}
-      workspaceLabel={staff ? 'Staff operations' : 'Guard workspace'}
+      breadcrumb={staffWorkspace ? 'Operations' : undefined}
+      workspaceLabel={staffWorkspace ? 'Staff operations' : 'Guard workspace'}
       destinations={destinations}
       activeId={activeId}
       onNavigate={setActiveId}
       notifications={
-        <button type="button" className={staff ? 'sfd-icon-btn' : 'sfm-icon-btn'} aria-label="Notifications">
-          <Bell size={staff ? 16 : 20} strokeWidth={2} aria-hidden />
+        <button
+          type="button"
+          className={desktopSurface ? 'sfd-icon-btn' : 'sfm-icon-btn'}
+          aria-label="Notifications"
+        >
+          <Bell size={desktopSurface ? 16 : 20} strokeWidth={2} aria-hidden />
         </button>
       }
       accountMenu={<div className="sfp-account">MT</div>}
@@ -161,7 +170,7 @@ function PreviewApp() {
           <span className="sfp-identity-name">Marcus Trent</span>
         </span>
       }
-      primaryAction={{ label: staff ? 'Create job' : 'Post availability', onClick: () => undefined }}
+      primaryAction={{ label: staffWorkspace ? 'Create job' : 'Post availability', onClick: () => undefined }}
       navFooter={<p className="sfp-nav-footer">Guardr preview build</p>}
       hideChrome={
         surface === 'mobile' &&
