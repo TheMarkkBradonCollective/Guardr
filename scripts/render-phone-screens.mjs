@@ -207,30 +207,34 @@ html, body { width: 390px; height: 844px; overflow: hidden; font-family: Inter, 
   padding: 2px 16px 12px;
   font-size: 14px; font-weight: 600; color: #111;
 }
-.auth-hero { background: #f6f6f6; padding: 20px 20px 24px; }
+.auth-hero { background: #f6f6f6; padding: 14px 20px 16px; }
 .auth-kicker {
   font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
-  text-transform: uppercase; color: #6a6a6a; margin-bottom: 10px;
+  text-transform: uppercase; color: #6a6a6a; margin-bottom: 8px;
 }
 .auth-hero h1 {
-  font-size: 30px; font-weight: 800;
+  font-size: 28px; font-weight: 800;
   letter-spacing: -0.04em; line-height: 1.05;
 }
 .auth-hero p {
-  margin-top: 10px;
-  font-size: 14px; font-weight: 500; color: #6a6a6a; line-height: 1.4;
+  margin-top: 8px;
+  font-size: 13px; font-weight: 500; color: #6a6a6a; line-height: 1.35;
 }
-.auth-opts { padding: 16px 20px 20px; }
-.opt { padding: 2px 0 4px; }
-.opt + .opt { margin-top: 18px; }
-.opt .icrow { margin-bottom: 8px; color: #111; }
+.auth-opts { padding: 12px 20px 14px; }
+.opt { padding: 2px 0 2px; }
+.opt + .opt { margin-top: 12px; }
+.opt .icrow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; color: #111; }
+.opt .badge {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 .opt-row {
   display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 10px; padding-bottom: 14px; border-bottom: 1px solid #eee;
+  gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee;
 }
-.opt h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
-.opt p { font-size: 13px; font-weight: 500; color: #666; line-height: 1.4; margin-top: 6px; }
-.opt .go { flex-shrink: 0; margin-top: 6px; color: #111; }
+.opt h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.opt p { font-size: 12px; font-weight: 500; color: #666; line-height: 1.35; margin-top: 4px; }
+.opt .go { flex-shrink: 0; margin-top: 4px; color: #111; }
 `;
 
 const svg = {
@@ -524,6 +528,16 @@ const SCREENS = [
             <div>
               <h2>Business</h2>
               <p>A company, venue, or organization is the contracting party and pays. Extra tools for sites, staffing, and team access. You can still post a private event if the business is hiring.</p>
+            </div>
+            <span class="go">${svg.arrowR}</span>
+          </div>
+        </div>
+        <div class="opt">
+          <div class="icrow">${svg.shieldLg}<span class="badge">Licensed PPO</span></div>
+          <div class="opt-row">
+            <div>
+              <h2>Security company</h2>
+              <p>A licensed private patrol operator (PPO) hiring independent contractor guards through Guardr — for overflow staffing or subcontracted coverage. PPO verification required.</p>
             </div>
             <span class="go">${svg.arrowR}</span>
           </div>
