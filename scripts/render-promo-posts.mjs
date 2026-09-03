@@ -530,13 +530,36 @@ function graphicHtml(post) {
   }
 
   if (layout === 'devices') {
-    // Product ad: phones fill and crop the frame. Type overlays. No site chrome.
-    const phones = (post.phones || [])
-      .map((src, i) => `<div class="phone p${i}"><img src="${screenUrl(src)}" alt="" /></div>`)
-      .join('');
+    const shot = post.shot || 'hero';
+    const srcs = post.phones || [];
     const isStory = h > 1200;
     const isWide = w > h;
     const fmt = isStory ? 'story' : isWide ? 'wide' : 'sq';
+    const device = (src, cls = '') =>
+      `<div class="device ${cls}"><i class="island"></i><i class="vol"></i><i class="pwr"></i><img src="${screenUrl(src)}" alt="" /></div>`;
+    const lock = `<div class="lock"><img src="${logoUrl}" alt="" /><span>GUARDR</span></div>`;
+    const headline = `<h1>${esc(post.line1)}${post.line2 ? `<br/>${esc(post.line2)}` : ''}</h1>`;
+    const lede = post.ledeHtml ? `<p class="lede">${post.ledeHtml}</p>` : '';
+    const note = post.note ? `<p class="note">${esc(post.note)}</p>` : '';
+    const ladder = (post.steps || [])
+      .map(
+        (s) =>
+          `<li><span class="n">${esc(s.n)}</span><div><h2>${esc(s.title)}</h2><p>${esc(s.body)}</p></div></li>`,
+      )
+      .join('');
+    const menu = (post.items || []).map((it) => `<li>${esc(it)}</li>`).join('');
+    const copyInner =
+      shot === 'steps'
+        ? `${lock}`
+        : shot === 'menu'
+          ? `${lock}${lede}${note}`
+          : `${lock}${headline}${lede}${note}`;
+    const extra =
+      shot === 'steps'
+        ? `<ol class="ladder">${ladder}</ol>`
+        : shot === 'menu'
+          ? `<ul class="menu-list">${menu}</ul>`
+          : '';
     return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8" />
 <style>
@@ -545,168 +568,203 @@ ${fontFaceCss()}
 html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .frame {
   position: relative;
-  background: #000;
+  background: #050505;
   color: #fff;
   font-family: Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 .glow {
   position: absolute;
-  inset: 18% -20% -30% -20%;
-  background: radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0) 62%);
+  inset: 8% -30% 10% 10%;
+  background: radial-gradient(ellipse at 70% 35%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 58%);
   pointer-events: none;
   z-index: 0;
 }
-.stage {
+.stage { position: absolute; inset: 0; z-index: 1; }
+.device {
   position: absolute;
-  inset: 0;
-  z-index: 1;
+  background: linear-gradient(165deg, #3a3a3a 0%, #141414 42%, #050505 100%);
+  border-radius: 62px;
+  padding: 11px;
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.22),
+    inset 0 -2px 3px rgba(0,0,0,0.65),
+    0 0 0 1px #2a2a2a,
+    0 40px 90px rgba(0,0,0,0.62);
 }
-.phone { position: absolute; }
-.phone img {
+.device img {
   display: block;
   width: 100%;
-  border-radius: 58px;
-  border: 14px solid #0c0c0c;
-  box-shadow: 0 50px 110px rgba(0,0,0,0.85), 0 0 0 1px #2a2a2a;
+  border-radius: 51px;
 }
-.veil-top { display: none; }
-.veil-bot {
+.device::after {
+  content: '';
   position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 52%;
+  inset: 11px;
+  border-radius: 51px;
+  pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 28%);
+  z-index: 3;
+}
+.island {
+  position: absolute;
+  top: 18px; left: 50%; transform: translateX(-50%);
+  width: 92px; height: 26px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 4;
+}
+.vol, .pwr { position: absolute; background: #2a2a2a; }
+.vol { left: -3px; top: 118px; width: 4px; height: 90px; border-radius: 2px 0 0 2px; }
+.pwr { right: -3px; top: 168px; width: 4px; height: 64px; border-radius: 0 2px 2px 0; }
+.veil {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 34%;
   z-index: 3;
   pointer-events: none;
-  background: linear-gradient(0deg, #000 0%, rgba(0,0,0,0.92) 38%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(0deg, #050505 0%, rgba(5,5,5,0.88) 42%, rgba(5,5,5,0) 100%);
 }
 .copy {
   position: absolute;
-  z-index: 4;
-  left: 44px;
-  right: 44px;
-  top: auto;
-  bottom: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
+  z-index: 5;
+  left: 48px; right: 48px; bottom: 44px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
 }
 .lock {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.32em;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.34em;
 }
-.lock img { width: 24px; height: 24px; object-fit: contain; }
+.lock img { width: 22px; height: 22px; object-fit: contain; }
 .copy h1 {
-  font-size: 72px;
-  font-weight: 900;
-  letter-spacing: -0.055em;
-  line-height: 0.84;
+  font-size: 72px; font-weight: 900;
+  letter-spacing: -0.06em; line-height: 0.82;
   text-transform: uppercase;
   max-width: 12ch;
-  text-shadow: 0 10px 32px rgba(0,0,0,0.9);
+  text-shadow: 0 12px 32px rgba(0,0,0,0.85);
 }
 .lede {
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 1.22;
-  color: #d2d2d2;
-  max-width: 22ch;
+  font-size: 24px; font-weight: 500; line-height: 1.22;
+  color: #d4d4d4; max-width: 20ch;
   text-shadow: 0 6px 18px rgba(0,0,0,0.9);
 }
 .lede em { font-style: normal; color: #fff; font-weight: 800; }
-.note {
-  font-size: 15px;
-  font-weight: 600;
-  color: #8a8a8a;
-  max-width: 26ch;
-  line-height: 1.3;
+.note { font-size: 15px; font-weight: 600; color: #8a8a8a; max-width: 26ch; line-height: 1.3; }
+.ladder {
+  position: absolute; z-index: 5;
+  left: 48px; top: 140px; right: 42%;
+  display: flex; flex-direction: column; gap: 28px;
+  list-style: none;
+}
+.ladder li { display: grid; grid-template-columns: 72px 1fr; gap: 8px; align-items: start; }
+.ladder .n { font-size: 22px; font-weight: 800; letter-spacing: 0.12em; color: #5a5a5a; padding-top: 10px; }
+.ladder h2 { font-size: 64px; font-weight: 900; letter-spacing: -0.06em; line-height: 0.86; }
+.ladder p { margin-top: 8px; font-size: 20px; font-weight: 500; color: #b0b0b0; max-width: 16ch; }
+.menu-list {
+  position: absolute; z-index: 5;
+  left: 48px; top: 160px;
+  list-style: none;
+}
+.menu-list li {
+  font-size: 78px; font-weight: 900;
+  letter-spacing: -0.06em; line-height: 0.9;
+  text-transform: uppercase;
+}
+.grain {
+  position: absolute; inset: 0; z-index: 8; pointer-events: none; opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
-.sq .phone.p0 {
-  width: 640px;
-  left: 26%;
-  top: -80px;
-  transform: rotate(8deg);
-  z-index: 2;
-}
-.sq .phone.p1 {
-  width: 520px;
-  left: -24%;
-  top: 40px;
-  transform: rotate(-11deg);
-  z-index: 1;
-}
+/* HERO — one giant phone, type in the open black */
+.shot-hero .device { width: 560px; left: 46%; top: -10px; transform: rotate(8deg); }
+.shot-hero .copy { max-width: 520px; }
+.shot-hero .copy h1 { font-size: 78px; }
+.shot-hero .veil { width: 58%; right: auto; height: 48%; }
 
-.story .copy { bottom: 72px; left: 56px; right: 56px; gap: 16px; }
-.story .lock { font-size: 16px; }
-.story .lock img { width: 32px; height: 32px; }
-.story .copy h1 { font-size: 88px; max-width: 10ch; }
-.story .lede { font-size: 30px; max-width: 16ch; }
-.story .note { font-size: 20px; }
-.story .veil-bot { height: 42%; }
-.story .phone.p0 {
-  width: 780px;
-  left: 18%;
-  top: -40px;
-  transform: rotate(8deg);
-  z-index: 2;
+/* BILLBOARD — type is the graphic, phone supports */
+.shot-billboard .veil {
+  top: 0; bottom: auto; height: 48%;
+  background: linear-gradient(180deg, #050505 0%, rgba(5,5,5,0.72) 58%, rgba(5,5,5,0) 100%);
 }
-.story .phone.p1 {
-  width: 620px;
-  left: -28%;
-  top: 180px;
-  transform: rotate(-11deg);
-  z-index: 1;
-}
+.shot-billboard .copy { top: 48px; bottom: auto; gap: 16px; max-width: 640px; }
+.shot-billboard .copy h1 { font-size: 96px; max-width: 9ch; }
+.shot-billboard .lede { font-size: 26px; max-width: 16ch; }
+.shot-billboard .device { width: 540px; left: auto; right: -90px; top: 300px; transform: rotate(-9deg); }
 
-.wide .copy {
-  bottom: 36px;
-  left: 40px;
-  right: 40%;
-  top: auto;
+/* STEPS — editorial ladder + phone */
+.shot-steps .veil { display: none; }
+.shot-steps .copy { top: 48px; bottom: auto; }
+.shot-steps .ladder { right: 38%; gap: 36px; }
+.shot-steps .ladder h2 { font-size: 72px; }
+.shot-steps .device { width: 480px; left: auto; right: -110px; top: 120px; transform: rotate(11deg); }
+
+/* MENU — giant coverage names + phone */
+.shot-menu .veil { display: none; }
+.shot-menu .copy {
+  top: 48px; bottom: 44px; right: auto;
+  height: auto; justify-content: space-between;
 }
-.wide .copy h1 { font-size: 52px; }
-.wide .lede { font-size: 20px; max-width: 20ch; }
-.wide .note { font-size: 14px; }
-.wide .veil-bot {
-  height: 100%;
-  width: 58%;
-  right: auto;
-  background: linear-gradient(90deg, #000 0%, rgba(0,0,0,0.72) 50%, rgba(0,0,0,0) 100%);
+.shot-menu .copy .lede { max-width: 16ch; }
+.shot-menu .note { display: none; }
+.shot-menu .menu-list li { font-size: 70px; }
+.shot-menu .device { width: 500px; left: auto; right: -120px; top: 70px; transform: rotate(-8deg); }
+
+/* Stories */
+.story .copy { left: 56px; right: 56px; }
+.story .lock { font-size: 15px; }
+.story .lock img { width: 28px; height: 28px; }
+.story.shot-hero .device { width: 780px; left: 16%; top: -20px; }
+.story.shot-hero .copy { bottom: 80px; }
+.story.shot-hero .copy h1 { font-size: 96px; }
+.story.shot-hero .lede { font-size: 30px; }
+.story.shot-hero .veil { height: 38%; }
+.story.shot-billboard .copy { top: 96px; }
+.story.shot-billboard .copy h1 { font-size: 110px; }
+.story.shot-billboard .lede { font-size: 32px; }
+.story.shot-billboard .device { width: 620px; right: -90px; top: 720px; }
+.story.shot-steps .copy { top: 88px; }
+.story.shot-steps .ladder { top: 220px; left: 56px; right: 8%; gap: 48px; }
+.story.shot-steps .ladder h2 { font-size: 92px; }
+.story.shot-steps .ladder p { font-size: 26px; }
+.story.shot-steps .ladder .n { font-size: 24px; padding-top: 22px; }
+.story.shot-steps .device { width: 520px; right: -110px; top: 620px; }
+
+/* Landscape */
+.wide .copy { left: 48px; }
+.wide.shot-hero .veil {
+  height: 100%; width: 58%; right: auto;
+  background: linear-gradient(90deg, #050505 0%, rgba(5,5,5,0.78) 52%, rgba(5,5,5,0) 100%);
 }
-.wide .phone.p0 {
-  width: 420px;
-  left: auto;
-  right: -80px;
-  top: -70px;
-  transform: rotate(8deg);
-  z-index: 2;
+.wide.shot-hero .copy { top: 50%; bottom: auto; transform: translateY(-50%); max-width: 46%; }
+.wide.shot-hero .copy h1 { font-size: 64px; }
+.wide.shot-hero .lede { font-size: 22px; }
+.wide.shot-hero .device { width: 460px; left: auto; right: -90px; top: -90px; transform: rotate(8deg); }
+.wide.shot-billboard .veil {
+  height: 100%; width: 52%; right: auto;
+  background: linear-gradient(90deg, #050505 0%, rgba(5,5,5,0.7) 60%, rgba(5,5,5,0) 100%);
 }
-.wide .phone.p1 {
-  width: 340px;
-  left: auto;
-  right: 220px;
-  top: 40px;
-  transform: rotate(-9deg);
-  z-index: 1;
-}
+.wide.shot-billboard .copy { top: 50%; bottom: auto; transform: translateY(-50%); }
+.wide.shot-billboard .copy h1 { font-size: 58px; }
+.wide.shot-billboard .lede { font-size: 20px; }
+.wide.shot-billboard .device { width: 420px; right: -80px; top: -70px; transform: rotate(-7deg); }
+.wide.shot-steps .copy { top: 36px; }
+.wide.shot-steps .ladder { top: 110px; left: 48px; right: 46%; gap: 18px; }
+.wide.shot-steps .ladder h2 { font-size: 48px; }
+.wide.shot-steps .ladder p { font-size: 16px; margin-top: 2px; }
+.wide.shot-steps .ladder .n { font-size: 16px; padding-top: 8px; }
+.wide.shot-steps .device { width: 340px; right: -50px; top: -40px; transform: rotate(8deg); }
+.wide.shot-menu .copy { top: 36px; }
+.wide.shot-menu .menu-list { top: 100px; left: 48px; }
+.wide.shot-menu .menu-list li { font-size: 52px; }
+.wide.shot-menu .copy .lede { left: 48px; bottom: 32px; font-size: 18px; }
+.wide.shot-menu .device { width: 380px; right: -70px; top: -50px; transform: rotate(-6deg); }
 </style></head>
 <body>
-<article class="frame ${fmt}">
+<article class="frame ${fmt} shot-${shot}">
   <div class="glow"></div>
-  <div class="stage">${phones}</div>
-  <div class="veil-top"></div>
-  <div class="veil-bot"></div>
-  <div class="copy">
-    <div class="lock"><img src="${logoUrl}" alt="" /><span>GUARDR</span></div>
-    <h1>${esc(post.line1)}${post.line2 ? `<br/>${esc(post.line2)}` : ''}</h1>
-    <p class="lede">${post.ledeHtml}</p>
-    ${post.note ? `<p class="note">${esc(post.note)}</p>` : ''}
-  </div>
+  <div class="stage">${srcs.map((s, i) => device(s, `d${i}`)).join('')}</div>
+  <div class="veil"></div>
+  ${extra}
+  <div class="copy">${copyInner}</div>
 </article>
 </body></html>`;
   }
@@ -1042,46 +1100,51 @@ const POSTS = [
     file: 'instagram/ig-platform.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'hero',
     ...SQ,
     line1: 'THE PLATFORM.',
     line2: '',
     ledeHtml: 'Guards and businesses find each other and <em>contract directly per job</em>.',
-    note: 'Starting focused. Growing supply. Independent once verified.',
-    phones: ['screen-map.png', 'screen-post.png'],
-    phoneCaps: ['Pick a guard', 'Post a job'],
+    note: 'Not a staffing agency. Not dispatch.',
+    phones: ['screen-map.png'],
   },
   {
     file: 'instagram/ig-marketplace.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'billboard',
     ...SQ,
     line1: 'POST A JOB.',
     line2: 'PICK A GUARD.',
     ledeHtml: 'Licensed California coverage — maps, messaging, and pay in the app.',
-    phones: ['screen-map.png', 'screen-post.png'],
-    phoneCaps: ['Available nearby', 'Post coverage'],
+    phones: ['screen-post.png'],
   },
   {
     file: 'instagram/ig-how-it-works.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'steps',
     ...SQ,
     line1: 'POST.',
     line2: 'PICK. PAY.',
-    ledeHtml: 'You approve who works the site. Guards choose the shift.',
-    phones: ['screen-post.png', 'screen-map.png'],
-    phoneCaps: ['Post coverage', 'Pick from the map'],
+    phones: ['screen-post.png'],
+    steps: [
+      { n: '01', title: 'POST', body: 'the coverage you need' },
+      { n: '02', title: 'PICK', body: 'you approve who works' },
+      { n: '03', title: 'PAY', body: 'track the shift in the app' },
+    ],
   },
   {
     file: 'instagram/ig-coverage-types.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'menu',
     ...SQ,
     line1: 'OPEN SHIFTS.',
     line2: 'ON THE MAP.',
-    ledeHtml: 'Nightclub, retail, site, campus — apply to what fits. No forced dispatch.',
-    phones: ['screen-shifts.png', 'screen-map.png'],
-    phoneCaps: ['Open shifts', 'On the map'],
+    ledeHtml: 'Apply to what fits. No forced dispatch.',
+    phones: ['screen-shifts.png'],
+    items: ['Nightclub', 'Retail', 'Site', 'Campus'],
   },
   {
     file: 'stories/story-event.png',
@@ -1111,35 +1174,39 @@ const POSTS = [
     file: 'stories/story-platform.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'hero',
     ...ST,
     line1: 'THE PLATFORM.',
     line2: '',
     ledeHtml: 'Guards and businesses find each other and <em>contract directly per job</em>.',
-    note: 'Starting focused. Independent once verified.',
-    phones: ['screen-map.png', 'screen-post.png'],
-    phoneCaps: ['Pick a guard', 'Post a job'],
+    note: 'Not a staffing agency. Not dispatch.',
+    phones: ['screen-map.png'],
   },
   {
     file: 'stories/story-tagline.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'billboard',
     ...ST,
     line1: 'ANYTIME.',
     line2: 'ANYWHERE.',
     ledeHtml: 'Security when you need it. Post coverage or pick up a shift.',
-    phones: ['screen-map.png', 'screen-shifts.png'],
-    phoneCaps: ['Nearby guards', 'Open shifts'],
+    phones: ['screen-map.png'],
   },
   {
     file: 'stories/story-how-it-works.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'steps',
     ...ST,
     line1: 'POST.',
     line2: 'PICK. PAY.',
-    ledeHtml: 'You approve who works. Guards choose which shifts to take.',
-    phones: ['screen-post.png', 'screen-shifts.png'],
-    phoneCaps: ['Post the job', 'Apply to a shift'],
+    phones: ['screen-post.png'],
+    steps: [
+      { n: '01', title: 'POST', body: 'the coverage you need' },
+      { n: '02', title: 'PICK', body: 'you approve who works' },
+      { n: '03', title: 'PAY', body: 'track the shift in the app' },
+    ],
   },
   {
     file: 'landscape/wide-event.png',
@@ -1196,35 +1263,36 @@ const POSTS = [
     file: 'landscape/wide-platform.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'hero',
     ...WD,
     line1: 'THE PLATFORM.',
     line2: '',
     ledeHtml: 'Guards and businesses find each other and <em>contract directly per job</em>.',
-    note: 'Starting focused. Independent once verified.',
-    phones: ['screen-map.png', 'screen-post.png'],
-    phoneCaps: ['Pick a guard', 'Post a job'],
+    note: 'Not a staffing agency. Not dispatch.',
+    phones: ['screen-map.png'],
   },
   {
     file: 'landscape/wide-marketplace.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'billboard',
     ...WD,
     line1: 'POST A JOB.',
     line2: 'PICK A GUARD.',
     ledeHtml: 'Licensed California coverage. Maps, messaging, and pay in one app.',
-    phones: ['screen-map.png', 'screen-post.png'],
-    phoneCaps: ['Nearby', 'Post it'],
+    phones: ['screen-post.png'],
   },
   {
     file: 'landscape/wide-guards.png',
     kind: 'graphic',
     layout: 'devices',
+    shot: 'menu',
     ...WD,
     line1: 'OPEN SHIFTS',
     line2: 'ON THE MAP.',
     ledeHtml: 'Licensed CA guards apply to what fits. No forced dispatch.',
-    phones: ['screen-shifts.png', 'screen-map.png'],
-    phoneCaps: ['Open shifts', 'On the map'],
+    phones: ['screen-shifts.png'],
+    items: ['Nightclub', 'Retail', 'Site', 'Campus'],
   },
 ];
 
