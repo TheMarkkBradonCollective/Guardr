@@ -13,7 +13,7 @@ Re-render carousels only: `node scripts/render-promo-posts.mjs --carousel`
 
 [`instagram/ig-who-finds.png`](../../assets/marketing/posts/instagram/ig-who-finds.png)
 
-Sign-in page on the phone — **Who is hiring?** Personal or Business, after Log in as customer. **PERSONAL. BUSINESS. SECURITY COMPANIES.**
+Sign-in page on the phone — **Who is hiring?** Personal, Business, or Security company (Licensed PPO), after Log in as customer. **PERSONAL. BUSINESS. SECURITY COMPANIES.**
 
 **Caption:** Personal. Business. Security companies. Find licensed California guards — you pick who works.
 
