@@ -180,6 +180,13 @@ export function ClientCredentialLibraryEditor({
         onChange={handleRulesChange}
         canEdit={canEdit}
       />
+      <LibraryGroup
+        clientType="security-company"
+        title="Security company accounts"
+        rules={activeRules}
+        onChange={handleRulesChange}
+        canEdit={canEdit}
+      />
       {saveMode === 'manual' && canEdit && dirty ? (
         <div className="flex flex-wrap gap-2 pt-1">
           <AppButton variant="primary" size="sm" onClick={() => onChange(draft)}>

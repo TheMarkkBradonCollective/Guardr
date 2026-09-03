@@ -4,6 +4,7 @@ import { HeadingLarge, LabelSmall, ParagraphMedium } from 'baseui/typography';
 import { useStyletron } from 'baseui';
 import type { LucideIcon } from 'lucide-react';
 import { LandingBadge } from '../landing/LandingPrimitives';
+import type { ClientType } from '../../types';
 
 export function AuthFormHeader({
   role,
@@ -20,10 +21,11 @@ export function AuthFormHeader({
   hideBadge?: boolean;
   center?: boolean;
   variant?: 'page' | 'sheet' | 'desktop' | 'role-choice';
-  clientKind?: 'personal' | 'business';
+  clientKind?: ClientType;
 }) {
   const isPersonalClient = role === 'client' && clientKind === 'personal';
   const isBusinessClient = role === 'client' && clientKind === 'business';
+  const isSecurityCompanyClient = role === 'client' && clientKind === 'security-company';
   const sheetTitle = isSignUp ? 'Create account' : 'Sign in';
   const pageTitle = isSignUp
     ? role === 'guard'
@@ -32,9 +34,11 @@ export function AuthFormHeader({
         ? 'Create your staff account'
         : isPersonalClient
           ? 'Create your personal account'
-          : isBusinessClient
-            ? 'Create your business account'
-            : 'Create your account'
+          : isSecurityCompanyClient
+            ? 'Create your security company account'
+            : isBusinessClient
+              ? 'Create your business account'
+              : 'Create your account'
     : role === 'guard'
       ? 'Guard sign in'
       : role === 'staff'
@@ -50,15 +54,19 @@ export function AuthFormHeader({
         ? 'Staff workspace'
         : isPersonalClient
           ? 'Personal account'
-          : isBusinessClient
-            ? 'Business account'
-            : 'Customer workspace';
+          : isSecurityCompanyClient
+            ? 'Security company account'
+            : isBusinessClient
+              ? 'Business account'
+              : 'Customer workspace';
 
   const clientSignupSubtitle = isPersonalClient
     ? 'You hire and pay as an individual. Request coverage once or as often as you need — including recurring services.'
-    : isBusinessClient
-      ? 'Your organization hires and pays, with extra tools for sites, staffing, and team access.'
-      : 'Post jobs, browse guards, and manage coverage from your dashboard.';
+    : isSecurityCompanyClient
+      ? 'Your licensed PPO hires independent contractor guards through Guardr — upload your PPO license after sign-up.'
+      : isBusinessClient
+        ? 'Your organization hires and pays, with extra tools for sites, staffing, and team access.'
+        : 'Post jobs, browse guards, and manage coverage from your dashboard.';
 
   const subtitle =
     variant === 'sheet'

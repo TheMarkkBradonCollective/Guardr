@@ -38,7 +38,7 @@ import { AuthFormHeader } from './auth/AuthFormChrome';
 import { StaffSignupNotice } from './auth/StaffSignupNotice';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS, type ClientType } from '../types';
-import { normalizeClientType } from '../lib/clientType';
+import { isOrganizationClientType, isSecurityCompanyClientType, normalizeClientType } from '../lib/clientType';
 import { ROLE_LABELS } from '../lib/permissions';
 import { generateGuardIndependentContractorNumber } from '../lib/guardContractorNumber';
 import type { LegalPageId } from '../lib/legalContent';
@@ -605,8 +605,16 @@ export function AuthPage({
           setErrorMsg(clientCityAccess.message);
           return;
         }
-        if (clientKind === 'business' && !clientCompanyName.trim()) {
-          setErrorMsg('Enter the business or organization name that will be billed.');
+        if (isOrganizationClientType(clientKind) && !clientCompanyName.trim()) {
+          setErrorMsg(
+            isSecurityCompanyClientType(clientKind)
+              ? 'Enter your licensed security company name.'
+              : 'Enter the business or organization name that will be billed.'
+          );
+          return;
+        }
+        if (isSecurityCompanyClientType(clientKind) && !businessLicense.trim()) {
+          setErrorMsg('Enter your BSIS PPO license number.');
           return;
         }
         const company = clientKind === 'personal' ? '' : clientCompanyName.trim();
@@ -625,7 +633,11 @@ export function AuthPage({
           approved: false,
           accountStatus: 'pending',
 
-          businessType: clientKind === 'personal' ? businessType || 'Individual' : businessType || undefined,
+          businessType: isSecurityCompanyClientType(clientKind)
+            ? businessType || 'Security Company (PPO)'
+            : clientKind === 'personal'
+              ? businessType || 'Individual'
+              : businessType || undefined,
           industries: industries.length > 0 ? industries : undefined,
           businessLicense: businessLicense.trim() || undefined,
           website: website.trim() || undefined,
@@ -1266,20 +1278,28 @@ export function AuthPage({
                   <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} compact />
 
                   <p className="uber-label">
-                    {clientKind === 'personal' ? 'Personal account' : 'Business account'}
+                    {clientKind === 'personal'
+                      ? 'Personal account'
+                      : clientKind === 'security-company'
+                        ? 'Security company account'
+                        : 'Business account'}
                   </p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
                     {clientKind === 'personal'
                       ? 'You hire and pay as an individual. Request security as often as you need — one-time or recurring. Coverage can still be at a home, venue, or other site.'
-                      : 'The company or organization is the contracting party and pays. Extra tools for sites, staffing, and team access.'}
+                      : clientKind === 'security-company'
+                        ? 'Your licensed security company hires independent contractor guards through Guardr. Upload your PPO license after sign-up — staff verify before your first job posts.'
+                        : 'The company or organization is the contracting party and pays. Extra tools for sites, staffing, and team access.'}
                   </p>
-                  {clientKind === 'business' ? (
+                  {isOrganizationClientType(clientKind) ? (
                   <div>
-                    <label className="uber-label block mb-2">Business name</label>
+                    <label className="uber-label block mb-2">
+                      {isSecurityCompanyClientType(clientKind) ? 'Security company name' : 'Business name'}
+                    </label>
                     <input
                       type="text"
                       required
-                      placeholder="ABC Nightclub"
+                      placeholder={isSecurityCompanyClientType(clientKind) ? 'Acme Patrol Services' : 'ABC Nightclub'}
                       value={clientCompanyName}
                       onChange={(e) => setClientCompanyName(e.target.value)}
                       className="uber-input"
@@ -1302,6 +1322,21 @@ export function AuthPage({
                       />
                     </div>
                   </div>
+                  {clientKind === 'business' || clientKind === 'security-company' ? (
+                  <>
+                  {clientKind === 'security-company' ? (
+                    <div>
+                      <label className="uber-label block mb-2">BSIS PPO license number</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="PPO license number"
+                        value={businessLicense}
+                        onChange={(e) => setBusinessLicense(e.target.value)}
+                        className="uber-input"
+                      />
+                    </div>
+                  ) : null}
                   {clientKind === 'business' ? (
                   <>
                   <div>
@@ -1368,6 +1403,22 @@ export function AuthPage({
                       </div>
                     </div>
                   </div>
+                  </>
+                  ) : (
+                  <div>
+                    <label className="uber-label block mb-2">Website <span className="font-normal">(optional)</span></label>
+                    <div className="relative">
+                      <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted" />
+                      <input
+                        type="url"
+                        placeholder="https://yoursecuritycompany.com"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                        className="uber-input pl-10"
+                      />
+                    </div>
+                  </div>
+                  )}
                   </>
                   ) : null}
 

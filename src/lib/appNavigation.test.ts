@@ -56,6 +56,12 @@ describe('auth role choice URLs', () => {
       authRole: 'client',
       authClientType: 'personal',
     });
+    assert.deepEqual(parseAppRoute('/?auth=sign-up&ar=client&ct=security-company'), {
+      role: 'client',
+      authView: 'sign-up',
+      authRole: 'client',
+      authClientType: 'security-company',
+    });
   });
 });
 

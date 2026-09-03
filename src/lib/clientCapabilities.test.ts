@@ -29,10 +29,12 @@ describe('clientCapabilities', () => {
     assert.equal(clientHasCapability('personal', 'rehire-guard'), true);
   });
 
-  it('gives business accounts every shared tool plus site/staffing extras', () => {
-    const caps = clientCapabilities('business');
-    for (const cap of [...SHARED_CLIENT_CAPABILITIES, ...BUSINESS_ONLY_CAPABILITIES]) {
-      assert.equal(caps.has(cap), true, cap);
+  it('gives business and security company accounts every shared tool plus site/staffing extras', () => {
+    for (const kind of ['business', 'security-company'] as const) {
+      const caps = clientCapabilities(kind);
+      for (const cap of [...SHARED_CLIENT_CAPABILITIES, ...BUSINESS_ONLY_CAPABILITIES]) {
+        assert.equal(caps.has(cap), true, `${kind}:${cap}`);
+      }
     }
     assert.equal(clientHasCapability({ clientType: undefined }, 'reporting'), true);
     assert.equal(clientHasCapability({ clientType: 'personal' }, 'reporting'), false);
@@ -41,6 +43,7 @@ describe('clientCapabilities', () => {
   it('keeps bulk site staffing as a business tool, not a one-request limit', () => {
     assert.equal(clientMaxGuardsPerRequest('personal'), 4);
     assert.equal(clientMaxGuardsPerRequest('business'), 50);
+    assert.equal(clientMaxGuardsPerRequest('security-company'), 50);
     assert.equal(clampClientGuardsNeeded(12, 'personal'), 4);
     assert.equal(clampClientGuardsNeeded(12, 'business'), 12);
     assert.equal(clampClientGuardsNeeded(8, 'personal', 6), 6);
@@ -80,5 +83,6 @@ describe('clientCapabilities', () => {
     assert.ok(businessHome.includes('reports'));
     assert.equal(clientPostJobLabel('personal'), '+ Request security');
     assert.equal(clientPostJobLabel('business'), '+ Post a job');
+    assert.equal(clientPostJobLabel('security-company'), '+ Post overflow job');
   });
 });

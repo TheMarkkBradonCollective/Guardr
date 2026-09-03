@@ -47,15 +47,35 @@ function businessClient(overrides: Partial<Client> = {}): Client {
   } as Client;
 }
 
+function securityCompanyClient(overrides: Partial<Client> = {}): Client {
+  return {
+    id: 'c-ppo',
+    name: 'Sam Director',
+    email: 'sam@patrol.test',
+    companyName: 'Acme Patrol Services',
+    clientType: 'security-company',
+    phone: '555-0102',
+    avatar: '',
+    totalRequests: 0,
+    businessLicense: 'PPO-12345',
+    credentials: [],
+    ...overrides,
+  } as Client;
+}
+
 describe('clientCredentialCatalog', () => {
   it('keeps government IDs always required and alcohol licenses service-dependent', () => {
     const personalId = CLIENT_CREDENTIAL_CATALOG.find((type) => type.id === 'personal-gov-id');
     const businessId = CLIENT_CREDENTIAL_CATALOG.find((type) => type.id === 'business-rep-gov-id');
+    const ppoId = CLIENT_CREDENTIAL_CATALOG.find((type) => type.id === 'security-company-ppo-license');
+    const securityRepId = CLIENT_CREDENTIAL_CATALOG.find((type) => type.id === 'security-company-rep-gov-id');
     const alcohol = CLIENT_CREDENTIAL_CATALOG.find((type) => type.id === 'business-alcohol-license');
     const sellers = CLIENT_CREDENTIAL_CATALOG.find((type) => type.id === 'business-sellers-permit');
 
     assert.equal(personalId?.alwaysRequired, true);
     assert.equal(businessId?.alwaysRequired, true);
+    assert.equal(ppoId?.alwaysRequired, true);
+    assert.equal(securityRepId?.alwaysRequired, true);
     assert.equal(alcohol?.alwaysRequired, undefined);
     assert.equal(clientCredentialRequiredForJob(alcohol!, 'nightclub-bar'), true);
     assert.equal(clientCredentialRequiredForJob(alcohol!, 'foot-patrol'), false);
@@ -89,6 +109,14 @@ describe('clientCredentials', () => {
     assert.match(clientJobCredentialBlocker(client, 'nightclub-bar') ?? '', /Alcohol License/);
     assert.match(clientJobCredentialBlocker(client, 'foot-patrol') ?? '', /Government-issued ID/);
     assert.doesNotMatch(clientJobCredentialBlocker(client, 'foot-patrol') ?? '', /Alcohol License/);
+  });
+
+  it('requires PPO license and representative ID for security companies', () => {
+    const client = securityCompanyClient();
+    const missing = missingRequiredClientCredentials(client, 'foot-patrol');
+    assert.ok(missing.some((type) => type.id === 'security-company-ppo-license'));
+    assert.ok(missing.some((type) => type.id === 'security-company-rep-gov-id'));
+    assert.match(clientJobCredentialBlocker(client, 'foot-patrol') ?? '', /PPO/);
   });
 
   it('clears the job blocker after a required credential is verified', () => {

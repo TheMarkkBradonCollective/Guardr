@@ -2,7 +2,7 @@
  * Unified auth: Supabase Auth when linked, legacy password fallback, auto-migration on sign-in.
  */
 
-import { clientDisplayName } from '../clientType';
+import { clientDisplayName, isClientType } from '../clientType';
 import { parseAuthorizedContacts } from '../clientAuthorizedContacts';
 import { parseClientCredentials } from '../clientCredentials';
 import { supabase } from '../supabase';
@@ -97,7 +97,7 @@ function clientFromRow(row: Record<string, unknown>): Client {
     lastName: nameParts.lastName,
     email: String(row.email ?? ''),
     companyName: typeof row.company_name === 'string' ? row.company_name : '',
-    clientType: row.client_type === 'personal' ? 'personal' : 'business',
+    clientType: isClientType(row.client_type) ? row.client_type : 'business',
     phone: typeof row.phone === 'string' ? row.phone : '',
     avatar: typeof row.avatar === 'string' ? row.avatar : '',
     totalRequests: typeof row.total_requests === 'number' ? row.total_requests : 0,

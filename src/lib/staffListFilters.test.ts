@@ -187,11 +187,14 @@ describe('staffListFilters', () => {
   it('filters client kind tabs', () => {
     const personalClient = { id: 'c-p', clientType: 'personal' } as Client;
     const businessClient = { id: 'c-b', clientType: 'business' } as Client;
+    const securityCompanyClient = { id: 'c-s', clientType: 'security-company' } as Client;
     const legacyClient = { id: 'c-l' } as Client;
 
     assert.equal(matchesClientKindFilter(personalClient, 'personal'), true);
     assert.equal(matchesClientKindFilter(personalClient, 'business'), false);
     assert.equal(matchesClientKindFilter(businessClient, 'business'), true);
+    assert.equal(matchesClientKindFilter(securityCompanyClient, 'security-company'), true);
+    assert.equal(matchesClientKindFilter(securityCompanyClient, 'business'), false);
     assert.equal(matchesClientKindFilter(legacyClient, 'business'), true);
   });
 

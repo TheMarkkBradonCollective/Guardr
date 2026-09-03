@@ -1,10 +1,11 @@
 import type { Client, ClientType } from '../types';
-import { normalizeClientType } from './clientType';
+import { isOrganizationClientType, normalizeClientType } from './clientType';
 
 /**
  * One client system. Client type is account structure, not usage frequency.
  * Personal = individual customer who can request, rebook, and schedule ongoing coverage.
  * Business = organization with expanded site, staffing, and team management tools.
+ * Security company = licensed PPO hiring marketplace guards (business-like ops tools).
  */
 export type ClientCapability =
   | 'request-security'
@@ -89,7 +90,7 @@ export function clientCapabilities(
 ): Set<ClientCapability> {
   const type = resolveType(clientOrType);
   const caps = new Set<ClientCapability>(SHARED_CLIENT_CAPABILITIES);
-  if (type === 'business') {
+  if (isOrganizationClientType(type)) {
     for (const cap of BUSINESS_ONLY_CAPABILITIES) caps.add(cap);
   }
   return caps;
@@ -145,10 +146,11 @@ export function clientOverflowNav(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
 ): { id: ClientOverflowNavId; label: string }[] {
   const type = resolveType(clientOrType);
+  const isPersonal = type === 'personal';
   const items: { id: ClientOverflowNavId; label: string }[] = [
-    { id: 'invoices', label: type === 'personal' ? 'Payments' : 'Billing' },
+    { id: 'invoices', label: isPersonal ? 'Payments' : 'Billing' },
     { id: 'guards', label: 'Guards' },
-    { id: 'locations', label: type === 'personal' ? 'Locations' : 'Sites' },
+    { id: 'locations', label: isPersonal ? 'Locations' : 'Sites' },
   ];
   if (clientHasCapability(type, 'reporting')) {
     items.push({ id: 'reports', label: 'Reports' });
@@ -161,26 +163,28 @@ export function clientHomeQuickActions(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
 ): { id: ClientHomeQuickActionId; label: string; sub: string }[] {
   const type = resolveType(clientOrType);
+  const isPersonal = type === 'personal';
+  const isSecurityCompany = type === 'security-company';
   const actions: { id: ClientHomeQuickActionId; label: string; sub: string }[] = [
     {
       id: 'request',
-      label: type === 'personal' ? 'Request security' : 'Post job',
-      sub: type === 'personal' ? 'Request another anytime' : 'Open to guards',
+      label: isPersonal ? 'Request security' : isSecurityCompany ? 'Post overflow job' : 'Post job',
+      sub: isPersonal ? 'Request another anytime' : isSecurityCompany ? 'Hire marketplace guards' : 'Open to guards',
     },
     {
       id: 'guards',
-      label: type === 'personal' ? 'Rebook a guard' : 'Browse guards',
-      sub: type === 'personal' ? 'Same guard or team again' : 'Resumes & licenses',
+      label: isPersonal ? 'Rebook a guard' : 'Browse guards',
+      sub: isPersonal ? 'Same guard or team again' : 'Resumes & licenses',
     },
     {
       id: 'locations',
-      label: type === 'personal' ? 'Preferred locations' : 'Sites',
-      sub: type === 'personal' ? 'Reuse saved places' : 'Locations & site notes',
+      label: isPersonal ? 'Preferred locations' : 'Sites',
+      sub: isPersonal ? 'Reuse saved places' : 'Locations & site notes',
     },
     {
       id: 'schedule',
       label: 'Schedule',
-      sub: type === 'personal' ? 'One-time or recurring' : 'Plan ahead',
+      sub: isPersonal ? 'One-time or recurring' : 'Plan ahead',
     },
   ];
   if (clientHasCapability(type, 'recurring-schedules')) {
@@ -211,5 +215,8 @@ export function clientHomeQuickActions(
 export function clientPostJobLabel(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
 ): string {
-  return resolveType(clientOrType) === 'personal' ? '+ Request security' : '+ Post a job';
+  const type = resolveType(clientOrType);
+  if (type === 'personal') return '+ Request security';
+  if (type === 'security-company') return '+ Post overflow job';
+  return '+ Post a job';
 }

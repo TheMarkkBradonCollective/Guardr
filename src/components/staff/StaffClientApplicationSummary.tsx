@@ -3,7 +3,7 @@ import { Client } from '../../types';
 import { WfBadge } from '../ui/wireframe';
 import { Globe, MapPin } from 'lucide-react';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
-import { clientTypeLabel } from '../../lib/clientType';
+import { clientTypeLabel, isSecurityCompanyClientType } from '../../lib/clientType';
 
 function IntakeField({ label, value }: { label: string; value: string | number | undefined | null }) {
   if (!value && value !== 0) return null;
@@ -71,7 +71,10 @@ export function StaffClientApplicationSummary({ client }: StaffClientApplication
           <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Business</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             <IntakeField label="Business type" value={client.businessType} />
-            <IntakeField label="License / EIN" value={client.businessLicense} />
+            <IntakeField
+              label={isSecurityCompanyClientType(client) ? 'PPO license number' : 'License / EIN'}
+              value={client.businessLicense}
+            />
           </div>
           {client.industries?.length ? (
             <div>

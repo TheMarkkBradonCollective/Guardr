@@ -212,7 +212,7 @@ export type GuardCardStatus = 'active' | 'in_progress' | 'none';
 export type GuardArmedPreference = 'armed' | 'unarmed' | 'both';
 
 /** Who is hiring and paying — the contracting party, not the job site type. */
-export type ClientType = 'personal' | 'business';
+export type ClientType = 'personal' | 'business' | 'security-company';
 
 /** People Guardr or assigned guards can contact for this account. */
 export type ClientAuthorizedContactRole =

@@ -6,6 +6,7 @@ import { personNameFromPayload } from '../../lib/personName';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
 import type { ClientType } from '../../types';
+import { CLIENT_TYPES, clientTypeLabel, isOrganizationClientType } from '../../lib/clientType';
 
 export interface StaffAddClientInput {
   firstName: string;
@@ -128,22 +129,22 @@ export function StaffAddClientForm({
           <div>
             <p className="uber-label block mb-2">Who is hiring?</p>
             <p className="text-xs text-brand-text-muted mb-2">
-              Personal is billed to the individual. Business is billed to the company or organization.
+              Personal is billed to the individual. Business and security companies bill to the organization.
               Job site type does not change this.
             </p>
-            <div className="flex gap-2">
-              {(['personal', 'business'] as const).map((kind) => (
+            <div className="flex flex-wrap gap-2">
+              {CLIENT_TYPES.map((kind) => (
                 <button
                   key={kind}
                   type="button"
                   onClick={() => setClientType(kind)}
-                  className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                  className={`flex-1 min-w-[7rem] py-2 rounded-xl text-sm font-medium border transition-colors ${
                     clientType === kind
                       ? 'bg-brand-primary text-white border-brand-primary'
                       : 'border-brand-border text-brand-text-muted hover:border-brand-primary/50'
                   }`}
                 >
-                  {kind === 'personal' ? 'Personal' : 'Business'}
+                  {clientTypeLabel(kind)}
                 </button>
               ))}
             </div>
@@ -161,9 +162,11 @@ export function StaffAddClientForm({
                 required
               />
             </div>
-            {clientType === 'business' ? (
+            {isOrganizationClientType(clientType) ? (
             <div>
-              <label className="uber-label block mb-1">Business name</label>
+              <label className="uber-label block mb-1">
+                {clientType === 'security-company' ? 'Security company name' : 'Business name'}
+              </label>
               <input
                 type="text"
                 value={companyName}

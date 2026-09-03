@@ -220,6 +220,37 @@ export const CLIENT_CREDENTIAL_CATALOG: ClientCredentialTypeDef[] = [
     applicableTo: ['business'],
     requiredFor: [],
   },
+  {
+    id: 'security-company-rep-gov-id',
+    name: 'Government-issued ID (authorized representative)',
+    applicableTo: ['security-company'],
+    requiredFor: [],
+    alwaysRequired: true,
+    requiredForDescription: 'Required for the authorized representative on every security company account.',
+    description: 'A government-issued photo ID for the person authorized to hire guards on behalf of the company.',
+  },
+  {
+    id: 'security-company-ppo-license',
+    name: 'BSIS Private Patrol Operator (PPO) License',
+    applicableTo: ['security-company'],
+    requiredFor: [],
+    alwaysRequired: true,
+    requiredForDescription: 'Required before posting jobs — verifies the company is licensed to furnish guards.',
+    description: 'California Bureau of Security and Investigative Services (BSIS) PPO license for the security company.',
+  },
+  {
+    id: 'security-company-guard-employer-bond',
+    name: 'Guard Employer Bond / Insurance Certificate',
+    applicableTo: ['security-company'],
+    requiredFor: [],
+    requiredForDescription: 'Upload when staff requests proof of bonding or employer insurance.',
+  },
+  {
+    id: 'security-company-other-gov-license',
+    name: 'Other Government-Issued License/Permit',
+    applicableTo: ['security-company'],
+    requiredFor: [],
+  },
 ];
 
 const CATALOG_BY_ID = new Map(CLIENT_CREDENTIAL_CATALOG.map((type) => [type.id, type]));
@@ -230,7 +261,10 @@ export function clientCredentialTypeById(typeId: string): ClientCredentialTypeDe
 
 function parseApplicableTo(value: unknown, fallback: ClientCredentialApplicableTo[]): ClientCredentialApplicableTo[] {
   if (!Array.isArray(value)) return fallback;
-  const next = value.filter((item): item is ClientCredentialApplicableTo => item === 'personal' || item === 'business');
+  const next = value.filter(
+    (item): item is ClientCredentialApplicableTo =>
+      item === 'personal' || item === 'business' || item === 'security-company'
+  );
   return next.length > 0 ? [...new Set(next)] : fallback;
 }
 
@@ -304,7 +338,13 @@ export function formatClientCredentialRequiredFor(type: ClientCredentialTypeDef)
 }
 
 export function formatClientCredentialApplicableTo(type: ClientCredentialTypeDef): string {
-  return type.applicableTo.map((kind) => (kind === 'personal' ? 'Personal accounts' : 'Business accounts')).join(', ');
+  return type.applicableTo
+    .map((kind) => {
+      if (kind === 'personal') return 'Personal accounts';
+      if (kind === 'security-company') return 'Security company accounts';
+      return 'Business accounts';
+    })
+    .join(', ');
 }
 
 export function selectableJobTypesForCredentialRules(): { id: JobType; label: string }[] {
