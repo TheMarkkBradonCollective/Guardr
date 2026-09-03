@@ -1268,14 +1268,31 @@ body[data-surface='desktop'] .payments-page {
   background: var(--sf-paper-sunken, #f6f6f6);
 }
 
-body[data-surface='desktop'] .payments-page-header,
-body[data-surface='desktop'] .sfd-shell-canvas .app-screen-header:not(.app-screen-header--map) {
+body[data-surface='desktop'] .payments-page-header {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px 24px;
   padding: 20px 32px 16px;
+  margin: 0;
+  border-bottom: 1px solid var(--sf-line);
+  background: var(--sf-paper, #fff);
+}
+
+/* Title lives in the top-bar breadcrumb — hide the in-canvas duplicate. */
+body[data-surface='desktop'] .sfd-shell-canvas .app-screen-header:not(.app-screen-header--map):not(.app-screen-header--toolbar-only),
+body[data-surface='desktop'] .sfd-shell-canvas .app-subscreen-header {
+  display: none;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-screen-header--toolbar-only {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 16px;
+  padding: 12px 24px;
   margin: 0;
   border-bottom: 1px solid var(--sf-line);
   background: var(--sf-paper, #fff);

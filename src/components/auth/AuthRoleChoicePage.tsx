@@ -162,9 +162,11 @@ function AuthChoiceHeroVisual() {
 function RoleChoiceRow({
   option,
   onSelect,
+  dense = false,
 }: {
   option: ChoiceOption;
   onSelect: (id: string) => void;
+  dense?: boolean;
 }) {
   const [, theme] = useStyletron();
   const { id, icon: Icon, title, description, badge, emphasized } = option;
@@ -173,7 +175,7 @@ function RoleChoiceRow({
     <Block
       as="button"
       type="button"
-      className={`auth-role-choice-option${emphasized ? ' auth-role-choice-option--staff' : ''}`}
+      className={`auth-role-choice-option${emphasized ? ' auth-role-choice-option--staff' : ''}${dense ? ' dsk-auth-role-option' : ''}`}
       onClick={() => onSelect(id)}
     >
       <Block display="flex" alignItems="center" gridGap="scale400" marginBottom="scale400">
@@ -208,7 +210,7 @@ function RoleChoiceRow({
             $style={{
               fontFamily: HEADING_FONT,
               fontWeight: 700,
-              fontSize: 'clamp(20px, 4vw, 28px)',
+              fontSize: dense ? '18px' : 'clamp(20px, 4vw, 28px)',
               letterSpacing: '-0.02em',
               color: theme.colors.contentPrimary,
               marginBottom: '8px',
@@ -296,6 +298,41 @@ export function AuthRoleChoicePage({
         : signupStep === 'work'
           ? SIGNUP_WORK_OPTIONS
           : SIGNUP_PATH_OPTIONS;
+
+  if (factor === 'desktop') {
+    return (
+      <div className="page-shell auth-experience dsk-auth auth-role-choice-page--desktop" data-landing-factor={surface}>
+        <DirectTopHeader
+          onBrandClick={onBack}
+          trailing={
+            onBack ? (
+              <button type="button" onClick={onBack} className="dsk-auth-back">
+                {backLabel === 'Back' ? 'Back' : 'Back to Home'}
+              </button>
+            ) : null
+          }
+        />
+        <div className="dsk-auth-split">
+          <aside className="dsk-auth-editorial">
+            {copy.kicker ? <p className="dsk-auth-kicker">{copy.kicker}</p> : null}
+            <h1 className="dsk-auth-headline">{copy.heading}</h1>
+            <p className="dsk-auth-sub">{copy.subheading}</p>
+            {showHero ? <AuthChoiceHeroVisual /> : null}
+            <div className="dsk-auth-editorial-spacer" aria-hidden />
+          </aside>
+          <section className="dsk-auth-form-panel" aria-label={copy.ariaLabel}>
+            <div className="dsk-auth-form-scroll">
+              <div className="dsk-auth-role-list">
+                {options.map((option) => (
+                  <RoleChoiceRow key={option.id} option={option} onSelect={handleSelect} dense />
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Block

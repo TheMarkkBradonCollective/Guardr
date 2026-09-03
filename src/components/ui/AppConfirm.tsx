@@ -348,7 +348,9 @@ export function AppConfirmHost() {
           ? 'app-confirm-panel sfm-confirm-panel'
           : tablet
             ? 'app-confirm-panel sft-confirm-panel'
-            : 'app-confirm-panel'
+            : surface === 'desktop'
+              ? 'app-confirm-panel sfd-confirm-panel'
+              : 'app-confirm-panel'
       }
       zIndex={2200}
     >

@@ -108,7 +108,7 @@ function TutorialStepPanel({
 
   return (
     <div
-      className={`tutorial-step-panel${surface === 'tablet' ? ' sft-tutorial-step' : ''}`}
+      className={`tutorial-step-panel${surface === 'tablet' ? ' sft-tutorial-step' : surface === 'desktop' ? ' sfd-tutorial-step' : ''}`}
       role="dialog"
       aria-live="polite"
     >
