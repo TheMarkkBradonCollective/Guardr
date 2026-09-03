@@ -782,6 +782,10 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .shot-hero .copy { max-width: 520px; }
 .shot-hero .copy h1 { font-size: 78px; }
 .shot-hero .veil { width: 58%; right: auto; height: 48%; }
+.shot-hero.flip .device { left: auto; right: 46%; transform: rotate(-8deg); }
+.shot-hero.flip .copy { left: auto; right: 48px; align-items: flex-end; text-align: right; }
+.shot-hero.flip .lede { text-align: right; }
+.shot-hero.flip .veil { left: auto; right: 0; }
 
 /* BILLBOARD — type is the graphic, phone supports */
 .shot-billboard .veil {
@@ -820,6 +824,7 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .story.shot-hero .copy h1 { font-size: 96px; }
 .story.shot-hero .lede { font-size: 30px; }
 .story.shot-hero .veil { height: 38%; }
+.story.shot-hero.flip .device { left: auto; right: 16%; transform: rotate(-8deg); }
 .story.shot-billboard .copy { top: 96px; }
 .story.shot-billboard .copy h1 { font-size: 110px; }
 .story.shot-billboard .lede { font-size: 32px; }
@@ -841,6 +846,13 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .wide.shot-hero .copy h1 { font-size: 64px; }
 .wide.shot-hero .lede { font-size: 22px; }
 .wide.shot-hero .device { width: 460px; left: auto; right: -90px; top: -90px; transform: rotate(8deg); }
+.wide.shot-hero.flip .copy { left: auto; right: 48px; align-items: flex-end; text-align: right; }
+.wide.shot-hero.flip .lede { text-align: right; }
+.wide.shot-hero.flip .veil {
+  left: auto; right: 0;
+  background: linear-gradient(270deg, #050505 0%, rgba(5,5,5,0.78) 52%, rgba(5,5,5,0) 100%);
+}
+.wide.shot-hero.flip .device { right: auto; left: -90px; transform: rotate(-8deg); }
 .wide.shot-billboard .veil {
   height: 100%; width: 52%; right: auto;
   background: linear-gradient(90deg, #050505 0%, rgba(5,5,5,0.7) 60%, rgba(5,5,5,0) 100%);
@@ -862,7 +874,7 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .wide.shot-menu .device { width: 380px; right: -70px; top: -50px; transform: rotate(-6deg); }
 </style></head>
 <body>
-<article class="frame ${fmt} shot-${shot}">
+<article class="frame ${fmt} shot-${shot}${post.flip ? ' flip' : ''}">
   <div class="glow"></div>
   <div class="stage">${srcs.map((s, i) => device(s, `d${i}`)).join('')}</div>
   <div class="veil"></div>
@@ -1124,6 +1136,21 @@ const SQ = { w: 1080, h: 1080 };
 const ST = { w: 1080, h: 1920 };
 const WD = { w: 1200, h: 630 };
 
+function phoneAd(file, dims, { line1, line2, lede, screen, flip }) {
+  return {
+    file,
+    kind: 'graphic',
+    layout: 'devices',
+    shot: 'hero',
+    ...dims,
+    line1,
+    line2,
+    ledeHtml: lede,
+    phones: [screen],
+    flip: Boolean(flip),
+  };
+}
+
 const POSTS = [
   {
     file: 'instagram/ig-post-a-job.png',
@@ -1241,6 +1268,58 @@ const POSTS = [
     line2: 'ANYWHERE.',
     lede: 'Security, when you need it.',
   },
+  phoneAd('instagram/ig-tonight-map.png', SQ, {
+    line1: 'NEED A GUARD',
+    line2: 'TONIGHT?',
+    lede: 'See who’s nearby. You pick.',
+    screen: 'screen-map.png',
+  }),
+  phoneAd('instagram/ig-see-nearby.png', SQ, {
+    line1: 'SEE WHO’S',
+    line2: 'NEARBY.',
+    lede: '2 live. You choose.',
+    screen: 'screen-map.png',
+    flip: true,
+  }),
+  phoneAd('instagram/ig-no-dispatcher.png', SQ, {
+    line1: 'NO',
+    line2: 'DISPATCHER.',
+    lede: 'You approve who works.',
+    screen: 'screen-map.png',
+  }),
+  phoneAd('instagram/ig-post-pick.png', SQ, {
+    line1: 'POST A JOB.',
+    line2: 'PICK A GUARD.',
+    lede: 'Tonight. Your site.',
+    screen: 'screen-post.png',
+    flip: true,
+  }),
+  phoneAd('instagram/ig-your-site.png', SQ, {
+    line1: 'TONIGHT.',
+    line2: 'YOUR SITE.',
+    lede: 'Post coverage in the app.',
+    screen: 'screen-post.png',
+  }),
+  phoneAd('instagram/ig-open-call.png', SQ, {
+    line1: 'OPEN SHIFTS.',
+    line2: 'YOUR CALL.',
+    lede: 'Apply to what fits.',
+    screen: 'screen-shifts.png',
+    flip: true,
+  }),
+  phoneAd('instagram/ig-apply.png', SQ, {
+    line1: 'APPLY TO',
+    line2: 'WHAT FITS.',
+    lede: 'No dispatcher. Your map.',
+    screen: 'screen-shifts.png',
+  }),
+  phoneAd('instagram/ig-two-live.png', SQ, {
+    line1: '2 LIVE',
+    line2: 'NEAR YOU.',
+    lede: 'Licensed. On the map.',
+    screen: 'screen-map.png',
+    flip: true,
+  }),
   {
     file: 'stories/story-event.png',
     kind: 'story',
@@ -1296,6 +1375,32 @@ const POSTS = [
     ledeHtml: 'Licensed. On the map. Your call.',
     phones: ['screen-map.png'],
   },
+  phoneAd('stories/story-tonight-map.png', ST, {
+    line1: 'NEED A GUARD',
+    line2: 'TONIGHT?',
+    lede: 'See who’s nearby. You pick.',
+    screen: 'screen-map.png',
+  }),
+  phoneAd('stories/story-no-dispatcher.png', ST, {
+    line1: 'NO',
+    line2: 'DISPATCHER.',
+    lede: 'You approve who works.',
+    screen: 'screen-map.png',
+    flip: true,
+  }),
+  phoneAd('stories/story-post-pick.png', ST, {
+    line1: 'POST A JOB.',
+    line2: 'PICK A GUARD.',
+    lede: 'Tonight. Your site.',
+    screen: 'screen-post.png',
+  }),
+  phoneAd('stories/story-open-call.png', ST, {
+    line1: 'OPEN SHIFTS.',
+    line2: 'YOUR CALL.',
+    lede: 'Apply to what fits.',
+    screen: 'screen-shifts.png',
+    flip: true,
+  }),
   {
     file: 'landscape/wide-event.png',
     kind: 'photo',
@@ -1378,6 +1483,32 @@ const POSTS = [
     line2: 'ANYWHERE.',
     lede: 'Security, when you need it.',
   },
+  phoneAd('landscape/wide-tonight-map.png', WD, {
+    line1: 'NEED A GUARD',
+    line2: 'TONIGHT?',
+    lede: 'See who’s nearby. You pick.',
+    screen: 'screen-map.png',
+  }),
+  phoneAd('landscape/wide-no-dispatcher.png', WD, {
+    line1: 'NO',
+    line2: 'DISPATCHER.',
+    lede: 'You approve who works.',
+    screen: 'screen-map.png',
+    flip: true,
+  }),
+  phoneAd('landscape/wide-post-pick.png', WD, {
+    line1: 'POST A JOB.',
+    line2: 'PICK A GUARD.',
+    lede: 'Tonight. Your site.',
+    screen: 'screen-post.png',
+  }),
+  phoneAd('landscape/wide-open-call.png', WD, {
+    line1: 'OPEN SHIFTS.',
+    line2: 'YOUR CALL.',
+    lede: 'Apply to what fits.',
+    screen: 'screen-shifts.png',
+    flip: true,
+  }),
 ];
 
 async function waitForFile(filePath, timeoutMs = 25000) {

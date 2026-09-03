@@ -4,21 +4,27 @@ Black-and-white. One idea per post. Brand: **Guardr** · **www.guardr.co**
 
 Re-render B&W: `node scripts/render-promo-posts.mjs --bw`
 
-The picture should make sense in half a second. Put the “platform / not a staffing agency” explanation in the **caption**, not on the image.
+Lead with the **phone pack** — same layout as “YOU PICK WHO WORKS.” Put the “platform / not a staffing agency” explanation in the **caption**.
 
 ---
 
-## Lead — need a guard tonight
+## Phone pack (post these)
 
-**Instagram:** [`instagram/ig-platform.png`](../../assets/marketing/posts/instagram/ig-platform.png)  
-**Story:** [`stories/story-platform.png`](../../assets/marketing/posts/stories/story-platform.png)  
-**LinkedIn / Facebook:** [`landscape/wide-platform.png`](../../assets/marketing/posts/landscape/wide-platform.png)
+Same treatment: one line, one phone, black field.
 
-**Caption:**
+| Image | Line | Caption seed |
+|---|---|---|
+| [`instagram/ig-marketplace.png`](../../assets/marketing/posts/instagram/ig-marketplace.png) | YOU PICK WHO WORKS. | Licensed guards on the map. You approve. Not dispatch. |
+| [`instagram/ig-tonight-map.png`](../../assets/marketing/posts/instagram/ig-tonight-map.png) | NEED A GUARD TONIGHT? | See who’s nearby. You pick. |
+| [`instagram/ig-see-nearby.png`](../../assets/marketing/posts/instagram/ig-see-nearby.png) | SEE WHO’S NEARBY. | 2 live. You choose. |
+| [`instagram/ig-no-dispatcher.png`](../../assets/marketing/posts/instagram/ig-no-dispatcher.png) | NO DISPATCHER. | You approve who works the site. |
+| [`instagram/ig-post-pick.png`](../../assets/marketing/posts/instagram/ig-post-pick.png) | POST A JOB. PICK A GUARD. | Tonight. Your site. |
+| [`instagram/ig-your-site.png`](../../assets/marketing/posts/instagram/ig-your-site.png) | TONIGHT. YOUR SITE. | Post coverage in the app. |
+| [`instagram/ig-open-call.png`](../../assets/marketing/posts/instagram/ig-open-call.png) | OPEN SHIFTS. YOUR CALL. | Guards: apply to what fits. |
+| [`instagram/ig-apply.png`](../../assets/marketing/posts/instagram/ig-apply.png) | APPLY TO WHAT FITS. | No dispatcher. Your map. |
+| [`instagram/ig-two-live.png`](../../assets/marketing/posts/instagram/ig-two-live.png) | 2 LIVE NEAR YOU. | Licensed. On the map. |
 
-Need a guard tonight?
-
-See who’s nearby on the map. You pick who works your site.
+**Caption footer for all of them:**
 
 Guardr is the platform — licensed California guards and businesses find each other and contract directly per job. Not a staffing agency. Not dispatch.
 
@@ -27,87 +33,36 @@ www.guardr.co
 
 ---
 
-## Instagram feed (1:1)
-
-### 1. Tonight (lead)
-**Image:** [`instagram/ig-platform.png`](../../assets/marketing/posts/instagram/ig-platform.png)
-
-Use the caption above.
-
----
-
-### 2. You pick who works
-**Image:** [`instagram/ig-marketplace.png`](../../assets/marketing/posts/instagram/ig-marketplace.png)
-
-You pick who works.
-
-Licensed guards show up on the map. You approve. They don’t get dispatched onto your site by someone else.
-
-www.guardr.co
-
----
-
-### 3. Guards — your call
-**Image:** [`instagram/ig-how-it-works.png`](../../assets/marketing/posts/instagram/ig-how-it-works.png)
-
-Open shifts. Your call.
-
-Licensed CA guards: browse the map, apply to what fits, get paid in the app. No dispatcher.
-
-www.guardr.co
-
----
-
-### 4. Tagline
-**Image:** [`instagram/ig-coverage-types.png`](../../assets/marketing/posts/instagram/ig-coverage-types.png)
-
-Anytime. Anywhere. Security, when you need it.
-
-www.guardr.co
-
----
-
-## Stories (9:16)
+## Stories (same pack)
 
 Link sticker: **https://www.guardr.co**
 
-| Image | Use |
+| Image | Line |
 |---|---|
-| [`stories/story-platform.png`](../../assets/marketing/posts/stories/story-platform.png) | Need a guard tonight? |
-| [`stories/story-tagline.png`](../../assets/marketing/posts/stories/story-tagline.png) | Anytime / anywhere |
-| [`stories/story-how-it-works.png`](../../assets/marketing/posts/stories/story-how-it-works.png) | You pick who works |
+| [`stories/story-how-it-works.png`](../../assets/marketing/posts/stories/story-how-it-works.png) | YOU PICK WHO WORKS. |
+| [`stories/story-tonight-map.png`](../../assets/marketing/posts/stories/story-tonight-map.png) | NEED A GUARD TONIGHT? |
+| [`stories/story-no-dispatcher.png`](../../assets/marketing/posts/stories/story-no-dispatcher.png) | NO DISPATCHER. |
+| [`stories/story-post-pick.png`](../../assets/marketing/posts/stories/story-post-pick.png) | POST A JOB. PICK A GUARD. |
+| [`stories/story-open-call.png`](../../assets/marketing/posts/stories/story-open-call.png) | OPEN SHIFTS. YOUR CALL. |
 
 ---
 
-## Facebook / LinkedIn (landscape)
+## LinkedIn / Facebook
 
-### Tonight
-**Image:** [`landscape/wide-platform.png`](../../assets/marketing/posts/landscape/wide-platform.png)
-
-Need a guard tonight? See who’s nearby. You pick.
-
-https://www.guardr.co
-
----
-
-### You pick
-**Image:** [`landscape/wide-marketplace.png`](../../assets/marketing/posts/landscape/wide-marketplace.png)
-
-You pick who works. Licensed. On the map. Your call.
-
-https://www.guardr.co
+| Image | Line |
+|---|---|
+| [`landscape/wide-marketplace.png`](../../assets/marketing/posts/landscape/wide-marketplace.png) | YOU PICK WHO WORKS. |
+| [`landscape/wide-tonight-map.png`](../../assets/marketing/posts/landscape/wide-tonight-map.png) | NEED A GUARD TONIGHT? |
+| [`landscape/wide-no-dispatcher.png`](../../assets/marketing/posts/landscape/wide-no-dispatcher.png) | NO DISPATCHER. |
+| [`landscape/wide-post-pick.png`](../../assets/marketing/posts/landscape/wide-post-pick.png) | POST A JOB. PICK A GUARD. |
+| [`landscape/wide-open-call.png`](../../assets/marketing/posts/landscape/wide-open-call.png) | OPEN SHIFTS. YOUR CALL. |
 
 ---
 
-### Tagline
-**Image:** [`landscape/wide-guards.png`](../../assets/marketing/posts/landscape/wide-guards.png)
+## Also in the folder (photo / tagline)
 
-Anytime. Anywhere. Security, when you need it.
-
-https://www.guardr.co
-
----
-
-Color lifestyle posts from the earlier pack are still in `instagram/`, `stories/`, and `landscape/` if you want them.
+[`ig-platform.png`](../../assets/marketing/posts/instagram/ig-platform.png) — photo, NEED A GUARD TONIGHT?  
+[`ig-how-it-works.png`](../../assets/marketing/posts/instagram/ig-how-it-works.png) — photo, OPEN SHIFTS. YOUR CALL.  
+[`ig-coverage-types.png`](../../assets/marketing/posts/instagram/ig-coverage-types.png) — type poster, ANYTIME. ANYWHERE.
 
 Questions: support@guardr.co
