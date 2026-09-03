@@ -45,4 +45,17 @@ describe('surface look layer', () => {
     assert.equal(css.toLowerCase().includes('#22c55e'), false);
     assert.equal(css.toLowerCase().includes('#ef4444'), false);
   });
+
+  it('does not paint the desktop sidebar paper (white labels need ink)', () => {
+    assert.equal(
+      /body\[data-surface='desktop'\] \.sfd-sidebar\s*\{[^}]*background:\s*var\(--look-paper\)/.test(css),
+      false,
+      'desktop sidebar must stay dark so inverse labels remain readable',
+    );
+    assert.equal(
+      /body\[data-surface='desktop'\] \.sfd-sidebar-item\[data-active='true'\][\s\S]{0,80}--look-tile-strong/.test(css),
+      false,
+      'active desktop nav items must not use the light tile fill',
+    );
+  });
 });

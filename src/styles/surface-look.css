@@ -401,11 +401,8 @@ html body[data-surface='desktop'] .sfd-shell-canvas {
   background: var(--look-canvas);
 }
 
-html body[data-surface='desktop'] .sfd-sidebar {
-  background: var(--look-paper);
-  border-right: 1px solid var(--sf-line);
-}
-
+/* Sidebar stays ink (#111) with inverse labels. Painting it paper would
+   hide the white nav text. The top bar is paper; that contrast is the point. */
 html body[data-surface='desktop'] .sfd-shell-header,
 html body[data-surface='desktop'] .sfd-topbar,
 html body[data-surface='desktop'] .payments-page-header {
@@ -516,10 +513,6 @@ html body[data-surface='desktop'] .staff-payments-summary {
 
 html body[data-surface='desktop'] .payments-page {
   background: var(--look-canvas);
-}
-
-html body[data-surface='desktop'] .sfd-sidebar-item[data-active='true'] {
-  background: var(--look-tile-strong);
 }
 
 html body[data-surface='desktop'] .staff-account-access-section.staff-account-access--leading .staff-account-access-actions {
