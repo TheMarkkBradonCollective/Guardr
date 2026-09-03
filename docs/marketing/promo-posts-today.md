@@ -5,24 +5,23 @@ Black-and-white. One idea per post. Brand: **Guardr** · **www.guardr.co**
 Re-render B&W: `node scripts/render-promo-posts.mjs --bw`  
 Re-render carousels only: `node scripts/render-promo-posts.mjs --carousel`
 
-Lead with the **carousels** — Anytime. Anywhere. cover, then five slides for clients and five for guards. The cover does not count as one of the five.
+Lead with the **carousels** — Anytime. Anywhere. cover, then three different app screens, then a 5th screenshot on the ending cover.
 
 ---
 
 ## Instagram carousels (post these)
 
-Two slideshows. Upload in order as an Instagram carousel (square).
+Two slideshows. Upload in order as an Instagram carousel (square). Each phone slide is a **different tab** — Map, Jobs, Chat, then You on the closer.
 
 ### For clients — `instagram/carousel-clients/`
 
-| # | File | Line |
-|---|---|---|
-| Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-clients/00-cover.png) | ANYTIME. ANYWHERE. |
-| 01 | [`01-tonight.png`](../../assets/marketing/posts/instagram/carousel-clients/01-tonight.png) | NEED A GUARD TONIGHT? |
-| 02 | [`02-nearby.png`](../../assets/marketing/posts/instagram/carousel-clients/02-nearby.png) | SEE WHO’S NEARBY. |
-| 03 | [`03-you-pick.png`](../../assets/marketing/posts/instagram/carousel-clients/03-you-pick.png) | YOU PICK WHO WORKS. |
-| 04 | [`04-post-pick.png`](../../assets/marketing/posts/instagram/carousel-clients/04-post-pick.png) | POST A JOB. PICK A GUARD. |
-| 05 | [`05-post-coverage.png`](../../assets/marketing/posts/instagram/carousel-clients/05-post-coverage.png) | POST COVERAGE. |
+| # | File | Screen | Line |
+|---|---|---|---|
+| 1 Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-clients/00-cover.png) | — | ANYTIME. ANYWHERE. |
+| 2 | [`01-tonight.png`](../../assets/marketing/posts/instagram/carousel-clients/01-tonight.png) | Map | NEED A GUARD TONIGHT? |
+| 3 | [`02-post-pick.png`](../../assets/marketing/posts/instagram/carousel-clients/02-post-pick.png) | Jobs | POST A JOB. PICK A GUARD. |
+| 4 | [`03-chat.png`](../../assets/marketing/posts/instagram/carousel-clients/03-chat.png) | Chat | TALK TO WHO APPLIES. |
+| 5 | [`04-end.png`](../../assets/marketing/posts/instagram/carousel-clients/04-end.png) | You + ending cover | ANYTIME. ANYWHERE. |
 
 **Caption:** Need a guard tonight? See who’s nearby. You pick who works.
 
@@ -33,14 +32,13 @@ www.guardr.co
 
 ### For guards — `instagram/carousel-guards/`
 
-| # | File | Line |
-|---|---|---|
-| Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-guards/00-cover.png) | ANYTIME. ANYWHERE. |
-| 01 | [`01-open-shifts.png`](../../assets/marketing/posts/instagram/carousel-guards/01-open-shifts.png) | OPEN SHIFTS. YOUR CALL. |
-| 02 | [`02-apply.png`](../../assets/marketing/posts/instagram/carousel-guards/02-apply.png) | APPLY TO WHAT FITS. |
-| 03 | [`03-no-dispatcher.png`](../../assets/marketing/posts/instagram/carousel-guards/03-no-dispatcher.png) | NO DISPATCHER. |
-| 04 | [`04-your-card.png`](../../assets/marketing/posts/instagram/carousel-guards/04-your-card.png) | YOUR CARD. YOUR SHIFTS. |
-| 05 | [`05-get-paid.png`](../../assets/marketing/posts/instagram/carousel-guards/05-get-paid.png) | PICK THE WORK. |
+| # | File | Screen | Line |
+|---|---|---|---|
+| 1 Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-guards/00-cover.png) | — | ANYTIME. ANYWHERE. |
+| 2 | [`01-open-shifts.png`](../../assets/marketing/posts/instagram/carousel-guards/01-open-shifts.png) | Jobs | OPEN SHIFTS. YOUR CALL. |
+| 3 | [`02-map.png`](../../assets/marketing/posts/instagram/carousel-guards/02-map.png) | Map | SEE IT ON THE MAP. |
+| 4 | [`03-chat.png`](../../assets/marketing/posts/instagram/carousel-guards/03-chat.png) | Chat | LOCK IN THE JOB. |
+| 5 | [`04-end.png`](../../assets/marketing/posts/instagram/carousel-guards/04-end.png) | You + ending cover | ANYTIME. ANYWHERE. |
 
 **Caption:** Open shifts on the map. Apply to what fits. No dispatcher.
 

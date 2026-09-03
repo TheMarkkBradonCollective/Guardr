@@ -692,6 +692,8 @@ h1 {
         : shot === 'menu'
           ? `<ul class="menu-list">${menu}</ul>`
           : '';
+    const mark =
+      shot === 'close' ? `<img class="mark" src="${logoUrl}" alt="" />` : '';
     return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8" />
 <style>
@@ -811,6 +813,22 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .shot-hero.flip .copy { left: auto; right: 48px; width: 44%; align-items: flex-end; text-align: right; }
 .shot-hero.flip .lede { text-align: right; }
 
+/* CLOSE — ending cover with a screenshot in front */
+.mark {
+  position: absolute; left: 50%; top: 40%;
+  width: 520px; height: 520px;
+  transform: translate(-50%, -50%);
+  opacity: 0.09;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+.shot-close .device { width: 500px; left: auto; right: -80px; top: 36px; transform: rotate(-7deg); }
+.shot-close .copy { top: 52px; bottom: auto; width: 50%; max-width: 540px; gap: 14px; }
+.shot-close .copy h1 { font-size: 92px; max-width: 10ch; }
+.shot-close .lede { font-size: 26px; max-width: 16ch; }
+.shot-close .note { color: #fff; font-size: 18px; font-weight: 700; letter-spacing: 0.08em; }
+
 /* BILLBOARD — type is the graphic, phone supports */
 .shot-billboard .copy { top: 48px; bottom: auto; gap: 16px; max-width: 640px; }
 .shot-billboard .copy h1 { font-size: 96px; max-width: 9ch; }
@@ -882,6 +900,7 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 <body>
 <article class="frame ${fmt} shot-${shot}${post.flip ? ' flip' : ''}">
   <div class="glow"></div>
+  ${mark}
   <div class="stage">${srcs.map((s, i) => device(s, `d${i}`)).join('')}</div>
   ${extra}
   <div class="copy">${copyInner}</div>
@@ -1141,12 +1160,12 @@ const SQ = { w: 1080, h: 1080 };
 const ST = { w: 1080, h: 1920 };
 const WD = { w: 1200, h: 630 };
 
-function phoneAd(file, dims, { line1, line2, lede, screen, flip, kicker, slide, slides, note }) {
+function phoneAd(file, dims, { line1, line2, lede, screen, flip, kicker, slide, slides, note, shot }) {
   return {
     file,
     kind: 'graphic',
     layout: 'devices',
-    shot: 'hero',
+    shot: shot || 'hero',
     ...dims,
     line1,
     line2,
@@ -1172,20 +1191,18 @@ function carouselCover(dir) {
   };
 }
 
-function carouselClose(file, { line1, line2, lede, kicker, slide }) {
-  return {
-    file,
-    kind: 'graphic',
-    layout: 'punch-type',
-    ...SQ,
-    line1,
-    line2,
-    lede,
+function carouselEnd(file, { kicker, screen, slide, slides = 5 }) {
+  return phoneAd(file, SQ, {
     kicker,
+    line1: 'ANYTIME.',
+    line2: 'ANYWHERE.',
+    lede: 'Security, when you need it.',
+    screen,
+    shot: 'close',
     slide,
-    slides: 5,
-    site: SITE,
-  };
+    slides,
+    note: SITE,
+  });
 }
 
 const POSTS = [
@@ -1547,8 +1564,8 @@ const POSTS = [
     flip: true,
   }),
 
-  // Instagram carousels — cover is ANYTIME. ANYWHERE. and does not count
-  // toward the five added slides.
+  // Instagram carousels — cover is ANYTIME. ANYWHERE. Then three different
+  // app tabs, then a 4th screenshot on the ending cover.
   carouselCover('instagram/carousel-clients'),
   phoneAd('instagram/carousel-clients/01-tonight.png', SQ, {
     kicker: 'For clients',
@@ -1556,43 +1573,31 @@ const POSTS = [
     line2: 'TONIGHT?',
     lede: 'See who’s nearby. You pick.',
     screen: 'screen-map.png',
-    slide: 1,
-    slides: 5,
-  }),
-  phoneAd('instagram/carousel-clients/02-nearby.png', SQ, {
-    kicker: 'For clients',
-    line1: 'SEE WHO’S',
-    line2: 'NEARBY.',
-    lede: 'Licensed. On the map.',
-    screen: 'screen-map.png',
-    flip: true,
     slide: 2,
     slides: 5,
   }),
-  phoneAd('instagram/carousel-clients/03-you-pick.png', SQ, {
-    kicker: 'For clients',
-    line1: 'YOU PICK',
-    line2: 'WHO WORKS.',
-    lede: 'Not dispatch. Your call.',
-    screen: 'screen-map.png',
-    slide: 3,
-    slides: 5,
-  }),
-  phoneAd('instagram/carousel-clients/04-post-pick.png', SQ, {
+  phoneAd('instagram/carousel-clients/02-post-pick.png', SQ, {
     kicker: 'For clients',
     line1: 'POST A JOB.',
     line2: 'PICK A GUARD.',
     lede: 'Tonight. Your site.',
     screen: 'screen-post.png',
     flip: true,
+    slide: 3,
+    slides: 5,
+  }),
+  phoneAd('instagram/carousel-clients/03-chat.png', SQ, {
+    kicker: 'For clients',
+    line1: 'TALK TO',
+    line2: 'WHO APPLIES.',
+    lede: 'Then you approve.',
+    screen: 'screen-chat.png',
     slide: 4,
     slides: 5,
   }),
-  carouselClose('instagram/carousel-clients/05-post-coverage.png', {
+  carouselEnd('instagram/carousel-clients/04-end.png', {
     kicker: 'For clients',
-    line1: 'POST',
-    line2: 'COVERAGE.',
-    lede: 'You pick who works.',
+    screen: 'screen-you.png',
     slide: 5,
   }),
 
@@ -1603,43 +1608,31 @@ const POSTS = [
     line2: 'YOUR CALL.',
     lede: 'Apply to what fits.',
     screen: 'screen-shifts.png',
-    slide: 1,
-    slides: 5,
-  }),
-  phoneAd('instagram/carousel-guards/02-apply.png', SQ, {
-    kicker: 'For guards',
-    line1: 'APPLY TO',
-    line2: 'WHAT FITS.',
-    lede: 'No dispatcher. Your map.',
-    screen: 'screen-shifts.png',
-    flip: true,
     slide: 2,
     slides: 5,
   }),
-  phoneAd('instagram/carousel-guards/03-no-dispatcher.png', SQ, {
+  phoneAd('instagram/carousel-guards/02-map.png', SQ, {
     kicker: 'For guards',
-    line1: 'NO',
-    line2: 'DISPATCHER.',
-    lede: 'You choose the work.',
+    line1: 'SEE IT ON',
+    line2: 'THE MAP.',
+    lede: 'No dispatcher.',
     screen: 'screen-map.png',
+    flip: true,
     slide: 3,
     slides: 5,
   }),
-  phoneAd('instagram/carousel-guards/04-your-card.png', SQ, {
+  phoneAd('instagram/carousel-guards/03-chat.png', SQ, {
     kicker: 'For guards',
-    line1: 'YOUR CARD.',
-    line2: 'YOUR SHIFTS.',
-    lede: 'Choose the work.',
-    screen: 'screen-shifts.png',
-    flip: true,
+    line1: 'LOCK IN',
+    line2: 'THE JOB.',
+    lede: 'Chat. Show up. Get paid.',
+    screen: 'screen-chat-guard.png',
     slide: 4,
     slides: 5,
   }),
-  carouselClose('instagram/carousel-guards/05-get-paid.png', {
+  carouselEnd('instagram/carousel-guards/04-end.png', {
     kicker: 'For guards',
-    line1: 'PICK THE',
-    line2: 'WORK.',
-    lede: 'Get paid for the job.',
+    screen: 'screen-you-guard.png',
     slide: 5,
   }),
 ];

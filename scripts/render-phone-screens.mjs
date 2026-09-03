@@ -176,6 +176,24 @@ html, body { width: 390px; height: 844px; overflow: hidden; font-family: Inter, 
   letter-spacing: 0.08em; text-transform: uppercase;
   padding: 10px 12px; border-radius: 8px;
 }
+.thread {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 2px; border-bottom: 1px solid #ececec;
+}
+.thread .preview { font-size: 13px; font-weight: 500; color: #666; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; }
+.thread .when { margin-left: auto; font-size: 11px; font-weight: 700; color: #999; align-self: flex-start; padding-top: 4px; }
+.unread { width: 8px; height: 8px; border-radius: 50%; background: #000; flex-shrink: 0; }
+.hero-card {
+  background: #fff; border-radius: 16px; padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+}
+.hero-card .avatar { width: 64px; height: 64px; font-size: 18px; }
+.hero-card h3 { font-size: 20px; font-weight: 800; letter-spacing: -0.04em; }
+.hero-card p { font-size: 13px; font-weight: 600; color: #666; margin-top: 3px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.stat { background: #fff; border-radius: 12px; padding: 12px 10px; }
+.stat b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -0.04em; }
+.stat span { font-size: 11px; font-weight: 600; color: #888; }
 `;
 
 const svg = {
@@ -322,9 +340,115 @@ const SCREENS = [
       'jobs',
     ),
   },
+  {
+    file: 'screen-chat.png',
+    html: chrome(
+      {
+        badge: `<span class="live"><i></i>2 live</span>`,
+        body: `<div class="page">
+        <div class="title">Chat</div>
+        <p class="hint">Guards on tonight’s job</p>
+        <div class="thread">
+          <div class="avatar a1">MT</div>
+          <div class="who"><strong>Marcus T.</strong><div class="preview">On site at 8. Armed.</div></div>
+          <span class="when">2m</span>
+          <i class="unread"></i>
+        </div>
+        <div class="thread">
+          <div class="avatar a2">JR</div>
+          <div class="who"><strong>Janelle R.</strong><div class="preview">I can take the lobby.</div></div>
+          <span class="when">18m</span>
+        </div>
+        <div class="thread">
+          <div class="avatar a1" style="background:#555">GA</div>
+          <div class="who"><strong>Grand Ave event</strong><div class="preview">You: Post is live.</div></div>
+          <span class="when">1h</span>
+        </div>
+      </div>`,
+      },
+      'chat',
+    ),
+  },
+  {
+    file: 'screen-chat-guard.png',
+    html: chrome(
+      {
+        badge: `<span class="loc">${svg.pin} California</span>`,
+        body: `<div class="page">
+        <div class="title">Chat</div>
+        <p class="hint">Jobs you applied to</p>
+        <div class="thread">
+          <div class="avatar a1" style="background:#111">GA</div>
+          <div class="who"><strong>Grand Ave event</strong><div class="preview">You’re confirmed. 8pm.</div></div>
+          <span class="when">4m</span>
+          <i class="unread"></i>
+        </div>
+        <div class="thread">
+          <div class="avatar a2">WH</div>
+          <div class="who"><strong>Retail close</strong><div class="preview">Thanks for applying.</div></div>
+          <span class="when">1h</span>
+        </div>
+        <div class="thread">
+          <div class="avatar a1">AD</div>
+          <div class="who"><strong>Site patrol</strong><div class="preview">You: I can work it.</div></div>
+          <span class="when">Tue</span>
+        </div>
+      </div>`,
+      },
+      'chat',
+    ),
+  },
+  {
+    file: 'screen-you.png',
+    html: chrome(
+      {
+        badge: `<span class="loc">${svg.pin} California</span>`,
+        body: `<div class="page">
+        <div class="title">You</div>
+        <p class="hint">Client · Downtown LA</p>
+        <div class="hero-card">
+          <div class="avatar a1">DL</div>
+          <div><h3>Downtown Lofts</h3><p>You pick who works.</p></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><b>2</b><span>Live</span></div>
+          <div class="stat"><b>6h</b><span>Tonight</span></div>
+          <div class="stat"><b>$35</b><span>Rate</span></div>
+        </div>
+        <div class="card"><div class="ic">${svg.pin}</div><div style="flex:1"><label>Site</label><div class="val">Grand Ave · DTLA</div></div></div>
+        <div class="card"><div class="ic">${svg.shield}</div><div style="flex:1"><label>Coverage</label><div class="val">Event security</div></div></div>
+      </div>`,
+      },
+      'you',
+    ),
+  },
+  {
+    file: 'screen-you-guard.png',
+    html: chrome(
+      {
+        badge: `<span class="loc">${svg.pin} California</span>`,
+        body: `<div class="page">
+        <div class="title">You</div>
+        <p class="hint">Licensed CA guard</p>
+        <div class="hero-card">
+          <div class="avatar a1">MT</div>
+          <div><h3>Marcus T.</h3><p>Guard card · Armed</p></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><b>4.9</b><span>Rating</span></div>
+          <div class="stat"><b>32-hr</b><span>Course</span></div>
+          <div class="stat"><b>$28</b><span>/ hr</span></div>
+        </div>
+        <div class="card"><div class="ic">${svg.shield}</div><div style="flex:1"><label>Credentials</label><div class="val">Verified · California</div></div></div>
+        <div class="card"><div class="ic">${svg.cash}</div><div style="flex:1"><label>Payouts</label><div class="val">Paid per job</div></div></div>
+      </div>`,
+      },
+      'you',
+    ),
+  },
 ];
 
-async function waitForFile(filePath, timeoutMs = 20000) {
+async function waitForFile(filePath, timeoutMs = 40000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {

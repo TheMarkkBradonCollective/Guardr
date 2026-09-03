@@ -2,7 +2,7 @@
 
 Ready-to-upload social pictures.
 
-- **Carousels (post these):** `instagram/carousel-clients/` and `instagram/carousel-guards/` — cover is Anytime. Anywhere., then five slides each
+- **Carousels (post these):** `instagram/carousel-clients/` and `instagram/carousel-guards/` — Anytime. Anywhere. cover, three different app screens, then a 5th screenshot on the ending cover
 - **Phone pack:** `instagram/ig-marketplace.png` (YOU PICK WHO WORKS) plus `ig-tonight-map`, `ig-see-nearby`, `ig-no-dispatcher`, `ig-post-pick`, `ig-your-site`, `ig-open-call`, `ig-apply`, `ig-two-live`
 - **Captions:** [`docs/marketing/promo-posts-today.md`](../../../docs/marketing/promo-posts-today.md)
 - **Instagram 1:1:** `instagram/`
