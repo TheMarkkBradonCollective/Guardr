@@ -82,4 +82,21 @@ describe('tablet CSS independence', () => {
     assert.match(css, /sft-form-page-body \.grid[\s\S]{0,280}repeat\(2/);
     assert.match(css, /\.client-content-shell[\s\S]{0,80}max-width: none/);
   });
+
+  it('owns a tablet auth split and centered dialogs instead of a phone stack', () => {
+    assert.ok(css.includes('.sft-auth-split'));
+    assert.ok(css.includes('.sft-auth-editorial'));
+    assert.ok(css.includes('.sft-auth-form-card'));
+    assert.ok(css.includes('.sft-confirm-panel'));
+    assert.ok(css.includes('.sft-tutorial-prompt'));
+    assert.match(
+      css,
+      /body\.sf-tablet \.sft-auth-split[\s\S]{0,200}grid-template-columns: minmax\(20rem, 1fr\) minmax\(22rem, 28rem\)/,
+    );
+    assert.equal(
+      css.includes('data-form-factor="tablet"'),
+      false,
+      'tablet-app.css must not key look off form-factor',
+    );
+  });
 });

@@ -559,35 +559,335 @@ body.sf-tablet .uber-style-landing--tablet .uber-landing-input-row {
   }
 }
 
-/* ── Auth / welcome: centered card, not desktop editorial split ──────────── */
+/* ── Auth: tablet split (editorial + form card), not a phone stack ──────── */
 
 body.sf-tablet .auth-experience--tablet,
-body.sf-tablet .auth-role-choice-page--tablet {
+body.sf-tablet .auth-role-choice-page--tablet,
+body.sf-tablet .sft-auth {
   background: var(--sf-paper-sunken, #f6f6f6);
 }
 
-body.sf-tablet .auth-experience--tablet .auth-form-page-form,
-body.sf-tablet .auth-role-choice-page--tablet .auth-form-page-form {
-  width: 100%;
-  max-width: 32rem;
-  margin-inline: auto;
-  padding: 1.25rem 1.35rem 1.5rem;
-  border: 1px solid var(--sf-line, #e2e2e2);
-  border-radius: var(--sf-radius-surface, 16px);
+body.sf-tablet .sft-auth {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body.sf-tablet .sft-auth-nav {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 1fr) auto minmax(5.5rem, 1fr);
+  align-items: center;
+  flex-shrink: 0;
+  min-height: calc(60px + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) 20px 0;
+  border-bottom: 1px solid var(--sf-line, #e2e2e2);
   background: var(--sf-paper, #ffffff);
 }
 
-body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-hero {
-  min-height: clamp(200px, 32vh, 360px);
+body.sf-tablet .sft-auth-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  min-height: 44px;
+  padding: 0 12px 0 4px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--sf-ink, #111);
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.sf-tablet .sft-auth-nav-back:active {
   background: var(--sf-paper-sunken, #f6f6f6);
 }
 
-body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-option {
+body.sf-tablet .sft-auth-nav-wordmark {
+  margin: 0;
+  justify-self: center;
+  font-family: var(--sf-font-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+body.sf-tablet .sft-auth-nav-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  justify-self: end;
+}
+
+body.sf-tablet .sft-auth-nav-icon,
+body.sf-tablet .sft-auth-nav-actions .theme-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--sf-ink, #111);
+  cursor: pointer;
+}
+
+body.sf-tablet .sft-auth-nav-icon:active,
+body.sf-tablet .sft-auth-nav-actions .theme-toggle-icon:active {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .sft-auth-split {
+  display: grid;
+  grid-template-columns: minmax(20rem, 1fr) minmax(22rem, 28rem);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+body.sf-tablet .sft-auth-editorial {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 36px 40px 40px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+body.sf-tablet .sft-auth-kicker {
+  margin: 0;
+  color: var(--sf-ink-secondary, #5c5c5c);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+  max-width: 32rem;
+}
+
+body.sf-tablet .sft-auth-headline {
+  margin: 0;
+  font-family: var(--sf-font-display);
+  font-size: clamp(1.85rem, 3.4vw, 2.55rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  max-width: 18ch;
+}
+
+body.sf-tablet .sft-auth-sub {
+  margin: 0;
+  color: var(--sf-ink-secondary, #5c5c5c);
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 34rem;
+}
+
+body.sf-tablet .sft-auth-features {
+  display: grid;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+body.sf-tablet .sft-auth-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   min-height: 44px;
+  color: var(--sf-ink, #111);
+  font-size: 15px;
+  font-weight: 550;
+}
+
+body.sf-tablet .sft-auth-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--sf-paper, #ffffff);
+  border: 1px solid var(--sf-line, #e2e2e2);
+  color: var(--sf-ink, #111);
+}
+
+body.sf-tablet .sft-auth-quote {
+  margin: 18px 0 0;
+  padding: 16px 18px;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: 16px;
+  background: var(--sf-paper, #ffffff);
+  max-width: 34rem;
+}
+
+body.sf-tablet .sft-auth-quote-text {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+body.sf-tablet .sft-auth-quote-author {
+  color: var(--sf-ink-secondary, #5c5c5c);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+body.sf-tablet .sft-auth-quote-role {
+  font-weight: 500;
+}
+
+body.sf-tablet .sft-auth-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 24px 28px 28px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+body.sf-tablet .sft-auth-form-card,
+body.sf-tablet .sft-auth-form {
+  width: 100%;
+  max-width: 26rem;
+}
+
+body.sf-tablet .sft-auth-form-card {
+  padding: 22px 24px 24px;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: 16px;
+  background: var(--sf-paper, #ffffff);
+  box-shadow: var(--sf-elev-2, 0 4px 14px rgba(0, 0, 0, 0.08));
+}
+
+body.sf-tablet .sft-auth-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+body.sf-tablet .sft-auth-legal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 16px;
+  margin-top: 20px;
+  justify-items: start;
+}
+
+body.sf-tablet .sft-auth-legal .legal-footer-links {
+  display: contents;
+}
+
+body.sf-tablet .sft-auth-legal .legal-footer-link,
+body.sf-tablet .auth-experience--tablet .legal-footer-link,
+body.sf-tablet .auth-role-choice-page--tablet .legal-footer-link {
+  min-height: 36px;
+  text-align: left;
 }
 
 body.sf-tablet .auth-experience--tablet .dsk-auth-split {
   display: none;
+}
+
+@media (orientation: portrait) {
+  body.sf-tablet .sft-auth-split {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  body.sf-tablet .sft-auth-editorial {
+    padding: 24px 28px 8px;
+  }
+
+  body.sf-tablet .sft-auth-headline {
+    max-width: none;
+    font-size: clamp(1.7rem, 5vw, 2.2rem);
+  }
+
+  body.sf-tablet .sft-auth-form-panel {
+    align-items: flex-start;
+    padding: 8px 24px 28px;
+  }
+
+  body.sf-tablet .sft-auth-form-card,
+  body.sf-tablet .sft-auth-form {
+    max-width: 32rem;
+    margin-inline: auto;
+  }
+}
+
+/* Role choice — landscape editorial + 2-up cards, not a phone list */
+body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-hero {
+  min-height: 0;
+  background: transparent;
+}
+
+body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-option {
+  min-height: 44px;
+  padding: 18px 18px 4px;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: 16px;
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-option:active {
+  transform: scale(0.99);
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+@media (orientation: landscape) {
+  body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-main {
+    display: grid;
+    grid-template-columns: minmax(18rem, 0.85fr) minmax(0, 1.15fr);
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-hero,
+  body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-options {
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 28px 24px 32px;
+  }
+
+  body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    max-width: none;
+  }
+}
+
+@media (orientation: portrait) {
+  body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-hero {
+    padding: 20px 24px 8px;
+  }
+
+  body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-options {
+    padding: 8px 24px 28px;
+  }
+
+  body.sf-tablet .auth-role-choice-page--tablet .auth-role-choice-options-grid {
+    display: grid;
+    gap: 12px;
+  }
 }
 
 body.sf-tablet .app-welcome--tablet {
@@ -695,6 +995,14 @@ body.sf-tablet .app-screen--tablet.uber-jobs-screen,
 body.sf-tablet .app-screen--tablet.h-full {
   padding: 0;
   overflow: hidden;
+}
+
+body.sf-tablet .sft-form-page-title {
+  margin: 0 0 6px;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-title, 24px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 body.sf-tablet .sft-form-page-kicker {
@@ -1826,4 +2134,210 @@ body.sf-tablet .staff-detail-pane:not(:has(> .staff-detail-header)) > .staff-det
   border: 1px solid var(--sf-line);
   border-radius: var(--sf-radius-card, 14px);
   background: var(--sf-paper, #fff);
+}
+
+/* ── Tablet product polish: dialogs, settings, chat, menus, controls ───── */
+
+body.sf-tablet .sft-confirm-panel,
+body.sf-tablet .app-confirm-panel {
+  width: min(460px, calc(100vw - 48px));
+  max-width: 460px;
+  border-radius: 18px;
+}
+
+body.sf-tablet .app-confirm-dialog {
+  padding: 22px 22px 20px;
+}
+
+body.sf-tablet .app-confirm-title {
+  font-family: var(--sf-font-display);
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+body.sf-tablet .app-confirm-dialog .app-confirm-message {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+body.sf-tablet .sft-tutorial-prompt,
+body.sf-tablet .app-form-sheet-panel {
+  width: min(480px, calc(100vw - 48px));
+  border-radius: 18px;
+}
+
+body.sf-tablet .app-form-sheet-handle {
+  display: none;
+}
+
+body.sf-tablet .sft-tutorial-prompt-inner {
+  width: 100%;
+}
+
+body.sf-tablet .sft-tutorial-step {
+  left: auto;
+  right: 24px;
+  bottom: 24px;
+  width: min(360px, calc(100vw - 48px));
+  padding: 0;
+}
+
+body.sf-tablet .sft-tutorial-step .tutorial-step-panel-inner {
+  max-width: none;
+  margin: 0;
+  border-radius: 16px;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  box-shadow: var(--sf-elev-3, 0 12px 36px rgba(0, 0, 0, 0.14));
+}
+
+body.sf-tablet .sft-shell-header-trail .sft-icon-btn,
+body.sf-tablet .sft-shell-header-trail .account-menu-trigger--tablet {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+body.sf-tablet .account-menu-trigger--tablet {
+  padding: 0;
+  border-radius: 12px;
+}
+
+body.sf-tablet .account-menu-trigger--tablet.account-menu-trigger--active {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .account-menu-panel {
+  width: min(320px, calc(100vw - 48px));
+  border-radius: 16px;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  box-shadow: var(--sf-elev-3, 0 12px 36px rgba(0, 0, 0, 0.14));
+}
+
+body.sf-tablet .account-menu-item {
+  min-height: 44px;
+  border-radius: 10px;
+}
+
+body.sf-tablet .legal-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  justify-content: flex-start;
+}
+
+body.sf-tablet .legal-footer-link {
+  min-height: 36px;
+}
+
+body.sf-tablet .guard-settings-screen.sft-form-page .sft-form-page-body,
+body.sf-tablet .sft-form-page.guard-settings-screen .sft-form-page-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+body.sf-tablet .guard-settings-screen .sft-form-page-body > .app-settings-head,
+body.sf-tablet .guard-settings-screen .sft-form-page-body > [data-full-width='true'] {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .sft-shell-canvas .app-settings-section,
+body.sf-tablet .sft-shell-canvas .settings-section {
+  padding: 16px 18px;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: 16px;
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .app-messages-split-detail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .app-messages-split-detail .app-chat-composer {
+  position: static;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--sf-line, #e2e2e2);
+  background: var(--sf-paper, #ffffff);
+}
+
+body.sf-tablet .app-messages-split-detail .app-chat-bubble,
+body.sf-tablet .app-messages-split-detail .app-chat-msg-wrap {
+  max-width: min(36rem, 78%);
+}
+
+body.sf-tablet input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
+body.sf-tablet select,
+body.sf-tablet textarea,
+body.sf-tablet .uber-input,
+body.sf-tablet .uber-select {
+  font-size: 16px;
+}
+
+body.sf-tablet .sft-shell-canvas .theme-toggle,
+body.sf-tablet .sft-shell-canvas .app-segmented,
+body.sf-tablet .sft-shell-canvas [role="switch"],
+body.sf-tablet .sft-shell-canvas .toggle,
+body.sf-tablet .sft-shell-canvas .app-switch {
+  min-height: 32px;
+}
+
+body.sf-tablet .sft-shell-canvas button[role="switch"],
+body.sf-tablet .sft-shell-canvas input[type="checkbox"],
+body.sf-tablet .sft-shell-canvas input[type="radio"] {
+  min-width: 22px;
+  min-height: 22px;
+}
+
+body.sf-tablet .sft-shell-canvas .app-button,
+body.sf-tablet .sft-shell-canvas .btn,
+body.sf-tablet .sft-auth .app-button {
+  min-height: 46px;
+  border-radius: 10px;
+}
+
+body.sf-tablet .sft-shell-canvas .app-button:active:not(:disabled),
+body.sf-tablet .sft-auth .app-button:active:not(:disabled),
+body.sf-tablet .sft-auth-nav-back:active,
+body.sf-tablet .account-menu-item:active {
+  transform: scale(0.98);
+}
+
+body.sf-tablet .sft-page > .app-subscreen-header,
+body.sf-tablet .sft-form-page > .app-subscreen-header {
+  display: none;
+}
+
+body.sf-tablet .uber-style-landing--tablet .uber-landing-nav {
+  padding-inline: 24px;
+}
+
+body.sf-tablet .uber-style-landing--tablet .legal-footer-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 16px;
+}
+
+@media (orientation: portrait) {
+  body.sf-tablet .guard-settings-screen.sft-form-page .sft-form-page-body,
+  body.sf-tablet .sft-form-page.guard-settings-screen .sft-form-page-body {
+    grid-template-columns: 1fr;
+  }
+
+  body.sf-tablet .sft-auth-legal {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  body.sf-tablet .uber-style-landing--tablet .legal-footer-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.sf-tablet .sft-tutorial-step {
+    left: 24px;
+    right: 24px;
+    width: auto;
+  }
 }
