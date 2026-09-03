@@ -2,7 +2,7 @@ import React from 'react';
 import { Drawer, Modal } from '../baseuiShims';
 import { modalOverrides, sheetOverrides } from './overlayStyles';
 import { useOverlayCloseGate, useReturnFocusOnClose } from './overlayStack';
-import { prefersMobileGestureUi, useDevice } from '../../../lib/platform';
+import { useSurfaceKind } from '../../../surfaces/SurfaceProvider';
 
 export interface GuardrSheetProps {
   open: boolean;
@@ -17,8 +17,8 @@ export interface GuardrSheetProps {
 
 /**
  * Bottom sheet overlay — More menu, mobile drawers.
- * Website desktop (`browser-desktop`) uses a centered modal instead of a slide-up sheet.
- * Mobile browser, PWA, and APK keep the bottom Drawer.
+ * Tablet and desktop use a centered dialog. Only the mobile surface keeps
+ * the slide-up Drawer (including a letterboxed `?ui=mobile` preview).
  */
 export function GuardrSheet({
   open,
@@ -30,12 +30,11 @@ export function GuardrSheet({
   ariaLabel,
   dismissable = true,
 }: GuardrSheetProps) {
-  const { viewSurface } = useDevice();
-  const gestureUi = prefersMobileGestureUi(viewSurface);
+  const surface = useSurfaceKind();
   const gatedClose = useOverlayCloseGate(open, onClose, dismissable);
   useReturnFocusOnClose(open);
 
-  if (!gestureUi) {
+  if (surface !== 'mobile') {
     return (
       <Modal
         isOpen={open}

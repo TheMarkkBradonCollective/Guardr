@@ -82,6 +82,7 @@ export function ResponsiveFormPage({
   if (surface === 'tablet') {
     return (
       <div className={`sft-form-page ${className}`.trim()} aria-label={title}>
+        {title ? <h1 className="sft-form-page-title">{title}</h1> : null}
         {subtitle ? <p className="sft-form-page-kicker">{subtitle}</p> : null}
         <div className="sft-form-page-body">{children}</div>
       </div>

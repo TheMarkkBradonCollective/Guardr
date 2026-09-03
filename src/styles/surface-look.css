@@ -529,6 +529,41 @@ html body[data-surface='tablet'] .payments-page {
   background: var(--look-canvas);
 }
 
+html body[data-surface='tablet'] .sft-auth,
+html body[data-surface='tablet'] .auth-experience--tablet,
+html body[data-surface='tablet'] .auth-role-choice-page--tablet {
+  background: var(--look-canvas);
+}
+
+html body[data-surface='tablet'] .sft-auth-nav {
+  background: var(--look-paper);
+  box-shadow: var(--look-header-shadow);
+}
+
+html body[data-surface='tablet'] .sft-auth-form-card,
+html body[data-surface='tablet'] .auth-role-choice-page--tablet .auth-role-choice-option,
+html body[data-surface='tablet'] .sft-auth-quote {
+  border: var(--look-card-border);
+  border-radius: var(--look-card-radius);
+  background: var(--look-tile);
+  box-shadow: var(--look-card-shadow);
+}
+
+html body[data-surface='tablet'] .sft-confirm-panel,
+html body[data-surface='tablet'] .sft-tutorial-prompt {
+  border-radius: var(--look-card-radius);
+  background: var(--look-paper);
+  box-shadow: var(--look-card-shadow);
+}
+
+html body[data-surface='tablet'] .sft-auth input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+html body[data-surface='tablet'] .sft-auth select,
+html body[data-surface='tablet'] .sft-auth textarea {
+  border: var(--look-input-border) !important;
+  border-radius: var(--look-input-radius) !important;
+  background: var(--look-input-bg) !important;
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    DESKTOP — operations centre. Cooler sunken canvas, hairline 6px cards,
    compact chips, hover rows, pointer density. Not a wide tablet.

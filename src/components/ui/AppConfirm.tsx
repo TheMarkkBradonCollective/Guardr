@@ -328,6 +328,7 @@ export function AppConfirmHost() {
   const [request, setRequest] = useState<DialogRequest | null>(null);
   const surface = useSurfaceKind();
   const sheet = surface === 'mobile';
+  const tablet = surface === 'tablet';
 
   useEffect(() => subscribe(setRequest), []);
 
@@ -342,7 +343,13 @@ export function AppConfirmHost() {
       open
       align={sheet ? 'bottom' : 'center'}
       onClose={handleClose}
-      panelClassName={sheet ? 'app-confirm-panel sfm-confirm-panel' : 'app-confirm-panel'}
+      panelClassName={
+        sheet
+          ? 'app-confirm-panel sfm-confirm-panel'
+          : tablet
+            ? 'app-confirm-panel sft-confirm-panel'
+            : 'app-confirm-panel'
+      }
       zIndex={2200}
     >
       {request.kind === 'confirm' ? (
