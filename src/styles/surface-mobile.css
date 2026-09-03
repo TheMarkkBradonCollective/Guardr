@@ -34,7 +34,9 @@ body[data-surface='mobile'] {
   /* Fixed positioning resolves against the viewport, which would span the whole
      screen; absolute keeps the bar inside the phone column. */
   body[data-surface='mobile'] .sfm-tabbar,
-  body[data-surface='mobile'] .sfm-sheet-root {
+  body[data-surface='mobile'] .sfm-sheet-root,
+  body[data-surface='mobile'] .sfm-drawer,
+  body[data-surface='mobile'] .sfm-drawer-backdrop {
     position: absolute;
   }
 }
@@ -266,7 +268,7 @@ body[data-surface='mobile'] {
   z-index: 130;
   display: flex;
   flex-direction: column;
-  width: min(304px, 88vw);
+  width: min(304px, 88%);
   max-width: 100%;
   padding-top: var(--sf-safe-top);
   padding-bottom: var(--sf-safe-bottom);
@@ -2399,4 +2401,34 @@ body[data-surface='mobile'] .sfm-shell form .grid.gap-3 {
 
 body[data-surface='mobile'] .staff-guard-detail-tabs {
   padding: 0 0 12px;
+}
+
+/* Tailwind sm/md/lg keys off the viewport. A letterboxed 440px phone column
+   on a 1600px display must still read as a one-handed sheet. */
+body[data-surface='mobile'] .sfm-shell [class*="sm:grid-cols-"],
+body[data-surface='mobile'] .sfm-shell [class*="md:grid-cols-"],
+body[data-surface='mobile'] .sfm-shell [class*="lg:grid-cols-"],
+body[data-surface='mobile'] .sfm-shell [class*="xl:grid-cols-"] {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+body[data-surface='mobile'] .sfm-shell .grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+body[data-surface='mobile'] .sfm-shell [class*="sm:flex-row"],
+body[data-surface='mobile'] .sfm-shell [class*="md:flex-row"],
+body[data-surface='mobile'] .sfm-shell [class*="lg:flex-row"] {
+  flex-direction: column !important;
+}
+
+body[data-surface='mobile'] .payments-page {
+  height: auto;
+  min-height: 100%;
+}
+
+body[data-surface='mobile'] .payments-page-body {
+  overflow: visible;
+  height: auto;
+  min-height: 0;
 }

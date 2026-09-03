@@ -32,4 +32,18 @@ describe('mobile CSS independence', () => {
     assert.match(lookCss, /body\[data-surface='mobile'\][\s\S]{0,80}\.tablet-split-panel/);
     assert.match(lookCss, /flex-direction: column !important/);
   });
+
+  it('keeps the hamburger drawer inside the letterboxed phone column', () => {
+    assert.match(
+      mobileCss,
+      /min-width: 744px[\s\S]+?\.sfm-drawer,\s*\n\s*body\[data-surface='mobile'\] \.sfm-drawer-backdrop \{\s*\n\s*position: absolute;/,
+    );
+    assert.match(mobileCss, /width: min\(304px, 88%\)/);
+  });
+
+  it('neutralizes viewport Tailwind grids so the phone column stays stacked', () => {
+    assert.match(mobileCss, /\[class\*="sm:grid-cols-"\]/);
+    assert.match(mobileCss, /\[class\*="sm:flex-row"\]/);
+    assert.match(mobileCss, /\.grid-cols-2[\s\S]{0,80}repeat\(2, minmax\(0, 1fr\)\)/);
+  });
 });
