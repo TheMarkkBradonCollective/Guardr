@@ -167,7 +167,7 @@ function PreviewApp() {
         </button>
       }
       accountMenu={
-        surface === 'mobile' ? (
+        surface === 'mobile' || desktopSurface ? (
           <AccountMenu
             userName="Marcus Trent"
             userSubtitle={staffWorkspace ? 'Staff operations' : 'Guard · independent contractor'}
@@ -176,6 +176,7 @@ function PreviewApp() {
             onSignOut={() => undefined}
             themeMode={themeMode}
             onChangeTheme={setThemeMode}
+            triggerVariant={desktopSurface ? 'uber-direct' : 'default'}
           />
         ) : (
           <div className="sfp-account">MT</div>

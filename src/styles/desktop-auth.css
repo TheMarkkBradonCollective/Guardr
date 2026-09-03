@@ -152,9 +152,72 @@ body[data-surface="desktop"] .dsk-auth-form-scroll {
   overscroll-behavior: contain;
 }
 
+body[data-surface="desktop"] .dsk-auth-kicker {
+  margin: 0 0 12px;
+  max-width: 32rem;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+}
+
+body[data-surface="desktop"] .dsk-auth-headline {
+  margin: 0 0 12px;
+  max-width: 16ch;
+  color: #ffffff;
+  font-family: var(--uber-font-display, "Uber Move", sans-serif);
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+body[data-surface="desktop"] .dsk-auth-sub {
+  margin: 0 0 20px;
+  max-width: 32rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+body[data-surface="desktop"] .dsk-auth-features {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body[data-surface="desktop"] .dsk-auth-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 550;
+}
+
+body[data-surface="desktop"] .dsk-auth-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body[data-surface="desktop"] .dsk-auth-editorial .auth-role-choice-visual {
+  margin-top: 28px;
+  max-width: 22rem;
+  opacity: 0.92;
+}
+
 body[data-surface="desktop"] .dsk-auth-form-inner {
   width: 100%;
-  max-width: 24rem;
+  max-width: 28rem;
   /* Auto margins centre the card without clipping a tall form. */
   margin: auto;
   padding: 0 !important;
@@ -163,6 +226,54 @@ body[data-surface="desktop"] .dsk-auth-form-inner {
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+body[data-surface="desktop"] .dsk-auth-form-inner--wide {
+  max-width: 40rem;
+}
+
+body[data-surface="desktop"] .dsk-auth-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 20px;
+}
+
+body[data-surface="desktop"] .dsk-auth-legal .legal-footer-link {
+  min-height: 28px;
+  font-size: 12px;
+}
+
+body[data-surface="desktop"] .dsk-auth-role-list {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  max-width: 36rem;
+  margin: auto;
+  padding: 2rem 0 3rem;
+}
+
+body[data-surface="desktop"] .dsk-auth-role-option {
+  padding: 16px 18px 8px;
+  border: 1px solid var(--sf-line, #e2e2e2);
+  border-radius: 8px;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 100ms ease, background-color 100ms ease, box-shadow 100ms ease;
+}
+
+body[data-surface="desktop"] .dsk-auth-role-option:hover {
+  border-color: #111;
+  background: #fafafa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+body[data-surface="desktop"] .auth-role-choice-page--desktop {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 body[data-surface="desktop"] .dsk-auth-form-inner .uber-input {

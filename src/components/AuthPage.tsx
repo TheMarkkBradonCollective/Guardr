@@ -812,6 +812,7 @@ export function AuthPage({
   const [, theme] = useStyletron();
 
   const testimonial = AUTH_TESTIMONIAL[role];
+  const hero = AUTH_HERO_CONTENT[role];
   const isMobilePageAuth = !isSheet && !isDesktopAuth;
   const useRoleChoiceAuthLayout = isMobilePageAuth;
   const useFocusedAuthHeader = isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp);
@@ -1710,8 +1711,8 @@ export function AuthPage({
             </form>
         </div>
 
-        {onOpenLegal && !isDesktopAuth && !isSignUp && (
-          <div className={isSheet ? 'auth-sheet-legal' : `flex justify-center ${isSheet ? 'mt-6' : 'mt-8'}`}>
+        {onOpenLegal && !isSignUp && (
+          <div className={isDesktopAuth ? 'dsk-auth-legal' : isSheet ? 'auth-sheet-legal' : `flex justify-center ${isSheet ? 'mt-6' : 'mt-8'}`}>
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
           </div>
         )}
@@ -1775,8 +1776,23 @@ export function AuthPage({
           />
         <div className="dsk-auth-split">
           <aside className="dsk-auth-editorial">
+            <p className="dsk-auth-kicker">{hero.trustLine}</p>
+            <h1 className="dsk-auth-headline">{hero.headline}</h1>
+            <p className="dsk-auth-sub">{hero.sub}</p>
+            <ul className="dsk-auth-features">
+              {hero.features.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <li key={feature.text} className="dsk-auth-feature">
+                    <span className="dsk-auth-feature-icon" aria-hidden>
+                      <Icon size={16} strokeWidth={2} />
+                    </span>
+                    <span>{feature.text}</span>
+                  </li>
+                );
+              })}
+            </ul>
             <div className="dsk-auth-editorial-spacer" aria-hidden />
-
             <blockquote className="dsk-auth-quote">
               <p className="dsk-auth-quote-text">&ldquo;{testimonial.quote}&rdquo;</p>
               <footer className="dsk-auth-quote-author">
@@ -1799,7 +1815,7 @@ export function AuthPage({
             </div>
 
             <div className="dsk-auth-form-scroll">
-              <div className="dsk-auth-form-inner animate-fade-in">
+              <div className={`dsk-auth-form-inner animate-fade-in${isSignUp ? ' dsk-auth-form-inner--wide' : ''}`}>
                 {authFormBody}
               </div>
             </div>

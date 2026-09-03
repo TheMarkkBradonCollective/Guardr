@@ -342,7 +342,13 @@ export function AppConfirmHost() {
       open
       align={sheet ? 'bottom' : 'center'}
       onClose={handleClose}
-      panelClassName={sheet ? 'app-confirm-panel sfm-confirm-panel' : 'app-confirm-panel'}
+      panelClassName={
+        sheet
+          ? 'app-confirm-panel sfm-confirm-panel'
+          : surface === 'desktop'
+            ? 'app-confirm-panel sfd-confirm-panel'
+            : 'app-confirm-panel'
+      }
       zIndex={2200}
     >
       {request.kind === 'confirm' ? (

@@ -101,11 +101,16 @@ function TutorialStepPanel({
   onNext: () => void;
   onBack: () => void;
 }) {
+  const surface = useSurfaceKind();
   const step = tour.steps[stepIndex];
   const isLastStep = stepIndex >= tour.steps.length - 1;
 
   return (
-    <div className="tutorial-step-panel" role="dialog" aria-live="polite">
+    <div
+      className={`tutorial-step-panel${surface === 'desktop' ? ' sfd-tutorial-step' : ''}`}
+      role="dialog"
+      aria-live="polite"
+    >
       <div className="tutorial-step-panel-inner">
         <p className="text-xs font-bold uppercase tracking-wider text-brand-primary mb-1">
           Step {stepIndex + 1} of {tour.steps.length}

@@ -117,7 +117,7 @@ export function RoleAppShell({
           src={accountMenu.avatarUrl}
           name={accountMenu.userName}
           size="sm"
-          className="sfm-shell-avatar"
+          className={surface === 'desktop' ? 'sfd-topbar-avatar' : 'sfm-shell-avatar'}
         />
       }
       accountMenu={

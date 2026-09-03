@@ -75,6 +75,19 @@ describe('desktop CSS independence', () => {
     assert.match(commandCss, /\.app-form-section \.grid[\s\S]{0,400}repeat\(2/);
   });
 
+  it('owns a desktop auth split and hides duplicate canvas titles', () => {
+    const authCss = readFileSync(join(here, 'desktop-auth.css'), 'utf8');
+    const commandCss = readFileSync(join(here, 'desktop-command.css'), 'utf8');
+    assert.ok(authCss.includes('.dsk-auth-split'));
+    assert.ok(authCss.includes('.dsk-auth-editorial'));
+    assert.ok(authCss.includes('.dsk-auth-headline'));
+    assert.ok(authCss.includes('.dsk-auth-role-option'));
+    assert.match(
+      commandCss,
+      /sfd-shell-canvas \.app-screen-header:not\(\.app-screen-header--map\):not\(\.app-screen-header--toolbar-only\)/,
+    );
+  });
+
   it('does not letterbox signed-in desktop pages into a phone column', () => {
     const indexCss = readFileSync(join(here, '../index.css'), 'utf8');
     const lookCss = readFileSync(join(here, 'surface-look.css'), 'utf8');
