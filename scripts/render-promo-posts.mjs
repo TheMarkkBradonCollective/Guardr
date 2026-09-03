@@ -460,6 +460,17 @@ function bwPage(w, h, inner, extraClass = '') {
 </body></html>`;
 }
 
+function carouselPager(post) {
+  if (post.slide == null) return '';
+  const total = post.slides || 5;
+  const active = post.slide;
+  const dots = Array.from(
+    { length: total },
+    (_, n) => `<i${n + 1 === active ? ' class="on"' : ''}></i>`,
+  ).join('');
+  return `<div class="carousel-meta"><span class="pager">${String(active).padStart(2, '0')} / ${String(total).padStart(2, '0')}</span><div class="dots">${dots}</div></div>`;
+}
+
 function graphicHtml(post) {
   const { w, h, layout } = post;
   const invert = post.invert ? 'invert' : '';
@@ -549,19 +560,35 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 }
 .lock { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 800; letter-spacing: 0.34em; }
 .lock img { width: 22px; height: 22px; object-fit: contain; }
+.kicker {
+  font-size: 13px; font-weight: 800; letter-spacing: 0.28em;
+  color: #8a8a8a; text-transform: uppercase;
+}
 h1 {
   font-size: ${titleSize}px; font-weight: 900; letter-spacing: -0.07em;
   line-height: 0.8; text-transform: uppercase;
 }
-.lede { font-size: ${subSize}px; font-weight: 500; color: #b8b8b8; max-width: 14ch; line-height: 1.2; }
+.lede { font-size: ${subSize}px; font-weight: 500; color: #b8b8b8; max-width: 16ch; line-height: 1.2; }
+.site { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; color: #fff; }
+.carousel-meta {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+  margin-top: 8px;
+}
+.pager { font-size: 13px; font-weight: 800; letter-spacing: 0.28em; color: #6a6a6a; }
+.dots { display: flex; gap: 8px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: #2e2e2e; display: block; }
+.dots i.on { background: #fff; }
 </style></head>
 <body>
 <article class="frame">
   <img class="mark" src="${logoUrl}" alt="" />
   <div class="copy">
     <div class="lock"><img src="${logoUrl}" alt="" /><span>GUARDR</span></div>
+    ${post.kicker ? `<p class="kicker">${esc(post.kicker)}</p>` : ''}
     <h1>${esc(post.line1)}${post.line2 ? `<br/>${esc(post.line2)}` : ''}</h1>
     <p class="lede">${esc(post.lede)}</p>
+    ${post.site ? `<p class="site">${esc(post.site)}</p>` : ''}
+    ${carouselPager(post)}
   </div>
 </article>
 </body></html>`;
@@ -641,9 +668,11 @@ h1 {
     const device = (src, cls = '') =>
       `<div class="device ${cls}"><i class="island"></i><i class="vol"></i><i class="pwr"></i><img src="${screenUrl(src)}" alt="" /></div>`;
     const lock = `<div class="lock"><img src="${logoUrl}" alt="" /><span>GUARDR</span></div>`;
+    const kicker = post.kicker ? `<p class="kicker">${esc(post.kicker)}</p>` : '';
     const headline = `<h1>${esc(post.line1)}${post.line2 ? `<br/>${esc(post.line2)}` : ''}</h1>`;
     const lede = post.ledeHtml ? `<p class="lede">${post.ledeHtml}</p>` : '';
     const note = post.note ? `<p class="note">${esc(post.note)}</p>` : '';
+    const pager = carouselPager(post);
     const ladder = (post.steps || [])
       .map(
         (s) =>
@@ -655,8 +684,8 @@ h1 {
       shot === 'steps'
         ? `${lock}`
         : shot === 'menu'
-          ? `${lock}${lede}${note}`
-          : `${lock}${headline}${lede}${note}`;
+          ? `${lock}${kicker}${lede}${note}${pager}`
+          : `${lock}${kicker}${headline}${lede}${note}${pager}`;
     const extra =
       shot === 'steps'
         ? `<ol class="ladder">${ladder}</ol>`
@@ -724,6 +753,10 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
   font-size: 13px; font-weight: 800; letter-spacing: 0.34em;
 }
 .lock img { width: 22px; height: 22px; object-fit: contain; }
+.kicker {
+  font-size: 13px; font-weight: 800; letter-spacing: 0.28em;
+  color: #8a8a8a; text-transform: uppercase;
+}
 .copy h1 {
   font-size: 72px; font-weight: 900;
   letter-spacing: -0.06em; line-height: 0.82;
@@ -738,6 +771,13 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 }
 .lede em { font-style: normal; color: #fff; font-weight: 800; }
 .note { font-size: 15px; font-weight: 600; color: #8a8a8a; max-width: 26ch; line-height: 1.3; }
+.carousel-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.pager { font-size: 13px; font-weight: 800; letter-spacing: 0.28em; color: #6a6a6a; }
+.dots { display: flex; gap: 8px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: #2e2e2e; display: block; }
+.dots i.on { background: #fff; }
+.shot-hero.flip .carousel-meta { align-items: flex-end; }
+.shot-hero.flip .dots { justify-content: flex-end; }
 .ladder {
   position: absolute; z-index: 5;
   left: 48px; top: 140px; right: 42%;
@@ -1101,7 +1141,7 @@ const SQ = { w: 1080, h: 1080 };
 const ST = { w: 1080, h: 1920 };
 const WD = { w: 1200, h: 630 };
 
-function phoneAd(file, dims, { line1, line2, lede, screen, flip }) {
+function phoneAd(file, dims, { line1, line2, lede, screen, flip, kicker, slide, slides, note }) {
   return {
     file,
     kind: 'graphic',
@@ -1113,6 +1153,38 @@ function phoneAd(file, dims, { line1, line2, lede, screen, flip }) {
     ledeHtml: lede,
     phones: [screen],
     flip: Boolean(flip),
+    kicker,
+    slide,
+    slides,
+    note,
+  };
+}
+
+function carouselCover(dir) {
+  return {
+    file: `${dir}/00-cover.png`,
+    kind: 'graphic',
+    layout: 'punch-type',
+    ...SQ,
+    line1: 'ANYTIME.',
+    line2: 'ANYWHERE.',
+    lede: 'Security, when you need it.',
+  };
+}
+
+function carouselClose(file, { line1, line2, lede, kicker, slide }) {
+  return {
+    file,
+    kind: 'graphic',
+    layout: 'punch-type',
+    ...SQ,
+    line1,
+    line2,
+    lede,
+    kicker,
+    slide,
+    slides: 5,
+    site: SITE,
   };
 }
 
@@ -1474,6 +1546,102 @@ const POSTS = [
     screen: 'screen-shifts.png',
     flip: true,
   }),
+
+  // Instagram carousels — cover is ANYTIME. ANYWHERE. and does not count
+  // toward the five added slides.
+  carouselCover('instagram/carousel-clients'),
+  phoneAd('instagram/carousel-clients/01-tonight.png', SQ, {
+    kicker: 'For clients',
+    line1: 'NEED A GUARD',
+    line2: 'TONIGHT?',
+    lede: 'See who’s nearby. You pick.',
+    screen: 'screen-map.png',
+    slide: 1,
+    slides: 5,
+  }),
+  phoneAd('instagram/carousel-clients/02-nearby.png', SQ, {
+    kicker: 'For clients',
+    line1: 'SEE WHO’S',
+    line2: 'NEARBY.',
+    lede: 'Licensed. On the map.',
+    screen: 'screen-map.png',
+    flip: true,
+    slide: 2,
+    slides: 5,
+  }),
+  phoneAd('instagram/carousel-clients/03-you-pick.png', SQ, {
+    kicker: 'For clients',
+    line1: 'YOU PICK',
+    line2: 'WHO WORKS.',
+    lede: 'Not dispatch. Your call.',
+    screen: 'screen-map.png',
+    slide: 3,
+    slides: 5,
+  }),
+  phoneAd('instagram/carousel-clients/04-post-pick.png', SQ, {
+    kicker: 'For clients',
+    line1: 'POST A JOB.',
+    line2: 'PICK A GUARD.',
+    lede: 'Tonight. Your site.',
+    screen: 'screen-post.png',
+    flip: true,
+    slide: 4,
+    slides: 5,
+  }),
+  carouselClose('instagram/carousel-clients/05-post-coverage.png', {
+    kicker: 'For clients',
+    line1: 'POST',
+    line2: 'COVERAGE.',
+    lede: 'You pick who works.',
+    slide: 5,
+  }),
+
+  carouselCover('instagram/carousel-guards'),
+  phoneAd('instagram/carousel-guards/01-open-shifts.png', SQ, {
+    kicker: 'For guards',
+    line1: 'OPEN SHIFTS.',
+    line2: 'YOUR CALL.',
+    lede: 'Apply to what fits.',
+    screen: 'screen-shifts.png',
+    slide: 1,
+    slides: 5,
+  }),
+  phoneAd('instagram/carousel-guards/02-apply.png', SQ, {
+    kicker: 'For guards',
+    line1: 'APPLY TO',
+    line2: 'WHAT FITS.',
+    lede: 'No dispatcher. Your map.',
+    screen: 'screen-shifts.png',
+    flip: true,
+    slide: 2,
+    slides: 5,
+  }),
+  phoneAd('instagram/carousel-guards/03-no-dispatcher.png', SQ, {
+    kicker: 'For guards',
+    line1: 'NO',
+    line2: 'DISPATCHER.',
+    lede: 'You choose the work.',
+    screen: 'screen-map.png',
+    slide: 3,
+    slides: 5,
+  }),
+  phoneAd('instagram/carousel-guards/04-your-card.png', SQ, {
+    kicker: 'For guards',
+    line1: 'YOUR CARD.',
+    line2: 'YOUR SHIFTS.',
+    lede: 'Choose the work.',
+    screen: 'screen-shifts.png',
+    flip: true,
+    slide: 4,
+    slides: 5,
+  }),
+  carouselClose('instagram/carousel-guards/05-get-paid.png', {
+    kicker: 'For guards',
+    line1: 'PICK THE',
+    line2: 'WORK.',
+    lede: 'Get paid for the job.',
+    slide: 5,
+  }),
 ];
 
 async function waitForFile(filePath, timeoutMs = 25000) {
@@ -1556,10 +1724,17 @@ async function screenshot(html, outPng, w, h, index) {
 
 async function main() {
   await mkdir(path.join(OUT, 'instagram'), { recursive: true });
+  await mkdir(path.join(OUT, 'instagram', 'carousel-clients'), { recursive: true });
+  await mkdir(path.join(OUT, 'instagram', 'carousel-guards'), { recursive: true });
   await mkdir(path.join(OUT, 'stories'), { recursive: true });
   await mkdir(path.join(OUT, 'landscape'), { recursive: true });
   const bwOnly = process.argv.includes('--bw');
-  const list = bwOnly ? POSTS.filter((p) => p.kind === 'graphic') : POSTS;
+  const carouselOnly = process.argv.includes('--carousel');
+  const list = carouselOnly
+    ? POSTS.filter((p) => String(p.file).includes('carousel-'))
+    : bwOnly
+      ? POSTS.filter((p) => p.kind === 'graphic')
+      : POSTS;
   for (let i = 0; i < list.length; i += 1) {
     const post = list[i];
     await screenshot(htmlFor(post), path.join(OUT, post.file), post.w, post.h, i);

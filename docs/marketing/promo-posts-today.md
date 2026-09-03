@@ -2,13 +2,56 @@
 
 Black-and-white. One idea per post. Brand: **Guardr** · **www.guardr.co**
 
-Re-render B&W: `node scripts/render-promo-posts.mjs --bw`
+Re-render B&W: `node scripts/render-promo-posts.mjs --bw`  
+Re-render carousels only: `node scripts/render-promo-posts.mjs --carousel`
 
-Lead with the **phone pack** — same layout as “YOU PICK WHO WORKS.” Put the “platform / not a staffing agency” explanation in the **caption**.
+Lead with the **carousels** — Anytime. Anywhere. cover, then five slides for clients and five for guards. The cover does not count as one of the five.
 
 ---
 
-## Phone pack (post these)
+## Instagram carousels (post these)
+
+Two slideshows. Upload in order as an Instagram carousel (square).
+
+### For clients — `instagram/carousel-clients/`
+
+| # | File | Line |
+|---|---|---|
+| Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-clients/00-cover.png) | ANYTIME. ANYWHERE. |
+| 01 | [`01-tonight.png`](../../assets/marketing/posts/instagram/carousel-clients/01-tonight.png) | NEED A GUARD TONIGHT? |
+| 02 | [`02-nearby.png`](../../assets/marketing/posts/instagram/carousel-clients/02-nearby.png) | SEE WHO’S NEARBY. |
+| 03 | [`03-you-pick.png`](../../assets/marketing/posts/instagram/carousel-clients/03-you-pick.png) | YOU PICK WHO WORKS. |
+| 04 | [`04-post-pick.png`](../../assets/marketing/posts/instagram/carousel-clients/04-post-pick.png) | POST A JOB. PICK A GUARD. |
+| 05 | [`05-post-coverage.png`](../../assets/marketing/posts/instagram/carousel-clients/05-post-coverage.png) | POST COVERAGE. |
+
+**Caption:** Need a guard tonight? See who’s nearby. You pick who works.
+
+Guardr is the platform — licensed California guards and businesses find each other and contract directly per job. Not a staffing agency. Not dispatch.
+
+www.guardr.co
+#Guardr #SecurityMarketplace #California
+
+### For guards — `instagram/carousel-guards/`
+
+| # | File | Line |
+|---|---|---|
+| Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-guards/00-cover.png) | ANYTIME. ANYWHERE. |
+| 01 | [`01-open-shifts.png`](../../assets/marketing/posts/instagram/carousel-guards/01-open-shifts.png) | OPEN SHIFTS. YOUR CALL. |
+| 02 | [`02-apply.png`](../../assets/marketing/posts/instagram/carousel-guards/02-apply.png) | APPLY TO WHAT FITS. |
+| 03 | [`03-no-dispatcher.png`](../../assets/marketing/posts/instagram/carousel-guards/03-no-dispatcher.png) | NO DISPATCHER. |
+| 04 | [`04-your-card.png`](../../assets/marketing/posts/instagram/carousel-guards/04-your-card.png) | YOUR CARD. YOUR SHIFTS. |
+| 05 | [`05-get-paid.png`](../../assets/marketing/posts/instagram/carousel-guards/05-get-paid.png) | PICK THE WORK. |
+
+**Caption:** Open shifts on the map. Apply to what fits. No dispatcher.
+
+Guardr is the platform — licensed California guards and businesses find each other and contract directly per job. Not a staffing agency. Not dispatch.
+
+www.guardr.co
+#Guardr #SecurityMarketplace #California
+
+---
+
+## Phone pack (single posts)
 
 Same treatment: one line, one phone, black field.
 
