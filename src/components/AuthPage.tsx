@@ -1839,7 +1839,10 @@ export function AuthPage({
                 </footer>
               </blockquote>
             </aside>
-            <section className="sft-auth-form-panel" aria-label={isSignUp ? 'Create account' : 'Sign in'}>
+            <section
+              className={`sft-auth-form-panel${isSignUp ? ' sft-auth-form-panel--wide' : ''}`}
+              aria-label={isSignUp ? 'Create account' : 'Sign in'}
+            >
               <div className="sft-auth-form-card animate-fade-in">{authFormBody}</div>
             </section>
           </div>
