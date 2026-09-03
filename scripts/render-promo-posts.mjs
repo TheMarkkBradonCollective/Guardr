@@ -687,11 +687,19 @@ h1 .long {
     const isStory = h > 1200;
     const isWide = w > h;
     const fmt = isStory ? 'story' : isWide ? 'wide' : 'sq';
+    const lines = [post.line1, post.line2, post.line3].filter(Boolean);
+    const stacked = lines.length > 2;
     const device = (src, cls = '') =>
       `<div class="device ${cls}"><i class="island"></i><i class="vol"></i><i class="pwr"></i><img src="${screenUrl(src)}" alt="" /></div>`;
     const lock = `<div class="lock"><img src="${logoUrl}" alt="" /><span>GUARDR</span></div>`;
     const kicker = post.kicker ? `<p class="kicker">${esc(post.kicker)}</p>` : '';
-    const headline = `<h1>${esc(post.line1)}${post.line2 ? `<br/>${esc(post.line2)}` : ''}</h1>`;
+    const headline = `<h1${stacked ? ' class="stacked"' : ''}>${lines
+      .map((line, i) =>
+        stacked && i === lines.length - 1
+          ? `<span class="long">${esc(line)}</span>`
+          : esc(line),
+      )
+      .join('<br/>')}</h1>`;
     const lede = post.ledeHtml ? `<p class="lede">${post.ledeHtml}</p>` : '';
     const note = post.note ? `<p class="note">${esc(post.note)}</p>` : '';
     const pager = carouselPager(post);
@@ -788,6 +796,8 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
   max-width: 12ch;
   text-shadow: 0 12px 32px rgba(0,0,0,0.85);
 }
+.copy h1.stacked { font-size: 54px; max-width: 12ch; }
+.copy h1 .long { font-size: 0.78em; letter-spacing: -0.05em; }
 .lede {
   font-size: 24px; font-weight: 500; line-height: 1.22;
   color: #d4d4d4; max-width: 20ch;
@@ -831,6 +841,7 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .shot-hero .device { width: 560px; left: 46%; top: -10px; transform: rotate(8deg); }
 .shot-hero .copy { right: auto; width: 44%; max-width: 480px; }
 .shot-hero .copy h1 { font-size: 78px; }
+.shot-hero .copy h1.stacked { font-size: 52px; }
 .shot-hero.flip .device { left: auto; right: 46%; transform: rotate(-8deg); }
 .shot-hero.flip .copy { left: auto; right: 48px; width: 44%; align-items: flex-end; text-align: right; }
 .shot-hero.flip .lede { text-align: right; }
@@ -846,8 +857,9 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
   z-index: 1;
 }
 .shot-close .device { width: 500px; left: auto; right: -80px; top: 36px; transform: rotate(-7deg); }
-.shot-close .copy { top: 52px; bottom: auto; width: 50%; max-width: 540px; gap: 14px; }
+.shot-close .copy { top: 52px; bottom: auto; width: 56%; max-width: 600px; gap: 14px; }
 .shot-close .copy h1 { font-size: 92px; max-width: 10ch; }
+.shot-close .copy h1.stacked { font-size: 56px; max-width: 12ch; }
 .shot-close .lede { font-size: 26px; max-width: 16ch; }
 .shot-close .note { color: #fff; font-size: 18px; font-weight: 700; letter-spacing: 0.08em; }
 
@@ -880,9 +892,13 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .story.shot-hero .device { width: 780px; left: 16%; top: -20px; }
 .story.shot-hero .copy { bottom: 80px; right: auto; width: 48%; }
 .story.shot-hero .copy h1 { font-size: 96px; }
+.story.shot-hero .copy h1.stacked { font-size: 68px; }
 .story.shot-hero .lede { font-size: 30px; }
 .story.shot-hero.flip .device { left: auto; right: 16%; transform: rotate(-8deg); }
 .story.shot-hero.flip .copy { left: auto; right: 56px; width: 48%; }
+.story.shot-close .device { width: 680px; right: -90px; top: 220px; transform: rotate(-7deg); }
+.story.shot-close .copy { top: 110px; width: 78%; max-width: none; }
+.story.shot-close .copy h1.stacked { font-size: 78px; }
 .story.shot-billboard .copy { top: 96px; }
 .story.shot-billboard .copy h1 { font-size: 110px; }
 .story.shot-billboard .lede { font-size: 32px; }
@@ -898,6 +914,7 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .wide .copy { left: 48px; }
 .wide.shot-hero .copy { top: 50%; bottom: auto; transform: translateY(-50%); right: auto; width: 44%; max-width: 46%; }
 .wide.shot-hero .copy h1 { font-size: 64px; }
+.wide.shot-hero .copy h1.stacked { font-size: 36px; max-width: 16ch; }
 .wide.shot-hero .lede { font-size: 22px; }
 .wide.shot-hero .device { width: 460px; left: auto; right: -90px; top: -90px; transform: rotate(8deg); }
 .wide.shot-hero.flip .copy { left: auto; right: 48px; align-items: flex-end; text-align: right; }
@@ -1182,7 +1199,7 @@ const SQ = { w: 1080, h: 1080 };
 const ST = { w: 1080, h: 1920 };
 const WD = { w: 1200, h: 630 };
 
-function phoneAd(file, dims, { line1, line2, lede, screen, flip, kicker, slide, slides, note, shot }) {
+function phoneAd(file, dims, { line1, line2, line3, lede, screen, flip, kicker, slide, slides, note, shot }) {
   return {
     file,
     kind: 'graphic',
@@ -1191,6 +1208,7 @@ function phoneAd(file, dims, { line1, line2, lede, screen, flip, kicker, slide, 
     ...dims,
     line1,
     line2,
+    line3,
     ledeHtml: lede,
     phones: [screen],
     flip: Boolean(flip),
@@ -1214,17 +1232,16 @@ function carouselCover(dir) {
 }
 
 function whoFinds(file, dims) {
-  return {
-    file,
-    kind: 'graphic',
-    layout: 'punch-type',
-    ...dims,
+  const isWide = dims.w > dims.h;
+  return phoneAd(file, dims, {
     kicker: 'WHO CAN FIND A GUARD',
     line1: 'PERSONAL.',
     line2: 'BUSINESS.',
     line3: 'SECURITY COMPANIES.',
     lede: 'Licensed California guards. You pick who works.',
-  };
+    screen: 'screen-signin.png',
+    shot: isWide ? 'hero' : 'close',
+  });
 }
 
 function carouselEnd(file, { kicker, screen, slide, slides = 5 }) {

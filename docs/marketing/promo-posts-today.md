@@ -13,7 +13,7 @@ Re-render carousels only: `node scripts/render-promo-posts.mjs --carousel`
 
 [`instagram/ig-who-finds.png`](../../assets/marketing/posts/instagram/ig-who-finds.png)
 
-**PERSONAL. BUSINESS. SECURITY COMPANIES.**
+Sign-in page on the phone. **PERSONAL. BUSINESS. SECURITY COMPANIES.**
 
 **Caption:** Personal. Business. Security companies. Find licensed California guards — you pick who works.
 
@@ -33,11 +33,11 @@ Two slideshows. Upload in order as an Instagram carousel (square). Each phone sl
 
 ### For clients — `instagram/carousel-clients/`
 
-Opens on **who can hire**, not the tagline. Ending cover is still Anytime. Anywhere.
+Opens on **who can hire**, with the sign-in page on the phone. Ending cover is still Anytime. Anywhere.
 
 | # | File | Screen | Line |
 |---|---|---|---|
-| 1 Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-clients/00-cover.png) | — | PERSONAL. BUSINESS. SECURITY COMPANIES. |
+| 1 Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-clients/00-cover.png) | Sign in | PERSONAL. BUSINESS. SECURITY COMPANIES. |
 | 2 | [`01-tonight.png`](../../assets/marketing/posts/instagram/carousel-clients/01-tonight.png) | Map | NEED A GUARD TONIGHT? |
 | 3 | [`02-post-pick.png`](../../assets/marketing/posts/instagram/carousel-clients/02-post-pick.png) | Jobs | POST A JOB. PICK A GUARD. |
 | 4 | [`03-chat.png`](../../assets/marketing/posts/instagram/carousel-clients/03-chat.png) | Chat | TALK TO WHO APPLIES. |

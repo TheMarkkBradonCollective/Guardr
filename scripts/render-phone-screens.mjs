@@ -194,6 +194,39 @@ html, body { width: 390px; height: 844px; overflow: hidden; font-family: Inter, 
 .stat { background: #fff; border-radius: 12px; padding: 12px 10px; }
 .stat b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -0.04em; }
 .stat span { font-size: 11px; font-weight: 600; color: #888; }
+
+.app.auth { background: #fff; }
+.auth-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px 6px;
+  font-weight: 800; font-size: 17px; letter-spacing: -0.04em;
+}
+.auth-head img { width: 22px; height: 22px; filter: invert(1); object-fit: contain; }
+.auth-back {
+  display: flex; align-items: center; gap: 6px;
+  padding: 2px 16px 12px;
+  font-size: 14px; font-weight: 600; color: #111;
+}
+.auth-hero { background: #f6f6f6; padding: 20px 20px 24px; }
+.auth-hero h1 {
+  font-size: 30px; font-weight: 800;
+  letter-spacing: -0.04em; line-height: 1.05;
+}
+.auth-hero p {
+  margin-top: 10px;
+  font-size: 14px; font-weight: 500; color: #6a6a6a; line-height: 1.4;
+}
+.auth-opts { padding: 16px 20px 20px; }
+.opt { padding: 2px 0 4px; }
+.opt + .opt { margin-top: 18px; }
+.opt .icrow { margin-bottom: 8px; color: #111; }
+.opt-row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; padding-bottom: 14px; border-bottom: 1px solid #eee;
+}
+.opt h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.opt p { font-size: 13px; font-weight: 500; color: #666; line-height: 1.4; margin-top: 6px; }
+.opt .go { flex-shrink: 0; margin-top: 6px; color: #111; }
 `;
 
 const svg = {
@@ -211,6 +244,11 @@ const svg = {
   check: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 13l4 4L19 7"/></svg>`,
   chev: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>`,
   gmark: `<img src="${LOGO}" width="18" height="18" alt="" />`,
+  user: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="8" r="3.2"/><path d="M5.2 19c.8-3.2 3.5-5 6.8-5s6 1.8 6.8 5"/></svg>`,
+  briefcase: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5h8v2M12 12v3"/></svg>`,
+  arrowL: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>`,
+  arrowR: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`,
+  shieldLg: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3z"/></svg>`,
 };
 
 const mapSvg = `
@@ -242,6 +280,14 @@ const mapSvg = `
   </g>
   <rect x="160" y="122" width="70" height="88" fill="#b0b0b0" opacity="0.9"/>
 </svg>`;
+
+function authPage(body) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>${css}</style></head><body>
+<div class="app auth">
+  <div class="status"><span>9:41</span><span class="right">${svg.signal}${svg.wifi}${svg.battery}</span></div>
+  ${body}
+</div></body></html>`;
+}
 
 function chrome(inner, onTab) {
   const tabs = [
@@ -446,6 +492,49 @@ const SCREENS = [
       'you',
     ),
   },
+  {
+    file: 'screen-signin.png',
+    html: authPage(`
+      <div class="auth-head"><img src="${LOGO}" alt=""/>Guardr</div>
+      <div class="auth-back">${svg.arrowL} Back to Home</div>
+      <div class="auth-hero">
+        <h1>Log in to your account</h1>
+        <p>Choose the workspace that matches how you use Guardr.</p>
+      </div>
+      <div class="auth-opts">
+        <div class="opt">
+          <div class="icrow">${svg.shieldLg}</div>
+          <div class="opt-row">
+            <div>
+              <h2>Log in as guard</h2>
+              <p>Independent contractor — your marketplace jobs and earnings.</p>
+            </div>
+            <span class="go">${svg.arrowR}</span>
+          </div>
+        </div>
+        <div class="opt">
+          <div class="icrow">${svg.user}</div>
+          <div class="opt-row">
+            <div>
+              <h2>Log in as customer</h2>
+              <p>Personal or business — whoever is hiring and paying for coverage.</p>
+            </div>
+            <span class="go">${svg.arrowR}</span>
+          </div>
+        </div>
+        <div class="opt">
+          <div class="icrow">${svg.briefcase}</div>
+          <div class="opt-row">
+            <div>
+              <h2>Log in as staff</h2>
+              <p>Guardr platform team — operations and support workspace.</p>
+            </div>
+            <span class="go">${svg.arrowR}</span>
+          </div>
+        </div>
+      </div>
+    `),
+  },
 ];
 
 async function waitForFile(filePath, timeoutMs = 40000) {
@@ -507,7 +596,9 @@ async function shot(html, outPng, i) {
   console.log('screen', path.basename(outPng), statSync(outPng).size);
 }
 
-for (let i = 0; i < SCREENS.length; i += 1) {
-  await shot(SCREENS[i].html, path.join(OUT, SCREENS[i].file), i);
+const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7);
+const list = only ? SCREENS.filter((s) => s.file.includes(only)) : SCREENS;
+for (let i = 0; i < list.length; i += 1) {
+  await shot(list[i].html, path.join(OUT, list[i].file), i);
 }
 console.log('done screens');
