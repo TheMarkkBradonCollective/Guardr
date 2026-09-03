@@ -1227,6 +1227,14 @@ html.theme-dark .app-back-pill:active {
 
 html.theme-dark .app-subscreen-title { color: #fff; }
 
+.app-subscreen-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--uber-text-muted, #767676);
+}
+
 /* Subscreen titles wrap to full width — never ellipsize with "..." */
 .app-subscreen-header--shrink {
   flex-shrink: 0;

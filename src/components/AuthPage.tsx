@@ -37,6 +37,15 @@ import { GuardrSheet } from './baseui/overlays/GuardrSheet';
 import { AuthFormHeader, AuthMobileTopBar } from './auth/AuthFormChrome';
 import { StaffSignupNotice } from './auth/StaffSignupNotice';
 import { ClientSignupIntake } from './auth/clientSignup/ClientSignupIntake';
+import type { ReferralPerson } from './auth/clientSignup/types';
+import {
+  BUSINESS_TYPE_OPTIONS,
+  ENGAGEMENT_TYPE_OPTIONS,
+  HOW_HEARD_OPTIONS,
+  INDUSTRY_OPTIONS,
+  PROPERTY_TYPE_OPTIONS,
+  SERVICE_TYPE_OPTIONS,
+} from '../lib/clientSignupOptions';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS, type ClientType } from '../types';
 import { isOrganizationClientType, isSecurityCompanyClientType, normalizeClientType } from '../lib/clientType';

@@ -1,5 +1,6 @@
 import React from 'react';
 import { SecurityGuard, SecurityRequest, JobGuardSlot } from '../../types';
+import type { GuardJobView } from '../../lib/guardJobView';
 import { teamRosterSummary } from '../../lib/guardTeams';
 import { confirmApproveTeamSlot, confirmDenyTeamSlot } from '../../lib/importantActionConfirm';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
@@ -20,7 +21,7 @@ const SLOT_STATUS_LABEL: Record<JobGuardSlot['status'], string> = {
 };
 
 interface JobTeamRosterProps {
-  job: SecurityRequest;
+  job: SecurityRequest | GuardJobView;
   guards: SecurityGuard[];
   variant?: 'client' | 'guard' | 'staff';
   currentGuardId?: string;

@@ -18,6 +18,7 @@ export function AppEmptyState({
   dashed = false,
   icon,
   title,
+  message,
   action,
 }: {
   children?: React.ReactNode;
@@ -25,8 +26,10 @@ export function AppEmptyState({
   dashed?: boolean;
   icon?: React.ReactNode;
   title?: string;
+  message?: React.ReactNode;
   action?: React.ReactNode;
 }) {
+  const body = children ?? message;
   if (icon || title) {
     return (
       <Block
@@ -53,9 +56,9 @@ export function AppEmptyState({
             {title}
           </ParagraphMedium>
         )}
-        {children && (
+        {body && (
           <LabelSmall margin={0} className="app-empty-state-body" $style={{ color: 'contentSecondary' }}>
-            {children}
+            {body}
           </LabelSmall>
         )}
         {action}
@@ -129,6 +132,7 @@ export function visibleBackLabel(destinationOrLabel: string, compact: boolean): 
 
 export function AppSubScreenHeader({
   title,
+  subtitle,
   onBack,
   backLabel = 'previous',
   wrapTitle = true,
@@ -136,6 +140,7 @@ export function AppSubScreenHeader({
   trailing,
 }: {
   title: string;
+  subtitle?: string;
   onBack: () => void;
   /** Destination name ("Guards") or full phrase ("Back to Guards"). */
   backLabel?: string;
@@ -156,7 +161,14 @@ export function AppSubScreenHeader({
         <ArrowLeft className="w-4 h-4" aria-hidden />
         {label}
       </button>
-      {!hideTitle ? <h1 className="app-subscreen-title flex-1 min-w-0">{title}</h1> : trailing ? <span className="flex-1" aria-hidden /> : null}
+      {!hideTitle ? (
+        <div className="flex-1 min-w-0">
+          <h1 className="app-subscreen-title">{title}</h1>
+          {subtitle ? <p className="app-subscreen-subtitle">{subtitle}</p> : null}
+        </div>
+      ) : trailing ? (
+        <span className="flex-1" aria-hidden />
+      ) : null}
       {trailing ? <div className="app-subscreen-trailing">{trailing}</div> : null}
     </div>
   );
