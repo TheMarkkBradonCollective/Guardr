@@ -57,6 +57,7 @@ import { AppOverlaySheet } from './ui/motion/AppMotion';
 import { PaymentsPage } from './payments/PaymentsPage';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
+import { GuardCompanyRosterPanel } from './guard/GuardCompanyRosterPanel';
 import { GuardPerformanceScreen } from './guard/GuardPerformanceScreen';
 import { GuardVehiclePanel } from './guard/GuardVehiclePanel';
 import { guardVehicleTabVisible } from '../lib/guardVehicle';
@@ -188,6 +189,8 @@ interface GuardDashboardProps {
   ) => void | Promise<void>;
   onAcceptPriceOffer?: (requestId: string, offerId: string) => void | Promise<void>;
   coworkerGuards?: SecurityGuard[];
+  /** Security-company client accounts — for guard roster membership display (Phase D). */
+  companyClients?: import('../types').Client[];
   onAckPostOrders?: (requestId: string) => void | Promise<void>;
   onAckBriefing?: (requestId: string) => void | Promise<void>;
   onSaveJobPreferences?: (preferences: import('../types').JobType[]) => void | Promise<void>;
@@ -347,6 +350,7 @@ export function GuardDashboard({
   onSubmitPriceOffer,
   onAcceptPriceOffer,
   coworkerGuards = [],
+  companyClients = [],
   onUpdateJobAudit,
   onAckPostOrders,
   onAckBriefing,
@@ -1709,12 +1713,15 @@ export function GuardDashboard({
 
           {tab === 'settings' && (
             <div className="absolute inset-0 bg-brand-bg flex flex-col min-h-0 overflow-hidden" data-tour="guard-settings">
-              <UserSettingsScreen
-                currentUser={currentUser}
-                onOpenLegal={onOpenLegal}
-                onOpenDownload={onOpenDownload}
-                isDbConnected={isDbConnected}
-              />
+              <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
+                <GuardCompanyRosterPanel guardId={guard.id} clients={companyClients} />
+                <UserSettingsScreen
+                  currentUser={currentUser}
+                  onOpenLegal={onOpenLegal}
+                  onOpenDownload={onOpenDownload}
+                  isDbConnected={isDbConnected}
+                />
+              </div>
             </div>
           )}
 

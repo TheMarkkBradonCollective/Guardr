@@ -63,9 +63,14 @@ describe('clientCapabilities', () => {
   it('hides business-only views from personal accounts', () => {
     assert.equal(isClientViewAllowed('reports', 'personal'), false);
     assert.equal(isClientViewAllowed('reports', 'business'), true);
+    assert.equal(isClientViewAllowed('roster', 'security-company'), true);
+    assert.equal(isClientViewAllowed('roster', 'business'), false);
+    assert.equal(isClientViewAllowed('operations', 'security-company'), true);
+    assert.equal(isClientViewAllowed('map', 'security-company'), false);
     assert.equal(isClientViewAllowed('locations', 'personal'), true);
     assert.equal(resolveAllowedClientView('reports', 'personal'), 'home');
-    assert.equal(resolveAllowedClientView('invoices', 'personal'), 'invoices');
+    assert.equal(resolveAllowedClientView('roster', 'business'), 'home');
+    assert.equal(resolveAllowedClientView('operations', 'security-company'), 'operations');
   });
 
   it('filters overflow nav and home actions by type', () => {
@@ -73,6 +78,9 @@ describe('clientCapabilities', () => {
     const businessNav = clientOverflowNav('business').map((item) => item.id);
     assert.deepEqual(personalNav, ['invoices', 'guards', 'locations', 'settings']);
     assert.deepEqual(businessNav, ['invoices', 'guards', 'locations', 'reports', 'settings']);
+    const securityNav = clientOverflowNav('security-company').map((item) => item.id);
+    assert.ok(securityNav.includes('roster'));
+    assert.ok(securityNav.includes('operations'));
     assert.equal(clientOverflowNav('personal').find((i) => i.id === 'locations')?.label, 'Locations');
     assert.equal(clientOverflowNav('business').find((i) => i.id === 'locations')?.label, 'Sites');
     assert.equal(clientOverflowNav('business').find((i) => i.id === 'invoices')?.label, 'Billing');

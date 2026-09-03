@@ -40,7 +40,19 @@ import {
 } from 'lucide-react';
 import type { ClientHomeQuickActionId } from '../../lib/clientCapabilities';
 
-export type ClientHomeAction = 'request' | 'schedule' | 'recurring' | 'reports' | 'requests' | 'guards' | 'messages' | 'map' | 'locations' | 'invoices';
+export type ClientHomeAction =
+  | 'request'
+  | 'schedule'
+  | 'recurring'
+  | 'reports'
+  | 'requests'
+  | 'guards'
+  | 'messages'
+  | 'map'
+  | 'locations'
+  | 'invoices'
+  | 'roster'
+  | 'operations';
 
 interface ClientHomeScreenProps {
   companyName: string;
@@ -62,6 +74,8 @@ const QUICK_ACTION_ICONS: Record<ClientHomeQuickActionId, typeof Shield> = {
   schedule: Calendar,
   recurring: Building2,
   reports: FileText,
+  roster: Users,
+  operations: Radio,
 };
 
 const REPORT_TYPE_LABEL: Record<ClientReportCard['type'], string> = {

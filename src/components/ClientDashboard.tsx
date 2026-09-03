@@ -34,6 +34,8 @@ import { ResponsivePage } from './layouts/desktop/DesktopPageShell';
 import { WorkbenchEmpty, WorkbenchFlatSplit } from './baseui/layout/WorkbenchLayout';
 import { isTutorialDemoId } from '../lib/tutorialDemoData';
 import type { MessagesChrome } from '../lib/messagesChrome';
+import { SecurityCompanyRosterScreen } from './client/SecurityCompanyRosterScreen';
+import { SecurityCompanyOperationsScreen } from './client/SecurityCompanyOperationsScreen';
 import { useClientCapabilities } from './client/ClientCapabilitiesContext';
 
 export type ClientView =
@@ -47,6 +49,8 @@ export type ClientView =
   | 'requests'
   | 'guards'
   | 'locations'
+  | 'roster'
+  | 'operations'
   | 'profile'
   | 'settings'
   | 'support'
@@ -96,6 +100,8 @@ interface ClientDashboardProps {
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onRequestSuggestedGuard?: (requestId: string, guardId: string) => void | Promise<void>;
   onDismissGuardSuggestion?: (requestId: string, suggestionId: string) => void | Promise<void>;
+  onAddToCompanyRoster?: (guardId: string) => void | Promise<void>;
+  onRemoveFromCompanyRoster?: (guardId: string) => void | Promise<void>;
   onApproveFullTeam?: (requestId: string) => void | Promise<void>;
   onDenyFullTeam?: (requestId: string) => void | Promise<void>;
   onRequestReplacement?: (requestId: string, reasonNote?: string) => void | Promise<void>;
@@ -194,6 +200,8 @@ export function ClientDashboard({
   onDenyTeamSlot,
   onRequestSuggestedGuard,
   onDismissGuardSuggestion,
+  onAddToCompanyRoster,
+  onRemoveFromCompanyRoster,
   onApproveFullTeam,
   onDenyFullTeam,
   onRequestReplacement,
@@ -361,6 +369,20 @@ export function ClientDashboard({
         break;
       case 'invoices':
         navigate('invoices');
+        break;
+      case 'roster':
+        if (!caps.has('roster-management')) {
+          navigate('home');
+          break;
+        }
+        navigate('roster');
+        break;
+      case 'operations':
+        if (!caps.has('shift-operations')) {
+          navigate('home');
+          break;
+        }
+        navigate('operations');
         break;
     }
   };
@@ -832,6 +854,40 @@ export function ClientDashboard({
       />
       </>,
       'client-request'
+    );
+  }
+
+  if (view === 'roster' && clientRecord && caps.has('roster-management')) {
+    return page(
+      'roster',
+      <SecurityCompanyRosterScreen
+        client={clientRecord}
+        guards={guards}
+        marketplaceGuards={guards}
+        onAddToRoster={(guardId) => void onAddToCompanyRoster?.(guardId)}
+        onRemoveFromRoster={(guardId) => void onRemoveFromCompanyRoster?.(guardId)}
+        onRequestGuard={startDirectGuardRequest}
+        onBack={() => navigate('home')}
+      />,
+      'client-roster'
+    );
+  }
+
+  if (view === 'operations' && clientRecord && caps.has('shift-operations')) {
+    return page(
+      'operations',
+      <SecurityCompanyOperationsScreen
+        clientId={clientId}
+        companyName={companyName}
+        requests={requests}
+        guards={guards}
+        onOpenJob={(jobId) => {
+          onRequestsSelectedIdChange?.(jobId);
+          navigate('requests');
+        }}
+        onBack={() => navigate('home')}
+      />,
+      'client-operations'
     );
   }
 

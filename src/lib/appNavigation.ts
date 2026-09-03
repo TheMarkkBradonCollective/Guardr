@@ -184,6 +184,8 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   requests: 'requests',
   guards: 'guards',
   locations: 'locations',
+  roster: 'roster',
+  operations: 'operations',
   guide: 'guide',
 };
 
@@ -203,6 +205,8 @@ const CLIENT_VIEW_TO_SLUG: Partial<Record<ClientView, string>> = {
   requests: 'requests',
   guards: 'guards',
   locations: 'locations',
+  roster: 'roster',
+  operations: 'operations',
   guide: 'guide',
 };
 

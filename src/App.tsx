@@ -270,6 +270,10 @@ import {
   suggestGuardForJob,
 } from './lib/guardSuggestions';
 import {
+  addGuardToCompanyRoster,
+  removeGuardFromCompanyRoster,
+} from './lib/securityCompanyRoster';
+import {
   markAllNotificationsRead,
   markNotificationClicked,
   upsertNotification,
@@ -2666,6 +2670,9 @@ export default function App() {
         specialRequirements: c.special_requirements ?? undefined,
         trusted: c.trusted === true,
         favoriteGuardIds: Array.isArray(c.favorite_guard_ids) ? (c.favorite_guard_ids as string[]) : [],
+        securityCompanyRoster: Array.isArray(c.security_company_roster)
+          ? c.security_company_roster
+          : [],
         defaultAssignmentMode:
           c.default_assignment_mode === 'first-to-accept' ? 'first-to-accept' : 'client-approve',
         authorizedContacts: parseAuthorizedContacts(c.authorized_contacts),
@@ -7122,6 +7129,47 @@ export default function App() {
         );
         appToast('Could not update favourites.', 'error');
       }
+    }
+  };
+
+  const persistCompanyRoster = async (client: Client) => {
+    setClients((prev) => prev.map((c) => (c.id === client.id ? client : c)));
+    if (isDbConnected) {
+      const { error } = await supabase
+        .from('clients')
+        .update({ security_company_roster: client.securityCompanyRoster ?? [] })
+        .eq('id', client.id);
+      if (error) throw error;
+    }
+  };
+
+  const handleAddToCompanyRoster = async (guardId: string) => {
+    if (!currentUser) return;
+    const client = clients.find((c) => c.id === currentUser.id);
+    if (!client || client.clientType !== 'security-company') return;
+    const result = addGuardToCompanyRoster(client, guardId, { source: 'manual' });
+    if ('error' in result) {
+      appToast(result.error, 'error');
+      return;
+    }
+    try {
+      await persistCompanyRoster(result.client);
+      appToast('Guard added to your roster.', 'success');
+    } catch {
+      appToast('Could not save roster.', 'error');
+    }
+  };
+
+  const handleRemoveFromCompanyRoster = async (guardId: string) => {
+    if (!currentUser) return;
+    const client = clients.find((c) => c.id === currentUser.id);
+    if (!client || client.clientType !== 'security-company') return;
+    const next = removeGuardFromCompanyRoster(client, guardId);
+    try {
+      await persistCompanyRoster(next);
+      appToast('Guard removed from roster.', 'info');
+    } catch {
+      appToast('Could not update roster.', 'error');
     }
   };
 
@@ -13467,6 +13515,7 @@ export default function App() {
             void handleAcceptPriceOffer(requestId, activeGuardId, offerId)
           }
           coworkerGuards={getBrowsableGuards(verifiedGuards)}
+          companyClients={clients.filter((c) => c.clientType === 'security-company')}
           onUpdateJobAudit={handleUpdateJobAudit}
           onAckPostOrders={handleAckPostOrders}
           onSaveJobPreferences={(prefs) => handleSaveGuardJobPreferences(activeGuardId, prefs)}
@@ -13767,6 +13816,8 @@ export default function App() {
               onDenyTeamSlot={handleClientDenyTeamSlot}
               onRequestSuggestedGuard={handleClientRequestSuggestedGuard}
               onDismissGuardSuggestion={handleDismissGuardSuggestion}
+              onAddToCompanyRoster={handleAddToCompanyRoster}
+              onRemoveFromCompanyRoster={handleRemoveFromCompanyRoster}
               onRequestReplacement={handleRequestReplacement}
               onSubmitPriceOffer={(requestId, guardId, input) =>
                 void handleSubmitPriceOffer(requestId, guardId, input, 'client')

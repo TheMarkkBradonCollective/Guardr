@@ -214,6 +214,22 @@ export type GuardArmedPreference = 'armed' | 'unarmed' | 'both';
 /** Who is hiring and paying — the contracting party, not the job site type. */
 export type ClientType = 'personal' | 'business' | 'security-company';
 
+export type SecurityCompanyRosterSource = 'marketplace' | 'manual';
+
+export type SecurityCompanyRosterStatus = 'active' | 'removed';
+
+/** IC guard on a licensed security company's roster — discovery/chemistry, not employment. */
+export interface SecurityCompanyRosterEntry {
+  id: string;
+  guardId: string;
+  addedAt: string;
+  source: SecurityCompanyRosterSource;
+  status: SecurityCompanyRosterStatus;
+  notes?: string;
+  lastBookedJobId?: string;
+  lastBookedAt?: string;
+}
+
 /** People Guardr or assigned guards can contact for this account. */
 export type ClientAuthorizedContactRole =
   | 'contact'
@@ -316,6 +332,9 @@ export interface Client {
 
   /** Guard IDs this client has favourited — shown first in the guard directory. */
   favoriteGuardIds?: string[];
+
+  /** IC guards on roster for security-company accounts (Phase B). */
+  securityCompanyRoster?: SecurityCompanyRosterEntry[];
 
   /** Default guard placement mode for new job posts. */
   defaultAssignmentMode?: AssignmentMode;

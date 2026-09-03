@@ -20,6 +20,8 @@ import {
   Settings,
   Receipt,
   LifeBuoy,
+  UsersRound,
+  Radio,
 } from 'lucide-react';
 import { useClientCapabilities } from '../client/ClientCapabilitiesContext';
 import type { ClientOverflowNavId } from '../../lib/clientCapabilities';
@@ -56,10 +58,20 @@ const OVERFLOW_NAV_ICONS: Record<ClientOverflowNavId, typeof Home> = {
   guards: Users,
   locations: MapPin,
   reports: FileText,
+  roster: UsersRound,
+  operations: Radio,
   settings: Settings,
 };
 
-const SIDEBAR_VIEWS = new Set<ClientView>(['locations', 'reports', 'invoices', 'settings', 'guards']);
+const SIDEBAR_VIEWS = new Set<ClientView>([
+  'locations',
+  'reports',
+  'invoices',
+  'settings',
+  'guards',
+  'roster',
+  'operations',
+]);
 
 const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   map: 'Map',
@@ -74,6 +86,8 @@ const VIEW_TITLES: Partial<Record<ClientView, string>> = {
   request: 'Post job offer',
   'direct-request': 'Request guard',
   reports: 'Reports',
+  roster: 'Company roster',
+  operations: 'Live operations',
   invoices: 'Payments',
   guide: 'Guide',
   messages: 'Messages',
@@ -155,8 +169,28 @@ export function ClientAppLayout({
           ? 'home'
           : activeView;
 
-  const navItems = useMemo(
-    () => [
+  const navItems = useMemo(() => {
+    if (caps.isSecurityCompany) {
+      return caps.primaryNav.map((item) => {
+        if (item.id === 'home') return { id: 'home', label: item.label, icon: Home };
+        if (item.id === 'requests') {
+          return {
+            id: 'requests',
+            label: item.label,
+            icon: ClipboardList,
+            children: [
+              { id: 'requests-today', label: 'Today' },
+              { id: 'requests-future', label: 'Future' },
+              { id: 'requests-past', label: 'Past' },
+            ],
+          };
+        }
+        if (item.id === 'operations') return { id: 'operations', label: item.label, icon: Radio };
+        if (item.id === 'roster') return { id: 'roster', label: item.label, icon: UsersRound };
+        return { id: item.id, label: item.label, icon: Home };
+      });
+    }
+    return [
       { id: 'home', label: 'Home', icon: Home },
       {
         id: 'requests',
@@ -169,9 +203,8 @@ export function ClientAppLayout({
         ],
       },
       { id: 'map', label: 'Map', icon: Map },
-    ],
-    [],
-  );
+    ];
+  }, [caps.isSecurityCompany, caps.primaryNav]);
 
   const messagesNavItems = useMemo(
     () => [

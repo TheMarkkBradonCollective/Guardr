@@ -113,16 +113,18 @@ export function maxGuardsPerRequestForType(type: ClientType): number {
 }
 
 /** Views each product lane may open in the client shell. */
-const BUSINESS_ONLY_VIEWS = new Set(['reports']);
-const SECURITY_COMPANY_ONLY_VIEWS = new Set(['reports', 'roster', 'operations']);
-
 export function isClientViewAllowedForType(view: string, type: ClientType): boolean {
-  if (BUSINESS_ONLY_VIEWS.has(view) || SECURITY_COMPANY_ONLY_VIEWS.has(view)) {
+  if (view === 'reports') {
     return capabilitiesForClientType(type).has('reporting');
   }
-  if (view === 'roster' || view === 'operations') {
-    const caps = capabilitiesForClientType(type);
-    return caps.has('roster-management') || caps.has('shift-operations');
+  if (view === 'roster') {
+    return capabilitiesForClientType(type).has('roster-management');
+  }
+  if (view === 'operations') {
+    return capabilitiesForClientType(type).has('shift-operations');
+  }
+  if (view === 'map' && type === 'security-company') {
+    return false;
   }
   return true;
 }

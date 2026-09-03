@@ -218,6 +218,7 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS application_revision_requested_at T
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS application_revision_note TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS trusted BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS favorite_guard_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS security_company_roster JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS business_type TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS industries TEXT[];
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS business_license TEXT;

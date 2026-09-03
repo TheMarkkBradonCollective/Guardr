@@ -31,7 +31,14 @@ export const BUSINESS_ONLY_CAPABILITIES = BUSINESS_CLIENT_CAPABILITIES.filter(
   (cap) => !PERSONAL_CLIENT_CAPABILITIES.includes(cap as (typeof PERSONAL_CLIENT_CAPABILITIES)[number])
 ) as ClientCapability[];
 
-export type ClientOverflowNavId = 'invoices' | 'guards' | 'locations' | 'reports' | 'settings';
+export type ClientOverflowNavId =
+  | 'invoices'
+  | 'guards'
+  | 'locations'
+  | 'reports'
+  | 'roster'
+  | 'operations'
+  | 'settings';
 
 export type ClientHomeQuickActionId =
   | 'request'
@@ -39,7 +46,9 @@ export type ClientHomeQuickActionId =
   | 'recurring'
   | 'reports'
   | 'guards'
-  | 'locations';
+  | 'locations'
+  | 'roster'
+  | 'operations';
 
 function resolveType(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
@@ -107,14 +116,41 @@ export function clientOverflowNav(
   const isSecurityCompany = type === 'security-company';
   const items: { id: ClientOverflowNavId; label: string }[] = [
     { id: 'invoices', label: isPersonal ? 'Payments' : 'Billing' },
-    { id: 'guards', label: isSecurityCompany ? 'Marketplace' : 'Guards' },
-    { id: 'locations', label: isPersonal ? 'Locations' : isSecurityCompany ? 'Client sites' : 'Sites' },
   ];
+  if (clientHasCapability(type, 'roster-management')) {
+    items.push({ id: 'roster', label: 'Roster' });
+  }
+  if (clientHasCapability(type, 'shift-operations')) {
+    items.push({ id: 'operations', label: 'Live ops' });
+  }
+  items.push(
+    { id: 'guards', label: isSecurityCompany ? 'Marketplace' : 'Guards' },
+    { id: 'locations', label: isPersonal ? 'Locations' : isSecurityCompany ? 'Client sites' : 'Sites' }
+  );
   if (clientHasCapability(type, 'reporting')) {
     items.push({ id: 'reports', label: 'Reports' });
   }
   items.push({ id: 'settings', label: 'Settings' });
   return items;
+}
+
+export function clientPrimaryNav(
+  clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
+): { id: 'home' | 'requests' | 'map' | 'operations' | 'roster'; label: string }[] {
+  const type = resolveType(clientOrType);
+  if (type === 'security-company') {
+    return [
+      { id: 'home', label: 'Home' },
+      { id: 'requests', label: 'Jobs' },
+      { id: 'operations', label: 'Live ops' },
+      { id: 'roster', label: 'Roster' },
+    ];
+  }
+  return [
+    { id: 'home', label: 'Home' },
+    { id: 'requests', label: 'Jobs' },
+    { id: 'map', label: 'Map' },
+  ];
 }
 
 export function clientHomeQuickActions(
@@ -171,6 +207,20 @@ export function clientHomeQuickActions(
       id: 'reports',
       label: 'Reports',
       sub: 'Activity & incidents',
+    });
+  }
+  if (clientHasCapability(type, 'roster-management')) {
+    actions.push({
+      id: 'roster',
+      label: 'Company roster',
+      sub: 'IC guards you book again',
+    });
+  }
+  if (clientHasCapability(type, 'shift-operations')) {
+    actions.push({
+      id: 'operations',
+      label: 'Live operations',
+      sub: 'Track active shifts',
     });
   }
   return actions;
