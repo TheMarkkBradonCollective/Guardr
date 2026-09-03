@@ -6,6 +6,7 @@ import {
   parseAppRoute,
   readAuthChoiceFromUrl,
   readAuthSignupPickFromUrl,
+  readLegalPageFromUrl,
   routeHasNestedSelection,
   routeWithoutNestedSelection,
   type AppRoute,
@@ -290,5 +291,12 @@ describe('unified payments routes', () => {
       staffGuardTab: 'timesheet',
       staffMessageTab: undefined,
     });
+  });
+});
+
+describe('legal page URLs', () => {
+  it('maps equal opportunity to a public legal page', () => {
+    assert.equal(readLegalPageFromUrl('/legal/equal-opportunity'), 'equal-opportunity');
+    assert.equal(parseAppRoute('/legal/equal-opportunity'), null);
   });
 });

@@ -441,6 +441,7 @@ export function readLegalPageFromUrl(url: string): LegalPageId | null {
   if (pathname === '/legal/ica') return 'ica';
   if (pathname === '/legal/client-agreement') return 'client-agreement';
   if (pathname === '/legal/guard-conduct') return 'guard-conduct';
+  if (pathname === '/legal/equal-opportunity') return 'equal-opportunity';
   return null;
 }
 
