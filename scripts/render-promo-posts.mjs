@@ -463,6 +463,109 @@ function bwPage(w, h, inner, extraClass = '') {
 function graphicHtml(post) {
   const { w, h, layout } = post;
   const invert = post.invert ? 'invert' : '';
+  const isStory = h > 1200;
+  const isWide = w > h;
+
+  if (layout === 'punch-photo') {
+    const pos = post.objectPosition || 'center 20%';
+    const titleSize = isStory ? 108 : isWide ? 56 : 88;
+    const subSize = isStory ? 32 : isWide ? 20 : 26;
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" />
+<style>
+${fontFaceCss()}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
+.frame { position: relative; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+.photo {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: ${pos};
+  filter: grayscale(1) contrast(1.12) brightness(0.82);
+}
+.dim {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.04) 38%, rgba(0,0,0,0.55) 100%);
+}
+.copy {
+  position: absolute; z-index: 3;
+  left: ${isWide ? 40 : 48}px; right: ${isWide ? 40 : 48}px;
+  bottom: ${isStory ? 80 : isWide ? 32 : 48}px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: ${isStory ? 18 : 12}px;
+}
+.lock { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 800; letter-spacing: 0.34em; }
+.lock img { width: 22px; height: 22px; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6)); }
+h1 {
+  font-size: ${titleSize}px; font-weight: 900; letter-spacing: -0.06em;
+  line-height: 0.84; text-transform: uppercase;
+  text-shadow: 0 10px 28px rgba(0,0,0,0.75);
+}
+.lede {
+  font-size: ${subSize}px; font-weight: 600; line-height: 1.25;
+  color: #e8e8e8; max-width: 16ch;
+  text-shadow: 0 6px 16px rgba(0,0,0,0.8);
+}
+</style></head>
+<body>
+<article class="frame">
+  <img class="photo" src="${photoUrl(post.photo)}" alt="" />
+  <div class="dim"></div>
+  <div class="copy">
+    <div class="lock"><img src="${logoUrl}" alt="" /><span>GUARDR</span></div>
+    <h1>${esc(post.line1)}${post.line2 ? `<br/>${esc(post.line2)}` : ''}</h1>
+    <p class="lede">${esc(post.lede)}</p>
+  </div>
+</article>
+</body></html>`;
+  }
+
+  if (layout === 'punch-type') {
+    const titleSize = isStory ? 140 : isWide ? 72 : 118;
+    const subSize = isStory ? 36 : isWide ? 22 : 28;
+    const mark = isStory ? 620 : isWide ? 340 : 520;
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" />
+<style>
+${fontFaceCss()}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
+.frame {
+  position: relative; background: #000; color: #fff;
+  font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+}
+.mark {
+  position: absolute; left: 50%; top: 42%;
+  width: ${mark}px; height: ${mark}px;
+  transform: translate(-50%, -50%);
+  opacity: 0.09;
+  object-fit: contain;
+  pointer-events: none;
+}
+.copy {
+  position: absolute; left: ${isWide ? 48 : 52}px; right: ${isWide ? 48 : 52}px;
+  top: 0; bottom: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  align-items: flex-start; gap: ${isStory ? 22 : 14}px;
+  padding: ${isStory ? '0 0 40px' : isWide ? '0' : '0 0 24px'};
+}
+.lock { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 800; letter-spacing: 0.34em; }
+.lock img { width: 22px; height: 22px; object-fit: contain; }
+h1 {
+  font-size: ${titleSize}px; font-weight: 900; letter-spacing: -0.07em;
+  line-height: 0.8; text-transform: uppercase;
+}
+.lede { font-size: ${subSize}px; font-weight: 500; color: #b8b8b8; max-width: 14ch; line-height: 1.2; }
+</style></head>
+<body>
+<article class="frame">
+  <img class="mark" src="${logoUrl}" alt="" />
+  <div class="copy">
+    <div class="lock"><img src="${logoUrl}" alt="" /><span>GUARDR</span></div>
+    <h1>${esc(post.line1)}${post.line2 ? `<br/>${esc(post.line2)}` : ''}</h1>
+    <p class="lede">${esc(post.lede)}</p>
+  </div>
+</article>
+</body></html>`;
+  }
 
   if (layout === 'poster') {
     const cols = (post.cols || [])
@@ -1099,52 +1202,44 @@ const POSTS = [
   {
     file: 'instagram/ig-platform.png',
     kind: 'graphic',
-    layout: 'devices',
-    shot: 'hero',
+    layout: 'punch-photo',
     ...SQ,
-    line1: 'THE PLATFORM.',
-    line2: '',
-    ledeHtml: 'Guards and businesses find each other and <em>contract directly per job</em>.',
-    note: 'Not a staffing agency. Not dispatch.',
-    phones: ['screen-map.png'],
+    photo: 'source-event-night-square.png',
+    objectPosition: 'center 18%',
+    line1: 'NEED A GUARD',
+    line2: 'TONIGHT?',
+    lede: 'See who’s nearby. You pick.',
   },
   {
     file: 'instagram/ig-marketplace.png',
     kind: 'graphic',
     layout: 'devices',
-    shot: 'billboard',
+    shot: 'hero',
     ...SQ,
-    line1: 'POST A JOB.',
-    line2: 'PICK A GUARD.',
-    ledeHtml: 'Licensed California coverage — maps, messaging, and pay in the app.',
-    phones: ['screen-post.png'],
+    line1: 'YOU PICK',
+    line2: 'WHO WORKS.',
+    ledeHtml: 'Licensed. On the map. Your call.',
+    phones: ['screen-map.png'],
   },
   {
     file: 'instagram/ig-how-it-works.png',
     kind: 'graphic',
-    layout: 'devices',
-    shot: 'steps',
+    layout: 'punch-photo',
     ...SQ,
-    line1: 'POST.',
-    line2: 'PICK. PAY.',
-    phones: ['screen-post.png'],
-    steps: [
-      { n: '01', title: 'POST', body: 'the coverage you need' },
-      { n: '02', title: 'PICK', body: 'you approve who works' },
-      { n: '03', title: 'PAY', body: 'track the shift in the app' },
-    ],
+    photo: 'source-guard-portrait-square.png',
+    objectPosition: 'center 18%',
+    line1: 'OPEN SHIFTS.',
+    line2: 'YOUR CALL.',
+    lede: 'Apply to what fits. No dispatcher.',
   },
   {
     file: 'instagram/ig-coverage-types.png',
     kind: 'graphic',
-    layout: 'devices',
-    shot: 'menu',
+    layout: 'punch-type',
     ...SQ,
-    line1: 'OPEN SHIFTS.',
-    line2: 'ON THE MAP.',
-    ledeHtml: 'Apply to what fits. No forced dispatch.',
-    phones: ['screen-shifts.png'],
-    items: ['Nightclub', 'Retail', 'Site', 'Campus'],
+    line1: 'ANYTIME.',
+    line2: 'ANYWHERE.',
+    lede: 'Security, when you need it.',
   },
   {
     file: 'stories/story-event.png',
@@ -1173,40 +1268,33 @@ const POSTS = [
   {
     file: 'stories/story-platform.png',
     kind: 'graphic',
-    layout: 'devices',
-    shot: 'hero',
+    layout: 'punch-photo',
     ...ST,
-    line1: 'THE PLATFORM.',
-    line2: '',
-    ledeHtml: 'Guards and businesses find each other and <em>contract directly per job</em>.',
-    note: 'Not a staffing agency. Not dispatch.',
-    phones: ['screen-map.png'],
+    photo: 'source-event-story.png',
+    objectPosition: 'center 15%',
+    line1: 'NEED A GUARD',
+    line2: 'TONIGHT?',
+    lede: 'See who’s nearby. You pick.',
   },
   {
     file: 'stories/story-tagline.png',
     kind: 'graphic',
-    layout: 'devices',
-    shot: 'billboard',
+    layout: 'punch-type',
     ...ST,
     line1: 'ANYTIME.',
     line2: 'ANYWHERE.',
-    ledeHtml: 'Security when you need it. Post coverage or pick up a shift.',
-    phones: ['screen-map.png'],
+    lede: 'Security, when you need it.',
   },
   {
     file: 'stories/story-how-it-works.png',
     kind: 'graphic',
     layout: 'devices',
-    shot: 'steps',
+    shot: 'hero',
     ...ST,
-    line1: 'POST.',
-    line2: 'PICK. PAY.',
-    phones: ['screen-post.png'],
-    steps: [
-      { n: '01', title: 'POST', body: 'the coverage you need' },
-      { n: '02', title: 'PICK', body: 'you approve who works' },
-      { n: '03', title: 'PAY', body: 'track the shift in the app' },
-    ],
+    line1: 'YOU PICK',
+    line2: 'WHO WORKS.',
+    ledeHtml: 'Licensed. On the map. Your call.',
+    phones: ['screen-map.png'],
   },
   {
     file: 'landscape/wide-event.png',
@@ -1262,37 +1350,33 @@ const POSTS = [
   {
     file: 'landscape/wide-platform.png',
     kind: 'graphic',
-    layout: 'devices',
-    shot: 'hero',
+    layout: 'punch-photo',
     ...WD,
-    line1: 'THE PLATFORM.',
-    line2: '',
-    ledeHtml: 'Guards and businesses find each other and <em>contract directly per job</em>.',
-    note: 'Not a staffing agency. Not dispatch.',
-    phones: ['screen-map.png'],
+    photo: 'source-event-wide.png',
+    objectPosition: 'center 40%',
+    line1: 'NEED A GUARD',
+    line2: 'TONIGHT?',
+    lede: 'See who’s nearby. You pick.',
   },
   {
     file: 'landscape/wide-marketplace.png',
     kind: 'graphic',
     layout: 'devices',
-    shot: 'billboard',
+    shot: 'hero',
     ...WD,
-    line1: 'POST A JOB.',
-    line2: 'PICK A GUARD.',
-    ledeHtml: 'Licensed California coverage. Maps, messaging, and pay in one app.',
-    phones: ['screen-post.png'],
+    line1: 'YOU PICK',
+    line2: 'WHO WORKS.',
+    ledeHtml: 'Licensed. On the map. Your call.',
+    phones: ['screen-map.png'],
   },
   {
     file: 'landscape/wide-guards.png',
     kind: 'graphic',
-    layout: 'devices',
-    shot: 'menu',
+    layout: 'punch-type',
     ...WD,
-    line1: 'OPEN SHIFTS',
-    line2: 'ON THE MAP.',
-    ledeHtml: 'Licensed CA guards apply to what fits. No forced dispatch.',
-    phones: ['screen-shifts.png'],
-    items: ['Nightclub', 'Retail', 'Site', 'Campus'],
+    line1: 'ANYTIME.',
+    line2: 'ANYWHERE.',
+    lede: 'Security, when you need it.',
   },
 ];
 

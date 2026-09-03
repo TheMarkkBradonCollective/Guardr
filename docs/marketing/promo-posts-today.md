@@ -1,14 +1,14 @@
 # Guardr — Promo posts for today
 
-Black-and-white graphics fill the frame. Brand: **Guardr** · **www.guardr.co**
+Black-and-white. One idea per post. Brand: **Guardr** · **www.guardr.co**
 
 Re-render B&W: `node scripts/render-promo-posts.mjs --bw`
 
+The picture should make sense in half a second. Put the “platform / not a staffing agency” explanation in the **caption**, not on the image.
+
 ---
 
-## The one to lead with — Guardr is the platform
-
-**Use this post when you need to say what Guardr actually is.**
+## Lead — need a guard tonight
 
 **Instagram:** [`instagram/ig-platform.png`](../../assets/marketing/posts/instagram/ig-platform.png)  
 **Story:** [`stories/story-platform.png`](../../assets/marketing/posts/stories/story-platform.png)  
@@ -16,55 +16,54 @@ Re-render B&W: `node scripts/render-promo-posts.mjs --bw`
 
 **Caption:**
 
-Guardr is the platform — guards and businesses use it to find each other and contract directly per job.
+Need a guard tonight?
 
-We’re starting focused, growing guard supply, and letting both sides operate independently once they’re verified and on the platform.
+See who’s nearby on the map. You pick who works your site.
 
-Not a staffing agency. Not dispatch. A marketplace.
+Guardr is the platform — licensed California guards and businesses find each other and contract directly per job. Not a staffing agency. Not dispatch.
 
 www.guardr.co
-#Guardr #SecurityMarketplace #California #IndependentContractor
+#Guardr #SecurityMarketplace #California
 
 ---
 
 ## Instagram feed (1:1)
 
-### 1. Platform (lead)
+### 1. Tonight (lead)
 **Image:** [`instagram/ig-platform.png`](../../assets/marketing/posts/instagram/ig-platform.png)
 
 Use the caption above.
 
 ---
 
-### 2. Security marketplace
+### 2. You pick who works
 **Image:** [`instagram/ig-marketplace.png`](../../assets/marketing/posts/instagram/ig-marketplace.png)
 
-SECURITY MARKETPLACE
+You pick who works.
 
-Businesses post the job. Guards apply to work. You contract direct — pay and track in the app.
+Licensed guards show up on the map. You approve. They don’t get dispatched onto your site by someone else.
 
 www.guardr.co
 
 ---
 
-### 3. How it works
+### 3. Guards — your call
 **Image:** [`instagram/ig-how-it-works.png`](../../assets/marketing/posts/instagram/ig-how-it-works.png)
 
-01 Post — the coverage you need  
-02 Pick — you approve who works  
-03 Pay — track the shift in the app
+Open shifts. Your call.
+
+Licensed CA guards: browse the map, apply to what fits, get paid in the app. No dispatcher.
 
 www.guardr.co
 
 ---
 
-### 4. Coverage types
+### 4. Tagline
 **Image:** [`instagram/ig-coverage-types.png`](../../assets/marketing/posts/instagram/ig-coverage-types.png)
 
-Post coverage for:
-Event security · construction sites · retail · nightlife & venues · corporate campuses · executive protection.
+Anytime. Anywhere. Security, when you need it.
 
-Book now: www.guardr.co
+www.guardr.co
 
 ---
 
@@ -74,43 +73,41 @@ Link sticker: **https://www.guardr.co**
 
 | Image | Use |
 |---|---|
-| [`stories/story-platform.png`](../../assets/marketing/posts/stories/story-platform.png) | Lead — what Guardr is |
-| [`stories/story-tagline.png`](../../assets/marketing/posts/stories/story-tagline.png) | Anytime / anywhere + post-apply-contract |
-| [`stories/story-how-it-works.png`](../../assets/marketing/posts/stories/story-how-it-works.png) | Post / pick / pay |
+| [`stories/story-platform.png`](../../assets/marketing/posts/stories/story-platform.png) | Need a guard tonight? |
+| [`stories/story-tagline.png`](../../assets/marketing/posts/stories/story-tagline.png) | Anytime / anywhere |
+| [`stories/story-how-it-works.png`](../../assets/marketing/posts/stories/story-how-it-works.png) | You pick who works |
 
 ---
 
 ## Facebook / LinkedIn (landscape)
 
-### Platform (lead)
+### Tonight
 **Image:** [`landscape/wide-platform.png`](../../assets/marketing/posts/landscape/wide-platform.png)
 
-Guardr is the platform — guards and businesses use it to find each other and contract directly per job.
-
-We’re starting focused, growing guard supply, and letting both sides operate independently once they’re verified and on the platform.
+Need a guard tonight? See who’s nearby. You pick.
 
 https://www.guardr.co
 
 ---
 
-### Marketplace
+### You pick
 **Image:** [`landscape/wide-marketplace.png`](../../assets/marketing/posts/landscape/wide-marketplace.png)
 
-Clients post jobs. Licensed guards choose assignments. You contract directly.
+You pick who works. Licensed. On the map. Your call.
 
 https://www.guardr.co
 
 ---
 
-### Guards
+### Tagline
 **Image:** [`landscape/wide-guards.png`](../../assets/marketing/posts/landscape/wide-guards.png)
 
-Licensed CA guards: browse open shifts on the map. Apply to what fits. Get paid through the platform. No forced dispatch.
+Anytime. Anywhere. Security, when you need it.
 
 https://www.guardr.co
 
 ---
 
-Photo posts from the earlier pack are still in `instagram/`, `stories/`, and `landscape/` if you want them. These B&W graphics are the ones built to fill the frame.
+Color lifestyle posts from the earlier pack are still in `instagram/`, `stories/`, and `landscape/` if you want them.
 
 Questions: support@guardr.co
