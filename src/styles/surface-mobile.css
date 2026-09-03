@@ -3107,6 +3107,15 @@ body[data-surface='mobile'] .uber-landing-mobile-menu {
     box-shadow: 0 0 0 1px var(--sf-line);
     overflow-x: hidden;
   }
+
+  /* Sticky landing CTAs are position:fixed against the viewport; keep them
+     inside the letterboxed phone column the same way the signed-in dock is. */
+  body[data-surface='mobile'] .uber-style-landing--mobile .uber-landing-dock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: auto;
+  }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
