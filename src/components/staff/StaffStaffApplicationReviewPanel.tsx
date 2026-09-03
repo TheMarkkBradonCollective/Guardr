@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { SecurityGuard } from '../../types';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
-import { Mail, Phone } from 'lucide-react';
+import { AppButton } from '../ui/AppButton';
 import { getGuardUserStatus } from '../../lib/accountStatus';
 import { getStaffRosterStatusLabel } from '../../lib/staffAccountActivation';
 import { ROLE_LABELS, staffRoleToPlatformRole } from '../../lib/permissions';
 import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
+import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
+import { StaffAccountAccessSection } from './StaffAccountAccessSection';
 import { showAppToast } from '../ui/AppToast';
 import {
   confirmApproveStaffAccount,
   confirmRejectStaffAccount,
 } from '../../lib/importantActionConfirm';
+import { User } from 'lucide-react';
 
 interface StaffStaffApplicationReviewPanelProps {
   member: SecurityGuard;
@@ -19,6 +22,7 @@ interface StaffStaffApplicationReviewPanelProps {
   onApproveStaffAccount?: (staffId: string) => void | Promise<void>;
   onRejectStaffAccount?: (staffId: string) => void | Promise<void>;
   onOpenStaffProfile?: (staffId: string) => void;
+  reviewMeta?: React.ReactNode;
 }
 
 export function StaffStaffApplicationReviewPanel({
@@ -27,11 +31,12 @@ export function StaffStaffApplicationReviewPanel({
   onApproveStaffAccount,
   onRejectStaffAccount,
   onOpenStaffProfile,
+  reviewMeta,
 }: StaffStaffApplicationReviewPanelProps) {
   const [actionPending, setActionPending] = useState(false);
   const accountStatus = getGuardUserStatus(member);
   const isPending = accountStatus === 'pending';
-  const displayName = member.badgeNumber || member.name;
+  const displayName = member.name || member.badgeNumber;
   const staffRole = member.staffRole || 'Support';
   const statusTone =
     isPending
@@ -42,6 +47,9 @@ export function StaffStaffApplicationReviewPanel({
           ? 'success'
           : 'default';
   const statusLabel = getStaffRosterStatusLabel(member);
+  const memberManagedCities = (member.managedCities ?? []).filter(Boolean);
+  const roleLabel = ROLE_LABELS[staffRoleToPlatformRole(staffRole)];
+  const roleBadge = roleLabel === staffRole ? staffRole : `${staffRole} — ${roleLabel}`;
 
   const handleApprove = async () => {
     if (!onApproveStaffAccount) return;
@@ -73,81 +81,84 @@ export function StaffStaffApplicationReviewPanel({
     }
   };
 
+  const showReviewActions =
+    canReview && isPending && (onApproveStaffAccount || onRejectStaffAccount);
+
   return (
-    <div className="staff-detail-pane space-y-4">
-      <div className="flex items-start gap-4 pb-4 border-b border-brand-border">
-        <ProfileAvatar src={member.avatar} name={displayName} size="lg" rounded="xl" />
-        <div className="min-w-0 flex-1">
-          <h2 className="font-bold text-lg">{displayName}</h2>
-          {member.name && member.name !== displayName && (
-            <p className="text-sm text-brand-text-muted">{member.name}</p>
-          )}
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-brand-text-muted">
-            <span className="inline-flex items-center gap-1">
-              <Mail className="w-4 h-4" />
-              {member.email}
-            </span>
-            {member.phone && (
-              <span className="inline-flex items-center gap-1">
-                <Phone className="w-4 h-4" />
-                {member.phone}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <WfBadge tone="primary">
-              {staffRole} — {ROLE_LABELS[staffRoleToPlatformRole(staffRole)]}
-            </WfBadge>
+    <div className="staff-detail-pane">
+      <StaffDetailProfileHeader
+        avatar={<ProfileAvatar src={member.avatar} name={displayName} size="lg" rounded="xl" />}
+        name={displayName}
+        email={member.email}
+        emailPrefix="Work · "
+        metrics={[
+          { label: 'Staff ID', value: member.badgeNumber || '—' },
+          ...(memberManagedCities.length > 0
+            ? [{ label: 'Service areas', value: memberManagedCities.join(', ') }]
+            : []),
+        ]}
+        badges={
+          <>
+            <WfBadge tone="primary">{roleBadge}</WfBadge>
             <WfBadge tone={statusTone}>{statusLabel}</WfBadge>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+        editAction={
+          onOpenStaffProfile ? (
+            <AppButton
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenStaffProfile(member.id)}
+              startEnhancer={<User className="w-3.5 h-3.5" />}
+            >
+              View full staff profile
+            </AppButton>
+          ) : undefined
+        }
+      />
 
-      {onOpenStaffProfile && (
-        <button
-          type="button"
-          onClick={() => onOpenStaffProfile(member.id)}
-          className="text-xs font-semibold text-brand-primary hover:underline"
-        >
-          View full staff profile →
-        </button>
-      )}
+      <StaffAccountAccessSection
+        title="Application review"
+        leading={
+          showReviewActions && onApproveStaffAccount ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              className="staff-action-btn--ok"
+              disabled={actionPending}
+              onClick={() => void handleApprove()}
+            >
+              Approve application
+            </AppButton>
+          ) : undefined
+        }
+      >
+        {showReviewActions && onRejectStaffAccount ? (
+          <AppButton
+            variant="danger"
+            size="sm"
+            className="staff-action-btn--danger"
+            disabled={actionPending}
+            onClick={() => void handleReject()}
+          >
+            Deny application
+          </AppButton>
+        ) : null}
+      </StaffAccountAccessSection>
 
-      <StaffStaffApplicationSummary member={member} />
-
-      {canReview && isPending && (onApproveStaffAccount || onRejectStaffAccount) && (
-        <section className="staff-detail-section space-y-3">
-          <WfSectionHeader title="Review actions" className="!px-0 !mb-0" />
-          <div className="staff-detail-actions">
-            {onApproveStaffAccount && (
-              <button
-                type="button"
-                onClick={() => void handleApprove()}
-                disabled={actionPending}
-                className="app-button-primary app-btn-sm disabled:opacity-50"
-              >
-                Approve application
-              </button>
-            )}
-            {onRejectStaffAccount && (
-              <button
-                type="button"
-                onClick={() => void handleReject()}
-                disabled={actionPending}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
-              >
-                Deny application
-              </button>
-            )}
-          </div>
+      {canReview && isPending && !onApproveStaffAccount && !onRejectStaffAccount && (
+        <section className="staff-detail-section space-y-2">
+          <WfSectionHeader title="Application review" className="!px-0 !mb-0" />
+          <p className="text-sm text-brand-text-muted">
+            Only Directors and Founders can approve or deny staff applications.
+          </p>
         </section>
       )}
 
-      {canReview && isPending && !onApproveStaffAccount && !onRejectStaffAccount && (
-        <p className="text-sm text-brand-text-muted">
-          Only Directors and Founders can approve or deny staff applications.
-        </p>
-      )}
+      {reviewMeta}
+
+      <StaffStaffApplicationSummary member={member} />
     </div>
   );
 }

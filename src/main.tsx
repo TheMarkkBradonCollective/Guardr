@@ -49,6 +49,7 @@ import './styles/gr-data.css';
 import './styles/gr-forms.css';
 import './styles/gr-text-case.css';
 import './styles/legal-accept.css';
+import './styles/surface-look.css';
 
 applyThemeToDocument(loadTheme());
 

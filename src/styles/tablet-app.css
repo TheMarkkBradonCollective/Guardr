@@ -244,12 +244,19 @@ html body.sf-tablet .staff-detail-section .wf-metric-value {
   word-break: break-word;
 }
 
-html body.sf-tablet .split-detail-pane .grid,
-html body.sf-tablet .staff-detail-pane .grid,
+html body.sf-tablet .split-detail-pane .grid:not(.staff-detail-header):not(.staff-detail-metrics):not(.staff-detail-actions),
+html body.sf-tablet .staff-detail-pane .grid:not(.staff-detail-header):not(.staff-detail-metrics):not(.staff-detail-actions):not(.staff-detail-actions--list),
 html body.sf-tablet .staff-detail-section.grid,
 html body.sf-tablet .split-detail-pane [class*="grid-cols-"],
 html body.sf-tablet .staff-detail-pane [class*="grid-cols-"] {
   grid-template-columns: minmax(0, 1fr) !important;
+}
+
+/* Inspector fields sit two-up — beat the generic 1-col flatten above. */
+html body.sf-tablet .staff-detail-section:not(.staff-account-access) .grid,
+html body.sf-tablet .staff-detail-section:not(.staff-account-access) [class*="grid-cols-"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 16px 20px;
 }
 
 html body.sf-tablet .split-detail-pane .grid > *,
@@ -1477,4 +1484,346 @@ body.sf-tablet textarea,
 body.sf-tablet .uber-input,
 body.sf-tablet .uber-select {
   max-width: 100%;
+}
+
+/* ── Profile / application / staff detail ─────────────────────────────────
+   Tablet is an inspector, not a phone sheet and not a desktop workbench.
+   Identity sits two-up beside the metrics; actions live in a sunken card
+   as a two-column touch grid.
+   ────────────────────────────────────────────────────────────────────────── */
+body.sf-tablet .sfp-staff-profile-preview,
+body.sf-tablet .split-detail-pane.staff-detail-pane,
+.sfp-stage[data-surface='tablet'] .sfp-staff-profile-preview {
+  padding: 20px 24px 28px;
+}
+
+body.sf-tablet .staff-detail-header,
+.sfp-stage[data-surface='tablet'] .staff-detail-header {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding: 4px 0 20px;
+  gap: 16px 24px;
+  border-bottom: 1px solid var(--sf-line);
+}
+
+body.sf-tablet .staff-detail-identity,
+.sfp-stage[data-surface='tablet'] .staff-detail-identity {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex: 1 1 280px;
+  gap: 14px;
+}
+
+body.sf-tablet .staff-detail-name,
+body.sf-tablet .staff-detail-header h2,
+.sfp-stage[data-surface='tablet'] .staff-detail-name,
+.sfp-stage[data-surface='tablet'] .staff-detail-header h2 {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-heading, 19px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+body.sf-tablet .staff-detail-metrics,
+body.sf-tablet .staff-detail-metrics--2,
+body.sf-tablet .staff-detail-metrics--3,
+.sfp-stage[data-surface='tablet'] .staff-detail-metrics,
+.sfp-stage[data-surface='tablet'] .staff-detail-metrics--2,
+.sfp-stage[data-surface='tablet'] .staff-detail-metrics--3 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  flex: 1 1 240px;
+  gap: 10px 12px;
+  margin-top: 0;
+}
+
+body.sf-tablet .staff-detail-metric,
+.sfp-stage[data-surface='tablet'] .staff-detail-metric {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--sf-line);
+  border-radius: 12px;
+  background: var(--sf-paper, #fff);
+}
+
+body.sf-tablet .staff-detail-metric--wide,
+.sfp-stage[data-surface='tablet'] .staff-detail-metric--wide {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .staff-detail-metric-chip,
+body.sf-tablet .staff-detail-metrics .wf-metric-value,
+.sfp-stage[data-surface='tablet'] .staff-detail-metric-chip,
+.sfp-stage[data-surface='tablet'] .staff-detail-metrics .wf-metric-value {
+  display: block;
+  width: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-subheading, 16px);
+  font-weight: 700;
+}
+
+body.sf-tablet .staff-detail-edit,
+.sfp-stage[data-surface='tablet'] .staff-detail-edit {
+  margin-left: auto;
+}
+
+body.sf-tablet .staff-detail-edit button,
+body.sf-tablet .staff-detail-edit > *,
+.sfp-stage[data-surface='tablet'] .staff-detail-edit button,
+.sfp-stage[data-surface='tablet'] .staff-detail-edit > * {
+  width: auto !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  border: 1px solid var(--sf-line-strong, #c4c4c4) !important;
+  color: var(--sf-ink) !important;
+}
+
+html body.sf-tablet .staff-account-access,
+html body.sf-tablet .uber-app-shell .staff-account-access,
+.sfp-stage[data-surface='tablet'] .staff-account-access {
+  background: var(--sf-paper-sunken) !important;
+  border: 1px solid var(--sf-line) !important;
+  border-radius: var(--sf-radius-card, 14px) !important;
+  padding: 16px !important;
+  margin: 16px 0;
+  box-shadow: none !important;
+}
+
+html body.sf-tablet .staff-detail-actions,
+html body.sf-tablet .staff-detail-actions--list,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--list {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px;
+}
+
+html body.sf-tablet .staff-detail-actions--primary,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--primary {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  margin-top: 8px;
+}
+
+html body.sf-tablet .staff-detail-actions > *,
+html body.sf-tablet .staff-detail-actions > *:last-child:nth-child(2),
+html body.sf-tablet .staff-detail-actions > *:last-child:nth-child(3),
+.sfp-stage[data-surface='tablet'] .staff-detail-actions > *,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions > *:last-child:nth-child(2),
+.sfp-stage[data-surface='tablet'] .staff-detail-actions > *:last-child:nth-child(3) {
+  width: 100%;
+  grid-column: auto;
+  min-height: var(--sf-button-h, 46px);
+  border-radius: var(--sf-radius-control, 10px);
+  font-size: var(--sf-type-label, 13px);
+  font-weight: 600;
+}
+
+html body.sf-tablet .staff-detail-actions--list > *:last-child:nth-child(odd),
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--list > *:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+html body.sf-tablet .staff-detail-actions--list > *,
+html body.sf-tablet .staff-detail-actions--list button,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--list > *,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--list button {
+  width: 100% !important;
+  min-height: var(--sf-button-h, 46px) !important;
+  justify-content: center !important;
+}
+
+html body.sf-tablet .staff-detail-actions--primary > *,
+html body.sf-tablet .staff-detail-actions--primary button,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--primary > *,
+.sfp-stage[data-surface='tablet'] .staff-detail-actions--primary button {
+  width: 100% !important;
+  min-height: var(--sf-button-h, 46px) !important;
+  justify-content: center !important;
+  font-weight: 700 !important;
+}
+
+html body.sf-tablet .staff-detail-section:not(.staff-account-access) .grid.gap-4,
+.sfp-stage[data-surface='tablet'] .staff-detail-section:not(.staff-account-access) .grid.gap-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* Edit form on tablet is a card, not a phone bottom sheet. */
+body.sf-tablet .staff-detail-sheet,
+.sfp-stage[data-surface='tablet'] .staff-detail-sheet {
+  margin-top: 0;
+  padding: 20px !important;
+  border: 1px solid var(--sf-line) !important;
+  border-radius: var(--sf-radius-card, 14px) !important;
+  background: var(--sf-paper) !important;
+  box-shadow: none !important;
+}
+
+/* Inspector body: white cards on the sunken canvas, two-up under the header. */
+body.sf-tablet .sfp-staff-profile-preview,
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header),
+.sfp-stage[data-surface='tablet'] .sfp-staff-profile-preview {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header),
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 0;
+  align-items: start;
+  align-content: start;
+}
+
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .app-subscreen-header,
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-guard-detail-tabs,
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-header,
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access,
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-header,
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access {
+  grid-column: 1 / -1;
+}
+
+body.sf-tablet .staff-detail-header,
+.sfp-stage[data-surface='tablet'] .staff-detail-header {
+  margin-bottom: 16px;
+  padding: 16px 18px 18px;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-card, 14px);
+  background: var(--sf-paper, #fff);
+}
+
+html body.sf-tablet .staff-account-access,
+html body.sf-tablet .uber-app-shell .staff-account-access,
+.sfp-stage[data-surface='tablet'] .staff-account-access {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--sf-paper, #fff) !important;
+}
+
+html body.sf-tablet .staff-account-access > * + *,
+html body.sf-tablet .staff-account-access.space-y-3 > :not([hidden]) ~ :not([hidden]),
+.sfp-stage[data-surface='tablet'] .staff-account-access > * + * {
+  margin-top: 0 !important;
+}
+
+html body.sf-tablet .staff-account-access-head,
+.sfp-stage[data-surface='tablet'] .staff-account-access-head {
+  grid-column: 1 / -1;
+}
+
+html body.sf-tablet .staff-account-access .staff-detail-actions--list,
+html body.sf-tablet .staff-account-access .staff-detail-actions--primary,
+.sfp-stage[data-surface='tablet'] .staff-account-access .staff-detail-actions--list,
+.sfp-stage[data-surface='tablet'] .staff-account-access .staff-detail-actions--primary {
+  grid-column: 1 / -1;
+}
+
+/* One secondary + primary (Deny / Approve) share a row. */
+html body.sf-tablet .staff-account-access:has(.staff-detail-actions--list > :only-child) .staff-detail-actions--list,
+html body.sf-tablet .staff-account-access:has(.staff-detail-actions--list > :only-child) .staff-detail-actions--primary,
+.sfp-stage[data-surface='tablet'] .staff-account-access:has(.staff-detail-actions--list > :only-child) .staff-detail-actions--list,
+.sfp-stage[data-surface='tablet'] .staff-account-access:has(.staff-detail-actions--list > :only-child) .staff-detail-actions--primary {
+  display: block !important;
+  grid-column: auto;
+  grid-template-columns: none !important;
+}
+
+html body.sf-tablet .staff-account-access:has(.staff-detail-actions--list > :only-child) .staff-detail-actions--list > *:last-child:nth-child(odd),
+.sfp-stage[data-surface='tablet'] .staff-account-access:has(.staff-detail-actions--list > :only-child) .staff-detail-actions--list > *:last-child:nth-child(odd) {
+  grid-column: auto;
+}
+
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-section:not(.staff-account-access),
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) > .staff-detail-section:not(.staff-account-access) {
+  grid-column: auto;
+  min-width: 0;
+  margin: 16px 0 0;
+  padding: 18px 18px !important;
+  border: 1px solid var(--sf-line) !important;
+  border-bottom: 1px solid var(--sf-line) !important;
+  border-radius: var(--sf-radius-card, 14px);
+  background: var(--sf-paper, #fff);
+}
+
+body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access + .staff-detail-section:last-child,
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access + .staff-detail-section:last-child {
+  grid-column: 1 / -1;
+}
+
+/* ── Site-wide inspector: payments, forms, jobs, app screens ───────────── */
+
+html body.sf-tablet .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+html body.sf-tablet .client-content-shell,
+html body.sf-tablet .payments-page {
+  max-width: none !important;
+  width: 100%;
+  margin-inline: 0;
+}
+
+body.sf-tablet .payments-page,
+.sfp-stage[data-surface='tablet'] .payments-page {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .payments-page-header,
+.sfp-stage[data-surface='tablet'] .payments-page-header {
+  padding: 16px 24px 14px;
+  border-bottom: 1px solid var(--sf-line);
+  background: var(--sf-paper, #fff);
+}
+
+body.sf-tablet .payments-page-header h1,
+.sfp-stage[data-surface='tablet'] .payments-page-header h1 {
+  margin: 0;
+  font-size: var(--sf-type-heading, 19px);
+  font-weight: 700;
+}
+
+body.sf-tablet .payments-page-body,
+.sfp-stage[data-surface='tablet'] .payments-page-body {
+  padding: 16px 24px 24px;
+}
+
+body.sf-tablet .sft-page .grid.gap-4,
+body.sf-tablet .sft-form-page-body .grid,
+body.sf-tablet .sft-shell-canvas .app-form-section .grid,
+body.sf-tablet .sft-shell-canvas form .grid.gap-4,
+body.sf-tablet .sft-shell-canvas form .grid.gap-3 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px 18px;
+}
+
+body.sf-tablet .sft-shell-canvas .app-form-actions,
+body.sf-tablet .sft-shell-canvas .app-action-row,
+body.sf-tablet .sft-shell-canvas .app-action-row--equal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+body.sf-tablet .staff-detail-pane:not(:has(> .staff-detail-header)),
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:not(:has(> .staff-detail-header)) {
+  padding: 16px 20px 24px;
+}
+
+body.sf-tablet .staff-detail-pane:not(:has(> .staff-detail-header)) > .staff-detail-section,
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:not(:has(> .staff-detail-header)) > .staff-detail-section {
+  margin-top: 12px;
+  padding: 16px 18px !important;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-card, 14px);
+  background: var(--sf-paper, #fff);
 }

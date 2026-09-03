@@ -819,8 +819,8 @@ body[data-surface="desktop"] .adm-app .staff-overview {
 
 body[data-surface="desktop"] .adm-app .client-form-shell,
 body[data-surface="desktop"] .adm-app .guard-form-shell {
-  max-width: min(44rem, 100%);
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 1.25rem;
 }
 
@@ -1091,8 +1091,8 @@ body[data-surface="desktop"] .adm-page--calendar {
 }
 
 body[data-surface="desktop"] .adm-form-page {
-  max-width: min(40rem, 100%);
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 1.25rem 0 2rem;
 }
 
@@ -1141,8 +1141,8 @@ body[data-surface="desktop"] .adm-profile-sections section {
 }
 
 body[data-surface="desktop"] .adm-pending-page {
-  max-width: min(42rem, 100%);
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 2rem 1.25rem;
 }
 
@@ -1191,8 +1191,8 @@ body[data-surface="desktop"] .desktop-map-inspector-header {
 
 body[data-surface="desktop"] .adm-app .client-form-shell,
 body[data-surface="desktop"] .adm-app .client-content-shell {
-  max-width: min(52rem, 100%);
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 1.25rem;
 }
 
@@ -1209,8 +1209,8 @@ body[data-surface="desktop"] .adm-app .guard-tiered-screen-toolbar {
 
 /* Form wizards (post job, direct hire) */
 body[data-surface="desktop"] .adm-form-wizard {
-  max-width: min(52rem, 100%);
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 1.25rem 1.25rem 0;
 }
 

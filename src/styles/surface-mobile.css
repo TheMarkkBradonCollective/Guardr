@@ -34,7 +34,9 @@ body[data-surface='mobile'] {
   /* Fixed positioning resolves against the viewport, which would span the whole
      screen; absolute keeps the bar inside the phone column. */
   body[data-surface='mobile'] .sfm-tabbar,
-  body[data-surface='mobile'] .sfm-sheet-root {
+  body[data-surface='mobile'] .sfm-sheet-root,
+  body[data-surface='mobile'] .sfm-drawer,
+  body[data-surface='mobile'] .sfm-drawer-backdrop {
     position: absolute;
   }
 }
@@ -238,12 +240,14 @@ body[data-surface='mobile'] {
   white-space: nowrap;
 }
 
-/* ── Hamburger drawer (staff mobile) ─────────────────────────────────────── */
+/* ── Hamburger drawer (staff mobile) ───────────────────────────────────────
+   Chrome is z-index 1100 so it sits above Leaflet. The drawer must stack
+   above that chrome or the header band clips the Create job CTA. */
 
 .sfm-drawer-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: 1200;
   border: none;
   margin: 0;
   padding: 0;
@@ -263,10 +267,10 @@ body[data-surface='mobile'] {
   top: 0;
   bottom: 0;
   left: 0;
-  z-index: 130;
+  z-index: 1210;
   display: flex;
   flex-direction: column;
-  width: min(304px, 88vw);
+  width: min(304px, 88%);
   max-width: 100%;
   padding-top: var(--sf-safe-top);
   padding-bottom: var(--sf-safe-bottom);
@@ -1610,7 +1614,7 @@ body[data-surface='mobile'] .sfm-shell .app-empty-state {
 
 /* ── Controls ────────────────────────────────────────────────────────────── */
 
-body[data-surface='mobile'] .sfm-shell button:not(.sfm-tab):not(.sfm-icon-btn):not(.sfm-sheet-close):not(.sfm-more-row):not(.sfm-account-row):not(.sfm-shell-identity),
+body[data-surface='mobile'] .sfm-shell button:not(.sfm-tab):not(.sfm-icon-btn):not(.sfm-sheet-close):not(.sfm-more-row):not(.sfm-account-row):not(.sfm-shell-identity):not(.sfm-drawer-cta):not(.sfm-drawer-row),
 body[data-surface='mobile'] .sfm-shell .app-btn,
 body[data-surface='mobile'] .sfm-shell .app-button {
   min-height: 44px;
@@ -2148,4 +2152,285 @@ body[data-surface='mobile'] .sfm-shell .uber-section-header {
   body[data-surface='mobile'] .uber-landing-dock-btn {
     min-height: 44px;
   }
+}
+
+/* ── Profile / application / staff detail ─────────────────────────────────
+   Uber “Send a ride” sheet: display-scale name, highlighted metric chips,
+   a compact Edit details control, stacked option rows, one black footer CTA.
+   ────────────────────────────────────────────────────────────────────────── */
+
+body[data-surface='mobile'] .staff-detail-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px 0 24px;
+  gap: 16px;
+  border-bottom: none;
+}
+
+body[data-surface='mobile'] .staff-detail-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+body[data-surface='mobile'] .staff-detail-name,
+body[data-surface='mobile'] .staff-detail-header h2 {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-display) !important;
+  font-weight: 700;
+  letter-spacing: var(--sf-tracking-display);
+  line-height: 1.12;
+}
+
+body[data-surface='mobile'] .staff-detail-header-email {
+  font-size: var(--sf-type-body);
+  color: var(--sf-ink-secondary);
+  margin-top: 8px;
+}
+
+body[data-surface='mobile'] .staff-detail-metrics,
+body[data-surface='mobile'] .staff-detail-metrics--2,
+body[data-surface='mobile'] .staff-detail-metrics--3 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 0;
+}
+
+body[data-surface='mobile'] .staff-detail-metric {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+body[data-surface='mobile'] .staff-detail-metric--wide {
+  flex: 1 1 100%;
+}
+
+body[data-surface='mobile'] .staff-detail-metrics .wf-metric-label {
+  font-size: var(--sf-type-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sf-ink-tertiary);
+}
+
+body[data-surface='mobile'] .staff-detail-pane .wf-metric-value,
+body[data-surface='mobile'] .staff-detail-metrics .wf-metric-value,
+body[data-surface='mobile'] .staff-detail-metric-chip {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--uber-accent-100, var(--sf-paper-muted, #eee));
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+body[data-surface='mobile'] .staff-detail-header-badges {
+  margin-top: 0;
+}
+
+body[data-surface='mobile'] .staff-detail-edit {
+  display: block;
+  margin-top: 0;
+  width: fit-content;
+  max-width: 100%;
+}
+
+body[data-surface='mobile'] .staff-detail-edit > * {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: 100%;
+  flex: 0 0 auto !important;
+}
+
+body[data-surface='mobile'] .staff-detail-edit button,
+body[data-surface='mobile'] .staff-detail-edit [role='button'] {
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  font-size: var(--sf-type-label) !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+  border: 1px solid var(--sf-line-strong, var(--uber-border-dark, #c4c4c4)) !important;
+  color: var(--sf-ink) !important;
+}
+
+body[data-surface='mobile'] .staff-detail-section {
+  padding: 20px 0 !important;
+}
+
+body[data-surface='mobile'] .staff-account-access {
+  padding-top: 8px !important;
+}
+
+body[data-surface='mobile'] .staff-detail-actions,
+body[data-surface='mobile'] .uber-app-shell .staff-detail-actions,
+body[data-surface='mobile'] .staff-detail-actions--list,
+body[data-surface='mobile'] .staff-detail-actions--primary {
+  display: flex !important;
+  flex-direction: column;
+  gap: 8px;
+  grid-template-columns: none !important;
+}
+
+body[data-surface='mobile'] .staff-detail-actions > *,
+body[data-surface='mobile'] .staff-detail-actions > *:last-child:nth-child(odd) {
+  width: 100%;
+  grid-column: auto;
+}
+
+body[data-surface='mobile'] .staff-detail-actions--list > *,
+body[data-surface='mobile'] .staff-detail-actions--list button {
+  width: 100% !important;
+  min-height: var(--sf-row-h, 68px) !important;
+  justify-content: flex-start !important;
+  border-radius: var(--sf-radius-control, 12px) !important;
+  font-size: var(--sf-type-body) !important;
+  font-weight: 600 !important;
+  text-align: left;
+}
+
+body[data-surface='mobile'] .staff-detail-actions--primary {
+  margin-top: 8px;
+}
+
+body[data-surface='mobile'] .staff-detail-actions--primary > *,
+body[data-surface='mobile'] .staff-detail-actions--primary button {
+  width: 100% !important;
+  min-height: var(--sf-button-h, 52px) !important;
+  justify-content: center !important;
+  border-radius: var(--sf-radius-control, 12px) !important;
+  font-size: var(--sf-type-body) !important;
+  font-weight: 700 !important;
+}
+
+body[data-surface='mobile'] .staff-detail-sheet {
+  margin-top: 8px;
+  padding: 20px 16px 24px !important;
+  border: 1px solid var(--sf-line) !important;
+  border-radius: var(--sf-radius-overlay, 24px) var(--sf-radius-overlay, 24px) 0 0 !important;
+  background: var(--sf-paper) !important;
+  box-shadow: var(--shadow-panel, 0 -4px 20px rgba(0, 0, 0, 0.1)) !important;
+}
+
+/* ── Site-wide sheet: payments, app screens, forms ──────────────────────── */
+
+body[data-surface='mobile'] .payments-page-header,
+body[data-surface='mobile'] .sfm-shell .app-screen-header:not(.app-screen-header--map) {
+  padding: 12px 16px 16px;
+  border-bottom: none;
+}
+
+body[data-surface='mobile'] .payments-page-header h1,
+body[data-surface='mobile'] .sfm-shell .app-screen-header-title,
+body[data-surface='mobile'] .sfm-shell .app-screen-header h1 {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-display) !important;
+  font-weight: 700;
+  letter-spacing: var(--sf-tracking-display);
+  line-height: 1.12;
+}
+
+body[data-surface='mobile'] .payments-page-header p {
+  margin-top: 8px;
+  font-size: var(--sf-type-body);
+  color: var(--sf-ink-secondary);
+}
+
+body[data-surface='mobile'] .payments-page-body {
+  padding: 8px 16px 24px;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-form-actions > *,
+body[data-surface='mobile'] .sfm-shell .app-action-row > *,
+body[data-surface='mobile'] .sfm-shell .app-action-row--equal > * {
+  width: 100%;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-form-actions,
+body[data-surface='mobile'] .sfm-shell .app-action-row,
+body[data-surface='mobile'] .sfm-shell .app-action-row--equal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Full phone canvas: product pages fill the sheet, not a workbench ───── */
+
+body[data-surface='mobile'] .sfm-shell .staff-detail-pane,
+body[data-surface='mobile'] .sfp-staff-profile-preview {
+  width: 100%;
+  max-width: 100%;
+  padding: 8px 16px calc(28px + var(--sf-safe-bottom));
+  box-sizing: border-box;
+}
+
+body[data-surface='mobile'] .sfm-shell .tablet-split-panel,
+body[data-surface='mobile'] .sfm-shell .desktop-master-detail,
+body[data-surface='mobile'] .sfm-shell .adm-workbench-split {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+body[data-surface='mobile'] .sfm-shell .split-list-pane,
+body[data-surface='mobile'] .sfm-shell .split-detail-pane,
+body[data-surface='mobile'] .sfm-shell .uber-workbench-list,
+body[data-surface='mobile'] .sfm-shell .uber-workbench-detail {
+  width: 100%;
+  max-width: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-form-section .grid,
+body[data-surface='mobile'] .sfm-shell .app-form-grid,
+body[data-surface='mobile'] .sfm-shell form .grid.gap-4,
+body[data-surface='mobile'] .sfm-shell form .grid.gap-3 {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+body[data-surface='mobile'] .staff-guard-detail-tabs {
+  padding: 0 0 12px;
+}
+
+/* Tailwind sm/md/lg keys off the viewport. A letterboxed 440px phone column
+   on a 1600px display must still read as a one-handed sheet. */
+body[data-surface='mobile'] .sfm-shell [class*="sm:grid-cols-"],
+body[data-surface='mobile'] .sfm-shell [class*="md:grid-cols-"],
+body[data-surface='mobile'] .sfm-shell [class*="lg:grid-cols-"],
+body[data-surface='mobile'] .sfm-shell [class*="xl:grid-cols-"] {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+body[data-surface='mobile'] .sfm-shell .grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+body[data-surface='mobile'] .sfm-shell [class*="sm:flex-row"],
+body[data-surface='mobile'] .sfm-shell [class*="md:flex-row"],
+body[data-surface='mobile'] .sfm-shell [class*="lg:flex-row"] {
+  flex-direction: column !important;
+}
+
+body[data-surface='mobile'] .payments-page {
+  height: auto;
+  min-height: 100%;
+}
+
+body[data-surface='mobile'] .payments-page-body {
+  overflow: visible;
+  height: auto;
+  min-height: 0;
 }

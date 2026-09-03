@@ -4,6 +4,7 @@ import { ROLE_DESCRIPTIONS, ROLE_LABELS, staffRoleToPlatformRole } from '../../l
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { getStaffActivationChecklist, staffHasApplicationIntake } from '../../lib/staffAccountActivation';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
+import { WfSectionHeader } from '../ui/wireframe';
 
 function DetailRow({ label, value }: { label: string; value?: React.ReactNode }) {
   if (value == null || value === '') return null;
@@ -26,28 +27,27 @@ export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSu
   const platformRole = staffRole ? staffRoleToPlatformRole(staffRole) : 'finance';
   const cities = (member.managedCities ?? []).filter(Boolean);
   const hasIntake = staffHasApplicationIntake(member);
+  const roleTitle = ROLE_LABELS[platformRole];
   const requestedRoleLabel = isFinanceDesk
     ? `Finance desk — ${ROLE_LABELS.finance}`
     : member.sideRole === 'Finance' && staffRole
-      ? `${staffRole} + Finance — ${ROLE_LABELS[platformRole]}`
-      : `${staffRole} — ${ROLE_LABELS[platformRole]}`;
+      ? `${staffRole} + Finance — ${roleTitle}`
+      : roleTitle === staffRole
+        ? `${staffRole}`
+        : `${staffRole} — ${roleTitle}`;
 
   return (
-    <section className="staff-detail-section space-y-4 !px-0">
-      <div>
-        <p className="text-sm font-semibold text-brand-text">Application details</p>
-      </div>
+    <section className="staff-detail-section space-y-4">
+      <WfSectionHeader title="Application details" className="!px-0 !mb-0" />
 
+      {/* Name, staff ID, and work email are already in the profile header. */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <DetailRow label="Full name" value={member.name} />
-        <DetailRow label="Staff ID" value={member.badgeNumber} />
-        <DetailRow label="Work email" value={member.email} />
+        <DetailRow label="Requested role" value={requestedRoleLabel} />
         <DetailRow label="Personal email" value={member.personalEmail} />
         <DetailRow label="Phone" value={member.phone} />
         <DetailRow label="Years of experience" value={member.yearsExperience?.toString()} />
         <DetailRow label="Availability" value={member.availabilityNotes} />
         <DetailRow label="Referred by" value={member.referredBy} />
-        <DetailRow label="Requested role" value={requestedRoleLabel} />
       </div>
 
       <div>

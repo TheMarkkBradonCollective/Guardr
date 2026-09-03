@@ -695,7 +695,8 @@ export function StaffGuardDetailPanel({
         </div>
       )}
       <div className="staff-detail-header">
-        <div className="relative shrink-0">
+        <div className="staff-detail-identity">
+        <div className="staff-detail-avatar relative shrink-0">
           <ProfileAvatar src={editing ? avatar : guard.avatar} name={displayName} size="lg" rounded="xl" />
           {editing && canEdit && (
             <label
@@ -709,8 +710,8 @@ export function StaffGuardDetailPanel({
             </label>
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="staff-detail-identity-copy min-w-0 flex-1">
+          <div className="staff-detail-name-row">
             {editing ? (
               <div className="w-full">
                 <PersonNameFields
@@ -724,13 +725,13 @@ export function StaffGuardDetailPanel({
                 />
               </div>
             ) : (
-              <h2 className="font-bold text-lg">{guard.name}</h2>
+              <h2 className="staff-detail-name">{guard.name}</h2>
             )}
             {guard.isStaff && (
               <WfBadge tone="primary">{guard.staffRole || 'Staff'}</WfBadge>
             )}
           </div>
-          <p className="text-sm text-brand-text-muted mt-1">{guard.email}</p>
+          <p className="staff-detail-header-email">{guard.email}</p>
           {saveError && <p className="text-xs text-red-500 mt-1">{saveError}</p>}
           {photoError && <p className="text-xs text-red-500 mt-1">{photoError}</p>}
           {photoSaving && <p className="text-xs text-brand-text-muted mt-1">Saving photo…</p>}
@@ -741,27 +742,28 @@ export function StaffGuardDetailPanel({
               <EditField label="Min hourly rate ($)" value={hourlyRate} onChange={setHourlyRate} type="number" min={0} />
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-x-4 gap-y-3 mt-3">
-              <div>
+            <div className="staff-detail-metrics staff-detail-metrics--3">
+              <div className="staff-detail-metric">
                 <p className="wf-metric-label">{GUARD_ICN_SHORT_LABEL}</p>
-                <p className="wf-metric-value">{guard.badgeNumber}</p>
+                <p className="wf-metric-value staff-detail-metric-chip">{guard.badgeNumber}</p>
               </div>
-              <div>
+              <div className="staff-detail-metric">
                 <p className="wf-metric-label">Rating</p>
-                <p className="wf-metric-value text-brand-primary">★ {guard.rating}</p>
+                <p className="wf-metric-value staff-detail-metric-chip text-brand-primary">★ {guard.rating}</p>
               </div>
-              <div>
+              <div className="staff-detail-metric">
                 <p className="wf-metric-label">Completed</p>
-                <p className="wf-metric-value">{completedJobsCount}</p>
+                <p className="wf-metric-value staff-detail-metric-chip">{completedJobsCount}</p>
               </div>
             </div>
           )}
           {!guard.isStaff && (
-            <div className="flex flex-wrap items-center gap-2 mt-3">
+            <div className="staff-detail-header-badges">
               <GuardArmedStatusPill guard={guard} />
               <GuardRosterStatusBadges guard={guard} className="shrink-0" />
             </div>
           )}
+        </div>
         </div>
       </div>
 

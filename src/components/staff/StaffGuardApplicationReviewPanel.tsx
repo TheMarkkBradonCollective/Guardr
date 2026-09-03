@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { SecurityGuard } from '../../types';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
-import { WfSectionHeader } from '../ui/wireframe';
-import { Mail } from 'lucide-react';
+import { AppButton } from '../ui/AppButton';
 import { getGuardUserStatus } from '../../lib/accountStatus';
 import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { StaffGuardApplicationSummary } from './StaffGuardApplicationSummary';
+import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
+import { StaffAccountAccessSection } from './StaffAccountAccessSection';
 import { showAppToast } from '../ui/AppToast';
 import { confirmApproveGuardProfile } from '../../lib/importantActionConfirm';
 import {
@@ -18,6 +19,10 @@ import {
 } from '../../lib/guardAccountActivation';
 import { StaffGuardActivationChecklistView } from './StaffGuardActivationChecklistView';
 import { StaffApplicationCredentialViewModal } from './StaffApplicationCredentialViewModal';
+import { GUARD_ICN_SHORT_LABEL } from '../../lib/guardContractorNumber';
+import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
+import { User } from 'lucide-react';
+
 interface StaffGuardApplicationReviewPanelProps {
   guard: SecurityGuard;
   canReview: boolean;
@@ -25,6 +30,7 @@ interface StaffGuardApplicationReviewPanelProps {
   onRejectGuardApplication?: (guardId: string, reason?: string) => void | Promise<void>;
   onRequestGuardApplicationRevision?: (guardId: string, reason?: string) => void | Promise<void>;
   onOpenGuardProfile?: (guardId: string) => void;
+  reviewMeta?: React.ReactNode;
 }
 
 export function StaffGuardApplicationReviewPanel({
@@ -34,6 +40,7 @@ export function StaffGuardApplicationReviewPanel({
   onRejectGuardApplication,
   onRequestGuardApplicationRevision,
   onOpenGuardProfile,
+  reviewMeta,
 }: StaffGuardApplicationReviewPanelProps) {
   const [actionPending, setActionPending] = useState(false);
   const [viewingCredentialItemId, setViewingCredentialItemId] = useState<string | null>(null);
@@ -46,10 +53,13 @@ export function StaffGuardApplicationReviewPanel({
   const handleApproveProfile = async () => {
     if (!onApproveGuardAccount || !guardCanStaffApproveProfile(guard)) return;
     if (!(await confirmApproveGuardProfile(guard.name))) return;
+    setActionPending(true);
     try {
       await onApproveGuardAccount(guard.id);
     } catch (err) {
       showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
+    } finally {
+      setActionPending(false);
     }
   };
 
@@ -82,31 +92,91 @@ export function StaffGuardApplicationReviewPanel({
     }
   };
 
-  return (
-    <div className="staff-detail-pane space-y-4">
-      <div className="flex items-start gap-4 pb-4 border-b border-brand-border">
-        <ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" />
-        <div className="min-w-0 flex-1">
-          <h2 className="font-bold text-lg">{guard.name}</h2>
-          <p className="text-sm text-brand-text-muted mt-1 inline-flex items-center gap-1.5">
-            <Mail className="w-4 h-4 shrink-0" />
-            {guard.email}
-          </p>
-          <div className="flex flex-wrap items-center gap-2 mt-3">
-            <GuardRosterStatusBadges guard={guard} showTrusted={false} />
-          </div>
-        </div>
-      </div>
+  const showReviewActions =
+    canReview && (isPending || isApprovedOrActive) &&
+    (onApproveGuardAccount || onRejectGuardApplication || onRequestGuardApplicationRevision);
 
-      {onOpenGuardProfile && (
-        <button
-          type="button"
-          onClick={() => onOpenGuardProfile(guard.id)}
-          className="text-xs font-semibold text-brand-primary hover:underline"
-        >
-          View full guard profile →
-        </button>
-      )}
+  return (
+    <div className="staff-detail-pane">
+      <StaffDetailProfileHeader
+        avatar={<ProfileAvatar src={guard.avatar} name={guard.name} size="lg" rounded="xl" />}
+        name={guard.name}
+        email={guard.email}
+        metrics={[
+          { label: GUARD_ICN_SHORT_LABEL, value: guard.badgeNumber || '—' },
+          { label: 'Rating', value: `★ ${guard.rating}` },
+        ]}
+        badges={
+          <>
+            <GuardArmedStatusPill guard={guard} />
+            <GuardRosterStatusBadges guard={guard} showTrusted={false} className="shrink-0" />
+          </>
+        }
+        editAction={
+          onOpenGuardProfile ? (
+            <AppButton
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenGuardProfile(guard.id)}
+              startEnhancer={<User className="w-3.5 h-3.5" />}
+            >
+              View full guard profile
+            </AppButton>
+          ) : undefined
+        }
+      />
+
+      <StaffAccountAccessSection
+        title="Application review"
+        leading={
+          showReviewActions && isPending && onApproveGuardAccount ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              className="staff-action-btn--ok"
+              disabled={!guardCanStaffApproveProfile(guard) || actionPending}
+              onClick={() => void handleApproveProfile()}
+              title={
+                activationChecklist.staffApprovalBlockers.length > 0
+                  ? activationChecklist.staffApprovalBlockers.join(' · ')
+                  : 'Approve guard application'
+              }
+            >
+              Approve application
+            </AppButton>
+          ) : undefined
+        }
+      >
+        {showReviewActions ? (
+          <>
+            {isPending && onRejectGuardApplication && (
+              <AppButton
+                variant="danger"
+                size="sm"
+                className="staff-action-btn--danger"
+                disabled={actionPending}
+                onClick={() => void handleDenyApplication()}
+              >
+                Deny application
+              </AppButton>
+            )}
+            {(isPending || isApprovedOrActive) && onRequestGuardApplicationRevision && (
+              <AppButton
+                variant="outline"
+                size="sm"
+                className="staff-action-btn--warn"
+                disabled={actionPending}
+                onClick={() => void handleRequestRevision()}
+              >
+                Request revision
+              </AppButton>
+            )}
+          </>
+        ) : null}
+      </StaffAccountAccessSection>
+
+      {reviewMeta}
 
       <StaffGuardApplicationSummary guard={guard} />
 
@@ -123,49 +193,6 @@ export function StaffGuardApplicationReviewPanel({
           credentialItemId={viewingCredentialItemId}
           onClose={() => setViewingCredentialItemId(null)}
         />
-      )}
-
-      {canReview && (isPending || isApprovedOrActive) && (
-        <section className="staff-detail-section space-y-3">
-          <WfSectionHeader title="Review actions" className="!px-0 !mb-0" />
-          <div className="staff-detail-actions">
-            {isPending && onApproveGuardAccount && (
-              <button
-                type="button"
-                onClick={() => void handleApproveProfile()}
-                disabled={!guardCanStaffApproveProfile(guard) || actionPending}
-                className="app-button-primary app-btn-sm disabled:opacity-50"
-                title={
-                  activationChecklist.staffApprovalBlockers.length > 0
-                    ? activationChecklist.staffApprovalBlockers.join(' · ')
-                    : 'Approve guard application'
-                }
-              >
-                Approve application
-              </button>
-            )}
-            {isPending && onRejectGuardApplication && (
-              <button
-                type="button"
-                onClick={() => void handleDenyApplication()}
-                disabled={actionPending}
-                className="app-button-outline app-btn-sm text-red-400 border-red-500/40 disabled:opacity-50"
-              >
-                Deny application
-              </button>
-            )}
-            {(isPending || isApprovedOrActive) && onRequestGuardApplicationRevision && (
-              <button
-                type="button"
-                onClick={() => void handleRequestRevision()}
-                disabled={actionPending}
-                className="app-button-outline app-btn-sm disabled:opacity-50"
-              >
-                Request revision
-              </button>
-            )}
-          </div>
-        </section>
       )}
     </div>
   );

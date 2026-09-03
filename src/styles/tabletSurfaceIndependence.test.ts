@@ -47,4 +47,39 @@ describe('tablet CSS independence', () => {
     assert.ok(css.includes('.staff-analytics-tablet-canvas'));
     assert.ok(css.includes('.sft-dev-notes-grid'));
   });
+
+  it('styles staff/application profiles as a tablet inspector between phone and desktop', () => {
+    assert.ok(css.includes('.staff-account-access'));
+    assert.ok(css.includes('.staff-detail-actions'));
+    assert.ok(css.includes('.staff-detail-metrics'));
+    assert.match(css, /body\.sf-tablet \.staff-account-access/);
+    assert.match(css, /body\.sf-tablet \.staff-detail-actions/);
+    assert.match(css, /body\.sf-tablet \.staff-detail-identity[\s\S]{0,200}flex-direction: row/);
+    assert.match(
+      css,
+      /html body\.sf-tablet \.staff-detail-actions[\s\S]{0,400}grid-template-columns: repeat\(2/,
+    );
+    assert.match(
+      css,
+      /staff-detail-pane:has\(> \.staff-detail-header\)[\s\S]{0,240}grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/,
+    );
+    assert.match(css, /body\.sf-tablet \.staff-account-access[\s\S]{0,400}sf-paper/);
+    assert.match(css, /body\.sf-tablet \.staff-detail-metric[\s\S]{0,280}border-radius: 12px/);
+    assert.equal(
+      /html body\.sf-tablet \.staff-detail-actions[\s\S]{0,180}grid-template-columns: repeat\(3/.test(css),
+      false,
+      'tablet profile actions must not use a 3-column desktop workbench grid',
+    );
+    assert.equal(
+      css.includes('piggybacking mobile'),
+      false,
+      'tablet must not piggyback the mobile stacked sheet',
+    );
+  });
+
+  it('applies the tablet inspector to payments, forms, and app screens site-wide', () => {
+    assert.match(css, /body\.sf-tablet \.payments-page/);
+    assert.match(css, /sft-form-page-body \.grid[\s\S]{0,280}repeat\(2/);
+    assert.match(css, /\.client-content-shell[\s\S]{0,80}max-width: none/);
+  });
 });

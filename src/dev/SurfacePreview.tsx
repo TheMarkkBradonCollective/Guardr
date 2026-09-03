@@ -12,15 +12,45 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Bell, Monitor, Smartphone, Tablet } from 'lucide-react';
-import { SurfaceProvider, useSurface } from '../surfaces/SurfaceProvider';
+import { Bell, Briefcase, CreditCard, Monitor, Smartphone, Tablet, UserCheck } from 'lucide-react';
+import { useSurface } from '../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../surfaces/SurfaceAppShell';
 import { SURFACE_KINDS, surfaceLabel, type SurfaceKind } from '../surfaces/surfaceKind';
 import { GUARD_DESTINATIONS, STAFF_DESTINATIONS } from './surfacePreviewData';
+import type { SurfaceDestination } from '../surfaces/surfaceNavigation';
 import { MobileShiftsScreen } from './surfaces/MobileShiftsScreen';
 import { TabletShiftsScreen } from './surfaces/TabletShiftsScreen';
 import { DesktopOperationsScreen } from './surfaces/DesktopOperationsScreen';
+import { StaffProfilePreviewScreen } from './surfaces/StaffProfilePreviewScreen';
+import { JobPreviewScreen } from './surfaces/JobPreviewScreen';
+import { PaymentsPreviewScreen } from './surfaces/PaymentsPreviewScreen';
 import './surfacePreview.css';
+
+const PROFILE_DEST: SurfaceDestination = {
+  id: 'profiles',
+  label: 'Profiles',
+  icon: UserCheck,
+  section: 'Operations',
+  mobileRank: 0,
+  tabletQuick: true,
+};
+
+const JOB_DEST: SurfaceDestination = {
+  id: 'job-detail',
+  label: 'Job',
+  icon: Briefcase,
+  section: 'Operations',
+  mobileRank: 0,
+  tabletQuick: true,
+};
+
+const PAYMENTS_DEST: SurfaceDestination = {
+  id: 'payments-preview',
+  label: 'Payments',
+  icon: CreditCard,
+  section: 'Management',
+  mobileRank: 0,
+};
 
 const SURFACE_ICON: Record<SurfaceKind, typeof Monitor> = {
   mobile: Smartphone,
@@ -29,14 +59,18 @@ const SURFACE_ICON: Record<SurfaceKind, typeof Monitor> = {
 };
 
 export default function SurfacePreview() {
-  const [surface, setSurface] = useState<SurfaceKind>('mobile');
+  const { setSurface } = useSurface();
+  const [surface, setLocalSurface] = useState<SurfaceKind>('mobile');
+
+  useEffect(() => {
+    setSurface(surface);
+    return () => setSurface(null);
+  }, [surface, setSurface]);
 
   return (
     <>
       <div className="sfp-stage" data-surface={surface}>
-        <SurfaceProvider forceSurface={surface}>
-          <PreviewApp />
-        </SurfaceProvider>
+        <PreviewApp />
       </div>
       <div className="sfp-switcher" role="group" aria-label="Preview surface">
         {SURFACE_KINDS.map((kind) => {
@@ -46,7 +80,7 @@ export default function SurfacePreview() {
               key={kind}
               type="button"
               data-active={kind === surface ? 'true' : undefined}
-              onClick={() => setSurface(kind)}
+              onClick={() => setLocalSurface(kind)}
             >
               <Icon size={14} strokeWidth={2.25} aria-hidden />
               <span>{surfaceLabel(kind)}</span>
@@ -60,27 +94,73 @@ export default function SurfacePreview() {
 
 function PreviewApp() {
   const { surface } = useSurface();
-  const staff = surface === 'desktop';
-  const [activeId, setActiveId] = useState(staff ? 'jobs' : 'myJobs');
+  const desktopSurface = surface === 'desktop';
+  const previewPage =
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') : null;
+  const [activeId, setActiveId] = useState(
+    previewPage === 'profiles'
+      ? 'profiles'
+      : previewPage === 'jobs'
+        ? 'job-detail'
+        : previewPage === 'payments'
+          ? 'payments-preview'
+          : desktopSurface
+            ? 'jobs'
+            : 'myJobs'
+  );
+  const staffWorkspace =
+    desktopSurface ||
+    activeId === 'profiles' ||
+    activeId === 'job-detail' ||
+    activeId === 'payments-preview';
+  const destinations = [
+    PROFILE_DEST,
+    JOB_DEST,
+    PAYMENTS_DEST,
+    ...(staffWorkspace ? STAFF_DESTINATIONS : GUARD_DESTINATIONS),
+  ];
 
-  // Guards live on mobile, staff live on the desktop operations centre, so the
-  // harness swaps the destination set with the surface rather than pretending one
-  // role uses all three identically.
   useEffect(() => {
-    setActiveId(surface === 'desktop' ? 'jobs' : 'myJobs');
+    const page =
+      typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') : null;
+    setActiveId(
+      page === 'profiles'
+        ? 'profiles'
+        : page === 'jobs'
+          ? 'job-detail'
+          : page === 'payments'
+            ? 'payments-preview'
+            : surface === 'desktop'
+              ? 'jobs'
+              : 'myJobs'
+    );
   }, [surface]);
 
   return (
     <SurfaceAppShell
-      title={staff ? 'Jobs' : 'Shifts'}
-      breadcrumb={staff ? 'Operations' : undefined}
-      workspaceLabel={staff ? 'Staff operations' : 'Guard workspace'}
-      destinations={staff ? STAFF_DESTINATIONS : GUARD_DESTINATIONS}
+      title={
+        activeId === 'profiles'
+          ? 'Staff'
+          : activeId === 'job-detail'
+            ? 'Jobs'
+            : activeId === 'payments-preview'
+              ? 'Payments'
+              : staffWorkspace
+                ? 'Jobs'
+                : 'Shifts'
+      }
+      breadcrumb={staffWorkspace ? 'Operations' : undefined}
+      workspaceLabel={staffWorkspace ? 'Staff operations' : 'Guard workspace'}
+      destinations={destinations}
       activeId={activeId}
       onNavigate={setActiveId}
       notifications={
-        <button type="button" className={staff ? 'sfd-icon-btn' : 'sfm-icon-btn'} aria-label="Notifications">
-          <Bell size={staff ? 16 : 20} strokeWidth={2} aria-hidden />
+        <button
+          type="button"
+          className={desktopSurface ? 'sfd-icon-btn' : 'sfm-icon-btn'}
+          aria-label="Notifications"
+        >
+          <Bell size={desktopSurface ? 16 : 20} strokeWidth={2} aria-hidden />
         </button>
       }
       accountMenu={<div className="sfp-account">MT</div>}
@@ -90,11 +170,22 @@ function PreviewApp() {
           <span className="sfp-identity-name">Marcus Trent</span>
         </span>
       }
-      primaryAction={{ label: staff ? 'Create job' : 'Post availability', onClick: () => undefined }}
+      primaryAction={{ label: staffWorkspace ? 'Create job' : 'Post availability', onClick: () => undefined }}
       navFooter={<p className="sfp-nav-footer">Guardr preview build</p>}
-      hideChrome={surface === 'mobile'}
+      hideChrome={
+        surface === 'mobile' &&
+        activeId !== 'profiles' &&
+        activeId !== 'job-detail' &&
+        activeId !== 'payments-preview'
+      }
     >
-      {surface === 'mobile' ? (
+      {activeId === 'profiles' ? (
+        <StaffProfilePreviewScreen />
+      ) : activeId === 'job-detail' ? (
+        <JobPreviewScreen />
+      ) : activeId === 'payments-preview' ? (
+        <PaymentsPreviewScreen />
+      ) : surface === 'mobile' ? (
         <MobileShiftsScreen />
       ) : surface === 'tablet' ? (
         <TabletShiftsScreen />

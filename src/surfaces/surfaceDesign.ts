@@ -148,9 +148,9 @@ const MOBILE: SurfaceDesignScale = {
   gestureNavigation: true,
   dragAndDrop: false,
   type: {
-    display: 34,
-    title: 26,
-    heading: 20,
+    display: 40,
+    title: 28,
+    heading: 22,
     subheading: 17,
     body: 16,
     label: 14,

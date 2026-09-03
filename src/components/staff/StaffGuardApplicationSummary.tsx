@@ -7,6 +7,7 @@ import {
   guardHasApplicationIntake,
 } from '../../lib/guardApplicationIntake';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
+import { WfSectionHeader } from '../ui/wireframe';
 
 function DetailRow({ label, value }: { label: string; value?: React.ReactNode }) {
   if (value == null || value === '') return null;
@@ -41,10 +42,8 @@ export function StaffGuardApplicationSummary({ guard }: StaffGuardApplicationSum
   const hasIntake = guardHasApplicationIntake(guard);
 
   return (
-    <section className="staff-detail-section space-y-4 !px-0">
-      <div>
-        <p className="text-sm font-semibold text-brand-text">Application details</p>
-      </div>
+    <section className="staff-detail-section space-y-4">
+      <WfSectionHeader title="Application details" className="!px-0 !mb-0" />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <DetailRow label="Phone" value={guard.phone} />

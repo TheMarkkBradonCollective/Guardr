@@ -29,12 +29,12 @@ import { isExecutiveStaffRole, staffRequiresCityAssignment } from '../../lib/sta
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { StaffProfileSection, type StaffProfilePayload } from '../profile/StaffProfileSection';
 import type { ProfileSavePayload } from '../profile/UserProfileScreen';
-import { WfBadge } from '../ui/wireframe';
+import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
 import { showAppToast } from '../ui/AppToast';
-import { ArrowLeft, Mail, Phone } from 'lucide-react';
+import { ArrowLeft, Mail, Pencil, Phone, Save } from 'lucide-react';
 import { getStaffDisplayName } from '../../lib/staffProfile';
 import { getStaffRosterStatusLabel } from '../../lib/staffAccountActivation';
 import {
@@ -47,6 +47,8 @@ import type { PlatformSettings } from '../../lib/platformSettings';
 import type { StaffTeamDetailTab } from '../../lib/appNavigation';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffTimesheetsPanel } from './StaffTimesheetsPanel';
+import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
+import { StaffAccountAccessSection } from './StaffAccountAccessSection';
 
 interface StaffTeamDetailPanelProps {
   member: SecurityGuard;
@@ -360,24 +362,27 @@ export function StaffTeamDetailPanel({
         </div>
       )}
 
-      <div className="staff-profile-header flex items-start gap-4 pb-5 border-b border-brand-border">
-        <ProfileAvatar src={member.avatar} name={displayName} size="lg" rounded="xl" />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-bold text-lg">{displayName}</h2>
-            {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
-            <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
-            {isPending && <WfBadge tone="warning">Pending Director approval</WfBadge>}
-            {isInactive && <WfBadge>Inactive</WfBadge>}
-          </div>
-          <div className="staff-profile-contact-row mt-3">
-            <a href={`mailto:${member.email}`} className="staff-profile-contact-link">
-              <Mail className="w-3.5 h-3.5" aria-hidden />
-              <span>
-                <span className="text-brand-text-muted">Work · </span>
-                {member.email}
-              </span>
-            </a>
+      {platformSettings && onStaffTeamTabChange ? (
+        <div className="staff-guard-detail-tabs">
+          <StaffListFilterTabs
+            aria-label="Staff detail"
+            activeId={staffTeamTab}
+            onChange={(id) => onStaffTeamTabChange(id as StaffTeamDetailTab)}
+            tabs={[
+              { id: 'profile', label: 'Profile' },
+              { id: 'timesheets', label: 'Timesheets' },
+            ]}
+          />
+        </div>
+      ) : null}
+
+      <StaffDetailProfileHeader
+        avatar={<ProfileAvatar src={member.avatar} name={displayName} size="lg" rounded="xl" />}
+        name={displayName}
+        email={member.email}
+        emailPrefix="Work · "
+        contact={
+          <div className="staff-profile-contact-row mt-2">
             {member.personalEmail?.trim() && (
               <a href={`mailto:${member.personalEmail}`} className="staff-profile-contact-link">
                 <Mail className="w-3.5 h-3.5" aria-hidden />
@@ -394,38 +399,34 @@ export function StaffTeamDetailPanel({
               </a>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-3">
-            <div>
-              <p className="wf-metric-label">Staff ID</p>
-              <p className="wf-metric-value">{member.badgeNumber}</p>
-            </div>
-            <div>
-              <p className="wf-metric-label">Account</p>
-              <p className="wf-metric-value">{rosterStatusLabel}</p>
-            </div>
-            {memberManagedCities.length > 0 && (
-              <div className="col-span-2">
-                <p className="wf-metric-label">Service areas</p>
-                <p className="wf-metric-value">{memberManagedCities.join(', ')}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {platformSettings && onStaffTeamTabChange ? (
-        <div className="staff-guard-detail-tabs">
-          <StaffListFilterTabs
-            aria-label="Staff detail"
-            activeId={staffTeamTab}
-            onChange={(id) => onStaffTeamTabChange(id as StaffTeamDetailTab)}
-            tabs={[
-              { id: 'profile', label: 'Profile' },
-              { id: 'timesheets', label: 'Timesheets' },
-            ]}
-          />
-        </div>
-      ) : null}
+        }
+        metrics={[
+          { label: 'Staff ID', value: member.badgeNumber || '—' },
+          ...(memberManagedCities.length > 0
+            ? [{ label: 'Service areas', value: memberManagedCities.join(', ') }]
+            : []),
+        ]}
+        badges={
+          <>
+            {member.id === currentUserId && <WfBadge tone="primary">You</WfBadge>}
+            <WfBadge tone="primary">{member.staffRole || 'Staff'}</WfBadge>
+            {isPending && <WfBadge tone="warning">Pending Director approval</WfBadge>}
+            {isInactive && <WfBadge>Inactive</WfBadge>}
+          </>
+        }
+        editAction={
+          canEditProfile && !isPending && !editingProfile ? (
+            <AppButton
+              variant="outline"
+              size="sm"
+              onClick={() => setEditingProfile(true)}
+              startEnhancer={<Pencil className="w-3.5 h-3.5" />}
+            >
+              Edit details
+            </AppButton>
+          ) : undefined
+        }
+      />
 
       {staffTeamTab === 'timesheets' && platformSettings ? (
         <section className="staff-detail-section space-y-3">
@@ -437,16 +438,121 @@ export function StaffTeamDetailPanel({
         </section>
       ) : (
         <>
-      {!isPending && (
-        <section className="staff-detail-section space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold">Team profile</h3>
-            {canEditProfile && !editingProfile && (
-              <AppButton variant="outline" size="sm" onClick={() => setEditingProfile(true)}>
-                Edit profile
+      <StaffAccountAccessSection
+        title={isPending ? 'Application review' : 'Account access'}
+        leading={
+          editingProfile ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              onClick={() => void handleProfileSave()}
+              disabled={profileSaving}
+              startEnhancer={<Save className="w-3.5 h-3.5" />}
+            >
+              {profileSaving ? 'Saving…' : 'Save changes'}
+            </AppButton>
+          ) : isPending && canApproveStaffAccounts && onApproveStaffAccount ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              className="staff-action-btn--ok"
+              onClick={() => void handleApproveApplication()}
+              disabled={reviewPending}
+            >
+              Approve application
+            </AppButton>
+          ) : !isPending && canModifyMember && accountStatus !== 'active' ? (
+            <AppButton
+              variant="primary"
+              size="sm"
+              fullWidth
+              className="staff-action-btn--ok"
+              onClick={() => void handleUpdateUserStatus('active')}
+            >
+              Restore account
+            </AppButton>
+          ) : undefined
+        }
+      >
+        {editingProfile ? (
+          <AppButton
+            variant="outline"
+            size="sm"
+            fullWidth
+            disabled={profileSaving}
+            onClick={() => {
+              setEditingProfile(false);
+              setProfileError('');
+              setPhone(member.phone ?? '');
+              setPersonalEmail(member.personalEmail ?? '');
+              setStaffProfile({
+                headline: member.headline ?? '',
+                summary: member.summary ?? '',
+                about: member.about ?? member.bio ?? '',
+                specialties: member.specialties ?? [],
+              });
+            }}
+          >
+            Cancel
+          </AppButton>
+        ) : isPending && canApproveStaffAccounts && onRejectStaffAccount ? (
+          <AppButton
+            variant="danger"
+            size="sm"
+            className="staff-action-btn--danger"
+            onClick={() => void handleRejectApplication()}
+            disabled={reviewPending}
+          >
+            Deny application
+          </AppButton>
+        ) : !isPending && canModifyMember ? (
+          <>
+            {accountStatus !== 'suspended' && (
+              <AppButton
+                variant="outline"
+                size="sm"
+                className="staff-action-btn--warn"
+                onClick={() => void handleUpdateUserStatus('suspended')}
+              >
+                Deactivate
               </AppButton>
             )}
-          </div>
+            {accountStatus !== 'blocked' && (
+              <AppButton
+                variant="danger"
+                size="sm"
+                className="staff-action-btn--danger"
+                onClick={() => void handleUpdateUserStatus('blocked')}
+              >
+                Block
+              </AppButton>
+            )}
+          </>
+        ) : null}
+      </StaffAccountAccessSection>
+
+      {isPending &&
+        canApproveStaffAccounts &&
+        !onApproveStaffAccount &&
+        !onRejectStaffAccount && (
+          <section className="staff-detail-section space-y-2">
+            <p className="text-xs text-brand-text-muted">
+              Only Directors and Founders can approve or deny staff applications.
+            </p>
+          </section>
+        )}
+
+      {!isPending && canManageStaff && !canModifyMember && (
+        <section className="staff-detail-section space-y-2">
+          <p className="text-xs text-brand-text-muted">{blockedReason}</p>
+        </section>
+      )}
+
+      {!isPending && (
+        <section className={`staff-detail-section space-y-3${editingProfile ? ' staff-detail-sheet' : ''}`}>
+          <WfSectionHeader title="Team profile" className="!px-0 !mb-0" />
           {editingProfile ? (
             <>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -475,35 +581,6 @@ export function StaffTeamDetailPanel({
                 payload={staffProfile}
                 onChange={(patch) => setStaffProfile((prev) => ({ ...prev, ...patch }))}
               />
-              <div className="flex flex-wrap gap-2">
-                <AppButton
-                  variant="primary"
-                  size="sm"
-                  onClick={() => void handleProfileSave()}
-                  disabled={profileSaving}
-                >
-                  {profileSaving ? 'Saving…' : 'Save profile'}
-                </AppButton>
-                <AppButton
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setEditingProfile(false);
-                    setProfileError('');
-                    setPhone(member.phone ?? '');
-                    setPersonalEmail(member.personalEmail ?? '');
-                    setStaffProfile({
-                      headline: member.headline ?? '',
-                      summary: member.summary ?? '',
-                      about: member.about ?? member.bio ?? '',
-                      specialties: member.specialties ?? [],
-                    });
-                  }}
-                  disabled={profileSaving}
-                >
-                  Cancel
-                </AppButton>
-              </div>
               {profileError && <p className="text-sm text-red-400">{profileError}</p>}
             </>
           ) : (
@@ -515,49 +592,10 @@ export function StaffTeamDetailPanel({
         </section>
       )}
 
-      {(isPending || isInactive) && (
-        <>
-          <StaffStaffApplicationSummary member={member} />
-          {isPending &&
-            (canApproveStaffAccounts && (onApproveStaffAccount || onRejectStaffAccount) ? (
-            <section className="staff-detail-section space-y-2">
-              <h3 className="text-sm font-semibold">Application review</h3>
-              <div className="app-action-row--equal">
-                {onApproveStaffAccount && (
-                  <AppButton
-                    variant="primary"
-                    size="sm"
-                    onClick={() => void handleApproveApplication()}
-                    disabled={reviewPending}
-                  >
-                    Approve application
-                  </AppButton>
-                )}
-                {onRejectStaffAccount && (
-                  <AppButton
-                    variant="danger"
-                    size="sm"
-                    onClick={() => void handleRejectApplication()}
-                    disabled={reviewPending}
-                  >
-                    Deny application
-                  </AppButton>
-                )}
-              </div>
-            </section>
-          ) : (
-            <section className="staff-detail-section space-y-2">
-              <h3 className="text-sm font-semibold">Application review</h3>
-              <p className="text-xs text-brand-text-muted">
-                Only Directors and Founders can approve or deny staff applications.
-              </p>
-            </section>
-          ))}
-        </>
-      )}
+      {(isPending || isInactive) && <StaffStaffApplicationSummary member={member} />}
 
       <section className="staff-detail-section space-y-3">
-        <h3 className="text-sm font-semibold">Platform role</h3>
+        <WfSectionHeader title="Platform role" className="!px-0 !mb-0" />
         <p className="text-xs text-brand-text-muted leading-relaxed">
           {ROLE_DESCRIPTIONS[platformRole]}
         </p>
@@ -620,7 +658,7 @@ export function StaffTeamDetailPanel({
 
       {memberIsExecutive && (
         <section className="staff-detail-section space-y-2">
-          <h3 className="text-sm font-semibold">Service areas</h3>
+          <WfSectionHeader title="Service areas" className="!px-0 !mb-0" />
           <p className="text-xs text-brand-text-muted leading-relaxed">
             Directors and Founders run the full platform and are not assigned to a single city.
           </p>
@@ -629,7 +667,7 @@ export function StaffTeamDetailPanel({
 
       {memberIsManager && memberRequiresCity && (
         <section className="staff-detail-section space-y-2">
-          <h3 className="text-sm font-semibold">City assignment</h3>
+          <WfSectionHeader title="City assignment" className="!px-0 !mb-0" />
           <p className="text-xs text-brand-text-muted leading-relaxed">
             City managers are assigned in Service Areas. Each Manager runs one city only.
           </p>
@@ -641,7 +679,7 @@ export function StaffTeamDetailPanel({
 
       {canEditMemberCityAccess && assignableCityNames.length > 0 && (
         <section className="staff-detail-section space-y-3">
-          <h3 className="text-sm font-semibold">City assignment</h3>
+          <WfSectionHeader title="City assignment" className="!px-0 !mb-0" />
           <p className="text-xs text-brand-text-muted leading-relaxed">
             Assign the cities this staff member may work in. Directors and Founders set city
             managers in Service Areas.
@@ -684,37 +722,6 @@ export function StaffTeamDetailPanel({
           {cityError && <p className="text-sm text-red-400">{cityError}</p>}
           {cityMsg && <p className="text-sm text-brand-primary">{cityMsg}</p>}
         </section>
-      )}
-
-      {!isPending && canModifyMember ? (
-        <section className="staff-detail-section space-y-2">
-          <h3 className="text-sm font-semibold">Account controls</h3>
-          <div className="app-action-row--equal">
-            {accountStatus !== 'suspended' && (
-              <AppButton variant="outline" size="sm" onClick={() => void handleUpdateUserStatus('suspended')}>
-                Suspend
-              </AppButton>
-            )}
-            {accountStatus !== 'blocked' && (
-              <AppButton variant="danger" size="sm" onClick={() => void handleUpdateUserStatus('blocked')}>
-                Block
-              </AppButton>
-            )}
-            {accountStatus !== 'active' && (
-              <AppButton variant="primary" size="sm" onClick={() => void handleUpdateUserStatus('active')}>
-                Restore account
-              </AppButton>
-            )}
-          </div>
-        </section>
-      ) : (
-        !isPending &&
-        canManageStaff && (
-          <section className="staff-detail-section space-y-2">
-            <h3 className="text-sm font-semibold">Account controls</h3>
-            <p className="text-xs text-brand-text-muted">{blockedReason}</p>
-          </section>
-        )
       )}
         </>
       )}

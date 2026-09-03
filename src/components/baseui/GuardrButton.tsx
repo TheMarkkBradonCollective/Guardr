@@ -66,20 +66,23 @@ export function GuardrButton({
   const isDanger = kind === 'danger';
 
   const primaryStyle = {
-    backgroundColor: theme.colors.contentPrimary,   // black in light, white in dark
-    color:           theme.colors.contentInversePrimary,
+    backgroundColor: theme.colors.buttonPrimaryFill,
+    color:           theme.colors.buttonPrimaryText,
     border:          'none',
     borderRadius:    '8px',
     fontWeight:      600,
     ':hover': {
-      backgroundColor: theme.colors.contentSecondary,
+      backgroundColor: theme.colors.buttonPrimaryHover,
+    },
+    ':active': {
+      backgroundColor: theme.colors.buttonPrimaryActive,
     },
   };
 
   const secondaryStyle = {
     backgroundColor: 'transparent',
     color:           theme.colors.contentPrimary,
-    border:          `1.5px solid ${theme.colors.contentPrimary}`,
+    border:          `1px solid ${theme.colors.contentPrimary}`,
     borderRadius:    '8px',
     fontWeight:      600,
     ':hover': {

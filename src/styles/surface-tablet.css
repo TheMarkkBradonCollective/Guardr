@@ -1022,3 +1022,11 @@
   padding: 20px var(--sf-gutter);
   overflow: hidden;
 }
+
+/* Beat index.css form-factor letterboxes — tablet is its own product. */
+body[data-surface='tablet'] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+body[data-surface='tablet'] .client-content-shell {
+  max-width: none !important;
+  width: 100%;
+  margin-inline: 0;
+}

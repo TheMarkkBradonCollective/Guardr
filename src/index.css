@@ -5225,10 +5225,131 @@ html.theme-light .staff-ops-btn-primary:hover {
 
 .staff-detail-header {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
   gap: 1rem;
   padding: 1.25rem;
   border-bottom: 1px solid var(--brand-border);
+}
+
+.staff-detail-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.staff-detail-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.staff-detail-identity-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.staff-detail-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.staff-detail-name,
+.staff-detail-header h2 {
+  margin: 0;
+  font-family: var(--uber-font-display, var(--sf-font-display, inherit));
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.staff-detail-edit {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.staff-detail-edit > * {
+  display: inline-flex !important;
+  width: auto !important;
+  flex: 0 0 auto !important;
+}
+
+.staff-detail-edit button {
+  width: auto !important;
+}
+
+.staff-account-access-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.staff-detail-header-email {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  margin-top: var(--space-1, 4px);
+  min-width: 0;
+  max-width: 100%;
+  font-size: 0.875rem;
+  color: var(--brand-text-muted);
+}
+
+.staff-detail-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-3, 12px);
+}
+
+/* Metric strip — KPI label/value pairs, aligned to the 4px baseline grid. */
+.staff-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3, 12px) var(--space-4, 16px);
+  margin-top: var(--space-4, 16px);
+}
+
+.staff-detail-metrics--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.staff-detail-metric {
+  min-width: 0;
+}
+
+.staff-detail-metric .wf-metric-label {
+  display: block;
+  margin-bottom: var(--space-1, 4px);
+}
+
+.staff-detail-metric .wf-metric-value {
+  overflow-wrap: break-word;
+  font-variant-numeric: tabular-nums;
+}
+
+.staff-detail-metric--wide {
+  grid-column: 1 / -1;
+}
+
+/* Action block — bordered, flat, no shadow (guardedesign.md §A.7). */
+.staff-account-access {
+  border-bottom: 1px solid var(--brand-border);
+}
+
+/* Sub-group label inside a detail section (Business, Security needs, …). */
+.staff-detail-subhead {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--brand-text-muted);
 }
 
 .staff-detail-section {
@@ -5320,18 +5441,28 @@ html.theme-light .staff-ops-btn-primary:hover {
 
 .staff-detail-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   width: 100%;
   align-items: stretch;
 }
 
+.staff-detail-actions--primary {
+  grid-template-columns: 1fr;
+}
+
+.staff-detail-actions > *,
 .staff-detail-actions > button,
 .staff-detail-actions > .app-button-primary,
 .staff-detail-actions > .app-button-outline,
 .staff-detail-actions > .app-button-danger {
   width: 100%;
   min-width: 0;
+}
+
+/* An odd trailing action would otherwise sit half-width and alone on its row. */
+.staff-detail-actions > *:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 .staff-guard-detail-top-bar--sticky {
@@ -18399,17 +18530,17 @@ body[data-form-factor="tablet"] .role-app-shell--docked .role-main > .app-screen
 }
 
 body[data-surface="desktop"] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
-  max-width: 52rem;
-  margin-inline: auto;
+  max-width: none;
+  margin-inline: 0;
 }
 
 body[data-surface="desktop"] .role-app-shell .app-screen--wide {
-  max-width: 68rem;
+  max-width: none;
 }
 
 body[data-surface="desktop"] .client-content-shell {
-  max-width: min(1100px, 100%);
-  margin-inline: auto;
+  max-width: none;
+  margin-inline: 0;
 }
 
 body[data-form-factor="tablet"] .client-content-shell {
@@ -18419,8 +18550,8 @@ body[data-form-factor="tablet"] .client-content-shell {
 
 body[data-surface="desktop"] .client-form-shell,
 body[data-surface="desktop"] .guard-form-shell {
-  max-width: min(44rem, 100%);
-  margin-inline: auto;
+  max-width: none;
+  margin-inline: 0;
 }
 
 body[data-form-factor="tablet"] .client-form-shell,
@@ -21011,12 +21142,17 @@ body[data-form-factor="tablet"] .uber-app-shell {
 }
 
 .uber-app-shell .staff-detail-actions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   width: 100%;
 }
 
+.uber-app-shell .staff-detail-actions--primary {
+  grid-template-columns: 1fr;
+}
+
+.uber-app-shell .staff-detail-actions > *,
 .uber-app-shell .staff-detail-actions > button,
 .uber-app-shell .staff-detail-actions > .app-button-primary,
 .uber-app-shell .staff-detail-actions > .app-button-outline,
@@ -21025,17 +21161,19 @@ body[data-form-factor="tablet"] .uber-app-shell {
   min-width: 0;
 }
 
-/* Account control color coding — green / yellow / red (beats Base Web Styletron) */
+/* Account actions — one button family (guardedesign.md §5).
+   Semantic colour is reserved for status pills, so an affirmative action is the
+   black primary CTA, a reversible one is the neutral outline, and a destructive
+   one carries the danger outline. Beats Base Web's Styletron inline styles. */
 .uber-app-shell .staff-detail-actions button.staff-action-btn--ok,
 .staff-detail-actions button.staff-action-btn--ok,
 .uber-app-shell .staff-detail-actions .staff-action-btn--ok,
 .staff-detail-actions .staff-action-btn--ok,
 button.staff-action-btn--ok {
-  background-color: #15803d !important;
+  background-color: var(--brand-primary) !important;
   background-image: none !important;
-  border-color: #15803d !important;
-  border-style: solid !important;
-  color: #ffffff !important;
+  border: 1px solid var(--brand-primary) !important;
+  color: var(--brand-accent-text) !important;
 }
 
 .uber-app-shell .staff-detail-actions button.staff-action-btn--ok:hover:not(:disabled),
@@ -21043,35 +21181,42 @@ button.staff-action-btn--ok {
 .uber-app-shell .staff-detail-actions .staff-action-btn--ok:hover:not(:disabled),
 .staff-detail-actions .staff-action-btn--ok:hover:not(:disabled),
 button.staff-action-btn--ok:hover:not(:disabled) {
-  background-color: #166534 !important;
-  border-color: #166534 !important;
-  color: #ffffff !important;
+  background-color: var(--brand-primary-hover) !important;
+  border-color: var(--brand-primary-hover) !important;
+  color: var(--brand-accent-text) !important;
 }
 
 .uber-app-shell .staff-detail-actions .staff-action-btn--warn,
-.staff-detail-actions .staff-action-btn--warn {
-  background-color: #ca8a04 !important;
-  border-color: #ca8a04 !important;
-  color: #ffffff !important;
+.staff-detail-actions .staff-action-btn--warn,
+button.staff-action-btn--warn {
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 1px solid var(--uber-border-dark, var(--brand-border)) !important;
+  color: var(--brand-text) !important;
 }
 
 .uber-app-shell .staff-detail-actions .staff-action-btn--warn:hover:not(:disabled),
-.staff-detail-actions .staff-action-btn--warn:hover:not(:disabled) {
-  background-color: #a16207 !important;
-  border-color: #a16207 !important;
+.staff-detail-actions .staff-action-btn--warn:hover:not(:disabled),
+button.staff-action-btn--warn:hover:not(:disabled) {
+  background-color: var(--brand-bg-sec) !important;
+  border-color: var(--brand-text) !important;
 }
 
 .uber-app-shell .staff-detail-actions .staff-action-btn--danger,
-.staff-detail-actions .staff-action-btn--danger {
-  background-color: #dc2626 !important;
-  border-color: #dc2626 !important;
-  color: #ffffff !important;
+.staff-detail-actions .staff-action-btn--danger,
+button.staff-action-btn--danger {
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 1px solid var(--status-danger) !important;
+  color: var(--status-danger) !important;
 }
 
 .uber-app-shell .staff-detail-actions .staff-action-btn--danger:hover:not(:disabled),
-.staff-detail-actions .staff-action-btn--danger:hover:not(:disabled) {
-  background-color: #b91c1c !important;
-  border-color: #b91c1c !important;
+.staff-detail-actions .staff-action-btn--danger:hover:not(:disabled),
+button.staff-action-btn--danger:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--status-danger) 8%, transparent) !important;
+  border-color: var(--status-danger) !important;
+  color: var(--status-danger) !important;
 }
 
 .uber-app-shell .staff-detail-actions .staff-action-btn--ok:disabled,
@@ -21080,7 +21225,7 @@ button.staff-action-btn--ok:hover:not(:disabled) {
 .staff-detail-actions .staff-action-btn--ok:disabled,
 .staff-detail-actions .staff-action-btn--warn:disabled,
 .staff-detail-actions .staff-action-btn--danger:disabled {
-  opacity: 0.45 !important;
+  opacity: 0.4 !important;
 }
 
 .uber-app-shell .app-form-section,
@@ -22177,8 +22322,13 @@ body[data-surface="desktop"] .app-metric-cell-value {
   margin-bottom: 0 !important;
 }
 
-body[data-surface="desktop"] .staff-detail-pane {
-  max-width: 52rem;
+body[data-surface='desktop'] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+body[data-surface='desktop'] .sfd-shell-canvas .app-screen,
+body[data-surface='desktop'] .sfd-shell-canvas .staff-detail-pane,
+body[data-surface='desktop'] .sfd-shell-canvas .sfp-staff-profile-preview {
+  max-width: none !important;
+  margin-inline: 0 !important;
+  width: 100% !important;
 }
 
 .staff-shell .staff-overview-focus-band,
@@ -22225,17 +22375,23 @@ body[data-surface="desktop"] .staff-detail-pane {
 
 body[data-surface="desktop"] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
 body[data-surface="desktop"] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed) {
-  max-width: 62rem !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  width: 100% !important;
 }
 
 body[data-surface="desktop"] .role-app-shell .app-screen--wide,
 body[data-surface="desktop"] .role-app-shell .app-screen--wide,
 body[data-surface="desktop"] .role-app-shell .client-home-screen {
-  max-width: 78rem !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  width: 100% !important;
 }
 
 body[data-surface="desktop"] .client-content-shell {
-  max-width: min(1280px, 100%) !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  width: 100% !important;
 }
 
 body[data-surface="desktop"] .app-dashboard-split {
