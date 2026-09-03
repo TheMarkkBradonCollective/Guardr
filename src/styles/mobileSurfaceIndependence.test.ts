@@ -39,6 +39,8 @@ describe('mobile CSS independence', () => {
       /min-width: 744px[\s\S]+?\.sfm-drawer,\s*\n\s*body\[data-surface='mobile'\] \.sfm-drawer-backdrop \{\s*\n\s*position: absolute;/,
     );
     assert.match(mobileCss, /width: min\(304px, 88%\)/);
+    assert.match(mobileCss, /\.sfm-drawer-backdrop \{[\s\S]{0,80}z-index: 1200;/);
+    assert.match(mobileCss, /\.sfm-drawer \{[\s\S]{0,200}z-index: 1210;/);
   });
 
   it('neutralizes viewport Tailwind grids so the phone column stays stacked', () => {

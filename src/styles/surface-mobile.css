@@ -240,12 +240,14 @@ body[data-surface='mobile'] {
   white-space: nowrap;
 }
 
-/* ── Hamburger drawer (staff mobile) ─────────────────────────────────────── */
+/* ── Hamburger drawer (staff mobile) ───────────────────────────────────────
+   Chrome is z-index 1100 so it sits above Leaflet. The drawer must stack
+   above that chrome or the header band clips the Create job CTA. */
 
 .sfm-drawer-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: 1200;
   border: none;
   margin: 0;
   padding: 0;
@@ -265,7 +267,7 @@ body[data-surface='mobile'] {
   top: 0;
   bottom: 0;
   left: 0;
-  z-index: 130;
+  z-index: 1210;
   display: flex;
   flex-direction: column;
   width: min(304px, 88%);
@@ -1612,7 +1614,7 @@ body[data-surface='mobile'] .sfm-shell .app-empty-state {
 
 /* ── Controls ────────────────────────────────────────────────────────────── */
 
-body[data-surface='mobile'] .sfm-shell button:not(.sfm-tab):not(.sfm-icon-btn):not(.sfm-sheet-close):not(.sfm-more-row):not(.sfm-account-row):not(.sfm-shell-identity),
+body[data-surface='mobile'] .sfm-shell button:not(.sfm-tab):not(.sfm-icon-btn):not(.sfm-sheet-close):not(.sfm-more-row):not(.sfm-account-row):not(.sfm-shell-identity):not(.sfm-drawer-cta):not(.sfm-drawer-row),
 body[data-surface='mobile'] .sfm-shell .app-btn,
 body[data-surface='mobile'] .sfm-shell .app-button {
   min-height: 44px;
