@@ -1247,9 +1247,9 @@ function carouselCover(dir) {
 
 function whoFinds(file, dims) {
   return phoneAd(file, dims, {
-    line1: 'FIND A GUARD.',
-    line2: 'YOU PICK.',
-    lede: 'Whoever is hiring finds licensed guards on the map.',
+    line1: 'ONE PLATFORM.',
+    line2: 'EVERY NEED.',
+    lede: 'For every kind of customer who hires.',
     screen: 'screen-who-hiring.png',
     shot: 'floor',
   });

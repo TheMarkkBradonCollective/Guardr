@@ -5,7 +5,7 @@ Black-and-white. One idea per post. Brand: **Guardr** · **www.guardr.co**
 Re-render B&W: `node scripts/render-promo-posts.mjs --bw`  
 Re-render carousels only: `node scripts/render-promo-posts.mjs --carousel`
 
-**Start here:** who can find a licensed guard — **personal, business, and security companies.** Then you pick who works.
+**Start here:** one platform for every kind of customer who hires — personal, business, and security companies.
 
 ---
 
@@ -13,9 +13,9 @@ Re-render carousels only: `node scripts/render-promo-posts.mjs --carousel`
 
 [`instagram/ig-who-finds.png`](../../assets/marketing/posts/instagram/ig-who-finds.png)
 
-Who is hiring? on the phone (Personal, Business, Security company). Type at the bottom: **FIND A GUARD. YOU PICK.**
+Who is hiring? on the phone (Personal, Business, Security company). Type at the bottom: **ONE PLATFORM. EVERY NEED.**
 
-**Caption:** Find a licensed California guard. Whoever is hiring — you pick who works.
+**Caption:** One platform for every kind of customer who hires. Licensed California guards — you pick who works.
 
 Guardr is the platform — not a staffing agency. Not dispatch. Clients contract directly per job.
 
@@ -37,7 +37,7 @@ Opens on **who can hire**, with the sign-in page on the phone. Ending cover is s
 
 | # | File | Screen | Line |
 |---|---|---|---|
-| 1 Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-clients/00-cover.png) | Who is hiring? | FIND A GUARD. YOU PICK. |
+| 1 Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-clients/00-cover.png) | Who is hiring? | ONE PLATFORM. EVERY NEED. |
 | 2 | [`01-tonight.png`](../../assets/marketing/posts/instagram/carousel-clients/01-tonight.png) | Map | NEED A GUARD TONIGHT? |
 | 3 | [`02-post-pick.png`](../../assets/marketing/posts/instagram/carousel-clients/02-post-pick.png) | Jobs | POST A JOB. PICK A GUARD. |
 | 4 | [`03-chat.png`](../../assets/marketing/posts/instagram/carousel-clients/03-chat.png) | Chat | TALK TO WHO APPLIES. |
@@ -100,7 +100,7 @@ Link sticker: **https://www.guardr.co**
 
 | Image | Line |
 |---|---|
-| [`stories/story-who-finds.png`](../../assets/marketing/posts/stories/story-who-finds.png) | FIND A GUARD. YOU PICK. |
+| [`stories/story-who-finds.png`](../../assets/marketing/posts/stories/story-who-finds.png) | ONE PLATFORM. EVERY NEED. |
 | [`stories/story-how-it-works.png`](../../assets/marketing/posts/stories/story-how-it-works.png) | YOU PICK WHO WORKS. |
 | [`stories/story-tonight-map.png`](../../assets/marketing/posts/stories/story-tonight-map.png) | NEED A GUARD TONIGHT? |
 | [`stories/story-no-dispatcher.png`](../../assets/marketing/posts/stories/story-no-dispatcher.png) | NO DISPATCHER. |
@@ -113,7 +113,7 @@ Link sticker: **https://www.guardr.co**
 
 | Image | Line |
 |---|---|
-| [`landscape/wide-who-finds.png`](../../assets/marketing/posts/landscape/wide-who-finds.png) | FIND A GUARD. YOU PICK. |
+| [`landscape/wide-who-finds.png`](../../assets/marketing/posts/landscape/wide-who-finds.png) | ONE PLATFORM. EVERY NEED. |
 | [`landscape/wide-marketplace.png`](../../assets/marketing/posts/landscape/wide-marketplace.png) | YOU PICK WHO WORKS. |
 | [`landscape/wide-tonight-map.png`](../../assets/marketing/posts/landscape/wide-tonight-map.png) | NEED A GUARD TONIGHT? |
 | [`landscape/wide-no-dispatcher.png`](../../assets/marketing/posts/landscape/wide-no-dispatcher.png) | NO DISPATCHER. |
