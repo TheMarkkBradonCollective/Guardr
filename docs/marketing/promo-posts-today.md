@@ -5,27 +5,47 @@ Black-and-white. One idea per post. Brand: **Guardr** · **www.guardr.co**
 Re-render B&W: `node scripts/render-promo-posts.mjs --bw`  
 Re-render carousels only: `node scripts/render-promo-posts.mjs --carousel`
 
-Lead with the **carousels** — Anytime. Anywhere. cover, then three different app screens, then a 5th screenshot on the ending cover.
+**Start here:** who can find a licensed guard — **personal, business, and security companies.** Then you pick who works.
 
 ---
 
-## Instagram carousels (post these)
+## Post this first (single)
+
+[`instagram/ig-who-finds.png`](../../assets/marketing/posts/instagram/ig-who-finds.png)
+
+**PERSONAL. BUSINESS. SECURITY COMPANIES.**
+
+**Caption:** Personal. Business. Security companies. Find licensed California guards — you pick who works.
+
+Guardr is the platform — not a staffing agency. Not dispatch. Clients contract directly per job.
+
+www.guardr.co
+#Guardr #SecurityMarketplace #California
+
+Stories: [`stories/story-who-finds.png`](../../assets/marketing/posts/stories/story-who-finds.png)  
+LinkedIn / Facebook: [`landscape/wide-who-finds.png`](../../assets/marketing/posts/landscape/wide-who-finds.png)
+
+---
+
+## Instagram carousels
 
 Two slideshows. Upload in order as an Instagram carousel (square). Each phone slide is a **different tab** — Map, Jobs, Chat, then You on the closer.
 
 ### For clients — `instagram/carousel-clients/`
 
+Opens on **who can hire**, not the tagline. Ending cover is still Anytime. Anywhere.
+
 | # | File | Screen | Line |
 |---|---|---|---|
-| 1 Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-clients/00-cover.png) | — | ANYTIME. ANYWHERE. |
+| 1 Cover | [`00-cover.png`](../../assets/marketing/posts/instagram/carousel-clients/00-cover.png) | — | PERSONAL. BUSINESS. SECURITY COMPANIES. |
 | 2 | [`01-tonight.png`](../../assets/marketing/posts/instagram/carousel-clients/01-tonight.png) | Map | NEED A GUARD TONIGHT? |
 | 3 | [`02-post-pick.png`](../../assets/marketing/posts/instagram/carousel-clients/02-post-pick.png) | Jobs | POST A JOB. PICK A GUARD. |
 | 4 | [`03-chat.png`](../../assets/marketing/posts/instagram/carousel-clients/03-chat.png) | Chat | TALK TO WHO APPLIES. |
 | 5 | [`04-end.png`](../../assets/marketing/posts/instagram/carousel-clients/04-end.png) | You + ending cover | ANYTIME. ANYWHERE. |
 
-**Caption:** Need a guard tonight? See who’s nearby. You pick who works.
+**Caption:** Personal, business, or a security company — find licensed California guards. You pick who works.
 
-Guardr is the platform — licensed California guards and businesses find each other and contract directly per job. Not a staffing agency. Not dispatch.
+Guardr is the platform — licensed California guards and clients find each other and contract directly per job. Not a staffing agency. Not dispatch.
 
 www.guardr.co
 #Guardr #SecurityMarketplace #California
@@ -80,6 +100,7 @@ Link sticker: **https://www.guardr.co**
 
 | Image | Line |
 |---|---|
+| [`stories/story-who-finds.png`](../../assets/marketing/posts/stories/story-who-finds.png) | PERSONAL. BUSINESS. SECURITY COMPANIES. |
 | [`stories/story-how-it-works.png`](../../assets/marketing/posts/stories/story-how-it-works.png) | YOU PICK WHO WORKS. |
 | [`stories/story-tonight-map.png`](../../assets/marketing/posts/stories/story-tonight-map.png) | NEED A GUARD TONIGHT? |
 | [`stories/story-no-dispatcher.png`](../../assets/marketing/posts/stories/story-no-dispatcher.png) | NO DISPATCHER. |
@@ -92,6 +113,7 @@ Link sticker: **https://www.guardr.co**
 
 | Image | Line |
 |---|---|
+| [`landscape/wide-who-finds.png`](../../assets/marketing/posts/landscape/wide-who-finds.png) | PERSONAL. BUSINESS. SECURITY COMPANIES. |
 | [`landscape/wide-marketplace.png`](../../assets/marketing/posts/landscape/wide-marketplace.png) | YOU PICK WHO WORKS. |
 | [`landscape/wide-tonight-map.png`](../../assets/marketing/posts/landscape/wide-tonight-map.png) | NEED A GUARD TONIGHT? |
 | [`landscape/wide-no-dispatcher.png`](../../assets/marketing/posts/landscape/wide-no-dispatcher.png) | NO DISPATCHER. |

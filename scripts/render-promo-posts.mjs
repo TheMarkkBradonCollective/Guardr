@@ -530,7 +530,19 @@ h1 {
   }
 
   if (layout === 'punch-type') {
-    const titleSize = isStory ? 140 : isWide ? 72 : 118;
+    const lines = [post.line1, post.line2, post.line3].filter(Boolean);
+    const stacked = lines.length > 2;
+    const titleSize = isStory
+      ? stacked
+        ? 76
+        : 140
+      : isWide
+        ? stacked
+          ? 42
+          : 72
+        : stacked
+          ? 72
+          : 118;
     const subSize = isStory ? 36 : isWide ? 22 : 28;
     const mark = isStory ? 620 : isWide ? 340 : 520;
     return `<!DOCTYPE html>
@@ -555,7 +567,7 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
   position: absolute; left: ${isWide ? 48 : 52}px; right: ${isWide ? 48 : 52}px;
   top: 0; bottom: 0;
   display: flex; flex-direction: column; justify-content: center;
-  align-items: flex-start; gap: ${isStory ? 22 : 14}px;
+  align-items: flex-start; gap: ${isStory ? 22 : stacked ? 12 : 14}px;
   padding: ${isStory ? '0 0 40px' : isWide ? '0' : '0 0 24px'};
 }
 .lock { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 800; letter-spacing: 0.34em; }
@@ -568,7 +580,11 @@ h1 {
   font-size: ${titleSize}px; font-weight: 900; letter-spacing: -0.07em;
   line-height: 0.8; text-transform: uppercase;
 }
-.lede { font-size: ${subSize}px; font-weight: 500; color: #b8b8b8; max-width: 16ch; line-height: 1.2; }
+h1 .long {
+  font-size: ${isWide ? 0.92 : 0.82}em;
+  letter-spacing: -0.055em;
+}
+.lede { font-size: ${subSize}px; font-weight: 500; color: #b8b8b8; max-width: ${stacked ? '22ch' : '16ch'}; line-height: 1.2; }
 .site { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; color: #fff; }
 .carousel-meta {
   display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
@@ -585,7 +601,13 @@ h1 {
   <div class="copy">
     <div class="lock"><img src="${logoUrl}" alt="" /><span>GUARDR</span></div>
     ${post.kicker ? `<p class="kicker">${esc(post.kicker)}</p>` : ''}
-    <h1>${esc(post.line1)}${post.line2 ? `<br/>${esc(post.line2)}` : ''}</h1>
+    <h1>${lines
+      .map((line, i) =>
+        stacked && i === lines.length - 1
+          ? `<span class="long">${esc(line)}</span>`
+          : esc(line),
+      )
+      .join('<br/>')}</h1>
     <p class="lede">${esc(post.lede)}</p>
     ${post.site ? `<p class="site">${esc(post.site)}</p>` : ''}
     ${carouselPager(post)}
@@ -1191,6 +1213,20 @@ function carouselCover(dir) {
   };
 }
 
+function whoFinds(file, dims) {
+  return {
+    file,
+    kind: 'graphic',
+    layout: 'punch-type',
+    ...dims,
+    kicker: 'WHO CAN FIND A GUARD',
+    line1: 'PERSONAL.',
+    line2: 'BUSINESS.',
+    line3: 'SECURITY COMPANIES.',
+    lede: 'Licensed California guards. You pick who works.',
+  };
+}
+
 function carouselEnd(file, { kicker, screen, slide, slides = 5 }) {
   return phoneAd(file, SQ, {
     kicker,
@@ -1302,6 +1338,7 @@ const POSTS = [
     ledeHtml: 'Licensed. On the map. Your call.',
     phones: ['screen-map.png'],
   },
+  whoFinds('instagram/ig-who-finds.png', SQ),
   {
     file: 'instagram/ig-how-it-works.png',
     kind: 'graphic',
@@ -1429,6 +1466,7 @@ const POSTS = [
     ledeHtml: 'Licensed. On the map. Your call.',
     phones: ['screen-map.png'],
   },
+  whoFinds('stories/story-who-finds.png', ST),
   phoneAd('stories/story-tonight-map.png', ST, {
     line1: 'NEED A GUARD',
     line2: 'TONIGHT?',
@@ -1528,6 +1566,7 @@ const POSTS = [
     ledeHtml: 'Licensed. On the map. Your call.',
     phones: ['screen-map.png'],
   },
+  whoFinds('landscape/wide-who-finds.png', WD),
   {
     file: 'landscape/wide-guards.png',
     kind: 'graphic',
@@ -1564,9 +1603,10 @@ const POSTS = [
     flip: true,
   }),
 
-  // Instagram carousels — cover is ANYTIME. ANYWHERE. Then three different
-  // app tabs, then a 4th screenshot on the ending cover.
-  carouselCover('instagram/carousel-clients'),
+  // Instagram carousels — clients open on who can hire (personal, business,
+  // security companies). Guards keep Anytime. Anywhere. Then unique app tabs,
+  // then a 4th screenshot on the ending cover.
+  whoFinds('instagram/carousel-clients/00-cover.png', SQ),
   phoneAd('instagram/carousel-clients/01-tonight.png', SQ, {
     kicker: 'For clients',
     line1: 'NEED A GUARD',
@@ -1723,11 +1763,14 @@ async function main() {
   await mkdir(path.join(OUT, 'landscape'), { recursive: true });
   const bwOnly = process.argv.includes('--bw');
   const carouselOnly = process.argv.includes('--carousel');
-  const list = carouselOnly
-    ? POSTS.filter((p) => String(p.file).includes('carousel-'))
-    : bwOnly
-      ? POSTS.filter((p) => p.kind === 'graphic')
-      : POSTS;
+  const filter = process.argv.find((a) => a.startsWith('--filter='))?.slice(9);
+  const list = filter
+    ? POSTS.filter((p) => String(p.file).includes(filter))
+    : carouselOnly
+      ? POSTS.filter((p) => String(p.file).includes('carousel-'))
+      : bwOnly
+        ? POSTS.filter((p) => p.kind === 'graphic')
+        : POSTS;
   for (let i = 0; i < list.length; i += 1) {
     const post = list[i];
     await screenshot(htmlFor(post), path.join(OUT, post.file), post.w, post.h, i);

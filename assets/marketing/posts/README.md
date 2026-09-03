@@ -2,7 +2,8 @@
 
 Ready-to-upload social pictures.
 
-- **Carousels (post these):** `instagram/carousel-clients/` and `instagram/carousel-guards/` — Anytime. Anywhere. cover, three different app screens, then a 5th screenshot on the ending cover
+- **Start here:** `instagram/ig-who-finds.png` — PERSONAL. BUSINESS. SECURITY COMPANIES. (who can find a guard)
+- **Carousels (post these):** `instagram/carousel-clients/` opens on that same who-can-hire cover, then three different app screens, then Anytime. Anywhere. on the ending cover. `instagram/carousel-guards/` still opens Anytime. Anywhere.
 - **Phone pack:** `instagram/ig-marketplace.png` (YOU PICK WHO WORKS) plus `ig-tonight-map`, `ig-see-nearby`, `ig-no-dispatcher`, `ig-post-pick`, `ig-your-site`, `ig-open-call`, `ig-apply`, `ig-two-live`
 - **Captions:** [`docs/marketing/promo-posts-today.md`](../../../docs/marketing/promo-posts-today.md)
 - **Instagram 1:1:** `instagram/`
