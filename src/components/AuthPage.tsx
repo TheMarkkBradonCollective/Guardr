@@ -36,6 +36,7 @@ import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
 import { AuthFormHeader } from './auth/AuthFormChrome';
 import { StaffSignupNotice } from './auth/StaffSignupNotice';
+import { ClientSignupIntake } from './auth/clientSignup/ClientSignupIntake';
 import { personNameFromPayload } from '../lib/personName';
 import { SessionUser, SecurityGuard, Client, GUARD_SPECIALTY_OPTIONS, type ClientType } from '../types';
 import { isOrganizationClientType, isSecurityCompanyClientType, normalizeClientType } from '../lib/clientType';
@@ -79,81 +80,6 @@ function clampHourlyRate(raw: string): number {
   if (!Number.isFinite(parsed)) return DEFAULT_GUARD_HOURLY_RATE;
   return Math.min(MAX_GUARD_HOURLY_RATE, Math.max(MIN_GUARD_HOURLY_RATE, parsed));
 }
-
-const SERVICE_TYPE_OPTIONS = [
-  'Event security',
-  'Site patrol',
-  'Access control',
-  'Executive protection',
-  'Armed transport',
-  'Loss prevention / retail',
-  'Construction site',
-  'Residential / HOA',
-  'Corporate / office',
-  'Hospital / healthcare',
-  'School / campus',
-  'Fire watch',
-  'Other',
-] as const;
-
-const PROPERTY_TYPE_OPTIONS = [
-  'Home / residence',
-  'Private event',
-  'Retail storefront',
-  'Office building',
-  'Warehouse / industrial',
-  'Residential / HOA',
-  'Event venue',
-  'Construction site',
-  'Hospital / healthcare',
-  'School / campus',
-  'Restaurant / bar',
-  'Hotel / hospitality',
-  'Nightclub / bar',
-  'Other',
-] as const;
-
-const INDUSTRY_OPTIONS = [
-  'Retail',
-  'Hospitality & events',
-  'Construction',
-  'Healthcare',
-  'Education',
-  'Corporate / office',
-  'Government',
-  'Logistics / warehouse',
-  'Entertainment & nightlife',
-  'Real estate / property',
-  'Non-profit',
-  'Other',
-] as const;
-
-const ENGAGEMENT_TYPE_OPTIONS = [
-  { value: 'one-time', label: 'One-time event' },
-  { value: 'recurring', label: 'Ongoing / recurring' },
-  { value: 'temporary', label: 'Temporary / short-term' },
-] as const;
-
-const BUSINESS_TYPE_OPTIONS = [
-  'LLC',
-  'Corporation',
-  'Sole Proprietor',
-  'Partnership',
-  'Non-profit',
-  'Government / Public agency',
-  'Individual',
-  'Other',
-] as const;
-
-const HOW_HEARD_OPTIONS = [
-  'Referred by a guard or staff member',
-  'Google / web search',
-  'Social media',
-  'Word of mouth',
-  'Industry event',
-  'Advertisement',
-  'Other',
-] as const;
 
 interface AuthHeroFeature {
   icon: LucideIcon;
@@ -287,12 +213,6 @@ interface AuthPageProps {
   open?: boolean;
 }
 
-/** Lightweight person entry for the referredBy autocomplete */
-interface ReferralPerson {
-  id: string;
-  name: string;
-  role: 'guard' | 'staff';
-}
 
 function resolveStoredPassword(
   emailLower: string,

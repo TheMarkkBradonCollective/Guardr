@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import type { ClientType } from '../../types';
-import { normalizeClientType, isOrganizationClientType } from '../../lib/clientType';
+import { normalizeClientType } from '../../lib/clientType';
 import {
   clientHasCapability,
   clientHomeQuickActions,
@@ -38,7 +38,7 @@ export function useClientCapabilities() {
       isPersonal: clientType === 'personal',
       isBusiness: clientType === 'business',
       isSecurityCompany: clientType === 'security-company',
-      isOrganization: isOrganizationClientType(clientType),
+      isOrganization: clientType === 'business' || clientType === 'security-company',
       has: (capability: ClientCapability) => clientHasCapability(clientType, capability),
       maxGuardsPerRequest: clientMaxGuardsPerRequest(clientType),
       maxSavedLocations: clientMaxSavedLocations(clientType),
