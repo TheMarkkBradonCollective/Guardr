@@ -683,53 +683,39 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
   pointer-events: none;
   z-index: 0;
 }
-.stage { position: absolute; inset: 0; z-index: 1; }
+.stage { position: absolute; inset: 0; z-index: 6; }
 .device {
   position: absolute;
-  background: linear-gradient(165deg, #3a3a3a 0%, #141414 42%, #050505 100%);
+  background: linear-gradient(165deg, #e8e8ea 0%, #c2c2c6 40%, #d8d8dc 100%);
   border-radius: 62px;
   padding: 11px;
   box-shadow:
-    inset 0 1px 1px rgba(255,255,255,0.22),
-    inset 0 -2px 3px rgba(0,0,0,0.65),
-    0 0 0 1px #2a2a2a,
-    0 40px 90px rgba(0,0,0,0.62);
+    inset 0 1px 1px rgba(255,255,255,.7),
+    inset 0 -1px 2px rgba(0,0,0,.18),
+    0 0 0 1.5px #d0d0d4,
+    0 40px 90px rgba(0,0,0,.55);
 }
 .device img {
+  position: relative;
+  z-index: 5;
   display: block;
   width: 100%;
   border-radius: 51px;
-}
-.device::after {
-  content: '';
-  position: absolute;
-  inset: 11px;
-  border-radius: 51px;
-  pointer-events: none;
-  background: linear-gradient(125deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 28%);
-  z-index: 3;
 }
 .island {
   position: absolute;
   top: 18px; left: 50%; transform: translateX(-50%);
   width: 92px; height: 26px;
-  background: #000;
+  background: #1c1c1e;
   border-radius: 20px;
-  z-index: 4;
+  z-index: 6;
 }
-.vol, .pwr { position: absolute; background: #2a2a2a; }
+.vol, .pwr { position: absolute; background: #c8c8cc; }
 .vol { left: -3px; top: 118px; width: 4px; height: 90px; border-radius: 2px 0 0 2px; }
 .pwr { right: -3px; top: 168px; width: 4px; height: 64px; border-radius: 0 2px 2px 0; }
-.veil {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  height: 34%;
-  z-index: 3;
-  pointer-events: none;
-  background: linear-gradient(0deg, #050505 0%, rgba(5,5,5,0.88) 42%, rgba(5,5,5,0) 100%);
-}
 .copy {
   position: absolute;
-  z-index: 5;
+  z-index: 8;
   left: 48px; right: 48px; bottom: 44px;
   display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
 }
@@ -773,39 +759,31 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
   text-transform: uppercase;
 }
 .grain {
-  position: absolute; inset: 0; z-index: 8; pointer-events: none; opacity: 0.05;
+  position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0.05;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
 }
 
-/* HERO — one giant phone, type in the open black */
+/* HERO — one giant phone in front of the black field, type in the open */
 .shot-hero .device { width: 560px; left: 46%; top: -10px; transform: rotate(8deg); }
-.shot-hero .copy { max-width: 520px; }
+.shot-hero .copy { right: auto; width: 44%; max-width: 480px; }
 .shot-hero .copy h1 { font-size: 78px; }
-.shot-hero .veil { width: 58%; right: auto; height: 48%; }
 .shot-hero.flip .device { left: auto; right: 46%; transform: rotate(-8deg); }
-.shot-hero.flip .copy { left: auto; right: 48px; align-items: flex-end; text-align: right; }
+.shot-hero.flip .copy { left: auto; right: 48px; width: 44%; align-items: flex-end; text-align: right; }
 .shot-hero.flip .lede { text-align: right; }
-.shot-hero.flip .veil { left: auto; right: 0; }
 
 /* BILLBOARD — type is the graphic, phone supports */
-.shot-billboard .veil {
-  top: 0; bottom: auto; height: 48%;
-  background: linear-gradient(180deg, #050505 0%, rgba(5,5,5,0.72) 58%, rgba(5,5,5,0) 100%);
-}
 .shot-billboard .copy { top: 48px; bottom: auto; gap: 16px; max-width: 640px; }
 .shot-billboard .copy h1 { font-size: 96px; max-width: 9ch; }
 .shot-billboard .lede { font-size: 26px; max-width: 16ch; }
 .shot-billboard .device { width: 540px; left: auto; right: -90px; top: 300px; transform: rotate(-9deg); }
 
 /* STEPS — editorial ladder + phone */
-.shot-steps .veil { display: none; }
 .shot-steps .copy { top: 48px; bottom: auto; }
 .shot-steps .ladder { right: 38%; gap: 36px; }
 .shot-steps .ladder h2 { font-size: 72px; }
 .shot-steps .device { width: 480px; left: auto; right: -110px; top: 120px; transform: rotate(11deg); }
 
 /* MENU — giant coverage names + phone */
-.shot-menu .veil { display: none; }
 .shot-menu .copy {
   top: 48px; bottom: 44px; right: auto;
   height: auto; justify-content: space-between;
@@ -820,11 +798,11 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 .story .lock { font-size: 15px; }
 .story .lock img { width: 28px; height: 28px; }
 .story.shot-hero .device { width: 780px; left: 16%; top: -20px; }
-.story.shot-hero .copy { bottom: 80px; }
+.story.shot-hero .copy { bottom: 80px; right: auto; width: 48%; }
 .story.shot-hero .copy h1 { font-size: 96px; }
 .story.shot-hero .lede { font-size: 30px; }
-.story.shot-hero .veil { height: 38%; }
 .story.shot-hero.flip .device { left: auto; right: 16%; transform: rotate(-8deg); }
+.story.shot-hero.flip .copy { left: auto; right: 56px; width: 48%; }
 .story.shot-billboard .copy { top: 96px; }
 .story.shot-billboard .copy h1 { font-size: 110px; }
 .story.shot-billboard .lede { font-size: 32px; }
@@ -838,25 +816,13 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 
 /* Landscape */
 .wide .copy { left: 48px; }
-.wide.shot-hero .veil {
-  height: 100%; width: 58%; right: auto;
-  background: linear-gradient(90deg, #050505 0%, rgba(5,5,5,0.78) 52%, rgba(5,5,5,0) 100%);
-}
-.wide.shot-hero .copy { top: 50%; bottom: auto; transform: translateY(-50%); max-width: 46%; }
+.wide.shot-hero .copy { top: 50%; bottom: auto; transform: translateY(-50%); right: auto; width: 44%; max-width: 46%; }
 .wide.shot-hero .copy h1 { font-size: 64px; }
 .wide.shot-hero .lede { font-size: 22px; }
 .wide.shot-hero .device { width: 460px; left: auto; right: -90px; top: -90px; transform: rotate(8deg); }
 .wide.shot-hero.flip .copy { left: auto; right: 48px; align-items: flex-end; text-align: right; }
 .wide.shot-hero.flip .lede { text-align: right; }
-.wide.shot-hero.flip .veil {
-  left: auto; right: 0;
-  background: linear-gradient(270deg, #050505 0%, rgba(5,5,5,0.78) 52%, rgba(5,5,5,0) 100%);
-}
 .wide.shot-hero.flip .device { right: auto; left: -90px; transform: rotate(-8deg); }
-.wide.shot-billboard .veil {
-  height: 100%; width: 52%; right: auto;
-  background: linear-gradient(90deg, #050505 0%, rgba(5,5,5,0.7) 60%, rgba(5,5,5,0) 100%);
-}
 .wide.shot-billboard .copy { top: 50%; bottom: auto; transform: translateY(-50%); }
 .wide.shot-billboard .copy h1 { font-size: 58px; }
 .wide.shot-billboard .lede { font-size: 20px; }
@@ -877,7 +843,6 @@ html, body, .frame { width: ${w}px; height: ${h}px; overflow: hidden; }
 <article class="frame ${fmt} shot-${shot}${post.flip ? ' flip' : ''}">
   <div class="glow"></div>
   <div class="stage">${srcs.map((s, i) => device(s, `d${i}`)).join('')}</div>
-  <div class="veil"></div>
   ${extra}
   <div class="copy">${copyInner}</div>
 </article>
