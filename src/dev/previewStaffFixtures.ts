@@ -57,4 +57,5 @@ export const PREVIEW_JOB = {
   guardsNeeded: 1,
   status: 'open',
   estimatedPayout: 224,
+  requiredCertifications: [],
 } as SecurityRequest;
