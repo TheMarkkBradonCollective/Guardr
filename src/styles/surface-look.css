@@ -227,6 +227,13 @@ html body[data-surface='mobile'] .staff-account-access {
   background: transparent !important;
 }
 
+html body[data-surface='mobile'] .staff-detail-actions--list > *,
+html body[data-surface='mobile'] .staff-detail-actions--list button {
+  border: none !important;
+  border-radius: 16px !important;
+  background: var(--look-tile) !important;
+}
+
 html body[data-surface='mobile'] .sfm-shell input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='file']),
 html body[data-surface='mobile'] .sfm-shell select,
 html body[data-surface='mobile'] .sfm-shell textarea,
