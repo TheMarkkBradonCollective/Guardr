@@ -137,6 +137,7 @@ export function MobileSheet({
   const onPointerDown = (event: React.PointerEvent) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     drag.current = { startY: event.clientY, startTime: performance.now(), pointerId: event.pointerId };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
     setDragging(true);
   };
 

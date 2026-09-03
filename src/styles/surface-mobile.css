@@ -205,6 +205,7 @@ body[data-surface='mobile'] {
 
 .sfm-tab-icon {
   position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -293,8 +294,16 @@ body[data-surface='mobile'] {
   border-bottom: 1px solid var(--sf-line);
 }
 
+.sfm-drawer-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+}
+
 .sfm-drawer-workspace {
-  margin: 0 0 8px;
+  margin: 0;
   color: var(--sf-ink-tertiary);
   font-size: 11px;
   font-weight: 700;
@@ -305,13 +314,34 @@ body[data-surface='mobile'] {
 .sfm-drawer-identity-btn {
   display: flex;
   align-items: center;
+  gap: 12px;
   width: 100%;
-  margin: 0;
-  padding: 8px 0;
+  margin: 4px 0 0;
+  padding: 10px 4px;
   border: none;
+  border-radius: var(--sf-radius-control);
   background: none;
+  color: var(--sf-ink);
+  text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+.sfm-drawer-identity-btn:active {
+  background: var(--sf-paper-muted);
+}
+
+.sfm-drawer-identity-copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.sfm-drawer-identity-action {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .sfm-drawer-primary {
@@ -1427,6 +1457,15 @@ body[data-surface='mobile'] .sfm-more-footer .uber-direct-sidebar-footer-legal-w
   min-width: 0;
 }
 
+.sfm-account-row-chevron {
+  flex-shrink: 0;
+  color: var(--sf-ink-tertiary);
+}
+
+.sfm-account-row--danger .sfm-account-row-chevron {
+  display: none;
+}
+
 .sfm-account-count {
   min-width: 22px;
   padding: 2px 7px;
@@ -1614,7 +1653,7 @@ body[data-surface='mobile'] .sfm-shell .app-empty-state {
 
 /* ── Controls ────────────────────────────────────────────────────────────── */
 
-body[data-surface='mobile'] .sfm-shell button:not(.sfm-tab):not(.sfm-icon-btn):not(.sfm-sheet-close):not(.sfm-more-row):not(.sfm-account-row):not(.sfm-shell-identity):not(.sfm-drawer-cta):not(.sfm-drawer-row),
+body[data-surface='mobile'] .sfm-shell button:not(.sfm-tab):not(.sfm-icon-btn):not(.sfm-sheet-close):not(.sfm-more-row):not(.sfm-account-row):not(.sfm-shell-identity):not(.sfm-drawer-cta):not(.sfm-drawer-row):not(.sfm-drawer-identity-btn),
 body[data-surface='mobile'] .sfm-shell .app-btn,
 body[data-surface='mobile'] .sfm-shell .app-button {
   min-height: 44px;
@@ -2433,4 +2472,476 @@ body[data-surface='mobile'] .payments-page-body {
   overflow: visible;
   height: auto;
   min-height: 0;
+}
+
+/* ============================================================================
+   Native product polish — login through logout, every control
+   ============================================================================
+   Signed-in chrome already exists. This pass finishes the product: public
+   screens, auth, onboarding, confirms, settings, chat, forms, and the little
+   interactions that make a phone app feel built rather than adapted.
+   ========================================================================= */
+
+body[data-surface='mobile'] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body[data-surface='mobile'] ::selection {
+  background: var(--sf-paper-muted);
+  color: var(--sf-ink);
+}
+
+body[data-surface='mobile'] .sf-shell,
+body[data-surface='mobile'] .sfm-shell-canvas,
+body[data-surface='mobile'] .auth-role-choice-main,
+body[data-surface='mobile'] .auth-mobile-page-scroll {
+  scrollbar-width: none;
+}
+
+body[data-surface='mobile'] .sf-shell::-webkit-scrollbar,
+body[data-surface='mobile'] .sfm-shell-canvas::-webkit-scrollbar,
+body[data-surface='mobile'] .auth-role-choice-main::-webkit-scrollbar,
+body[data-surface='mobile'] .auth-mobile-page-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Frosted chrome — header and tab bar sit on the content, not as web bars. */
+body[data-surface='mobile'] .sfm-shell-header,
+body[data-surface='mobile'] .sfm-shell-chrome {
+  background: color-mix(in srgb, var(--sf-paper) 86%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+body[data-surface='mobile'] .sfm-tabbar {
+  background: color-mix(in srgb, var(--sf-paper) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+body[data-surface='mobile'] .sfm-tab[data-active='true'] .sfm-tab-icon {
+  position: relative;
+}
+
+body[data-surface='mobile'] .sfm-tab[data-active='true'] .sfm-tab-icon::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 12px;
+  background: var(--sf-paper-muted);
+  z-index: -1;
+}
+
+/* ── Confirms / alerts / prompts as action sheets ───────────────────────── */
+
+body[data-surface='mobile'] .sfm-confirm-panel {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 6px 20px calc(16px + var(--sf-safe-bottom)) !important;
+  border-radius: 24px 24px 0 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  background: var(--sf-paper) !important;
+}
+
+body[data-surface='mobile'] .sfm-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 0 4px;
+}
+
+body[data-surface='mobile'] .sfm-confirm-grabber {
+  width: 36px;
+  height: 4px;
+  margin: 6px auto 14px;
+  border-radius: 999px;
+  background: var(--sf-line-strong);
+}
+
+body[data-surface='mobile'] .sfm-confirm .app-confirm-title {
+  font-family: var(--sf-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+body[data-surface='mobile'] .sfm-confirm .app-confirm-message {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+body[data-surface='mobile'] .sfm-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+body[data-surface='mobile'] .sfm-confirm-actions button,
+body[data-surface='mobile'] .sfm-tutorial-prompt-inner button {
+  min-height: var(--sf-button-h) !important;
+  border-radius: var(--sf-radius-control) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+body[data-surface='mobile'] .sfm-tutorial-prompt {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  border-radius: 24px 24px 0 0 !important;
+}
+
+body[data-surface='mobile'] .sfm-tutorial-prompt-inner {
+  padding-bottom: var(--sf-safe-bottom);
+}
+
+body[data-surface='mobile'] .tutorial-step-panel {
+  padding: 0;
+  padding-bottom: 0;
+}
+
+body[data-surface='mobile'] .tutorial-step-panel-inner {
+  max-width: none;
+  margin: 0;
+  border-radius: 24px 24px 0 0;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  padding: 18px 20px calc(16px + var(--sf-safe-bottom));
+}
+
+body[data-surface='mobile'] .tutorial-step-panel-actions {
+  flex-direction: column;
+  gap: 8px;
+}
+
+body[data-surface='mobile'] .tutorial-step-panel-actions .app-button-primary,
+body[data-surface='mobile'] .tutorial-step-panel-actions .app-button-outline,
+body[data-surface='mobile'] .tutorial-step-panel-actions button {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+}
+
+body[data-surface='mobile'] .tutorial-end-bar {
+  top: calc(var(--sf-safe-top) + 8px);
+  right: 12px;
+}
+
+body[data-surface='mobile'] .tutorial-end-bar-primary {
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+/* ── Auth, welcome, landing ─────────────────────────────────────────────── */
+
+body[data-surface='mobile'] .auth-role-choice-page {
+  background: var(--sf-paper);
+}
+
+body[data-surface='mobile'] .auth-role-choice-hero {
+  min-height: auto;
+  padding-top: 20px;
+  padding-bottom: 12px;
+  background: var(--sf-paper);
+}
+
+body[data-surface='mobile'] .auth-role-choice-visual {
+  display: none;
+}
+
+body[data-surface='mobile'] .auth-form-page-title,
+body[data-surface='mobile'] .auth-role-choice-page h1 {
+  font-family: var(--sf-font-display);
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+body[data-surface='mobile'] .auth-role-choice-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-height: 72px;
+  padding: 14px 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body[data-surface='mobile'] .auth-role-choice-option + .auth-role-choice-option {
+  margin-top: 0;
+  border-top: 1px solid var(--sf-line);
+}
+
+body[data-surface='mobile'] .auth-role-choice-option:hover {
+  opacity: 1;
+}
+
+body[data-surface='mobile'] .auth-role-choice-option:active {
+  opacity: 0.72;
+}
+
+body[data-surface='mobile'] .auth-role-choice-options {
+  padding-top: 8px;
+  border-top: none;
+}
+
+body[data-surface='mobile'] .auth-mobile-page-back,
+body[data-surface='mobile'] .auth-sheet-close,
+body[data-surface='mobile'] .auth-mobile-page-guide {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+body[data-surface='mobile'] .auth-sheet-submit button,
+body[data-surface='mobile'] .auth-mobile-page-form button[type='submit'],
+body[data-surface='mobile'] .auth-form-page-form button[type='submit'] {
+  min-height: var(--sf-button-h) !important;
+  border-radius: var(--sf-radius-control) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+body[data-surface='mobile'] .app-welcome {
+  min-height: 100dvh;
+  padding-bottom: var(--sf-safe-bottom);
+}
+
+body[data-surface='mobile'] .app-welcome-headline {
+  font-family: var(--sf-font-display);
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+body[data-surface='mobile'] .app-welcome-signin-btn,
+body[data-surface='mobile'] .app-welcome-signup-btn,
+body[data-surface='mobile'] .uber-landing-dock-btn {
+  min-height: var(--sf-button-h) !important;
+  border-radius: var(--sf-radius-control) !important;
+}
+
+body[data-surface='mobile'] .uber-landing-dock {
+  background: color-mix(in srgb, var(--sf-paper) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+}
+
+body[data-surface='mobile'] .uber-landing-nav {
+  padding-top: var(--sf-safe-top);
+}
+
+body[data-surface='mobile'] .uber-landing-mobile-menu-item {
+  min-height: 52px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ── Settings, profile, forms ───────────────────────────────────────────── */
+
+body[data-surface='mobile'] .sfm-shell .app-screen-title,
+body[data-surface='mobile'] .sfm-shell .app-page-lead-title {
+  display: none;
+}
+
+body[data-surface='mobile'] .sfm-shell .settings-section-head {
+  margin: 8px 4px 6px;
+  padding: 16px 16px 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sf-ink-tertiary);
+  background: transparent;
+}
+
+body[data-surface='mobile'] .sfm-shell .settings-toggle-row {
+  min-height: 56px;
+  padding: 12px 4px;
+  gap: 12px;
+}
+
+body[data-surface='mobile'] .sfm-shell .theme-toggle {
+  width: 100%;
+  justify-content: stretch;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--sf-paper-sunken) !important;
+  border: none !important;
+}
+
+body[data-surface='mobile'] .sfm-shell .theme-toggle-btn,
+body[data-surface='mobile'] .sfm-account-theme .theme-toggle-btn {
+  flex: 1;
+  min-height: 40px;
+  justify-content: center;
+}
+
+body[data-surface='mobile'] .sfm-account-theme .theme-toggle {
+  width: 100%;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--sf-paper-sunken) !important;
+  border: none !important;
+}
+
+body[data-surface='mobile'] .legal-accept-row {
+  min-height: 56px;
+  border-radius: 16px;
+}
+
+body[data-surface='mobile'] .legal-accept-checkbox-visual,
+body[data-surface='mobile'] .app-checkbox {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-blocked-access-row {
+  width: 100%;
+  max-width: none;
+  min-height: var(--sf-row-h);
+  padding: 16px;
+  border-radius: 16px;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-blocked-access-row,
+body[data-surface='mobile'] .app-screen.max-w-lg {
+  max-width: none;
+}
+
+body[data-surface='mobile'] .account-pending-screen {
+  min-height: 100%;
+  padding: 48px 24px calc(48px + var(--sf-safe-bottom));
+}
+
+body[data-surface='mobile'] .account-pending-title {
+  font-family: var(--sf-font-display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* ── Chat / messages ────────────────────────────────────────────────────── */
+
+body[data-surface='mobile'] .sfm-shell .app-chat-bubble {
+  max-width: min(82%, 320px);
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-chat-composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  padding: 8px 12px calc(8px + var(--sf-safe-bottom));
+  background: color-mix(in srgb, var(--sf-paper) 92%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--sf-line);
+}
+
+body[data-surface='mobile'] .sfm-shell .app-chat-composer-input,
+body[data-surface='mobile'] .sfm-shell .app-chat-composer-field {
+  min-height: 44px;
+  font-size: 16px !important;
+  border-radius: 22px;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-chat-composer-send {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+}
+
+/* ── Search, filters, toasts, switches ──────────────────────────────────── */
+
+body[data-surface='mobile'] .sfm-shell .wf-search-bar,
+body[data-surface='mobile'] .sfm-shell input[type='search'] {
+  min-height: var(--sf-input-h);
+  font-size: 16px !important;
+  border-radius: 14px;
+}
+
+body[data-surface='mobile'] [data-baseweb='snackbar-element'],
+body[data-surface='mobile'] [data-baseweb='snackbar'] {
+  top: calc(var(--sf-safe-top) + 8px) !important;
+  left: 12px !important;
+  right: 12px !important;
+  width: auto !important;
+}
+
+body[data-surface='mobile'] .guardr-switch-icon-only {
+  min-width: 46px;
+  min-height: 28px;
+}
+
+body[data-surface='mobile'] .sfm-shell [data-baseweb='checkbox'] {
+  min-height: 44px;
+  align-items: center;
+}
+
+body[data-surface='mobile'] .sfm-legal-gate,
+body[data-surface='mobile'] .legal-document-page {
+  padding-left: var(--sf-gutter);
+  padding-right: var(--sf-gutter);
+  padding-bottom: calc(24px + var(--sf-safe-bottom));
+}
+
+/* Press, not hover — touch devices never get a stuck hover fill. */
+@media (hover: none) {
+  body[data-surface='mobile'] .sfm-shell a:hover,
+  body[data-surface='mobile'] .sfm-shell button:hover,
+  body[data-surface='mobile'] .auth-role-choice-option:hover,
+  body[data-surface='mobile'] .uber-landing-nav-link:hover,
+  body[data-surface='mobile'] .theme-toggle:hover {
+    background-color: inherit;
+    opacity: 1;
+  }
+}
+
+body[data-surface='mobile'] .sfm-shell .app-list-row:active,
+body[data-surface='mobile'] .sfm-shell .app-inbox-row:active,
+body[data-surface='mobile'] .sfm-shell .staff-overview-list-row:active,
+body[data-surface='mobile'] .sfm-shell .uber-job-row:active {
+  transform: scale(0.99);
+}
+
+body[data-surface='mobile'] .sfm-drawer-cta {
+  min-height: var(--sf-button-h);
+  font-size: 16px;
+}
+
+body[data-surface='mobile'] .sfm-drawer-identity-btn .sfm-shell-avatar {
+  width: 44px !important;
+  height: 44px !important;
+  font-size: 14px !important;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  body[data-surface='mobile'] .auth-role-choice-hero {
+    display: none;
+  }
+
+  body[data-surface='mobile'] .app-welcome-headline {
+    font-size: 24px;
+  }
+
+  body[data-surface='mobile'] .sfm-confirm-panel,
+  body[data-surface='mobile'] .sfm-tutorial-prompt {
+    max-height: 92dvh;
+    overflow-y: auto;
+  }
 }

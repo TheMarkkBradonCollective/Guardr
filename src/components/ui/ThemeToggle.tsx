@@ -1,6 +1,7 @@
 import React from 'react';
 import { Moon, Sun } from 'lucide-react';
 import type { ThemeMode } from '../../lib/platform/theme';
+import { triggerHaptic } from '../../lib/platform/nativeHaptics';
 
 const MODES: { id: ThemeMode; label: string; icon: typeof Moon }[] = [
   { id: 'dark', label: 'Dark', icon: Moon },
@@ -29,10 +30,13 @@ export function ThemeToggle({ value, onChange, size = 'md', className = '' }: Th
           <button
             key={id}
             type="button"
-            onClick={() => onChange(id)}
+            onClick={() => {
+              void triggerHaptic('light');
+              onChange(id);
+            }}
             title={label}
             aria-pressed={active}
-            className={`flex items-center gap-1.5 rounded-full font-medium transition-all ${
+            className={`theme-toggle-btn flex items-center gap-1.5 rounded-full font-medium transition-all ${
               compact ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'
             } ${
               active
