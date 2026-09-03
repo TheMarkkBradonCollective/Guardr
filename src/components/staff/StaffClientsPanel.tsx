@@ -204,6 +204,7 @@ export function StaffClientsPanel({
           tabs={[
             { id: 'personal', label: 'Personal' },
             { id: 'business', label: 'Business' },
+            { id: 'security-company', label: 'Security co.' },
           ]}
         />
         <StaffListFilterTabs

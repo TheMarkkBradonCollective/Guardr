@@ -212,7 +212,7 @@ export type GuardCardStatus = 'active' | 'in_progress' | 'none';
 export type GuardArmedPreference = 'armed' | 'unarmed' | 'both';
 
 /** Who is hiring and paying — the contracting party, not the job site type. */
-export type ClientType = 'personal' | 'business';
+export type ClientType = 'personal' | 'business' | 'security-company';
 
 /** People Guardr or assigned guards can contact for this account. */
 export type ClientAuthorizedContactRole =
@@ -1160,6 +1160,16 @@ export interface JobGuardSlot {
   updatedAt?: string;
 }
 
+export type JobGuardSuggestionStatus = 'pending' | 'dismissed' | 'placed';
+
+export interface JobGuardSuggestion {
+  id: string;
+  suggestedGuardId: string;
+  suggestedByGuardId: string;
+  suggestedAt: string;
+  status: JobGuardSuggestionStatus;
+}
+
 export interface SecurityRequest {
   id: string;
   title: string;
@@ -1306,6 +1316,8 @@ export interface SecurityRequest {
   scheduleChangeExtraAmount?: number;
   /** Per-slot roster for multi-guard jobs */
   guardSlots?: JobGuardSlot[];
+  /** Peer guard suggestions awaiting client review */
+  guardSuggestions?: JobGuardSuggestion[];
   /** marketplace = open post for any guard; direct = client sent from a guard profile */
   requestType?: RequestType;
   /** Set only when requestType is direct */

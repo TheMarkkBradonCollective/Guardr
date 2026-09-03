@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  BUSINESS_ONLY_CAPABILITIES,
-  SHARED_CLIENT_CAPABILITIES,
+  BUSINESS_CLIENT_CAPABILITIES,
+  PERSONAL_CLIENT_CAPABILITIES,
   clampClientGuardsNeeded,
   clientCapabilities,
   clientHasCapability,
@@ -18,10 +18,11 @@ import {
 describe('clientCapabilities', () => {
   it('lets personal accounts request, rebook, and schedule recurring coverage', () => {
     const caps = clientCapabilities('personal');
-    for (const cap of SHARED_CLIENT_CAPABILITIES) {
+    for (const cap of PERSONAL_CLIENT_CAPABILITIES) {
       assert.equal(caps.has(cap), true, cap);
     }
-    for (const cap of BUSINESS_ONLY_CAPABILITIES) {
+    for (const cap of BUSINESS_CLIENT_CAPABILITIES) {
+      if (PERSONAL_CLIENT_CAPABILITIES.includes(cap as (typeof PERSONAL_CLIENT_CAPABILITIES)[number])) continue;
       assert.equal(caps.has(cap), false, cap);
     }
     assert.equal(clientHasCapability('personal', 'recurring-schedules'), true);
@@ -31,16 +32,27 @@ describe('clientCapabilities', () => {
 
   it('gives business accounts every shared tool plus site/staffing extras', () => {
     const caps = clientCapabilities('business');
-    for (const cap of [...SHARED_CLIENT_CAPABILITIES, ...BUSINESS_ONLY_CAPABILITIES]) {
+    for (const cap of BUSINESS_CLIENT_CAPABILITIES) {
       assert.equal(caps.has(cap), true, cap);
     }
     assert.equal(clientHasCapability({ clientType: undefined }, 'reporting'), true);
     assert.equal(clientHasCapability({ clientType: 'personal' }, 'reporting'), false);
   });
 
+  it('gives security companies overflow and ops flags without venue employee-access tools', () => {
+    const caps = clientCapabilities('security-company');
+    assert.equal(caps.has('overflow-marketplace'), true);
+    assert.equal(caps.has('roster-management'), true);
+    assert.equal(caps.has('shift-operations'), true);
+    assert.equal(caps.has('employee-access'), false);
+    assert.equal(caps.has('rebook-service'), false);
+    assert.equal(caps.has('multi-guard-requests'), true);
+  });
+
   it('keeps bulk site staffing as a business tool, not a one-request limit', () => {
     assert.equal(clientMaxGuardsPerRequest('personal'), 4);
     assert.equal(clientMaxGuardsPerRequest('business'), 50);
+    assert.equal(clientMaxGuardsPerRequest('security-company'), 50);
     assert.equal(clampClientGuardsNeeded(12, 'personal'), 4);
     assert.equal(clampClientGuardsNeeded(12, 'business'), 12);
     assert.equal(clampClientGuardsNeeded(8, 'personal', 6), 6);
@@ -80,5 +92,6 @@ describe('clientCapabilities', () => {
     assert.ok(businessHome.includes('reports'));
     assert.equal(clientPostJobLabel('personal'), '+ Request security');
     assert.equal(clientPostJobLabel('business'), '+ Post a job');
+    assert.equal(clientPostJobLabel('security-company'), '+ Post overflow job');
   });
 });

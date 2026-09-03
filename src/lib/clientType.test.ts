@@ -5,6 +5,8 @@ import {
   clientTypeLabel,
   clientWorkspaceLabel,
   isClientType,
+  isOrganizationClientType,
+  isSecurityCompanyClientType,
   normalizeClientType,
 } from './clientType';
 
@@ -12,16 +14,27 @@ describe('clientType', () => {
   it('normalizes unknown values to business', () => {
     assert.equal(normalizeClientType('personal'), 'personal');
     assert.equal(normalizeClientType('business'), 'business');
+    assert.equal(normalizeClientType('security-company'), 'security-company');
     assert.equal(normalizeClientType('commercial'), 'business');
     assert.equal(normalizeClientType(undefined), 'business');
     assert.equal(isClientType('personal'), true);
+    assert.equal(isClientType('security-company'), true);
     assert.equal(isClientType('company'), false);
   });
 
-  it('labels personal and business accounts', () => {
+  it('labels personal, business, and security company accounts', () => {
     assert.equal(clientTypeLabel('personal'), 'Personal');
     assert.equal(clientTypeLabel('business'), 'Business');
+    assert.equal(clientTypeLabel('security-company'), 'Security company');
     assert.equal(clientTypeLabel(undefined), 'Business');
+  });
+
+  it('treats business and security companies as organizations', () => {
+    assert.equal(isOrganizationClientType('business'), true);
+    assert.equal(isOrganizationClientType('security-company'), true);
+    assert.equal(isOrganizationClientType('personal'), false);
+    assert.equal(isSecurityCompanyClientType('security-company'), true);
+    assert.equal(isSecurityCompanyClientType('business'), false);
   });
 
   it('uses the person name for personal contracting parties', () => {
@@ -63,6 +76,18 @@ describe('clientType', () => {
         clientType: 'business',
       }),
       'ABC Nightclub'
+    );
+  });
+
+  it('uses the company name for security company contracting parties', () => {
+    assert.equal(
+      clientDisplayName({
+        name: 'Pat Lee',
+        firstName: 'Pat',
+        companyName: 'Acme Patrol Services',
+        clientType: 'security-company',
+      }),
+      'Acme Patrol Services'
     );
   });
 });

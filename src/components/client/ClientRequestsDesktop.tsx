@@ -56,6 +56,8 @@ export interface ClientRequestsDesktopProps {
   onDenyPendingGuard?: (requestId: string) => void | Promise<void>;
   onApproveTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
   onDenyTeamSlot?: (requestId: string, slotId: string) => void | Promise<void>;
+  onRequestSuggestedGuard?: (requestId: string, guardId: string) => void | Promise<void>;
+  onDismissGuardSuggestion?: (requestId: string, suggestionId: string) => void | Promise<void>;
   onApproveFullTeam?: (requestId: string) => void | Promise<void>;
   onDenyFullTeam?: (requestId: string) => void | Promise<void>;
   crewSettings?: PlatformSettings;
@@ -149,6 +151,8 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
     onDenyPendingGuard,
     onApproveTeamSlot,
     onDenyTeamSlot,
+    onRequestSuggestedGuard,
+    onDismissGuardSuggestion,
     onApproveFullTeam,
     onDenyFullTeam,
     crewSettings,
@@ -345,6 +349,8 @@ export function ClientRequestsDesktop(props: ClientRequestsDesktopProps) {
                 onDenyPendingGuard={onDenyPendingGuard}
                 onApproveTeamSlot={onApproveTeamSlot}
                 onDenyTeamSlot={onDenyTeamSlot}
+                onRequestSuggestedGuard={onRequestSuggestedGuard}
+                onDismissGuardSuggestion={onDismissGuardSuggestion}
                 onApproveFullTeam={onApproveFullTeam}
                 onDenyFullTeam={onDenyFullTeam}
                 onOpenJobChat={onOpenJobChat}

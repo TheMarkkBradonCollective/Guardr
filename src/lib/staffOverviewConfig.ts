@@ -1,4 +1,4 @@
-import { PlatformRole } from '../types';
+import type { PlatformRole } from '../types';
 import { canApproveStaffAccounts, canHandleDisputes, canManageClients, canManageGuards, canReviewCertifications, canReviewJobRequests, ROLE_LABELS } from './permissions';
 import type { OverviewActionItem, OverviewMetricCell, StaffSection } from './staffOps';
 
@@ -88,7 +88,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
   support: {
     roleLabel: ROLE_LABELS.support,
     workspaceKicker: 'Support workspace',
-    focusLine: 'Support inbox, incident reports, and live coverage monitoring.',
+    focusLine: 'Support inbox, incident escalations, and platform health — not security dispatch.',
     layout: 'compact',
     metricLabels: [...SUPPORT_METRICS],
     showPaymentsInQueue: false,
@@ -106,7 +106,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
   moderator: {
     roleLabel: ROLE_LABELS.moderator,
     workspaceKicker: 'Moderator workspace',
-    focusLine: 'Credential review, live coverage, and incident follow-up — no account or job approvals.',
+    focusLine: 'Credential review and incident follow-up — platform trust only, not shift command.',
     layout: 'compact',
     metricLabels: [...MODERATOR_METRICS],
     showPaymentsInQueue: false,

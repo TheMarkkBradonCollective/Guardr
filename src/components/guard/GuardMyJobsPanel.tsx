@@ -49,6 +49,7 @@ interface GuardMyJobsPanelProps {
   scheduleRequests?: ScheduleJob[];
   onApplyAsLead?: (jobId: string) => void | Promise<void>;
   onInviteGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onSuggestGuard?: (jobId: string, guardId: string) => void | Promise<void>;
   onRemoveGuard?: (jobId: string, guardId: string) => void | Promise<void>;
   onUpdateCrewProfile?: (
     jobId: string,
@@ -143,6 +144,7 @@ export function GuardMyJobsPanel({
   scheduleRequests,
   onApplyAsLead,
   onInviteGuard,
+  onSuggestGuard,
   onRemoveGuard,
   onUpdateCrewProfile,
   onAcceptInvite,
@@ -248,6 +250,7 @@ export function GuardMyJobsPanel({
         : undefined,
     onApplyAsLead: onApplyAsLead ? () => void onApplyAsLead(job.id) : undefined,
     onInviteGuard: onInviteGuard ? (guardId: string) => void onInviteGuard(job.id, guardId) : undefined,
+    onSuggestGuard: onSuggestGuard ? (guardId: string) => void onSuggestGuard(job.id, guardId) : undefined,
     onRemoveGuard: onRemoveGuard ? (guardId: string) => void onRemoveGuard(job.id, guardId) : undefined,
     onUpdateCrewProfile: onUpdateCrewProfile
       ? (patch: { crewName: string; crewDescription: string }) =>
@@ -318,6 +321,7 @@ export function GuardMyJobsPanel({
         scheduleRequests={scheduleRequests}
         onApplyAsLead={onApplyAsLead}
         onInviteGuard={onInviteGuard}
+        onSuggestGuard={onSuggestGuard}
         onRemoveGuard={onRemoveGuard}
         onUpdateCrewProfile={onUpdateCrewProfile}
         onAcceptInvite={onAcceptInvite}

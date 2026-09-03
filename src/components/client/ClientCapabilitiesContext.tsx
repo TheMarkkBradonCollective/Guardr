@@ -37,6 +37,8 @@ export function useClientCapabilities() {
       clientType,
       isPersonal: clientType === 'personal',
       isBusiness: clientType === 'business',
+      isSecurityCompany: clientType === 'security-company',
+      isOrganization: clientType === 'business' || clientType === 'security-company',
       has: (capability: ClientCapability) => clientHasCapability(clientType, capability),
       maxGuardsPerRequest: clientMaxGuardsPerRequest(clientType),
       maxSavedLocations: clientMaxSavedLocations(clientType),

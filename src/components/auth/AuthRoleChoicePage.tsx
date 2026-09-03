@@ -75,6 +75,14 @@ const SIGNUP_CLIENT_KIND_OPTIONS: ChoiceOption[] = [
     description:
       'A company, venue, or organization is the contracting party and pays. Extra tools for sites, staffing, and team access. You can still post a private event if the business is hiring.',
   },
+  {
+    id: 'security-company',
+    icon: Shield,
+    title: 'Security company',
+    description:
+      'A licensed private patrol operator (PPO) hiring independent contractor guards through Guardr — for overflow staffing or subcontracted coverage. PPO verification required.',
+    badge: 'Licensed PPO',
+  },
 ];
 
 const SIGNUP_WORK_OPTIONS: ChoiceOption[] = [
@@ -115,7 +123,7 @@ const COPY: Record<
     heading: 'Who is hiring?',
     subheading:
       'This is the person or organization that contracts and pays for coverage — not the type of location.',
-    ariaLabel: 'Choose personal or business',
+    ariaLabel: 'Choose personal, business, or security company',
     kicker: 'I need security',
   },
   work: {
@@ -273,7 +281,7 @@ export function AuthRoleChoicePage({
       return;
     }
     if (signupStep === 'client') {
-      if (id === 'personal' || id === 'business') onSelectClientType?.(id);
+      if (id === 'personal' || id === 'business' || id === 'security-company') onSelectClientType?.(id);
       return;
     }
     if (id === 'guard' || id === 'staff') onSelectRole(id);

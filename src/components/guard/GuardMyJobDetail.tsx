@@ -21,6 +21,7 @@ export interface GuardMyJobDetailProps {
   onApproveOvertime?: (requestId: string) => void | Promise<void>;
   onApplyAsLead?: (jobId: string) => void | Promise<void>;
   onInviteGuard?: (jobId: string, guardId: string) => void | Promise<void>;
+  onSuggestGuard?: (jobId: string, guardId: string) => void | Promise<void>;
   onRemoveGuard?: (jobId: string, guardId: string) => void | Promise<void>;
   onUpdateCrewProfile?: (
     jobId: string,
@@ -41,6 +42,7 @@ export function GuardMyJobDetail({
   onApproveOvertime,
   onApplyAsLead,
   onInviteGuard,
+  onSuggestGuard,
   onRemoveGuard,
   onUpdateCrewProfile,
   onAcceptInvite,
@@ -70,6 +72,11 @@ export function GuardMyJobDetail({
         onInviteGuard={
           onInviteGuard && job.status === 'open'
             ? (guardId) => void onInviteGuard(job.id, guardId)
+            : undefined
+        }
+        onSuggestGuard={
+          onSuggestGuard && job.status === 'open'
+            ? (guardId) => void onSuggestGuard(job.id, guardId)
             : undefined
         }
         onRemoveGuard={

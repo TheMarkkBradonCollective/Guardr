@@ -1,6 +1,7 @@
 import type { JobGuardSlot, JobGuardSlotStatus, SecurityRequest } from '../types';
 import type { ScheduleJob } from './guardSchedule';
 import {
+  computeInviteExpiresAt,
   emptySlotsForJob,
   findOpenSlot,
   guardHasJobTeamAssociation,
@@ -23,6 +24,149 @@ function scheduleError(
 
 function slotStatusAfterStaffReview(skipStaff: boolean): JobGuardSlotStatus {
   return skipStaff ? 'pending_client' : 'pending_staff';
+}
+
+export function guardHasApprovedTeamSlot(
+  slots: JobGuardSlot[] | undefined,
+  guardId: string
+): boolean {
+  return (slots ?? []).some((s) => s.guardId === guardId && s.status === 'approved');
+}
+
+/** Approved roster member invites another guard into the next open slot. */
+export function inviteGuardToTeamSlot(
+  job: SecurityRequest,
+  inviterGuardId: string,
+  inviteeId: string,
+  allJobs: ScheduleJob[],
+  inviteeName?: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (!isMultiGuardJob(job)) return { error: 'This job only needs one guard.' };
+  if (job.status !== 'open') return { error: 'This job is not open for invitations.' };
+  if (inviterGuardId === inviteeId) return { error: 'You cannot invite yourself.' };
+  const slots = mergeJobSlots(job, job.guardSlots);
+  if (!guardHasApprovedTeamSlot(slots, inviterGuardId)) {
+    return { error: 'You must be approved on this job before inviting other guards.' };
+  }
+  const blocked = scheduleError(inviteeId, job, allJobs, inviteeName);
+  if (blocked) return blocked;
+  if (guardHasJobTeamAssociation(slots, inviteeId)) {
+    return { error: 'That guard is already tied to this job.' };
+  }
+  const openSlot = findOpenSlot(slots);
+  if (!openSlot) return { error: 'No open slots left on this job.' };
+  const invitedAt = now.toISOString();
+  const inviteExpiresAt = computeInviteExpiresAt(
+    job.openedAt ?? job.startDate,
+    job.startDate,
+    invitedAt
+  );
+  const nextSlots = slots.map((slot) =>
+    slot.slotIndex === openSlot.slotIndex
+      ? {
+          ...slot,
+          guardId: inviteeId,
+          status: 'invited' as const,
+          invitedByGuardId: inviterGuardId,
+          invitedAt,
+          inviteExpiresAt,
+          updatedAt: invitedAt,
+        }
+      : slot
+  );
+  return { job: { ...job, guardSlots: nextSlots }, slots: nextSlots };
+}
+
+export function acceptTeamInvite(
+  job: SecurityRequest,
+  guardId: string,
+  allJobs: ScheduleJob[],
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  const blocked = scheduleError(guardId, job, allJobs);
+  if (blocked) return blocked;
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const slot = slots.find((s) => s.guardId === guardId && s.status === 'invited');
+  if (!slot) return { error: 'No pending invitation found for this job.' };
+  if (slot.inviteExpiresAt && new Date(slot.inviteExpiresAt).getTime() < now.getTime()) {
+    return { error: 'This invitation has expired.' };
+  }
+  if (guardHasJobTeamAssociation(slots.filter((s) => s.id !== slot.id), guardId)) {
+    return { error: 'You are already tied to this job.' };
+  }
+  const ts = now.toISOString();
+  const nextSlots = slots.map((s) =>
+    s.id === slot.id
+      ? {
+          ...s,
+          status: 'pending_client' as const,
+          staffApprovedAt: ts,
+          invitedByGuardId: s.invitedByGuardId,
+          updatedAt: ts,
+        }
+      : s
+  );
+  const nextApplicants = [...new Set([...job.applicants, guardId])];
+  return {
+    job: {
+      ...job,
+      guardSlots: nextSlots,
+      applicants: nextApplicants,
+      pendingGuardId: guardId,
+      staffApprovedGuardAt: ts,
+    },
+    slots: nextSlots,
+  };
+}
+
+export function declineTeamInvite(
+  job: SecurityRequest,
+  guardId: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  const slots = mergeJobSlots(job, job.guardSlots);
+  const slot = slots.find((s) => s.guardId === guardId && s.status === 'invited');
+  if (!slot) return { error: 'No pending invitation found.' };
+  const ts = now.toISOString();
+  const nextSlots = slots.map((s) =>
+    s.id === slot.id
+      ? {
+          ...s,
+          status: 'open' as const,
+          guardId: null,
+          invitedByGuardId: null,
+          invitedAt: undefined,
+          inviteExpiresAt: undefined,
+          updatedAt: ts,
+        }
+      : s
+  );
+  return { job: { ...job, guardSlots: nextSlots }, slots: nextSlots };
+}
+
+const INVITER_REMOVABLE_STATUSES: JobGuardSlotStatus[] = ['invited'];
+
+export function removeInvitedGuardFromTeam(
+  job: SecurityRequest,
+  inviterGuardId: string,
+  targetGuardId: string,
+  now = new Date()
+): { job: SecurityRequest; slots: JobGuardSlot[] } | { error: string } {
+  if (job.status !== 'open') return { error: 'This job is no longer open for roster changes.' };
+  const slots = mergeJobSlots(job, job.guardSlots);
+  if (!guardHasApprovedTeamSlot(slots, inviterGuardId)) {
+    return { error: 'Only approved roster members can remove pending invites.' };
+  }
+  const slot = slots.find((s) => s.guardId === targetGuardId);
+  if (!slot) return { error: 'That guard is not on this roster.' };
+  if (slot.invitedByGuardId !== inviterGuardId) {
+    return { error: 'You can only remove guards you invited.' };
+  }
+  if (!INVITER_REMOVABLE_STATUSES.includes(slot.status)) {
+    return { error: 'This guard can no longer be removed from the roster.' };
+  }
+  return reopenMemberSlot(job, slots, slot, targetGuardId, now.toISOString());
 }
 
 /** Place an independent applicant into the next open slot for client review. */

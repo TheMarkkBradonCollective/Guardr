@@ -1,67 +1,35 @@
 import type { Client, ClientType } from '../types';
 import { normalizeClientType } from './clientType';
+import {
+  capabilitiesForClientType,
+  isClientViewAllowedForType,
+  maxGuardsPerRequestForType,
+  type ClientCapability,
+  PERSONAL_CLIENT_CAPABILITIES,
+  BUSINESS_CLIENT_CAPABILITIES,
+  SECURITY_COMPANY_CAPABILITIES,
+  PERSONAL_MAX_GUARDS_PER_REQUEST,
+  BUSINESS_MAX_GUARDS_PER_REQUEST,
+  SECURITY_COMPANY_MAX_GUARDS_PER_REQUEST,
+} from './clientProductModules';
 
-/**
- * One client system. Client type is account structure, not usage frequency.
- * Personal = individual customer who can request, rebook, and schedule ongoing coverage.
- * Business = organization with expanded site, staffing, and team management tools.
- */
-export type ClientCapability =
-  | 'request-security'
-  | 'one-time-schedule'
-  | 'recurring-schedules'
-  | 'rebook-service'
-  | 'rehire-guard'
-  | 'manage-upcoming'
-  | 'view-assigned-guards'
-  | 'messaging'
-  | 'invoices'
-  | 'save-locations'
-  | 'authorized-contacts'
-  | 'personal-protection'
-  | 'multiple-sites'
-  | 'multiple-users'
-  | 'employee-access'
-  | 'site-requirements'
-  | 'site-rosters'
-  | 'multi-guard-requests'
-  | 'staffing-coverage'
-  | 'business-billing'
-  | 'company-documents'
-  | 'reporting';
+export type { ClientCapability };
+export {
+  PERSONAL_CLIENT_CAPABILITIES,
+  BUSINESS_CLIENT_CAPABILITIES,
+  SECURITY_COMPANY_CAPABILITIES,
+  PERSONAL_MAX_GUARDS_PER_REQUEST,
+  BUSINESS_MAX_GUARDS_PER_REQUEST,
+  SECURITY_COMPANY_MAX_GUARDS_PER_REQUEST,
+};
 
-/** Both account types are repeat customers. Frequency is not gated by type. */
-export const SHARED_CLIENT_CAPABILITIES: readonly ClientCapability[] = [
-  'request-security',
-  'one-time-schedule',
-  'recurring-schedules',
-  'rebook-service',
-  'rehire-guard',
-  'manage-upcoming',
-  'view-assigned-guards',
-  'messaging',
-  'invoices',
-  'save-locations',
-  'authorized-contacts',
-  'personal-protection',
-] as const;
+/** @deprecated Use PERSONAL_CLIENT_CAPABILITIES — kept for tests migrating off business inheritance. */
+export const SHARED_CLIENT_CAPABILITIES = PERSONAL_CLIENT_CAPABILITIES;
 
-export const BUSINESS_ONLY_CAPABILITIES: readonly ClientCapability[] = [
-  'multiple-sites',
-  'multiple-users',
-  'employee-access',
-  'site-requirements',
-  'site-rosters',
-  'multi-guard-requests',
-  'staffing-coverage',
-  'business-billing',
-  'company-documents',
-  'reporting',
-] as const;
-
-/** Personal events stay a small team; bulk site staffing is a business management tool. */
-export const PERSONAL_MAX_GUARDS_PER_REQUEST = 4;
-export const BUSINESS_MAX_GUARDS_PER_REQUEST = 50;
+/** @deprecated Use BUSINESS_CLIENT_CAPABILITIES minus personal caps. */
+export const BUSINESS_ONLY_CAPABILITIES = BUSINESS_CLIENT_CAPABILITIES.filter(
+  (cap) => !PERSONAL_CLIENT_CAPABILITIES.includes(cap as (typeof PERSONAL_CLIENT_CAPABILITIES)[number])
+) as ClientCapability[];
 
 export type ClientOverflowNavId = 'invoices' | 'guards' | 'locations' | 'reports' | 'settings';
 
@@ -72,8 +40,6 @@ export type ClientHomeQuickActionId =
   | 'reports'
   | 'guards'
   | 'locations';
-
-const BUSINESS_ONLY_VIEWS = new Set(['reports']);
 
 function resolveType(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
@@ -87,12 +53,7 @@ function resolveType(
 export function clientCapabilities(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
 ): Set<ClientCapability> {
-  const type = resolveType(clientOrType);
-  const caps = new Set<ClientCapability>(SHARED_CLIENT_CAPABILITIES);
-  if (type === 'business') {
-    for (const cap of BUSINESS_ONLY_CAPABILITIES) caps.add(cap);
-  }
-  return caps;
+  return capabilitiesForClientType(clientOrType);
 }
 
 export function clientHasCapability(
@@ -105,9 +66,7 @@ export function clientHasCapability(
 export function clientMaxGuardsPerRequest(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
 ): number {
-  return clientHasCapability(clientOrType, 'multi-guard-requests')
-    ? BUSINESS_MAX_GUARDS_PER_REQUEST
-    : PERSONAL_MAX_GUARDS_PER_REQUEST;
+  return maxGuardsPerRequestForType(resolveType(clientOrType));
 }
 
 export function clientMaxSavedLocations(
@@ -130,8 +89,7 @@ export function isClientViewAllowed(
   view: string,
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
 ): boolean {
-  if (!BUSINESS_ONLY_VIEWS.has(view)) return true;
-  return clientHasCapability(clientOrType, 'reporting');
+  return isClientViewAllowedForType(view, resolveType(clientOrType));
 }
 
 export function resolveAllowedClientView(
@@ -145,10 +103,12 @@ export function clientOverflowNav(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
 ): { id: ClientOverflowNavId; label: string }[] {
   const type = resolveType(clientOrType);
+  const isPersonal = type === 'personal';
+  const isSecurityCompany = type === 'security-company';
   const items: { id: ClientOverflowNavId; label: string }[] = [
-    { id: 'invoices', label: type === 'personal' ? 'Payments' : 'Billing' },
-    { id: 'guards', label: 'Guards' },
-    { id: 'locations', label: type === 'personal' ? 'Locations' : 'Sites' },
+    { id: 'invoices', label: isPersonal ? 'Payments' : 'Billing' },
+    { id: 'guards', label: isSecurityCompany ? 'Marketplace' : 'Guards' },
+    { id: 'locations', label: isPersonal ? 'Locations' : isSecurityCompany ? 'Client sites' : 'Sites' },
   ];
   if (clientHasCapability(type, 'reporting')) {
     items.push({ id: 'reports', label: 'Reports' });
@@ -161,41 +121,49 @@ export function clientHomeQuickActions(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
 ): { id: ClientHomeQuickActionId; label: string; sub: string }[] {
   const type = resolveType(clientOrType);
+  const isPersonal = type === 'personal';
+  const isSecurityCompany = type === 'security-company';
   const actions: { id: ClientHomeQuickActionId; label: string; sub: string }[] = [
     {
       id: 'request',
-      label: type === 'personal' ? 'Request security' : 'Post job',
-      sub: type === 'personal' ? 'Request another anytime' : 'Open to guards',
+      label: isPersonal ? 'Request security' : isSecurityCompany ? 'Post overflow job' : 'Post job',
+      sub: isPersonal ? 'Request another anytime' : isSecurityCompany ? 'Hire marketplace guards' : 'Open to guards',
     },
     {
       id: 'guards',
-      label: type === 'personal' ? 'Rebook a guard' : 'Browse guards',
-      sub: type === 'personal' ? 'Same guard or team again' : 'Resumes & licenses',
+      label: isPersonal ? 'Rebook a guard' : isSecurityCompany ? 'Browse marketplace' : 'Browse guards',
+      sub: isPersonal ? 'Same guard or team again' : 'Resumes & licenses',
     },
     {
       id: 'locations',
-      label: type === 'personal' ? 'Preferred locations' : 'Sites',
-      sub: type === 'personal' ? 'Reuse saved places' : 'Locations & site notes',
+      label: isPersonal ? 'Preferred locations' : isSecurityCompany ? 'Client sites' : 'Sites',
+      sub: isPersonal ? 'Reuse saved places' : 'Locations & site notes',
     },
     {
       id: 'schedule',
       label: 'Schedule',
-      sub: type === 'personal' ? 'One-time or recurring' : 'Plan ahead',
+      sub: isPersonal ? 'One-time or recurring' : 'Plan ahead',
     },
   ];
   if (clientHasCapability(type, 'recurring-schedules')) {
     actions.push(
-      type === 'personal'
+      isPersonal
         ? {
             id: 'recurring',
             label: 'Recurring security',
             sub: 'Weekly or ongoing coverage',
           }
-        : {
-            id: 'recurring',
-            label: 'Multi-guard site',
-            sub: 'Construction & events',
-          }
+        : isSecurityCompany
+          ? {
+              id: 'recurring',
+              label: 'Recurring posts',
+              sub: 'Standing posts & routes',
+            }
+          : {
+              id: 'recurring',
+              label: 'Multi-guard site',
+              sub: 'Construction & events',
+            }
     );
   }
   if (clientHasCapability(type, 'reporting')) {
@@ -211,5 +179,8 @@ export function clientHomeQuickActions(
 export function clientPostJobLabel(
   clientOrType: ClientType | Pick<Client, 'clientType'> | undefined
 ): string {
-  return resolveType(clientOrType) === 'personal' ? '+ Request security' : '+ Post a job';
+  const type = resolveType(clientOrType);
+  if (type === 'personal') return '+ Request security';
+  if (type === 'security-company') return '+ Post overflow job';
+  return '+ Post a job';
 }

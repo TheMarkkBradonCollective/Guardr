@@ -1,0 +1,145 @@
+import React from 'react';
+import { Client } from '../../types';
+import { WfBadge } from '../ui/wireframe';
+import { MapPin } from 'lucide-react';
+import { IntakeField } from './applicationIntakeFields';
+
+export function StaffPersonalClientApplication({ client }: { client: Client }) {
+  return (
+    <>
+      {(client.serviceDescription ||
+        client.serviceTypes?.length ||
+        client.estimatedGuardsNeeded ||
+        client.armedPreference ||
+        client.serviceFrequencies?.length ||
+        client.estimatedStartDate ||
+        client.budgetRange) && (
+        <div className="space-y-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Coverage needs</p>
+          {client.serviceDescription ? (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">
+                Description
+              </p>
+              <p className="text-sm text-brand-text leading-relaxed whitespace-pre-wrap">
+                {client.serviceDescription}
+              </p>
+            </div>
+          ) : null}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <IntakeField label="Estimated guards" value={client.estimatedGuardsNeeded} />
+            <IntakeField
+              label="Armed preference"
+              value={
+                client.armedPreference === 'armed'
+                  ? 'Armed'
+                  : client.armedPreference === 'unarmed'
+                    ? 'Unarmed'
+                    : client.armedPreference === 'no-preference'
+                      ? 'No preference'
+                      : undefined
+              }
+            />
+            <IntakeField label="Est. start" value={client.estimatedStartDate} />
+            <IntakeField label="Budget range" value={client.budgetRange} />
+          </div>
+          {client.serviceTypes?.length ? (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">
+                Service types
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {client.serviceTypes.map((s) => (
+                  <WfBadge key={s}>{s}</WfBadge>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      <StaffSharedLocationAndBackground client={client} showPriorExperience />
+    </>
+  );
+}
+
+export function StaffSharedLocationAndBackground({
+  client,
+  showPriorExperience = true,
+}: {
+  client: Client;
+  showPriorExperience?: boolean;
+}) {
+  return (
+    <>
+      {(client.serviceCity || client.propertyTypes?.length) && (
+        <div className="space-y-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Location & site</p>
+          {client.serviceCity ? (
+            <div className="inline-flex items-center gap-1.5 text-sm">
+              <MapPin className="w-3.5 h-3.5 text-brand-primary" />
+              <span>
+                {client.serviceCity}
+                {client.serviceState ? `, ${client.serviceState}` : ', CA'}
+              </span>
+            </div>
+          ) : null}
+          {client.propertyTypes?.length ? (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">
+                Property types
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {client.propertyTypes.map((p) => (
+                  <WfBadge key={p}>{p}</WfBadge>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      {(client.referredBy || client.howHeardAboutUs) && (
+        <div className="space-y-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Referral</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <IntakeField label="Referred by" value={client.referredBy} />
+            <IntakeField label="How they heard" value={client.howHeardAboutUs} />
+          </div>
+        </div>
+      )}
+
+      {showPriorExperience &&
+      (client.hasPriorSecurityService != null ||
+        client.priorSecurityProvider ||
+        client.specialRequirements) ? (
+        <div className="space-y-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted">Background</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <IntakeField
+              label="Prior security service"
+              value={
+                client.hasPriorSecurityService == null
+                  ? undefined
+                  : client.hasPriorSecurityService
+                    ? 'Yes'
+                    : 'No'
+              }
+            />
+            <IntakeField label="Prior provider" value={client.priorSecurityProvider} />
+          </div>
+          {client.specialRequirements ? (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.07em] text-brand-text-muted mb-1">
+                Special requirements
+              </p>
+              <p className="text-sm text-brand-text leading-relaxed whitespace-pre-wrap">
+                {client.specialRequirements}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </>
+  );
+}

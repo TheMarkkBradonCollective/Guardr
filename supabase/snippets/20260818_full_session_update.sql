@@ -25,12 +25,12 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS client_type TEXT;
 
 UPDATE clients
 SET client_type = 'business'
-WHERE client_type IS NULL OR client_type NOT IN ('personal', 'business');
+WHERE client_type IS NULL OR client_type NOT IN ('personal', 'business', 'security-company');
 
 ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_account_kind_check;
 ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_client_type_check;
 ALTER TABLE clients ADD CONSTRAINT clients_client_type_check
-  CHECK (client_type IN ('personal', 'business'));
+  CHECK (client_type IN ('personal', 'business', 'security-company'));
 
 ALTER TABLE clients ALTER COLUMN client_type SET DEFAULT 'business';
 ALTER TABLE clients ALTER COLUMN client_type SET NOT NULL;

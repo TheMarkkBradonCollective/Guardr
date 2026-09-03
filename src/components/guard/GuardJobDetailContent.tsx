@@ -13,6 +13,7 @@ import { JobListingProfile } from '../jobs/JobListingProfile';
 import { PriceNegotiationPanel } from '../jobs/PriceNegotiationPanel';
 import type { PlatformFeeConfig } from '../../lib/payments';
 import { getAgreedPriceOffer, getGuardNegotiation, isOpenContractPricing } from '../../lib/agreementPricing';
+import { GuardJobSlotPanel } from './GuardJobSlotPanel';
 import { WfBadge } from '../ui/wireframe';
 import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { Check, X } from 'lucide-react';
@@ -33,6 +34,7 @@ interface GuardJobDetailContentProps {
   }) => void | Promise<void>;
   onAcceptInvite?: () => void | Promise<void>;
   onDeclineInvite?: () => void | Promise<void>;
+  onSuggestGuard?: (guardId: string) => void | Promise<void>;
   scheduleRequests?: import('../../lib/guardSchedule').ScheduleJob[];
   onClose?: () => void;
   feeConfig?: PlatformFeeConfig;
@@ -50,6 +52,11 @@ export function GuardJobDetailContent({
   coworkerGuards = [],
   onAccept,
   onDeclineDirectJob,
+  onInviteGuard,
+  onRemoveGuard,
+  onSuggestGuard,
+  onAcceptInvite,
+  onDeclineInvite,
   scheduleRequests,
   onClose,
   feeConfig,
@@ -140,6 +147,20 @@ export function GuardJobDetailContent({
                 <p className="text-sm text-brand-primary bg-brand-primary/10 border border-brand-primary/25 rounded-lg px-3 py-2.5">
                   Application submitted. Guardr staff will review applicants and send the best fit for customer approval.
                 </p>
+              )}
+
+              {job.status === 'open' && (
+                <GuardJobSlotPanel
+                  job={job}
+                  guard={guard}
+                  coworkerGuards={coworkerGuards}
+                  onInviteGuard={onInviteGuard}
+                  onRemoveGuard={onRemoveGuard}
+                  onSuggestGuard={onSuggestGuard}
+                  onAcceptInvite={onAcceptInvite}
+                  onDeclineInvite={onDeclineInvite}
+                  scheduleRequests={scheduleRequests}
+                />
               )}
 
               {/* Direct request to this guard — confirm or decline */}
