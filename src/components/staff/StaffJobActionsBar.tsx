@@ -23,7 +23,7 @@ export function StaffJobActionsBar({
   const scheduleLocked = isJobScheduleLocked(request);
 
   return (
-    <section className="staff-detail-section space-y-3">
+    <section className="staff-detail-section staff-account-access space-y-3">
       <WfSectionHeader title="Staff actions" className="!px-0 !mb-0" />
       <div className="staff-detail-actions staff-detail-actions--primary">
         <AppButton

@@ -76,4 +76,10 @@ describe('tablet CSS independence', () => {
       'tablet must not piggyback the mobile stacked sheet',
     );
   });
+
+  it('applies the tablet inspector to payments, forms, and app screens site-wide', () => {
+    assert.match(css, /body\.sf-tablet \.payments-page/);
+    assert.match(css, /sft-form-page-body \.grid[\s\S]{0,280}repeat\(2/);
+    assert.match(css, /\.client-content-shell[\s\S]{0,80}max-width: none/);
+  });
 });

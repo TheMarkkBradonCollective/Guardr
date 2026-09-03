@@ -1762,3 +1762,68 @@ body.sf-tablet .staff-detail-pane:has(> .staff-detail-header) > .staff-account-a
 .sfp-stage[data-surface='tablet'] .staff-detail-pane:has(> .staff-detail-header) > .staff-account-access + .staff-detail-section:last-child {
   grid-column: 1 / -1;
 }
+
+/* ── Site-wide inspector: payments, forms, jobs, app screens ───────────── */
+
+html body.sf-tablet .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+html body.sf-tablet .client-content-shell,
+html body.sf-tablet .payments-page {
+  max-width: none !important;
+  width: 100%;
+  margin-inline: 0;
+}
+
+body.sf-tablet .payments-page,
+.sfp-stage[data-surface='tablet'] .payments-page {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body.sf-tablet .payments-page-header,
+.sfp-stage[data-surface='tablet'] .payments-page-header {
+  padding: 16px 24px 14px;
+  border-bottom: 1px solid var(--sf-line);
+  background: var(--sf-paper, #fff);
+}
+
+body.sf-tablet .payments-page-header h1,
+.sfp-stage[data-surface='tablet'] .payments-page-header h1 {
+  margin: 0;
+  font-size: var(--sf-type-heading, 19px);
+  font-weight: 700;
+}
+
+body.sf-tablet .payments-page-body,
+.sfp-stage[data-surface='tablet'] .payments-page-body {
+  padding: 16px 24px 24px;
+}
+
+body.sf-tablet .sft-page .grid.gap-4,
+body.sf-tablet .sft-form-page-body .grid,
+body.sf-tablet .sft-shell-canvas .app-form-section .grid,
+body.sf-tablet .sft-shell-canvas form .grid.gap-4,
+body.sf-tablet .sft-shell-canvas form .grid.gap-3 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px 18px;
+}
+
+body.sf-tablet .sft-shell-canvas .app-form-actions,
+body.sf-tablet .sft-shell-canvas .app-action-row,
+body.sf-tablet .sft-shell-canvas .app-action-row--equal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+body.sf-tablet .staff-detail-pane:not(:has(> .staff-detail-header)),
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:not(:has(> .staff-detail-header)) {
+  padding: 16px 20px 24px;
+}
+
+body.sf-tablet .staff-detail-pane:not(:has(> .staff-detail-header)) > .staff-detail-section,
+.sfp-stage[data-surface='tablet'] .staff-detail-pane:not(:has(> .staff-detail-header)) > .staff-detail-section {
+  margin-top: 12px;
+  padding: 16px 18px !important;
+  border: 1px solid var(--sf-line);
+  border-radius: var(--sf-radius-card, 14px);
+  background: var(--sf-paper, #fff);
+}

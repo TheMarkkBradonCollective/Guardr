@@ -1249,3 +1249,89 @@ body[data-surface='desktop'] .sfd-shell-canvas {
   scrollbar-width: thin;
   scrollbar-color: var(--sf-line-strong) transparent;
 }
+
+/* ── Site-wide canvas: every signed-in page, not just staff profiles ─────
+   Guard, client, and staff reading pages were letterboxed to 52rem so a
+   laptop looked like a phone column. Kill that. Forms, payments, jobs,
+   and generic detail panes use the same command workbench language. */
+
+body[data-surface='desktop'] .role-app-shell .app-screen:not(.guardr-map-root):not(.app-screen--full-bleed),
+body[data-surface='desktop'] .client-content-shell,
+body[data-surface='desktop'] .payments-page,
+body[data-surface='desktop'] .sfd-shell-canvas .payments-page {
+  max-width: none !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+}
+
+body[data-surface='desktop'] .payments-page {
+  background: var(--sf-paper-sunken, #f6f6f6);
+}
+
+body[data-surface='desktop'] .payments-page-header,
+body[data-surface='desktop'] .sfd-shell-canvas .app-screen-header:not(.app-screen-header--map) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 20px 32px 16px;
+  margin: 0;
+  border-bottom: 1px solid var(--sf-line);
+  background: var(--sf-paper, #fff);
+}
+
+body[data-surface='desktop'] .payments-page-header h1,
+body[data-surface='desktop'] .sfd-shell-canvas .app-screen-header-title,
+body[data-surface='desktop'] .sfd-shell-canvas .app-screen-header h1 {
+  margin: 0;
+  font-size: var(--sf-type-title, 21px) !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+body[data-surface='desktop'] .payments-page-header p {
+  margin: 4px 0 0;
+  max-width: 40rem;
+}
+
+body[data-surface='desktop'] .payments-page-body {
+  padding: 20px 32px 32px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-form-section .grid,
+body[data-surface='desktop'] .sfd-shell-canvas .app-form-grid,
+body[data-surface='desktop'] .sfd-shell-canvas form .grid.gap-4,
+body[data-surface='desktop'] .sfd-shell-canvas form .grid.gap-3 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 16px 28px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-form-actions,
+body[data-surface='desktop'] .sfd-shell-canvas .app-action-row,
+body[data-surface='desktop'] .sfd-shell-canvas .app-action-row--equal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body[data-surface='desktop'] .sfd-shell-canvas .app-form-actions > *,
+body[data-surface='desktop'] .sfd-shell-canvas .app-action-row > * {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+/* Job / generic detail panes without a profile header still fill the canvas. */
+body[data-surface='desktop'] .staff-detail-pane:not(:has(> .staff-detail-header)) {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 24px 32px 32px;
+}
+
+body[data-surface='desktop'] .staff-detail-pane:not(:has(> .staff-detail-header)) > .staff-detail-section {
+  margin-top: 12px;
+  padding: 22px 24px !important;
+  border: 1px solid var(--sf-line);
+  border-radius: 12px;
+  background: var(--sf-paper, #fff);
+}

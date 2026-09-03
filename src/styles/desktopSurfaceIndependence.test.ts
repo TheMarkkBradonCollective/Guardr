@@ -67,4 +67,11 @@ describe('desktop CSS independence', () => {
     );
     assert.ok(commandCss.includes('background-color: transparent !important'));
   });
+
+  it('applies the desktop workbench to payments, forms, and app screens site-wide', () => {
+    const commandCss = readFileSync(join(here, 'desktop-command.css'), 'utf8');
+    assert.match(commandCss, /\.payments-page-header/);
+    assert.match(commandCss, /\.role-app-shell \.app-screen[\s\S]{0,160}max-width: none/);
+    assert.match(commandCss, /\.app-form-section \.grid[\s\S]{0,400}repeat\(2/);
+  });
 });

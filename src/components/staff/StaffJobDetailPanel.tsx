@@ -24,6 +24,8 @@ import { SlideToConfirm } from '../ui/SlideToConfirm';
 import { WfBadge } from '../ui/wireframe';
 import { ArrowLeft, X } from 'lucide-react';
 import { StaffJobActionsBar } from './StaffJobActionsBar';
+import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
+import { ProfileAvatar } from '../profile/ProfileAvatar';
 
 export interface StaffJobDetailPanelProps {
   req: SecurityRequest;
@@ -109,23 +111,31 @@ export function StaffJobDetailPanel({
         </div>
       )}
       {showStatusHeader && (
-        <>
-          <div className="flex flex-wrap items-center gap-2">
-            <JobStatusBadge job={req} variant="staff" />
-            {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
-            {isJobLocationCoordsMissing(req) && <NoMapCoordsBadge />}
-            {scheduleChangePending && (
-              <WfBadge tone="warning">
-                {scheduleChangeBilling ? 'Confirm billing' : 'Schedule change'}
-              </WfBadge>
-            )}
-            <span className="text-xs text-brand-text-muted">{req.id}</span>
-          </div>
-          <p className="text-sm">
-            Guard: <strong>{assigned ? assigned.name : 'No guard yet'}</strong>
-            {req.guardsNeeded && req.guardsNeeded > 1 ? ` · ${req.guardsNeeded} guards needed` : ''}
-          </p>
-        </>
+        <StaffDetailProfileHeader
+          avatar={<ProfileAvatar name={req.clientName || req.title} size="lg" rounded="xl" />}
+          name={req.title || req.siteName || 'Job'}
+          email={req.clientName}
+          emailPrefix="Client · "
+          metrics={[
+            { label: 'When', value: currentRange },
+            { label: 'Location', value: req.location || req.address || '—' },
+            ...(assigned
+              ? [{ label: 'Guard', value: assigned.name }]
+              : [{ label: 'Guard', value: req.guardsNeeded && req.guardsNeeded > 1 ? `${req.guardsNeeded} needed` : 'Unassigned' }]),
+          ]}
+          badges={
+            <>
+              <JobStatusBadge job={req} variant="staff" />
+              {isNoSelfAuditFlagged(req) && <NoSelfAuditBadge />}
+              {isJobLocationCoordsMissing(req) && <NoMapCoordsBadge />}
+              {scheduleChangePending && (
+                <WfBadge tone="warning">
+                  {scheduleChangeBilling ? 'Confirm billing' : 'Schedule change'}
+                </WfBadge>
+              )}
+            </>
+          }
+        />
       )}
       {scheduleChangePending && (
         <section className="staff-detail-section space-y-3 border border-amber-500/30 bg-amber-500/5 rounded-xl p-4">
@@ -186,13 +196,15 @@ export function StaffJobDetailPanel({
         </section>
       )}
       {!editing && (
-        <JobListingProfile
-          job={req}
-          showClientHeader
-          showBadges={false}
-          payLine={<JobBillingSummaryFromRequest req={req} variant="staff" />}
-          operationalDetails={req.operationalDetails}
-        />
+        <section className="staff-detail-section space-y-3">
+          <JobListingProfile
+            job={req}
+            showClientHeader={!showStatusHeader}
+            showBadges={false}
+            payLine={<JobBillingSummaryFromRequest req={req} variant="staff" />}
+            operationalDetails={req.operationalDetails}
+          />
+        </section>
       )}
       {scheduleLocked && !editing && (
         <p className="text-xs text-brand-text-muted border-t border-brand-border pt-3">

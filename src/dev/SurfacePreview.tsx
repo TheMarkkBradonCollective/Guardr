@@ -12,7 +12,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Bell, Monitor, Smartphone, Tablet, UserCheck } from 'lucide-react';
+import { Bell, Briefcase, CreditCard, Monitor, Smartphone, Tablet, UserCheck } from 'lucide-react';
 import { useSurface } from '../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../surfaces/SurfaceAppShell';
 import { SURFACE_KINDS, surfaceLabel, type SurfaceKind } from '../surfaces/surfaceKind';
@@ -22,6 +22,8 @@ import { MobileShiftsScreen } from './surfaces/MobileShiftsScreen';
 import { TabletShiftsScreen } from './surfaces/TabletShiftsScreen';
 import { DesktopOperationsScreen } from './surfaces/DesktopOperationsScreen';
 import { StaffProfilePreviewScreen } from './surfaces/StaffProfilePreviewScreen';
+import { JobPreviewScreen } from './surfaces/JobPreviewScreen';
+import { PaymentsPreviewScreen } from './surfaces/PaymentsPreviewScreen';
 import './surfacePreview.css';
 
 const PROFILE_DEST: SurfaceDestination = {
@@ -31,6 +33,23 @@ const PROFILE_DEST: SurfaceDestination = {
   section: 'Operations',
   mobileRank: 0,
   tabletQuick: true,
+};
+
+const JOB_DEST: SurfaceDestination = {
+  id: 'job-detail',
+  label: 'Job',
+  icon: Briefcase,
+  section: 'Operations',
+  mobileRank: 0,
+  tabletQuick: true,
+};
+
+const PAYMENTS_DEST: SurfaceDestination = {
+  id: 'payments-preview',
+  label: 'Payments',
+  icon: CreditCard,
+  section: 'Management',
+  mobileRank: 0,
 };
 
 const SURFACE_ICON: Record<SurfaceKind, typeof Monitor> = {
@@ -76,24 +95,55 @@ export default function SurfacePreview() {
 function PreviewApp() {
   const { surface } = useSurface();
   const staff = surface === 'desktop';
-  const wantsProfiles =
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('page') === 'profiles';
+  const previewPage =
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') : null;
   const [activeId, setActiveId] = useState(
-    wantsProfiles ? 'profiles' : staff ? 'jobs' : 'myJobs'
+    previewPage === 'profiles'
+      ? 'profiles'
+      : previewPage === 'jobs'
+        ? 'job-detail'
+        : previewPage === 'payments'
+          ? 'payments-preview'
+          : staff
+            ? 'jobs'
+            : 'myJobs'
   );
-  const destinations = [PROFILE_DEST, ...(staff ? STAFF_DESTINATIONS : GUARD_DESTINATIONS)];
+  const destinations = [
+    PROFILE_DEST,
+    JOB_DEST,
+    PAYMENTS_DEST,
+    ...(staff ? STAFF_DESTINATIONS : GUARD_DESTINATIONS),
+  ];
 
   useEffect(() => {
-    const showProfiles =
-      typeof window !== 'undefined' &&
-      new URLSearchParams(window.location.search).get('page') === 'profiles';
-    setActiveId(showProfiles ? 'profiles' : surface === 'desktop' ? 'jobs' : 'myJobs');
+    const page =
+      typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') : null;
+    setActiveId(
+      page === 'profiles'
+        ? 'profiles'
+        : page === 'jobs'
+          ? 'job-detail'
+          : page === 'payments'
+            ? 'payments-preview'
+            : surface === 'desktop'
+              ? 'jobs'
+              : 'myJobs'
+    );
   }, [surface]);
 
   return (
     <SurfaceAppShell
-      title={activeId === 'profiles' ? 'Staff' : staff ? 'Jobs' : 'Shifts'}
+      title={
+        activeId === 'profiles'
+          ? 'Staff'
+          : activeId === 'job-detail'
+            ? 'Jobs'
+            : activeId === 'payments-preview'
+              ? 'Payments'
+              : staff
+                ? 'Jobs'
+                : 'Shifts'
+      }
       breadcrumb={staff ? 'Operations' : undefined}
       workspaceLabel={staff ? 'Staff operations' : 'Guard workspace'}
       destinations={destinations}
@@ -117,6 +167,10 @@ function PreviewApp() {
     >
       {activeId === 'profiles' ? (
         <StaffProfilePreviewScreen />
+      ) : activeId === 'job-detail' ? (
+        <JobPreviewScreen />
+      ) : activeId === 'payments-preview' ? (
+        <PaymentsPreviewScreen />
       ) : surface === 'mobile' ? (
         <MobileShiftsScreen />
       ) : surface === 'tablet' ? (

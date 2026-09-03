@@ -1,5 +1,6 @@
 import React from 'react';
 import type { AppRole } from '../../lib/appNavigation';
+import { useSurfaceKind } from '../../surfaces';
 
 interface PaymentsPageProps {
   role: AppRole;
@@ -19,11 +20,13 @@ const PAYMENTS_TITLE: Record<AppRole, string> = {
 };
 
 export function PaymentsPage({ role, children }: PaymentsPageProps) {
+  const surface = useSurfaceKind();
+
   return (
-    <div className="payments-page flex flex-col min-h-0 h-full">
-      <header className="payments-page-header px-4 pt-4 pb-3 border-b border-brand-border shrink-0">
-        <h1 className="text-xl font-bold">{PAYMENTS_TITLE[role]}</h1>
-        <p className="text-sm text-brand-text-muted mt-1">{PAYMENTS_SUBTITLE[role]}</p>
+    <div className={`payments-page payments-page--${surface} flex flex-col min-h-0 h-full`}>
+      <header className="payments-page-header shrink-0">
+        <h1 className="payments-page-title">{PAYMENTS_TITLE[role]}</h1>
+        <p className="payments-page-subtitle">{PAYMENTS_SUBTITLE[role]}</p>
       </header>
       <div className="payments-page-body flex-1 min-h-0 overflow-hidden">{children}</div>
     </div>

@@ -2319,3 +2319,45 @@ body[data-surface='mobile'] .staff-detail-sheet {
   background: var(--sf-paper) !important;
   box-shadow: var(--shadow-panel, 0 -4px 20px rgba(0, 0, 0, 0.1)) !important;
 }
+
+/* ── Site-wide sheet: payments, app screens, forms ──────────────────────── */
+
+body[data-surface='mobile'] .payments-page-header,
+body[data-surface='mobile'] .sfm-shell .app-screen-header:not(.app-screen-header--map) {
+  padding: 12px 16px 16px;
+  border-bottom: none;
+}
+
+body[data-surface='mobile'] .payments-page-header h1,
+body[data-surface='mobile'] .sfm-shell .app-screen-header-title,
+body[data-surface='mobile'] .sfm-shell .app-screen-header h1 {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-type-display) !important;
+  font-weight: 700;
+  letter-spacing: var(--sf-tracking-display);
+  line-height: 1.12;
+}
+
+body[data-surface='mobile'] .payments-page-header p {
+  margin-top: 8px;
+  font-size: var(--sf-type-body);
+  color: var(--sf-ink-secondary);
+}
+
+body[data-surface='mobile'] .payments-page-body {
+  padding: 8px 16px 24px;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-form-actions > *,
+body[data-surface='mobile'] .sfm-shell .app-action-row > *,
+body[data-surface='mobile'] .sfm-shell .app-action-row--equal > * {
+  width: 100%;
+}
+
+body[data-surface='mobile'] .sfm-shell .app-form-actions,
+body[data-surface='mobile'] .sfm-shell .app-action-row,
+body[data-surface='mobile'] .sfm-shell .app-action-row--equal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

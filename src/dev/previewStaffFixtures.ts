@@ -1,4 +1,4 @@
-import type { SecurityGuard } from '../types';
+import type { SecurityGuard, SecurityRequest } from '../types';
 
 /** Static staff member for the surface preview harness. */
 export const PREVIEW_STAFF_MEMBER: SecurityGuard = {
@@ -38,3 +38,23 @@ export const PREVIEW_PENDING_STAFF_MEMBER: SecurityGuard = {
   lastName: 'Cole',
   email: 'a.cole@signaturesecurityspecialist.com',
 };
+
+/** Open job for surface preview of jobs / payments — not just staff profiles. */
+export const PREVIEW_JOB = {
+  id: 'JOB-2131256835',
+  title: 'Portage Distribution — Dock A3',
+  description: 'Gate coverage for inbound freight on the A3 dock.',
+  clientId: 'client-preview-1',
+  clientName: 'Portage Distribution',
+  clientLogo: 'PD',
+  location: 'Sacramento',
+  address: '4100 Portage Rd, Sacramento, CA',
+  type: 'standing-guard',
+  armedRequired: false,
+  startDate: '2026-09-03T15:00:00.000Z',
+  endDate: '2026-09-03T23:00:00.000Z',
+  durationHours: 8,
+  guardsNeeded: 1,
+  status: 'open',
+  estimatedPayout: 224,
+} as SecurityRequest;
