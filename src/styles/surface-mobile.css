@@ -2340,6 +2340,17 @@ body[data-surface='mobile'] .staff-detail-actions--list button {
   text-align: left;
 }
 
+body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--ok,
+body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--warn,
+body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--danger,
+body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--ok,
+body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--warn,
+body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--danger {
+  justify-content: center !important;
+  text-align: center !important;
+  min-height: var(--sf-button-h, 52px) !important;
+}
+
 body[data-surface='mobile'] .staff-detail-actions--primary {
   margin-top: 8px;
 }

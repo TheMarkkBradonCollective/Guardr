@@ -21219,13 +21219,14 @@ button.staff-action-btn--danger:hover:not(:disabled) {
   color: var(--status-danger) !important;
 }
 
-.uber-app-shell .staff-detail-actions .staff-action-btn--ok:disabled,
-.uber-app-shell .staff-detail-actions .staff-action-btn--warn:disabled,
-.uber-app-shell .staff-detail-actions .staff-action-btn--danger:disabled,
 .staff-detail-actions .staff-action-btn--ok:disabled,
 .staff-detail-actions .staff-action-btn--warn:disabled,
-.staff-detail-actions .staff-action-btn--danger:disabled {
-  opacity: 0.4 !important;
+.staff-detail-actions .staff-action-btn--danger:disabled,
+button.staff-action-btn--ok:disabled,
+button.staff-action-btn--warn:disabled,
+button.staff-action-btn--danger:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed;
 }
 
 .uber-app-shell .app-form-section,
