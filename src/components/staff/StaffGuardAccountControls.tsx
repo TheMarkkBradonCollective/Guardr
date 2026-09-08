@@ -18,8 +18,8 @@ import {
   promptDenyGuardApplicationNote,
 } from '../../lib/staffDocumentReview';
 import { guardCanStaffActivateAccount } from '../../lib/guardAccountActivation';
-import { WfSectionHeader } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
+import { StaffAccountAccessSection } from './StaffAccountAccessSection';
 
 interface StaffGuardAccountControlsProps {
   guard: SecurityGuard;
@@ -119,84 +119,86 @@ export function StaffGuardAccountControls({
       guardCanDenyApplication(status) ||
       canActivateAccount);
 
-  return (
-    <section className={`staff-detail-section space-y-3 ${className}`.trim()}>
-      <WfSectionHeader title="Account access" className="!px-0 !mb-0" />
+  const accessActions = showAccessActions ? (
+    <>
+      {showApplicationActions && guardCanDenyApplication(status) && onRejectGuardApplication && (
+        <AppButton
+          variant="danger"
+          size="sm"
+          className="staff-action-btn--danger"
+          disabled={actionPending}
+          onClick={() => void runDenyApplication()}
+        >
+          Deny application
+        </AppButton>
+      )}
+      {canActivateAccount && (
+        <AppButton
+          variant="primary"
+          size="sm"
+          className="staff-action-btn--ok"
+          disabled={actionPending}
+          onClick={() => void runActivateAccount()}
+          title="Activate marketplace access — all five credentials are verified"
+        >
+          Activate account
+        </AppButton>
+      )}
+      {guardCanDeactivateAccount(status) && onUpdateUserStatus && (
+        <AppButton
+          variant="outline"
+          size="sm"
+          className="staff-action-btn--warn"
+          disabled={actionPending}
+          onClick={() => void runStatusUpdate('suspended')}
+          title="Temporarily deactivate marketplace access — guard can be restored later"
+        >
+          Deactivate
+        </AppButton>
+      )}
+      {guardCanBlockAccount(status) && onUpdateUserStatus && (
+        <AppButton
+          variant="danger"
+          size="sm"
+          className="staff-action-btn--danger"
+          disabled={actionPending}
+          onClick={() => void runStatusUpdate('blocked')}
+          title="Block platform access until staff restores the account"
+        >
+          Block
+        </AppButton>
+      )}
+      {guardCanRestoreAccountAccess(status) && onUpdateUserStatus && (
+        <AppButton
+          variant="primary"
+          size="sm"
+          className="staff-action-btn--ok"
+          disabled={actionPending}
+          onClick={() => void runStatusUpdate('active')}
+        >
+          Restore access
+        </AppButton>
+      )}
+    </>
+  ) : null;
 
-      {!canSuspend && (
-        <p className="text-xs text-brand-text-muted leading-relaxed">
+  const showsPermissionNote = !canSuspend;
+  const hasSecondaryActions =
+    Boolean(accessActions) ||
+    React.Children.toArray(children).some(Boolean) ||
+    showsPermissionNote;
+
+  if (!hasSecondaryActions && !leadingActions) return null;
+
+  return (
+    <StaffAccountAccessSection leading={leadingActions} className={className}>
+      {showsPermissionNote && (
+        <p className="staff-account-access-note text-xs text-brand-text-muted leading-relaxed col-span-full">
           Administrator+ permission required to deactivate, block, or restore guard accounts.
         </p>
       )}
-
-      {showAccessActions ? (
-        <div className="staff-detail-actions staff-detail-actions--list">
-          {showApplicationActions && guardCanDenyApplication(status) && onRejectGuardApplication && (
-            <AppButton
-              variant="danger"
-              size="sm"
-              className="staff-action-btn--danger"
-              disabled={actionPending}
-              onClick={() => void runDenyApplication()}
-            >
-              Deny application
-            </AppButton>
-          )}
-          {canActivateAccount && (
-            <AppButton
-              variant="primary"
-              size="sm"
-              className="staff-action-btn--ok"
-              disabled={actionPending}
-              onClick={() => void runActivateAccount()}
-              title="Activate marketplace access — all five credentials are verified"
-            >
-              Activate account
-            </AppButton>
-          )}
-          {guardCanDeactivateAccount(status) && onUpdateUserStatus && (
-            <AppButton
-              variant="outline"
-              size="sm"
-              className="staff-action-btn--warn"
-              disabled={actionPending}
-              onClick={() => void runStatusUpdate('suspended')}
-              title="Temporarily deactivate marketplace access — guard can be restored later"
-            >
-              Deactivate
-            </AppButton>
-          )}
-          {guardCanBlockAccount(status) && onUpdateUserStatus && (
-            <AppButton
-              variant="danger"
-              size="sm"
-              className="staff-action-btn--danger"
-              disabled={actionPending}
-              onClick={() => void runStatusUpdate('blocked')}
-              title="Block platform access until staff restores the account"
-            >
-              Block
-            </AppButton>
-          )}
-          {guardCanRestoreAccountAccess(status) && onUpdateUserStatus && (
-            <AppButton
-              variant="primary"
-              size="sm"
-              className="staff-action-btn--ok"
-              disabled={actionPending}
-              onClick={() => void runStatusUpdate('active')}
-            >
-              Restore access
-            </AppButton>
-          )}
-        </div>
-      ) : null}
-
-      {children ? <div className="staff-detail-actions staff-detail-actions--list">{children}</div> : null}
-
-      {leadingActions ? (
-        <div className="staff-detail-actions staff-detail-actions--primary">{leadingActions}</div>
-      ) : null}
-    </section>
+      {accessActions}
+      {children}
+    </StaffAccountAccessSection>
   );
 }

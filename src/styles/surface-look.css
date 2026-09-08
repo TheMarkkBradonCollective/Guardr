@@ -234,6 +234,52 @@ html body[data-surface='mobile'] .staff-detail-actions--list button {
   background: var(--look-tile) !important;
 }
 
+/* Account actions keep visible button affordance instead of flat list tiles. */
+html body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--ok,
+html body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--warn,
+html body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--danger,
+html body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--ok,
+html body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--warn,
+html body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--danger {
+  background-color: var(--look-paper) !important;
+  border: 1px solid var(--brand-border) !important;
+  color: var(--brand-text) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+html body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--ok,
+html body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--ok {
+  background-color: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+  color: var(--brand-accent-text) !important;
+}
+
+html body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--danger,
+html body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--danger {
+  background-color: color-mix(in srgb, var(--status-danger) 10%, var(--look-paper)) !important;
+  border-color: var(--status-danger) !important;
+  color: var(--status-danger) !important;
+}
+
+html body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--ok:disabled,
+html body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--warn:disabled,
+html body[data-surface='mobile'] .staff-detail-actions--list > .staff-action-btn--danger:disabled,
+html body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--ok:disabled,
+html body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--warn:disabled,
+html body[data-surface='mobile'] .staff-detail-actions--list button.staff-action-btn--danger:disabled {
+  opacity: 1 !important;
+  background-color: var(--look-tile-strong) !important;
+  border-color: var(--brand-border) !important;
+  color: var(--brand-text-muted) !important;
+  box-shadow: none;
+}
+
+html body[data-surface='mobile'] .staff-account-access-note {
+  width: 100%;
+  margin: 0;
+  padding: 0 2px 4px;
+}
+
 html body[data-surface='mobile'] .sfm-shell input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='file']),
 html body[data-surface='mobile'] .sfm-shell select,
 html body[data-surface='mobile'] .sfm-shell textarea,
