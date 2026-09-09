@@ -1,14 +1,11 @@
 import sharp from 'sharp';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { blackMarkPng, iconChromeForLabel, iconLabelForProductApp, renderBrandedIcon, whiteMarkPng } from './branded-icon.mjs';
+import { blackMarkPng, iconChromeForProductApp, iconLabelForProductApp, renderBrandedIcon, whiteMarkPng } from './branded-icon.mjs';
 
 const ROOT = process.cwd();
 const ICON_SOURCE = path.join(ROOT, 'assets', 'logos', 'icon-source.png');
 const RES = path.join(ROOT, 'android/app/src/main/res');
-
-/** Combined APK splash fallback — role builds use iconChromeForLabel(). */
-const DEFAULT_SPLASH_BACKGROUND = '#000000';
 
 /** Launcher mipmaps (legacy + round). */
 const LAUNCHER_SIZES = [
@@ -86,25 +83,27 @@ function parseProductAppArg() {
 }
 
 /** Role launcher: Guard and Staff are white + black mark; Customer is black + white mark. */
-async function renderLauncherIcon(iconMaster, size, label) {
+async function renderLauncherIcon(iconMaster, size, productApp) {
   return renderBrandedIcon(iconMaster, size, {
-    label,
+    productApp,
+    label: iconLabelForProductApp(productApp),
     safeZone: false,
   });
 }
 
 /** Transparent adaptive foreground — label stays inside the maskable safe zone. */
-async function renderForegroundIcon(iconMaster, size, label) {
+async function renderForegroundIcon(iconMaster, size, productApp) {
   return renderBrandedIcon(iconMaster, size, {
-    label,
+    productApp,
+    label: iconLabelForProductApp(productApp),
     background: { r: 0, g: 0, b: 0, alpha: 0 },
     safeZone: true,
   });
 }
 
 /** APK splash — Guard/Staff are a white field with a black shield; Customer stays black + white. */
-async function renderSplash(iconMaster, width, height, label) {
-  const chrome = iconChromeForLabel(label);
+async function renderSplash(iconMaster, width, height, productApp) {
+  const chrome = iconChromeForProductApp(productApp);
   const logoSize = Math.round(Math.min(width, height) * 0.34);
   const offsetX = Math.round((width - logoSize) / 2);
   const offsetY = Math.round((height - logoSize) / 2);
@@ -132,30 +131,30 @@ async function main() {
   const label = iconLabelForProductApp(productApp);
 
   for (const { dir, size } of LAUNCHER_SIZES) {
-    const icon = await renderLauncherIcon(iconMaster, size, label);
+    const icon = await renderLauncherIcon(iconMaster, size, productApp);
     await writePng(dir, 'ic_launcher.png', icon);
     await writePng(dir, 'ic_launcher_round.png', icon);
   }
 
   for (const { dir, size } of FOREGROUND_SIZES) {
-    const foreground = await renderForegroundIcon(iconMaster, size, label);
+    const foreground = await renderForegroundIcon(iconMaster, size, productApp);
     await writePng(dir, 'ic_launcher_foreground.png', foreground);
   }
 
   for (const { dir, width, height } of SPLASH_SCREENS) {
-    const splash = await renderSplash(iconMaster, width, height, label);
+    const splash = await renderSplash(iconMaster, width, height, productApp);
     await writePng(dir, 'splash.png', splash);
   }
 
-  const defaultSplash = await renderSplash(iconMaster, 480, 800, label);
+  const defaultSplash = await renderSplash(iconMaster, 480, 800, productApp);
   await writePng('drawable', 'splash.png', defaultSplash);
 
-  const chrome = iconChromeForLabel(label);
+  const chrome = iconChromeForProductApp(productApp);
   console.log('Generated Guardr-branded Android icons and splash screens');
   console.log(
     label
       ? `Launcher icon: ${chrome.background} field + ${chrome.mark} shield + "${label}" under the logo`
-      : `Launcher icon: black (${DEFAULT_SPLASH_BACKGROUND}) + white shield (no role label); splash: ${DEFAULT_SPLASH_BACKGROUND}`,
+      : `Launcher icon: ${chrome.background} field + ${chrome.mark} shield (no role label); splash: ${chrome.background}`,
   );
 }
 

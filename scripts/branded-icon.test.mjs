@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { iconChromeForLabel, nativeChromeForProductApp } from './branded-icon.mjs';
+import {
+  iconChromeForLabel,
+  iconChromeForProductApp,
+  iconLabelForProductApp,
+  nativeChromeForProductApp,
+} from './branded-icon.mjs';
 
 describe('Staff launcher chrome', () => {
   it('is a white tile with a black mark and black Staff label', () => {
@@ -9,21 +14,26 @@ describe('Staff launcher chrome', () => {
       mark: 'black',
       text: '#000000',
     });
-  });
-
-  it('colors Guard like Staff: white tile, black mark, black Guard label', () => {
-    assert.deepEqual(iconChromeForLabel('Guard'), {
+    assert.deepEqual(iconChromeForProductApp('staff'), {
       background: '#FFFFFF',
       mark: 'black',
       text: '#000000',
     });
+  });
+
+  it('keeps Guard white like Staff even with no word on the icon', () => {
+    assert.deepEqual(iconChromeForProductApp('guard'), {
+      background: '#FFFFFF',
+      mark: 'black',
+      text: '#000000',
+    });
+    assert.equal(iconChromeForProductApp('client').background, '#000000');
     assert.equal(iconChromeForLabel(null).background, '#000000');
   });
 
-  it('draws no word on the Customer launcher', async () => {
-    const { iconLabelForProductApp } = await import('./branded-icon.mjs');
+  it('draws no word on the Guard or Customer launchers', () => {
     assert.equal(iconLabelForProductApp('client'), null);
-    assert.equal(iconLabelForProductApp('guard'), 'Guard');
+    assert.equal(iconLabelForProductApp('guard'), null);
     assert.equal(iconLabelForProductApp('staff'), 'Staff');
   });
 
