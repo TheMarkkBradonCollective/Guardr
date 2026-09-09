@@ -68,6 +68,8 @@ import {
 import { signInWithCredentials } from '../lib/auth/authService';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
+import { useProductApp } from '../lib/ProductAppProvider';
+import { productRoleForApp } from '../lib/productApps';
 import { useSurfaceKind } from '../surfaces';
 import { useStyletron } from 'baseui';
 import { normalizeGuardServiceAreas } from '../lib/californiaCities';
@@ -258,6 +260,8 @@ export function AuthPage({
 }: AuthPageProps) {
   const isSheet = presentation === 'sheet';
   const { shellKind, viewSurface } = useDevice();
+  const { productApp } = useProductApp();
+  const allowCrossAppSignup = productRoleForApp(productApp) == null;
   const surface = useSurfaceKind();
   const isDesktopAuth = !isSheet && surface === 'desktop';
   const isTabletAuth = !isSheet && surface === 'tablet';
@@ -995,7 +999,9 @@ export function AuthPage({
 
               {isSignUp && role === 'guard' && (
                 <div className="space-y-5 pt-4 border-t border-brand-border">
-                  <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} />
+                  {allowCrossAppSignup ? (
+                    <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} />
+                  ) : null}
                   <p className="uber-label">Guard marketplace application</p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
                     For licensed independent contractors — not Guardr employment. After approval,
@@ -1213,7 +1219,9 @@ export function AuthPage({
 
               {isSignUp && role === 'client' && (
                 <div className="space-y-5 pt-4 border-t border-brand-border">
-                  <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} compact />
+                  {allowCrossAppSignup ? (
+                    <StaffSignupNotice onApplyAsStaff={switchToStaffSignup} compact />
+                  ) : null}
 
                   <p className="uber-label">
                     {clientKind === 'personal'

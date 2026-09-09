@@ -22,7 +22,7 @@ body.shell-pwa .app-welcome {
 
 body[data-shell="pwa"] .app-welcome-dock,
 body.shell-pwa .app-welcome-dock {
-  background: transparent;
+  background: var(--uber-bg, #ffffff);
   border-top: none;
   backdrop-filter: none;
   box-shadow: none;
@@ -73,7 +73,7 @@ body[data-view-surface="pwa-tablet"] .app-welcome--tablet .app-welcome-dock {
 body[data-shell="pwa"][data-pwa-mode="lite"] .app-welcome-dock,
 body[data-experience-tier="pwa-lite"] .app-welcome-dock {
   backdrop-filter: none;
-  background: transparent;
+  background: var(--uber-bg, #ffffff);
   border-top: none;
 }
 

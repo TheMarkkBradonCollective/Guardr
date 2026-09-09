@@ -23552,6 +23552,7 @@ html.theme-dark .app-welcome-backdrop-band {
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
+  flex: 0 0 auto;
   min-height: 3.25rem;
   padding:
     max(0.65rem, env(safe-area-inset-top, 0px))
@@ -23560,14 +23561,19 @@ html.theme-dark .app-welcome-backdrop-band {
     max(1.25rem, env(safe-area-inset-left, 0px));
 }
 
-.app-welcome-shell-status {
-  margin-right: auto;
+.app-welcome-shell-status,
+.app-welcome-kicker {
+  margin: 0;
   font-family: var(--uber-font-text, "Uber Move Text", sans-serif);
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--uber-text-muted, #767676);
+}
+
+.app-welcome-kicker {
+  margin: 0.35rem 0 1rem;
 }
 
 .app-welcome-main {
@@ -23577,29 +23583,40 @@ html.theme-dark .app-welcome-backdrop-band {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
   padding-inline: max(1.25rem, env(safe-area-inset-left, 0px)) max(1.25rem, env(safe-area-inset-right, 0px));
 }
 
 .app-welcome-hero {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  flex: 1;
+  justify-content: flex-start;
+  flex: 1 1 auto;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   max-width: 22rem;
-  padding-block: 1rem 1.5rem;
+  padding-block: 0.75rem 1.25rem;
   animation: app-welcome-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .app-welcome-brand {
-  margin: 0 0 1.25rem;
+  margin: 0;
   font-family: var(--uber-font-display, "Uber Move", "Helvetica Neue", Helvetica, sans-serif);
-  font-size: clamp(3.25rem, 14vw, 4.5rem);
+  font-size: clamp(2.5rem, 11vw, 3.75rem);
   font-weight: 900;
   letter-spacing: -0.06em;
-  line-height: 0.92;
+  line-height: 0.95;
   color: var(--uber-text, #000);
   animation: app-welcome-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (min-height: 840px) {
+  .app-welcome--mobile .app-welcome-hero {
+    justify-content: center;
+  }
 }
 
 .app-welcome-headline {
@@ -23623,22 +23640,23 @@ html.theme-dark .app-welcome-backdrop-band {
   animation: app-welcome-rise 680ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* CTA strip — flush with page, not a floating sheet/card */
+/* CTA strip stays in document flow under the copy — never overlays the hero. */
 .app-welcome-dock {
   position: relative;
   z-index: 2;
-  margin-top: auto;
+  flex: 0 0 auto;
+  margin-top: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
   padding:
-    1rem
+    0.75rem
     0
     max(1.35rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   border: none;
   border-radius: 0;
-  background: transparent;
+  background: var(--uber-bg, #ffffff);
   box-shadow: none;
   backdrop-filter: none;
   animation: app-welcome-rise 720ms 140ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -23672,6 +23690,31 @@ html.theme-dark .app-welcome-backdrop-band {
   gap: 0.5rem 1rem !important;
   font-size: 0.6875rem;
   line-height: 1.35;
+}
+
+/* Welcome page: compact legal row so the CTA dock does not eat the hero. */
+html body[data-surface='mobile'] .app-welcome-legal .legal-footer-links {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.15rem 0.85rem !important;
+  width: 100%;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+html body[data-surface='mobile'] .app-welcome-legal .legal-footer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0;
+  width: auto;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: none;
 }
 
 @keyframes app-welcome-rise {

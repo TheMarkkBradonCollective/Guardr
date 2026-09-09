@@ -21,7 +21,7 @@ body.shell-native .app-welcome {
 
 body[data-shell="native"] .app-welcome-dock,
 body.shell-native .app-welcome-dock {
-  background: transparent;
+  background: var(--uber-bg, #ffffff);
   border-top: none;
 }
 
@@ -101,6 +101,7 @@ body[data-apk-mode="premium"] .app-welcome-dock,
 body[data-experience-tier="apk-premium"] .app-welcome-dock {
   border-radius: 0;
   box-shadow: none;
+  background: var(--uber-bg, #ffffff);
 }
 
 body[data-apk-mode="premium"] .mobility-icon-btn,

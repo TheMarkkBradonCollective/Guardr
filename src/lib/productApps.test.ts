@@ -13,8 +13,10 @@ import {
   pathFromDeepLink,
   NATIVE_APPLICATION_IDS,
   PRODUCT_APP_ICON_LABELS,
+  installedAuthEntry,
   productAppForRole,
   productAppFromPath,
+  productRoleForApp,
   resolveProductApp,
   roleCanOpenProductApp,
   websiteAccountViewsForRole,
@@ -75,9 +77,20 @@ describe('role isolation', () => {
     assert.equal(productAppForRole('client'), 'client');
     assert.equal(productAppForRole('guard'), 'guard');
     assert.equal(productAppForRole('staff'), 'staff');
+    assert.equal(productRoleForApp('website'), null);
+    assert.equal(productRoleForApp('guard'), 'guard');
     assert.equal(PRODUCT_APP_ICON_LABELS.client, 'Hire');
     assert.equal(PRODUCT_APP_ICON_LABELS.guard, 'Work');
     assert.equal(PRODUCT_APP_ICON_LABELS.staff, 'Staff');
+  });
+
+  it('skips the log-in-as picker inside a role APK', () => {
+    assert.deepEqual(installedAuthEntry('guard', 'sign-in'), { type: 'form', role: 'guard' });
+    assert.deepEqual(installedAuthEntry('guard', 'sign-up'), { type: 'form', role: 'guard' });
+    assert.deepEqual(installedAuthEntry('staff', 'sign-in'), { type: 'form', role: 'staff' });
+    assert.deepEqual(installedAuthEntry('client', 'sign-in'), { type: 'form', role: 'client' });
+    assert.deepEqual(installedAuthEntry('client', 'sign-up'), { type: 'client-kind' });
+    assert.deepEqual(installedAuthEntry('website', 'sign-in'), { type: 'role-picker' });
   });
 
   it('blocks cross-app access at the product boundary', () => {

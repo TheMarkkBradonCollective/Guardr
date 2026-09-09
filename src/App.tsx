@@ -527,14 +527,17 @@ import {
 import {
   applyProductAppToDocument,
   consumePostAuthPath,
+  installedAuthEntry,
   isOperationalAppPath,
   persistPostAuthPath,
   productAppForRole,
   productAppFromPath,
+  productRoleForApp,
   roleCanOpenProductApp,
   wrongAppMessage,
   type ProductRole,
 } from './lib/productApps';
+import { useProductApp } from './lib/ProductAppProvider';
 import { WebsiteAccountShell } from './components/website/WebsiteAccountShell';
 import { WebsiteAccountHome } from './components/website/WebsiteAccountHome';
 import { WebsiteAccountDocuments } from './components/website/WebsiteAccountDocuments';
@@ -700,6 +703,8 @@ function routeMatchesUser(route: AppRoute, user: SessionUser): boolean {
 }
 
 export default function App() {
+  const { productApp } = useProductApp();
+  const installedAuthRole = productRoleForApp(productApp);
   // ── Session ────────────────────────────────────────────────
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(() => {
     try { const s = localStorage.getItem('guardr_current_user'); return s ? JSON.parse(s) : null; } catch { return null; }
@@ -1795,15 +1800,29 @@ export default function App() {
   };
 
   const navigateToAuth = (role?: AuthViewRole, mode?: AuthViewMode) => {
-    if (!role && (mode === 'sign-up' || mode === 'sign-in')) {
-      openAuthChoice(mode);
-      return;
+    const authMode = mode ?? 'sign-in';
+    if (!role) {
+      if (isAppExperience()) {
+        const entry = installedAuthEntry(productApp, authMode);
+        if (entry.type === 'form') {
+          openAuthView(entry.role, authMode);
+          return;
+        }
+        if (entry.type === 'client-kind') {
+          openAuthChoice('sign-up', 'client');
+          return;
+        }
+      }
+      if (authMode === 'sign-up' || authMode === 'sign-in') {
+        openAuthChoice(authMode);
+        return;
+      }
     }
-    if (role === 'client' && mode === 'sign-up') {
+    if (role === 'client' && authMode === 'sign-up') {
       openAuthChoice('sign-up', 'client');
       return;
     }
-    openAuthView(role ?? 'client', mode ?? 'sign-in');
+    openAuthView(role ?? 'client', authMode);
   };
 
   const closeAuthView = () => {
@@ -1817,6 +1836,12 @@ export default function App() {
   };
 
   const backToAuthRoleChoice = () => {
+    const stayOnClientKind =
+      initialAuthMode === 'sign-up' && initialAuthRole === 'client';
+    if (isAppExperience() && installedAuthRole && !stayOnClientKind) {
+      closeAuthView();
+      return;
+    }
     navigateHistoryBack(() => {
       const fallbackPick: AuthSignupPick =
         initialAuthMode === 'sign-up' && initialAuthRole === 'client'
@@ -1835,6 +1860,18 @@ export default function App() {
       setIsAuthView(false);
     });
   };
+
+  useLayoutEffect(() => {
+    if (currentUser || !isAppExperience() || !authChoiceMode) return;
+    const entry = installedAuthEntry(productApp, authChoiceMode);
+    if (entry.type === 'form') {
+      openAuthView(entry.role, authChoiceMode);
+      return;
+    }
+    if (entry.type === 'client-kind' && authSignupPick !== 'client') {
+      openAuthChoice('sign-up', 'client');
+    }
+  }, [currentUser, authChoiceMode, authSignupPick, productApp]);
 
   const openLegalPage = (page: LegalPageId) => {
     setLegalReturnAuth(isAuthView);
@@ -13396,26 +13433,33 @@ export default function App() {
     }
     if (isAppExperience()) {
       if (authChoiceMode) {
-        return (
-          <>
-            <AuthRoleChoicePage
-              mode={authChoiceMode}
-              signupStep={authSignupPick ?? 'path'}
-              themeMode={themeMode}
-              onChangeTheme={changeThemeMode}
-              onNavigateToAuth={navigateToAuth}
-              onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
-              onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
-              onSelectClientType={(kind) => openAuthView('client', 'sign-up', kind)}
-              onOpenGuide={openPublicGuide}
-              onBack={closeAuthChoice}
-            />
-            <InstallPrompt />
-          </>
-        );
+        const entry = installedAuthEntry(productApp, authChoiceMode);
+        const showInstalledChoice = entry.type === 'role-picker' || entry.type === 'client-kind';
+        if (showInstalledChoice) {
+          return (
+            <>
+              <AuthRoleChoicePage
+                mode={authChoiceMode}
+                signupStep={entry.type === 'client-kind' ? 'client' : (authSignupPick ?? 'path')}
+                themeMode={themeMode}
+                onChangeTheme={changeThemeMode}
+                onNavigateToAuth={navigateToAuth}
+                onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
+                onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
+                onSelectClientType={(kind) => openAuthView('client', 'sign-up', kind)}
+                onOpenGuide={openPublicGuide}
+                onBack={closeAuthChoice}
+              />
+              <InstallPrompt />
+            </>
+          );
+        }
       }
       // PWA/APK: full-page auth (not bottom sheets / floating cards).
       if (isAuthView) {
+        const lockToInstalledApp = Boolean(installedAuthRole);
+        const clientKindStep =
+          initialAuthMode === 'sign-up' && initialAuthRole === 'client';
         return (
           <>
             <AuthPage
@@ -13426,11 +13470,13 @@ export default function App() {
               isDbConnected={isDbConnected}
               isAppLoading={loading}
               onBackToHome={closeAuthView}
-              onBackToRoleChoice={backToAuthRoleChoice}
+              onBackToRoleChoice={
+                lockToInstalledApp && !clientKindStep ? undefined : backToAuthRoleChoice
+              }
               onOpenLegal={openLegalPage}
               onOpenGuide={openPublicGuide}
               onAuthModeChange={setAuthViewMode}
-              onAuthRoleChange={setAuthViewRole}
+              onAuthRoleChange={lockToInstalledApp ? undefined : setAuthViewRole}
               initialRole={initialAuthRole}
               initialMode={initialAuthMode}
               initialClientType={initialClientType}

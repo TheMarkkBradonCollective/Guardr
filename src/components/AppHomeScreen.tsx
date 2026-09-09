@@ -14,10 +14,11 @@ import {
 } from '../lib/platform/experienceTier';
 import { ThemeToggle } from './ui/ThemeToggle';
 import type { LegalPageId } from '../lib/legalContent';
+import { useProductApp } from '../lib/ProductAppProvider';
+import type { ProductApp } from '../lib/productApps';
 import {
   AppWelcomeBackdrop,
   AppWelcomeHero,
-  AppWelcomeShellBadge,
   AppWelcomeSignInDock,
 } from './app/AppWelcomeChrome';
 
@@ -32,6 +33,7 @@ interface AppHomeScreenProps {
     shellKind: ShellKind;
     formFactor: FormFactor;
     experienceTier?: ExperienceTier;
+    productApp?: ProductApp;
   };
 }
 
@@ -45,6 +47,8 @@ export function AppHomeScreen({
 }: AppHomeScreenProps) {
   const device = useDevice();
   const layoutFormFactor = useLayoutFormFactor();
+  const { productApp: contextProductApp } = useProductApp();
+  const productApp = previewOverrides?.productApp ?? contextProductApp;
   const shellKind = previewOverrides?.shellKind ?? device.shellKind;
   const formFactor = previewOverrides?.formFactor ?? layoutFormFactor;
   const viewSurface: ViewSurface =
@@ -83,7 +87,6 @@ export function AppHomeScreen({
       {showBackdrop ? <AppWelcomeBackdrop /> : null}
 
       <header className="app-welcome-topbar">
-        <AppWelcomeShellBadge shellKind={shellKind} experienceTier={experienceTier} />
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
       </header>
 
@@ -97,7 +100,12 @@ export function AppHomeScreen({
         position="relative"
         overrides={{ Block: { style: { zIndex: 1 } } }}
       >
-        <AppWelcomeHero shellKind={shellKind} isTablet={isTablet} experienceTier={experienceTier} />
+        <AppWelcomeHero
+          shellKind={shellKind}
+          isTablet={isTablet}
+          experienceTier={experienceTier}
+          productApp={productApp}
+        />
 
         <AppWelcomeSignInDock
           onNavigateToAuth={onNavigateToAuth}

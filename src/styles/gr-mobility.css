@@ -198,7 +198,7 @@ body.shell-pwa .app-welcome {
 body[data-shell="pwa"] .app-welcome-dock,
 body.shell-pwa .app-welcome-dock {
   border-top: none;
-  background: transparent;
+  background: var(--uber-bg, #ffffff);
 }
 
 body[data-shell="native"] .app-welcome-header,
@@ -208,7 +208,7 @@ body.shell-native .app-welcome-header {
 
 body[data-shell="native"] .app-welcome-dock,
 body.shell-native .app-welcome-dock {
-  background: transparent;
+  background: var(--uber-bg, #ffffff);
   border-top: none;
 }
 
