@@ -37,9 +37,15 @@ const pkg = JSON.parse(await readFile(path.join(ROOT, 'package.json'), 'utf8'));
 const gradle = await readFile(path.join(ROOT, 'android/app/build.gradle'), 'utf8').catch(() => '');
 
 if (gradle.includes('flavorDimensions')) {
-  ok('Gradle product flavors configured (sideload + play)');
+  ok('Gradle product flavors configured (distribution + role)');
 } else {
   fail('android/app/build.gradle missing play/sideload flavors');
+}
+
+if (!gradle.includes("applicationIdSuffix '.client'") && !gradle.includes('applicationIdSuffix ".client"')) {
+  fail('android/app/build.gradle missing role applicationIdSuffix values');
+} else {
+  ok('Role flavors use applicationIdSuffix (.client / .guard / .staff)');
 }
 
 if (gradle.includes('signingConfigs')) {
@@ -94,11 +100,25 @@ const secretsGoogleServices = path.join(ROOT, 'secrets/google-services.json');
 if (existsSync(googleServicesPath)) {
   try {
     const json = JSON.parse(readFileSync(googleServicesPath, 'utf8'));
-    const pkgName = json.client?.[0]?.client_info?.android_client_info?.package_name;
-    if (pkgName === 'com.signaturesecurity.guardr') {
-      ok('google-services.json configured for com.signaturesecurity.guardr');
+    const packages = (json.client ?? [])
+      .map((client) => client?.client_info?.android_client_info?.package_name)
+      .filter(Boolean);
+    const expected = [
+      'com.signaturesecurity.guardr',
+      'com.signaturesecurity.guardr.client',
+      'com.signaturesecurity.guardr.guard',
+      'com.signaturesecurity.guardr.staff',
+    ];
+    if (packages.some((pkg) => expected.includes(pkg))) {
+      ok(`google-services.json configured for ${packages.join(', ')}`);
+      const missingRoles = expected.slice(1).filter((pkg) => !packages.includes(pkg));
+      if (missingRoles.length > 0) {
+        warn(
+          `Firebase JSON is missing ${missingRoles.join(', ')} — build script will clone the base client; add real Android apps in Firebase Console for FCM`,
+        );
+      }
     } else {
-      fail(`google-services.json package_name is ${pkgName ?? 'missing'}, expected com.signaturesecurity.guardr`);
+      fail(`google-services.json package_name is ${packages.join(', ') || 'missing'}, expected a Guardr Android package`);
     }
   } catch {
     fail('android/app/google-services.json is not valid JSON');
@@ -139,7 +159,7 @@ for (const message of errors) {
 console.log('\n--- Your action required ---');
 console.log('1. Create upload keystore + android/keystore.properties (if not done)');
 console.log('2. Add google-services.json (secrets/ or GOOGLE_SERVICES_JSON)');
-console.log('3. npm run android:play  →  upload dist/play-store/guardr-play-release.aab');
+console.log('3. npm run android:play  →  upload dist/play-store/guardr-*-play-release.aab (one listing per role)');
 console.log('4. Complete Play Console: store listing, Data safety, content rating, app access');
 console.log('   See docs/GOOGLE-PLAY.md and docs/play-store-listing-copy.md\n');
 

@@ -52,7 +52,9 @@ import './styles/gr-text-case.css';
 import './styles/legal-accept.css';
 import './styles/surface-look.css';
 import './styles/product-apps.css';
-import { pathFromDeepLink } from './lib/productApps';
+import { ensureBakedProductAppLaunchPath, pathFromDeepLink } from './lib/productApps';
+
+ensureBakedProductAppLaunchPath();
 
 applyThemeToDocument(loadTheme());
 

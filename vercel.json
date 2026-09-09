@@ -53,6 +53,16 @@
       "source": "/manuals/",
       "destination": "/manuals/Guardr-User-Manuals-Combined.pdf",
       "permanent": false
+    },
+    {
+      "source": "/download/guardr.apk",
+      "destination": "/download/guardr-apps.zip",
+      "permanent": false
+    },
+    {
+      "source": "/guardr.apk",
+      "destination": "/download/guardr-apps.zip",
+      "permanent": false
     }
   ],
   "rewrites": [
@@ -73,9 +83,31 @@
       ]
     },
     {
-      "source": "/download/guardr.apk",
+      "source": "/download/guardr-apps.zip",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/zip" }
+      ]
+    },
+    {
+      "source": "/download/guardr-client.apk",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" }
+      ]
+    },
+    {
+      "source": "/download/guardr-guard.apk",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" }
+      ]
+    },
+    {
+      "source": "/download/guardr-staff.apk",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" }
       ]
     },
     {

@@ -3,6 +3,7 @@ import { App } from '@capacitor/app';
 import {
   compareVersions,
   fetchDownloadVersionManifest,
+  resolveApkDownloadUrl,
   type DownloadVersionManifest,
 } from '../downloadVersion';
 import { resolveDownloadLiveContext } from '../resolveDownloadLiveContext';
@@ -57,7 +58,7 @@ export async function installLatestApk(manifest?: DownloadVersionManifest): Prom
   }
 
   const latest = manifest ?? (await fetchDownloadVersionManifest());
-  const url = latest.apkDirectUrl || latest.apkUrl;
+  const url = resolveApkDownloadUrl(latest);
   if (!url) {
     throw new Error('No APK download URL is configured.');
   }

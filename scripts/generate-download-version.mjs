@@ -4,15 +4,16 @@
  * Writes public/download/version.json, public/version.json, APK QR code, and syncs android/app/build.gradle.
  */
 import { createHash } from 'node:crypto';
-import { copyFile, readFile, stat, writeFile } from 'node:fs/promises';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import QRCode from 'qrcode';
+import { APPS_ZIP_DIRECT_URL, APPS_ZIP_FILE, PRODUCT_APPS, PRODUCT_ROLES } from './product-apps.mjs';
 
 const ROOT = process.cwd();
 const APK_SLUG = 'guardr';
-const APK_DIRECT_URL = 'https://www.guardr.co/download/guardr.apk';
 const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
-const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
+const DOWNLOAD_DIR = 'public/download';
+const SITE_DOWNLOAD = 'https://www.guardr.co/download';
 
 const RELEASE_NOTES = {
   '1.0.131':
@@ -78,12 +79,27 @@ const apkCacheQuery = `?v=${versionCode}`;
 const cacheSlug = version.replace(/\./g, '-');
 const cacheName = `guardr-cache-v${cacheSlug}`;
 
+function appDownloadEntry(role) {
+  const app = PRODUCT_APPS[role];
+  return {
+    label: app.label,
+    packageId: app.packageId,
+    apkUrl: `/download/${app.apkFile}${apkCacheQuery}`,
+    apkDirectUrl: `${SITE_DOWNLOAD}/${app.apkFile}${apkCacheQuery}`,
+  };
+}
+
+const apps = Object.fromEntries(PRODUCT_ROLES.map((role) => [role, appDownloadEntry(role)]));
+
 const downloadManifest = {
   webVersion: version,
   apkVersion: version,
   apkVersionCode: versionCode,
-  apkUrl: `/download/guardr.apk${apkCacheQuery}`,
-  apkDirectUrl: `${APK_DIRECT_URL}${apkCacheQuery}`,
+  apkUrl: `/download/${APPS_ZIP_FILE}${apkCacheQuery}`,
+  apkDirectUrl: `${APPS_ZIP_DIRECT_URL}${apkCacheQuery}`,
+  zipUrl: `/download/${APPS_ZIP_FILE}${apkCacheQuery}`,
+  zipDirectUrl: `${APPS_ZIP_DIRECT_URL}${apkCacheQuery}`,
+  apps,
   updatedAt: new Date().toISOString(),
 };
 
@@ -93,7 +109,7 @@ await writeFile(
 );
 
 const qrPath = path.join(ROOT, 'public/download/apk-qr.png');
-await QRCode.toFile(qrPath, `${APK_DIRECT_URL}${apkCacheQuery}`, {
+await QRCode.toFile(qrPath, `${APPS_ZIP_DIRECT_URL}${apkCacheQuery}`, {
   type: 'png',
   width: 320,
   margin: 2,
@@ -103,13 +119,37 @@ await QRCode.toFile(qrPath, `${APK_DIRECT_URL}${apkCacheQuery}`, {
 let apkReady = false;
 let apkFileSize = 0;
 let apkSha256 = '';
+let catalogUrl = `/download/${APPS_ZIP_FILE}`;
+let catalogDownloadName = `${APK_SLUG}-apps-v${numericVersion}.zip`;
 
-if (await fileExists(DOWNLOAD_APK_PATH)) {
-  await copyFile(path.join(ROOT, DOWNLOAD_APK_PATH), path.join(ROOT, MBC_APK_PATH));
+const zipRel = `${DOWNLOAD_DIR}/${APPS_ZIP_FILE}`;
+if (await fileExists(zipRel)) {
+  const zipStat = await stat(path.join(ROOT, zipRel));
+  apkFileSize = zipStat.size;
+  apkSha256 = await sha256File(zipRel);
+  apkReady = apkFileSize > 0;
+} else {
+  for (const role of PRODUCT_ROLES) {
+    const rel = `${DOWNLOAD_DIR}/${PRODUCT_APPS[role].apkFile}`;
+    if (await fileExists(rel)) {
+      const apkStat = await stat(path.join(ROOT, rel));
+      apkFileSize = apkStat.size;
+      apkSha256 = await sha256File(rel);
+      apkReady = apkFileSize > 0;
+      catalogUrl = `/download/${PRODUCT_APPS[role].apkFile}`;
+      catalogDownloadName = PRODUCT_APPS[role].apkFile.replace('.apk', `-v${numericVersion}.apk`);
+      break;
+    }
+  }
+}
+
+if (await fileExists(MBC_APK_PATH) && !apkReady) {
   const apkStat = await stat(path.join(ROOT, MBC_APK_PATH));
   apkFileSize = apkStat.size;
   apkSha256 = await sha256File(MBC_APK_PATH);
   apkReady = apkFileSize > 0;
+  catalogUrl = `/${APK_SLUG}.apk`;
+  catalogDownloadName = `${APK_SLUG}-v${numericVersion}.apk`;
 }
 
 const releaseNotes =
@@ -122,12 +162,14 @@ const catalogManifest = {
     ready: apkReady,
     version: numericVersion,
     versionCode,
-    url: `/${APK_SLUG}.apk`,
-    downloadName: `${APK_SLUG}-v${numericVersion}.apk`,
+    url: catalogUrl,
+    downloadName: catalogDownloadName,
     fileSize: apkFileSize,
     sha256: apkSha256,
     releaseNotes,
   },
+  apps: downloadManifest.apps,
+  zipUrl: downloadManifest.zipUrl,
   updatedAt: downloadManifest.updatedAt,
 };
 
@@ -160,8 +202,8 @@ await writeFile(serviceWorkerPath, serviceWorker);
 console.log(`Download manifest: web/apk v${version} (code ${versionCode})`);
 console.log(`MBC catalog: /version.json apk.ready=${apkReady} size=${apkFileSize}`);
 if (apkReady) {
-  console.log(`MBC APK: /${APK_SLUG}.apk sha256=${apkSha256.slice(0, 16)}…`);
+  console.log(`Catalog binary: ${catalogUrl} sha256=${apkSha256.slice(0, 16)}…`);
 }
-console.log(`APK direct URL: ${APK_DIRECT_URL}`);
+console.log(`Apps zip URL: ${APPS_ZIP_DIRECT_URL}`);
 console.log(`APK QR code: public/download/apk-qr.png`);
 console.log(`Service worker cache: ${cacheName}`);

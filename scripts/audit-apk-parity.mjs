@@ -95,6 +95,25 @@ if (versionCodeMatch && Number.parseInt(versionCodeMatch[1], 10) !== expectedCod
   fail(`build.gradle versionCode ${versionCodeMatch[1]} !== expected ${expectedCode}`);
 }
 
+if (gradle.includes("flavorDimensions += ['distribution', 'role']") || gradle.includes('flavorDimensions += ["distribution", "role"]')) {
+  // ok
+} else if (!gradle.includes("'role'") && !gradle.includes('"role"')) {
+  fail('android/app/build.gradle missing role flavor dimension (client / guard / staff)');
+}
+
+if (!gradle.includes("applicationIdSuffix '.client'") && !gradle.includes('applicationIdSuffix ".client"')) {
+  fail('android/app/build.gradle missing client applicationIdSuffix');
+}
+
+if (versionManifest) {
+  if (!versionManifest.apps?.client?.apkUrl || !versionManifest.apps?.guard?.apkUrl || !versionManifest.apps?.staff?.apkUrl) {
+    fail('version.json must list client, guard, and staff apkUrl entries');
+  }
+  if (!versionManifest.zipUrl && !String(versionManifest.apkUrl || '').includes('guardr-apps.zip')) {
+    fail('version.json missing zipUrl / guardr-apps.zip');
+  }
+}
+
 if (catalogManifest?.apk) {
   if (!catalogManifest.apk.ready) {
     warn('public/version.json apk.ready is false — MBC App Market will not list this build');
@@ -104,9 +123,12 @@ if (catalogManifest?.apk) {
       `catalog apk.versionCode ${catalogManifest.apk.versionCode} !== build.gradle ${versionCodeMatch[1]}`,
     );
   }
-  const mbcApkPath = 'public/guardr.apk';
-  if (catalogManifest.apk.ready && !(await fileExists(mbcApkPath))) {
-    fail('public/guardr.apk is missing but catalog apk.ready is true');
+  const catalogRel = String(catalogManifest.apk.url || '')
+    .replace(/^\//, '')
+    .split('?')[0];
+  const catalogPath = catalogRel.startsWith('public/') ? catalogRel : `public/${catalogRel}`;
+  if (catalogManifest.apk.ready && catalogRel && !(await fileExists(catalogPath))) {
+    warn(`catalog apk.url ${catalogManifest.apk.url} is missing on disk`);
   }
 }
 
@@ -174,18 +196,30 @@ if (await fileExists(distIndex)) {
   warn('dist/ not built — run npm run build before APK assembly');
 }
 
-const apkPath = 'public/download/guardr.apk';
-if (!(await fileExists(apkPath))) {
-  warn('public/download/guardr.apk is missing — users cannot download the current build');
+const roleApkPaths = [
+  'public/download/guardr-client.apk',
+  'public/download/guardr-guard.apk',
+  'public/download/guardr-staff.apk',
+];
+const zipPath = 'public/download/guardr-apps.zip';
+const missingRoleApks = [];
+for (const apkPath of roleApkPaths) {
+  if (!(await fileExists(apkPath))) missingRoleApks.push(apkPath);
+}
+if (missingRoleApks.length > 0) {
+  warn(`${missingRoleApks.join(', ')} missing — run npm run android:apk:all`);
+}
+if (!(await fileExists(zipPath))) {
+  warn('public/download/guardr-apps.zip is missing — users cannot download all three apps as one zip');
 } else {
-  const apkStat = await stat(path.join(ROOT, apkPath));
+  const zipStat = await stat(path.join(ROOT, zipPath));
   const manifestTime = versionManifest?.updatedAt ? Date.parse(versionManifest.updatedAt) : 0;
-  if (manifestTime && apkStat.mtimeMs < manifestTime - 60_000) {
-    warn('public/download/guardr.apk is older than version.json updatedAt — rebuild and copy APK');
+  if (manifestTime && zipStat.mtimeMs < manifestTime - 60_000) {
+    warn('public/download/guardr-apps.zip is older than version.json updatedAt — rebuild APKs');
   }
-  if (versionManifest && versionManifest.apkVersion !== webVersion) {
-    warn(`Published APK (${versionManifest.apkVersion}) does not match package.json (${webVersion})`);
-  }
+}
+if (versionManifest && versionManifest.apkVersion !== webVersion) {
+  warn(`Published APK (${versionManifest.apkVersion}) does not match package.json (${webVersion})`);
 }
 
 console.log(`APK parity audit — target v${webVersion}`);

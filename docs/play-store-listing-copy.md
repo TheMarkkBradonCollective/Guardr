@@ -6,6 +6,16 @@ Copy-paste into Google Play Console → **Main store listing**. Adjust support e
 
 ## App name
 
+Use a separate Play listing per role (max 30 characters):
+
+```
+Guardr Client
+Guardr Guard
+Guardr Staff
+```
+
+The previous combined name:
+
 ```
 Guardr
 ```

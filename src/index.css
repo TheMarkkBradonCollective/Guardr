@@ -23190,6 +23190,16 @@ body[data-surface="desktop"] .staff-overview-insights .staff-overview-feed-card 
   margin-top: 1rem;
 }
 
+.install-role-apps {
+  margin-top: 0.25rem;
+}
+
+.install-role-apps .install-product-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
 .install-product-card-footer {
   margin-top: 0.75rem;
   display: flex;

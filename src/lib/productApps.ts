@@ -70,7 +70,34 @@ export const NATIVE_URL_SCHEMES: Record<Exclude<ProductApp, 'website'>, string> 
   staff: 'guardr-staff',
 };
 
+/** Android applicationId for each sideload/Play role APK. */
+export const PRODUCT_APP_PACKAGE_IDS: Record<Exclude<ProductApp, 'website'>, string> = {
+  client: 'com.signaturesecurity.guardr.client',
+  guard: 'com.signaturesecurity.guardr.guard',
+  staff: 'com.signaturesecurity.guardr.staff',
+};
+
+export const PRODUCT_APP_LAUNCHER_NAMES: Record<Exclude<ProductApp, 'website'>, string> = {
+  client: 'Guardr Client',
+  guard: 'Guardr Guard',
+  staff: 'Guardr Staff',
+};
+
 const PRODUCT_APP_STORAGE_KEY = 'guardr_product_app';
+
+export function parseProductAppRole(value: string | null | undefined): Exclude<ProductApp, 'website'> | null {
+  if (value === 'client' || value === 'guard' || value === 'staff') return value;
+  return null;
+}
+
+/**
+ * Product app baked into this web bundle (`VITE_PRODUCT_APP=client|guard|staff`).
+ * Set at Android flavor build time so each APK always opens its own app.
+ */
+export function bakedProductApp(): Exclude<ProductApp, 'website'> | null {
+  const env = typeof import.meta !== 'undefined' ? import.meta.env : undefined;
+  return parseProductAppRole(env?.VITE_PRODUCT_APP);
+}
 
 export function isWebsiteAccountView(value: string | null | undefined): value is WebsiteAccountView {
   return !!value && WEBSITE_ACCOUNT_VIEWS.has(value as WebsiteAccountView);
@@ -171,20 +198,52 @@ export function persistProductApp(app: ProductApp): void {
 /**
  * Native APK / PWA should open the role app, never the marketing website.
  * Browser tabs open the website unless the URL is already an app path.
+ * Role APKs bake `VITE_PRODUCT_APP` so launch always lands in that app.
  */
 export function resolveProductApp(input: {
   url?: string;
   isInstalledShell?: boolean;
   stored?: ProductApp | null;
+  baked?: ProductApp | null;
 }): ProductApp {
   const url = input.url ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
   const fromPath = productAppFromPath(url);
   if (fromPath !== 'website') return fromPath;
   if (isWebsiteAccountPath(url)) return 'website';
+  const baked = parseProductAppRole(input.baked ?? bakedProductApp());
+  if (baked) return baked;
   if (input.isInstalledShell ?? isAppExperience()) {
     return input.stored ?? readStoredProductApp() ?? 'website';
   }
   return 'website';
+}
+
+function isMarketingWebsitePath(url: string): boolean {
+  const pathname = parsePathname(url);
+  if (pathname === '/download' || pathname.startsWith('/download/')) return false;
+  if (pathname === '/guide' || pathname.startsWith('/guide/')) return false;
+  if (pathname === '/legal' || pathname.startsWith('/legal/')) return false;
+  if (pathname === '/manuals' || pathname.startsWith('/manuals/')) return false;
+  if (isWebsiteAccountPath(url) || isOperationalAppPath(url)) return false;
+  return true;
+}
+
+/**
+ * Role APKs / baked web bundles must not boot on the marketing homepage.
+ * `/account` stays the website account portal. Operational deep links are kept.
+ */
+export function ensureBakedProductAppLaunchPath(): string | null {
+  if (typeof window === 'undefined') return null;
+  const baked = bakedProductApp();
+  if (!baked) return null;
+  persistProductApp(baked);
+  applyProductAppToDocument(baked);
+  const url = window.location.pathname + window.location.search;
+  if (!isMarketingWebsitePath(url)) return null;
+  const dest = defaultOperationalPathForRole(baked);
+  if ((window.location.pathname.replace(/\/$/, '') || '/') === dest) return dest;
+  window.history.replaceState(window.history.state ?? {}, '', dest);
+  return dest;
 }
 
 export function shouldLandOnWebsiteAccount(isInstalledShell = isAppExperience()): boolean {
@@ -242,7 +301,7 @@ export function openAppCtaCopy(role: ProductRole): { title: string; body: string
 }
 
 export function installPathForApp(app: Exclude<ProductApp, 'website'>): string {
-  return `/download?app=${app}`;
+  return `/download/?app=${app}`;
 }
 
 export function webAppPathForRole(role: ProductRole, destination?: string): string {
@@ -308,11 +367,13 @@ export function pathFromDeepLink(url: string): string | null {
 export function applyProductAppToDocument(app: ProductApp): void {
   if (typeof document === 'undefined') return;
   document.documentElement.dataset.productApp = app;
-  document.body.dataset.productApp = app;
-  document.body.classList.toggle('product-website', app === 'website');
-  document.body.classList.toggle('product-client', app === 'client');
-  document.body.classList.toggle('product-guard', app === 'guard');
-  document.body.classList.toggle('product-staff', app === 'staff');
+  if (document.body) {
+    document.body.dataset.productApp = app;
+    document.body.classList.toggle('product-website', app === 'website');
+    document.body.classList.toggle('product-client', app === 'client');
+    document.body.classList.toggle('product-guard', app === 'guard');
+    document.body.classList.toggle('product-staff', app === 'staff');
+  }
   persistProductApp(app);
   const manifest = document.querySelector('link[rel="manifest"]');
   if (manifest instanceof HTMLLinkElement) {

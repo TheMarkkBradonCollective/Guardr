@@ -32,6 +32,14 @@ import {
   downloadScreenTitle,
 } from '../../lib/installSurfaceCopy';
 import { formatAppVersion } from '../../lib/appVersion';
+import { resolveApkDownloadUrl } from '../../lib/apkDownloadUrl';
+import {
+  bakedProductApp,
+  parseProductAppRole,
+  PRODUCT_APP_LAUNCHER_NAMES,
+  PRODUCT_APP_TAGLINES,
+  type ProductApp,
+} from '../../lib/productApps';
 
 interface AppDownloadScreenProps {
   onBack: () => void;
@@ -154,13 +162,18 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
   } = useAppDownloadStatus();
   const { isIOS, promptInstall, hasDeferredPrompt, showGuide, setShowGuide } = usePwaInstallPrompt();
   const [installing, setInstalling] = useState(false);
+  const highlightedApp =
+    parseProductAppRole(
+      typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('app') : null,
+    ) ?? bakedProductApp();
 
   const isNativeView = liveContext === 'apk';
   const isPwaView = liveContext === 'pwa';
   const isBrowserView = liveContext === 'browser';
 
-  const handleApkAction = async () => {
-    if (canInstallApkInApp()) {
+  const handleApkAction = async (app?: Exclude<ProductApp, 'website'> | 'zip') => {
+    const role = app === 'zip' ? null : app ?? bakedProductApp();
+    if (canInstallApkInApp() && app !== 'zip') {
       setInstalling(true);
       try {
         await installLatestApk(manifest ?? undefined);
@@ -177,12 +190,10 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
       return;
     }
 
-    if (!manifest?.apkUrl) return;
-
-    const href = manifest.apkUrl.startsWith('http')
-      ? manifest.apkUrl
-      : `${window.location.origin}${manifest.apkUrl}`;
-    window.location.assign(href);
+    if (!manifest) return;
+    const href = resolveApkDownloadUrl(manifest, role);
+    const absolute = href.startsWith('http') ? href : `${window.location.origin}${href}`;
+    window.location.assign(absolute);
   };
 
   const apkInstalled = Boolean(installedApkVersion);
@@ -283,7 +294,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
             action={
               <button
                 type="button"
-                onClick={() => void handleApkAction()}
+                onClick={() => void handleApkAction(highlightedApp ?? 'zip')}
                 disabled={loading || installing || !manifest}
                 className="install-cta install-cta--primary"
               >
@@ -317,7 +328,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
                   <div className="install-qr-block">
                     <img
                       src="/download/apk-qr.png"
-                      alt={`QR code to download ${INSTALL_APK_TITLE}`}
+                      alt="QR code to download Guardr Client, Guard, and Staff Android apps"
                       className="install-qr-image"
                     />
                     <p className="install-qr-caption">
@@ -329,6 +340,45 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
               </>
             }
           />
+
+          {!isNativeView ? (
+            <section className="install-role-apps" aria-label="Individual Android apps">
+              <h2 className="install-compare-title">Install one app</h2>
+              <p className="install-product-card-copy">
+                Each APK has its own icon and can sit next to the others on your phone.
+              </p>
+              <div className="install-product-card-actions">
+                {(['client', 'guard', 'staff'] as const).map((role) => {
+                  const links = manifest?.apps?.[role];
+                  const href = links?.apkUrl ?? `/download/guardr-${role}.apk`;
+                  const highlighted = highlightedApp === role;
+                  return (
+                    <a
+                      key={role}
+                      href={href}
+                      download={`guardr-${role}.apk`}
+                      className={`install-cta ${highlighted ? 'install-cta--primary' : 'install-cta--secondary'}`}
+                    >
+                      <span className="install-cta-copy">
+                        <span className="install-cta-title">{PRODUCT_APP_LAUNCHER_NAMES[role]}</span>
+                        <span className="install-cta-sub">{PRODUCT_APP_TAGLINES[role]}</span>
+                      </span>
+                    </a>
+                  );
+                })}
+                <a
+                  href={manifest?.zipUrl ?? '/download/guardr-apps.zip'}
+                  download="guardr-apps.zip"
+                  className="install-cta install-cta--ghost"
+                >
+                  <span className="install-cta-copy">
+                    <span className="install-cta-title">Download all three (zip)</span>
+                    <span className="install-cta-sub">Client + Guard + Staff</span>
+                  </span>
+                </a>
+              </div>
+            </section>
+          ) : null}
 
           {isPwaView ? (
             <div className="install-lite-note">

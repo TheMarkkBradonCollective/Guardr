@@ -10,9 +10,17 @@ import type { FormFactor } from '../../lib/platform/device';
 
 import { INSTALL_APK_TITLE, INSTALL_PWA_TITLE } from '../../lib/installSurfaceCopy';
 import { FONT_DISPLAY } from '../../theme/typography';
-const APK_DOWNLOAD_URL = '/download/guardr.apk';
+import { PRODUCT_APP_LAUNCHER_NAMES, PRODUCT_APP_TAGLINES, type ProductApp } from '../../lib/productApps';
+
+const APPS_ZIP_URL = '/download/guardr-apps.zip';
 const APK_QR_URL = '/download/apk-qr.png';
-const DOWNLOAD_PAGE_URL = '/download';
+const DOWNLOAD_PAGE_URL = '/download/';
+const ROLE_APKS: Exclude<ProductApp, 'website'>[] = ['client', 'guard', 'staff'];
+const ROLE_APK_FILES: Record<Exclude<ProductApp, 'website'>, string> = {
+  client: 'guardr-client.apk',
+  guard: 'guardr-guard.apk',
+  staff: 'guardr-staff.apk',
+};
 
 const HEADING_FONT = FONT_DISPLAY;
 
@@ -101,7 +109,7 @@ export function LandingAppDownloads({
         >
           Get {INSTALL_APK_TITLE} for field work, or save {INSTALL_PWA_TITLE} to your home screen — same
           account, same login either way. After you sign in, the website stays for billing and account
-          settings. Day-to-day work opens in the Client App, Guard App, or Staff App.
+          settings. Day-to-day work opens in Guardr Client, Guardr Guard, or Guardr Staff.
         </Block>
       </Block>
 
@@ -126,10 +134,10 @@ export function LandingAppDownloads({
                   color: theme.colors.contentPrimary,
                 }}
               >
-                {INSTALL_APK_TITLE}
+                Android apps
               </Block>
               <Block as="p" margin={0} $style={{ fontSize: '13px', lineHeight: 1.45, color: theme.colors.contentSecondary }}>
-                Full Android app — reliable notifications, GPS, and camera for on-site guards.
+                Three Android apps you can install side by side — Client, Guard, and Staff. Download all as a zip, or pick one.
               </Block>
             </Block>
             {showScan && (
@@ -161,7 +169,7 @@ export function LandingAppDownloads({
                     src={APK_QR_URL}
                     width={80}
                     height={80}
-                    alt="Scan to download the Guardr Android app"
+                    alt="Scan to download Guardr Client, Guard, and Staff Android apps"
                     style={{ display: 'block', width: '80px', height: '80px' }}
                   />
                 </Block>
@@ -179,12 +187,36 @@ export function LandingAppDownloads({
           </Block>
           <GuardrButton
             kind="primary"
-            {...({ $as: 'a', href: APK_DOWNLOAD_URL, download: 'guardr.apk' } as Record<string, unknown>)}
+            {...({ $as: 'a', href: APPS_ZIP_URL, download: 'guardr-apps.zip' } as Record<string, unknown>)}
             startEnhancer={<Download className="w-4 h-4" />}
             overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
           >
-            Get {INSTALL_APK_TITLE}
+            Download all apps
           </GuardrButton>
+          <Block display="flex" flexDirection="column" gridGap="scale200">
+            {ROLE_APKS.map((role) => (
+              <Block
+                key={role}
+                as="a"
+                href={`/download/${ROLE_APK_FILES[role]}`}
+                download={ROLE_APK_FILES[role]}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="baseline"
+                $style={{
+                  textDecoration: 'none',
+                  color: theme.colors.contentPrimary,
+                  fontSize: '13px',
+                  fontWeight: 600,
+                }}
+              >
+                <span>{PRODUCT_APP_LAUNCHER_NAMES[role]}</span>
+                <span style={{ fontWeight: 500, color: theme.colors.contentSecondary }}>
+                  {PRODUCT_APP_TAGLINES[role]}
+                </span>
+              </Block>
+            ))}
+          </Block>
         </Block>
 
         {/* Home screen / PWA panel */}

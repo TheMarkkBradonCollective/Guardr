@@ -10,6 +10,12 @@ const nativeFcmConfigured =
   process.env.VITE_NATIVE_FCM_CONFIGURED === 'true' ||
   (process.env.VITE_NATIVE_FCM_CONFIGURED !== 'false' && existsSync(googleServicesPath));
 const playStoreBuild = process.env.VITE_PLAY_STORE_BUILD === 'true';
+const productApp =
+  process.env.VITE_PRODUCT_APP === 'client' ||
+  process.env.VITE_PRODUCT_APP === 'guard' ||
+  process.env.VITE_PRODUCT_APP === 'staff'
+    ? process.env.VITE_PRODUCT_APP
+    : '';
 
 export default defineConfig(() => {
   return {
@@ -17,6 +23,7 @@ export default defineConfig(() => {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
       'import.meta.env.VITE_NATIVE_FCM_CONFIGURED': JSON.stringify(nativeFcmConfigured ? 'true' : 'false'),
       'import.meta.env.VITE_PLAY_STORE_BUILD': JSON.stringify(playStoreBuild ? 'true' : 'false'),
+      'import.meta.env.VITE_PRODUCT_APP': JSON.stringify(productApp),
     },
     plugins: [react(), tailwindcss()],
     resolve: {

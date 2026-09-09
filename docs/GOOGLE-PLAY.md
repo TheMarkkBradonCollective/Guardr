@@ -1,6 +1,16 @@
 # Google Play Console — Guardr
 
-Step-by-step guide to upload **Guardr** (`com.signaturesecurity.guardr`) to Google Play. Your developer account is already set up; this doc covers build prep, Console forms, and release.
+Step-by-step guide to upload **three Guardr apps** to Google Play. Each role is a separate listing so Client, Guard, and Staff can be installed side by side.
+
+| App | Package | AAB |
+|-----|---------|-----|
+| Guardr Client | `com.signaturesecurity.guardr.client` | `dist/play-store/guardr-client-play-release.aab` |
+| Guardr Guard | `com.signaturesecurity.guardr.guard` | `dist/play-store/guardr-guard-play-release.aab` |
+| Guardr Staff | `com.signaturesecurity.guardr.staff` | `dist/play-store/guardr-staff-play-release.aab` |
+
+The previous combined package `com.signaturesecurity.guardr` is **not** produced anymore. Create three Play Console apps (or retire the old listing after the role apps are live).
+
+Your developer account is already set up; this doc covers build prep, Console forms, and release.
 
 ## Quick commands
 
@@ -10,23 +20,25 @@ Step-by-step guide to upload **Guardr** (`com.signaturesecurity.guardr`) to Goog
 | `npm run play:assets` | Generate 512×512 icon + 1024×500 feature graphic |
 | `npm run android:play` | Build signed AAB for Play Console upload |
 
-Output AAB after a successful build:
+Output AABs after a successful build:
 
 ```
-dist/play-store/guardr-play-release.aab
+dist/play-store/guardr-client-play-release.aab
+dist/play-store/guardr-guard-play-release.aab
+dist/play-store/guardr-staff-play-release.aab
 ```
 
 ---
 
 ## What was automated in this repo
 
-- **Play vs sideload flavors** — `play` build has no `REQUEST_INSTALL_PACKAGES` (Play policy safe); `sideload` keeps in-app APK updates for guardr.co/download
+- Play vs sideload flavors — `play` build has no `REQUEST_INSTALL_PACKAGES` (Play policy safe); `sideload` keeps in-app APK updates for guardr.co/download. A second **role** dimension (`client` / `guard` / `staff`) sets `applicationIdSuffix` and the launcher name.
 - **Release signing** — reads `android/keystore.properties` (see `keystore.properties.example`)
 - **Play build flag** — `VITE_PLAY_STORE_BUILD=true` hides sideload update UI in Settings
 - **Store assets script** — `assets/play-store/icon-512.png`, `feature-graphic-1024x500.png`
 - **Listing copy draft** — `docs/play-store-listing-copy.md`
 
-Sideload APK builds are unchanged: `npm run android:apk` → `public/download/guardr.apk`.
+Sideload APK builds are unchanged in spirit: `npm run android:apk:all` → `public/download/guardr-apps.zip` plus the three role APKs.
 
 ---
 
@@ -68,8 +80,8 @@ On first upload, enroll in **Play App Signing** (recommended). Google holds the 
 
 Play builds require the same Firebase setup as sideload APKs.
 
-1. Firebase Console → add Android app with package `com.signaturesecurity.guardr`
-2. Download `google-services.json`
+1. Firebase Console → add **three** Android apps (Client / Guard / Staff packages listed above). Keep the original `com.signaturesecurity.guardr` app if it already exists.
+2. Download `google-services.json` (must include a `client` entry per package for FCM)
 3. Place at **`secrets/google-services.json`** (preferred) or set env `GOOGLE_SERVICES_JSON`
 4. Set **`FCM_SERVICE_ACCOUNT_JSON`** on the Guardr server (Vercel) for push delivery
 
@@ -91,15 +103,20 @@ npm run play:assets    # optional but recommended before Console upload
 npm run android:play
 ```
 
-Upload **`dist/play-store/guardr-play-release.aab`** — not `public/guardr.apk` (debug-signed sideload build).
+Upload each **`dist/play-store/guardr-*-play-release.aab`** to its Play listing — not the sideload zip (debug-signed).
 
 ---
 
 ## Step 4 — Your action: Play Console app setup
 
-### Create app (if not already)
+### Create apps (if not already)
 
-- **App name:** Guardr
+Create **three** apps (one per package). Suggested names:
+
+- **Guardr Client**
+- **Guardr Guard**
+- **Guardr Staff**
+
 - **Default language:** English (United States)
 - **App:** App · **Free**
 - **Developer:** Signature Security Specialist, LLC
@@ -210,7 +227,7 @@ When prompted for sensitive permissions:
 ## Step 6 — Upload and release
 
 1. **Testing → Internal testing** (recommended first)
-2. **Create release** → upload `dist/play-store/guardr-play-release.aab`
+2. **Create release** → upload the matching `dist/play-store/guardr-*-play-release.aab`
 3. Release name: e.g. `1.0.122 (222)` matching `versionName` / `versionCode` in `android/app/build.gradle`
 4. Add release notes
 5. **Save → Review → Start rollout**

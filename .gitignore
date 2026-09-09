@@ -18,4 +18,8 @@ android/keystore.properties
 dist/play-store/
 *.apk
 !public/download/guardr.apk
+!public/download/guardr-client.apk
+!public/download/guardr-guard.apk
+!public/download/guardr-staff.apk
+!public/download/guardr-apps.zip
 !public/guardr.apk

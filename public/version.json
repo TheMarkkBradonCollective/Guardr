@@ -1,14 +1,35 @@
 {
   "webVersion": "1.0.131-beta",
   "apk": {
-    "ready": true,
+    "ready": false,
     "version": "1.0.131",
     "versionCode": 231,
-    "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.131.apk",
-    "fileSize": 109523573,
-    "sha256": "4afe6a245925ed200fb1b724eea1376cb580f8f0207df4fa981226ad436ba733",
+    "url": "/download/guardr-apps.zip",
+    "downloadName": "guardr-apps-v1.0.131.zip",
+    "fileSize": 0,
+    "sha256": "",
     "releaseNotes": "Staff platform and auth now say Customer(s) everywhere; sidebar create buttons removed with add actions restored on Management and Credentials pages."
   },
-  "updatedAt": "2026-08-19T07:19:11.514Z"
+  "apps": {
+    "client": {
+      "label": "Guardr Client",
+      "packageId": "com.signaturesecurity.guardr.client",
+      "apkUrl": "/download/guardr-client.apk?v=231",
+      "apkDirectUrl": "https://www.guardr.co/download/guardr-client.apk?v=231"
+    },
+    "guard": {
+      "label": "Guardr Guard",
+      "packageId": "com.signaturesecurity.guardr.guard",
+      "apkUrl": "/download/guardr-guard.apk?v=231",
+      "apkDirectUrl": "https://www.guardr.co/download/guardr-guard.apk?v=231"
+    },
+    "staff": {
+      "label": "Guardr Staff",
+      "packageId": "com.signaturesecurity.guardr.staff",
+      "apkUrl": "/download/guardr-staff.apk?v=231",
+      "apkDirectUrl": "https://www.guardr.co/download/guardr-staff.apk?v=231"
+    }
+  },
+  "zipUrl": "/download/guardr-apps.zip?v=231",
+  "updatedAt": "2026-09-09T08:01:09.484Z"
 }

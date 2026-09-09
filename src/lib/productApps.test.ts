@@ -8,8 +8,11 @@ import {
   isWebsiteAccountPath,
   nativeDeepLinkForRole,
   openAppCtaCopy,
+  parseProductAppRole,
   parseWebsiteAccountView,
   pathFromDeepLink,
+  PRODUCT_APP_LAUNCHER_NAMES,
+  PRODUCT_APP_PACKAGE_IDS,
   productAppForRole,
   productAppFromPath,
   resolveProductApp,
@@ -112,6 +115,17 @@ describe('deep links and CTAs', () => {
     assert.equal(openAppCtaCopy('guard').action, 'Open Guard App');
     assert.equal(openAppCtaCopy('staff').action, 'Open Staff App');
   });
+
+  it('uses distinct Android package ids and launcher names', () => {
+    assert.equal(PRODUCT_APP_PACKAGE_IDS.client, 'com.signaturesecurity.guardr.client');
+    assert.equal(PRODUCT_APP_PACKAGE_IDS.guard, 'com.signaturesecurity.guardr.guard');
+    assert.equal(PRODUCT_APP_PACKAGE_IDS.staff, 'com.signaturesecurity.guardr.staff');
+    assert.equal(PRODUCT_APP_LAUNCHER_NAMES.client, 'Guardr Client');
+    assert.equal(PRODUCT_APP_LAUNCHER_NAMES.guard, 'Guardr Guard');
+    assert.equal(PRODUCT_APP_LAUNCHER_NAMES.staff, 'Guardr Staff');
+    assert.equal(parseProductAppRole('guard'), 'guard');
+    assert.equal(parseProductAppRole('website'), null);
+  });
 });
 
 describe('resolveProductApp', () => {
@@ -129,6 +143,23 @@ describe('resolveProductApp', () => {
       resolveProductApp({ url: '/', stored: 'guard', isInstalledShell: false }),
       'website',
     );
+  });
+
+  it('lands baked role APKs in their own app instead of the marketing website', () => {
+    assert.equal(resolveProductApp({ url: '/', baked: 'client', isInstalledShell: false }), 'client');
+    assert.equal(resolveProductApp({ url: '/', baked: 'guard', stored: 'staff' }), 'guard');
+    assert.equal(resolveProductApp({ url: '/', baked: 'staff' }), 'staff');
+  });
+
+  it('keeps /account on the website even in a baked role APK', () => {
+    assert.equal(
+      resolveProductApp({ url: '/account/billing', baked: 'guard', isInstalledShell: true }),
+      'website',
+    );
+  });
+
+  it('still prefers an operational URL over the baked identity', () => {
+    assert.equal(resolveProductApp({ url: '/staff/overview', baked: 'client' }), 'staff');
   });
 });
 

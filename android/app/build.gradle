@@ -40,7 +40,7 @@ android {
         }
     }
 
-    flavorDimensions += 'distribution'
+    flavorDimensions += ['distribution', 'role']
     productFlavors {
         sideload {
             dimension 'distribution'
@@ -53,6 +53,45 @@ android {
                 signingConfig signingConfigs.release
             }
         }
+        client {
+            dimension 'role'
+            applicationIdSuffix '.client'
+            resValue 'string', 'app_name', 'Guardr Client'
+            resValue 'string', 'title_activity_main', 'Guardr Client'
+            resValue 'string', 'package_name', 'com.signaturesecurity.guardr.client'
+            resValue 'string', 'custom_url_scheme', 'guardr-client'
+            manifestPlaceholders += [
+                roleScheme: 'guardr-client',
+                rolePathPrefix: '/client',
+                roleAppPathPrefix: '/app/client'
+            ]
+        }
+        guard {
+            dimension 'role'
+            applicationIdSuffix '.guard'
+            resValue 'string', 'app_name', 'Guardr Guard'
+            resValue 'string', 'title_activity_main', 'Guardr Guard'
+            resValue 'string', 'package_name', 'com.signaturesecurity.guardr.guard'
+            resValue 'string', 'custom_url_scheme', 'guardr-guard'
+            manifestPlaceholders += [
+                roleScheme: 'guardr-guard',
+                rolePathPrefix: '/guard',
+                roleAppPathPrefix: '/app/guard'
+            ]
+        }
+        staff {
+            dimension 'role'
+            applicationIdSuffix '.staff'
+            resValue 'string', 'app_name', 'Guardr Staff'
+            resValue 'string', 'title_activity_main', 'Guardr Staff'
+            resValue 'string', 'package_name', 'com.signaturesecurity.guardr.staff'
+            resValue 'string', 'custom_url_scheme', 'guardr-staff'
+            manifestPlaceholders += [
+                roleScheme: 'guardr-staff',
+                rolePathPrefix: '/staff',
+                roleAppPathPrefix: '/app/staff'
+            ]
+        }
     }
 
     buildTypes {
@@ -64,7 +103,7 @@ android {
 }
 
 afterEvaluate {
-    tasks.matching { it.name ==~ /.*(assemble|bundle)PlayRelease.*/ }.configureEach { task ->
+    tasks.matching { it.name ==~ /.*(assemble|bundle)Play.*Release.*/ }.configureEach { task ->
         task.doFirst {
             if (!hasReleaseKeystore) {
                 throw new GradleException(

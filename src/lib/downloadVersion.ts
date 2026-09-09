@@ -17,3 +17,5 @@ export async function fetchDownloadVersionManifest(): Promise<DownloadVersionMan
 export function resolveInstalledWebVersion(manifest?: DownloadVersionManifest | null): string {
   return manifest?.webVersion ?? APP_VERSION;
 }
+
+export { resolveApkDownloadUrl } from './apkDownloadUrl';

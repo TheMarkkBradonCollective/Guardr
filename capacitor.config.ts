@@ -1,11 +1,17 @@
 /**
  * Capacitor shell config — wraps the Vite build for Android APK / iOS.
  *
- * Build APK:
- *   npm run android:apk
+ * Sideload three role APKs + zip:
+ *   npm run android:apk:all
+ *
+ * Single role:
+ *   node scripts/build-android-apk.mjs --role=guard
  *
  * Sync after web changes:
  *   npm run build && npx cap sync android
+ *
+ * Capacitor appId stays the base package. Gradle `role` flavors add
+ * applicationIdSuffix so Client, Guard, and Staff install side by side.
  */
 const config = {
   appId: 'com.signaturesecurity.guardr',

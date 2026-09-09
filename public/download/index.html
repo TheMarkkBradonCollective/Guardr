@@ -321,19 +321,24 @@
       </div>
 
       <div class="panel" id="apk-download-card">
-        <h2 id="apk-download-title">APK (Full Version)</h2>
-        <p id="apk-download-copy">Latest APK for guards who want the native app icon, permissions, and more reliable notifications.</p>
+        <h2 id="apk-download-title">Android apps</h2>
+        <p id="apk-download-copy">Three apps you can install side by side: Guardr Client, Guardr Guard, and Guardr Staff. Download all as a zip, or pick one.</p>
         <div class="qr-block">
-          <img src="/download/apk-qr.png" width="180" height="180" alt="QR code to download Guardr APK" />
-          <p class="qr-caption">Scan to download the APK directly on Android</p>
-          <a class="qr-link" id="apk-direct-link" href="https://www.guardr.co/download/guardr.apk">https://www.guardr.co/download/guardr.apk</a>
+          <img src="/download/apk-qr.png" width="180" height="180" alt="QR code to download Guardr Client, Guard, and Staff Android apps" />
+          <p class="qr-caption">Scan to download all three APKs as a zip</p>
+          <a class="qr-link" id="apk-direct-link" href="https://www.guardr.co/download/guardr-apps.zip">https://www.guardr.co/download/guardr-apps.zip</a>
         </div>
-        <a class="btn" id="apk-download-btn" href="/download/guardr.apk" download="guardr.apk">Download APK</a>
+        <a class="btn" id="apk-download-btn" href="/download/guardr-apps.zip" download="guardr-apps.zip">Download all apps</a>
+        <div id="role-apk-links" class="status-grid" style="margin-top: 14px">
+          <a class="btn secondary" id="apk-client-btn" href="/download/guardr-client.apk" download="guardr-client.apk">Guardr Client</a>
+          <a class="btn secondary" id="apk-guard-btn" href="/download/guardr-guard.apk" download="guardr-guard.apk">Guardr Guard</a>
+          <a class="btn secondary" id="apk-staff-btn" href="/download/guardr-staff.apk" download="guardr-staff.apk">Guardr Staff</a>
+        </div>
         <p id="latest-version"></p>
         <ol id="apk-steps">
-          <li>Tap <strong>Download APK</strong>.</li>
-          <li>Open the file and tap <strong>Install</strong> (enable unknown apps if prompted).</li>
-          <li>Re-open this page after installing — we will detect your version.</li>
+          <li>Tap <strong>Download all apps</strong> (or a single app above).</li>
+          <li>Open each APK and tap <strong>Install</strong> (enable unknown apps if prompted).</li>
+          <li>Client, Guard, and Staff can all stay installed on one phone.</li>
         </ol>
       </div>
 
@@ -610,16 +615,33 @@
           latestVersion.textContent =
             'Latest APK (Full Version): ' + formatVersionLabel(latest.apkVersion) + ' (build ' + latest.apkVersionCode + ') · PWA (Lite Version): ' + formatVersionLabel(latest.webVersion);
 
-          if (latest.apkDirectUrl) {
+          if (latest.zipDirectUrl || latest.apkDirectUrl) {
             var directLink = document.getElementById('apk-direct-link');
             if (directLink) {
-              directLink.href = latest.apkDirectUrl;
-              directLink.textContent = latest.apkDirectUrl.replace(/\?v=\d+$/, '');
+              var zipUrl = latest.zipDirectUrl || latest.apkDirectUrl;
+              directLink.href = zipUrl;
+              directLink.textContent = zipUrl.replace(/\?v=\d+$/, '');
             }
           }
 
-          if (latest.apkUrl) {
-            downloadBtn.href = latest.apkUrl;
+          var requestedApp = new URLSearchParams(location.search).get('app');
+          var roleApps = latest.apps || {};
+          ['client', 'guard', 'staff'].forEach(function (role) {
+            var btn = document.getElementById('apk-' + role + '-btn');
+            var links = roleApps[role];
+            if (btn && links && links.apkUrl) {
+              btn.href = links.apkUrl;
+            }
+          });
+
+          if (latest.zipUrl) {
+            downloadBtn.href = latest.zipUrl;
+            downloadBtn.setAttribute('download', 'guardr-apps.zip');
+          }
+          if (requestedApp && roleApps[requestedApp] && roleApps[requestedApp].apkUrl) {
+            downloadBtn.href = roleApps[requestedApp].apkUrl;
+            downloadBtn.setAttribute('download', 'guardr-' + requestedApp + '.apk');
+            downloadBtn.textContent = 'Download ' + (roleApps[requestedApp].label || requestedApp);
           }
 
           if (live === 'apk') {
@@ -640,8 +662,10 @@
             apkDetail.textContent =
               'No APK install recorded yet. Open the Guardr app at least once, or download below. ' +
               'If you already installed an older APK, download again to update.';
-            downloadCopy.textContent = 'Install APK (Full Version) for guards who want native icon, permissions, and stronger notifications.';
-            downloadBtn.textContent = 'Get APK (Full Version)';
+            downloadCopy.textContent = 'Install Guardr Client, Guardr Guard, and Guardr Staff for native icon, permissions, and stronger notifications.';
+            if (downloadBtn.getAttribute('download') === 'guardr-apps.zip') {
+              downloadBtn.textContent = 'Download all apps';
+            }
           } else if (apkNeedsUpdate) {
             setBadge(apkBadge, 'Update available', 'warn');
             apkDetail.textContent =

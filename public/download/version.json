@@ -2,7 +2,29 @@
   "webVersion": "1.0.131-beta",
   "apkVersion": "1.0.131-beta",
   "apkVersionCode": 231,
-  "apkUrl": "/download/guardr.apk?v=231",
-  "apkDirectUrl": "https://www.guardr.co/download/guardr.apk?v=231",
-  "updatedAt": "2026-08-19T07:19:11.514Z"
+  "apkUrl": "/download/guardr-apps.zip?v=231",
+  "apkDirectUrl": "https://www.guardr.co/download/guardr-apps.zip?v=231",
+  "zipUrl": "/download/guardr-apps.zip?v=231",
+  "zipDirectUrl": "https://www.guardr.co/download/guardr-apps.zip?v=231",
+  "apps": {
+    "client": {
+      "label": "Guardr Client",
+      "packageId": "com.signaturesecurity.guardr.client",
+      "apkUrl": "/download/guardr-client.apk?v=231",
+      "apkDirectUrl": "https://www.guardr.co/download/guardr-client.apk?v=231"
+    },
+    "guard": {
+      "label": "Guardr Guard",
+      "packageId": "com.signaturesecurity.guardr.guard",
+      "apkUrl": "/download/guardr-guard.apk?v=231",
+      "apkDirectUrl": "https://www.guardr.co/download/guardr-guard.apk?v=231"
+    },
+    "staff": {
+      "label": "Guardr Staff",
+      "packageId": "com.signaturesecurity.guardr.staff",
+      "apkUrl": "/download/guardr-staff.apk?v=231",
+      "apkDirectUrl": "https://www.guardr.co/download/guardr-staff.apk?v=231"
+    }
+  },
+  "updatedAt": "2026-09-09T08:01:09.484Z"
 }
