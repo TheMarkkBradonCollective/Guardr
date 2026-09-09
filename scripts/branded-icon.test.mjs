@@ -11,13 +11,20 @@ describe('Staff launcher chrome', () => {
     });
   });
 
-  it('keeps Guard and Customer as black tiles with a white mark', () => {
+  it('keeps Guard as a black tile with a white mark', () => {
     assert.deepEqual(iconChromeForLabel('Guard'), {
       background: '#000000',
       mark: 'white',
       text: '#FFFFFF',
     });
-    assert.equal(iconChromeForLabel('Customer').background, '#000000');
+    assert.equal(iconChromeForLabel(null).background, '#000000');
+  });
+
+  it('draws no word on the Customer launcher', async () => {
+    const { iconLabelForProductApp } = await import('./branded-icon.mjs');
+    assert.equal(iconLabelForProductApp('client'), null);
+    assert.equal(iconLabelForProductApp('guard'), 'Guard');
+    assert.equal(iconLabelForProductApp('staff'), 'Staff');
   });
 
   it('uses a white Capacitor splash and light status bar for Staff', () => {

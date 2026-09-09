@@ -1,14 +1,14 @@
 import sharp from 'sharp';
 
-/** Text drawn under the Guardr shield on home-screen icons. */
+/** Text drawn under the Guardr shield on home-screen icons. Customer is shield-only. */
 export const PRODUCT_ICON_LABELS = {
-  client: 'Customer',
+  client: null,
   guard: 'Guard',
   staff: 'Staff',
 };
 
 export function iconLabelForProductApp(productApp) {
-  return PRODUCT_ICON_LABELS[productApp] ?? null;
+  return PRODUCT_ICON_LABELS[productApp] || null;
 }
 
 /** Staff is a white tile with a black mark; Guard/Customer stay black with a white mark. */
@@ -92,8 +92,9 @@ function parseBackground(background) {
 }
 
 /**
- * Role icon: shield + Guard/Customer/Staff under the logo.
- * `safeZone` keeps mark + label inside an Android/maskable crop.
+ * Role icon: shield plus optional Guard/Staff word under the logo.
+ * Customer is unlabeled (shield only). `safeZone` keeps mark + label
+ * inside an Android/maskable crop.
  */
 export async function renderBrandedIcon(iconMaster, size, {
   label = null,
