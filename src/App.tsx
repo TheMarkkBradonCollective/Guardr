@@ -526,9 +526,12 @@ import {
 } from './lib/appNavigation';
 import {
   applyProductAppToDocument,
+  consumePostAuthPath,
   isOperationalAppPath,
+  persistPostAuthPath,
   productAppForRole,
   productAppFromPath,
+  roleCanOpenProductApp,
   wrongAppMessage,
   type ProductRole,
 } from './lib/productApps';
@@ -1905,6 +1908,14 @@ export default function App() {
   const defaultRouteForUser = (user: SessionUser): AppRoute => {
     const role = appRoleForUser(user);
     if (!role) return { role: 'client', clientView: 'home' };
+    const pendingPath = consumePostAuthPath();
+    if (pendingPath) {
+      const pending = parseAppRoute(pendingPath);
+      if (pending && (pending.websiteAccount || roleCanOpenProductApp(role, productAppFromPath(pendingPath)))) {
+        if (pending.websiteAccount) return websiteAccountRoute(role, pending.accountView ?? 'home');
+        return { ...pending, role };
+      }
+    }
     if (!isAppExperience()) {
       const path = typeof window !== 'undefined' ? window.location.pathname : '/';
       if (!isOperationalAppPath(path) && !path.startsWith('/legal')) {
@@ -1991,6 +2002,7 @@ export default function App() {
     const userRole = user ? appRoleForUser(user) : null;
 
     if (!user && routeFromUrl?.websiteAccount) {
+      persistPostAuthPath(strippedUrl);
       setAuthChoiceMode(null);
       setIsAuthView(true);
       setInitialAuthMode('sign-in');
@@ -2001,6 +2013,7 @@ export default function App() {
     }
 
     if (!user && routeFromUrl && !routeFromUrl.authView && isOperationalAppPath(strippedUrl)) {
+      persistPostAuthPath(strippedUrl);
       const authRole: AuthViewRole =
         routeFromUrl.role === 'guard' || routeFromUrl.role === 'staff' ? routeFromUrl.role : 'client';
       setAuthChoiceMode(null);

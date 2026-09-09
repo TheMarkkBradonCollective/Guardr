@@ -346,3 +346,26 @@ export function wrongAppMessage(requested: ProductApp, role: ProductRole): strin
   const ownLabel = productAppLabelForRole(role);
   return `${requestedLabel} is for a different role. Opening ${ownLabel} instead.`;
 }
+
+const POST_AUTH_PATH_KEY = 'guardr_post_auth_path';
+
+export function persistPostAuthPath(url: string): void {
+  if (typeof window === 'undefined') return;
+  if (!isOperationalAppPath(url) && !isWebsiteAccountPath(url)) return;
+  try {
+    sessionStorage.setItem(POST_AUTH_PATH_KEY, url);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function consumePostAuthPath(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(POST_AUTH_PATH_KEY);
+    sessionStorage.removeItem(POST_AUTH_PATH_KEY);
+    return raw;
+  } catch {
+    return null;
+  }
+}
