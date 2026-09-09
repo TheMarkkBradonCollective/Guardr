@@ -85,7 +85,7 @@ function parseProductAppArg() {
   return null;
 }
 
-/** Role launcher: Staff is white + black mark; Guard/Customer are black + white mark. */
+/** Role launcher: Guard and Staff are white + black mark; Customer is black + white mark. */
 async function renderLauncherIcon(iconMaster, size, label) {
   return renderBrandedIcon(iconMaster, size, {
     label,
@@ -102,7 +102,7 @@ async function renderForegroundIcon(iconMaster, size, label) {
   });
 }
 
-/** APK splash — Staff is a white field with a black shield; others stay black + white. */
+/** APK splash — Guard/Staff are a white field with a black shield; Customer stays black + white. */
 async function renderSplash(iconMaster, width, height, label) {
   const chrome = iconChromeForLabel(label);
   const logoSize = Math.round(Math.min(width, height) * 0.34);

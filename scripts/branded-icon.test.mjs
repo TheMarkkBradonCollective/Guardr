@@ -11,11 +11,11 @@ describe('Staff launcher chrome', () => {
     });
   });
 
-  it('keeps Guard as a black tile with a white mark', () => {
+  it('colors Guard like Staff: white tile, black mark, black Guard label', () => {
     assert.deepEqual(iconChromeForLabel('Guard'), {
-      background: '#000000',
-      mark: 'white',
-      text: '#FFFFFF',
+      background: '#FFFFFF',
+      mark: 'black',
+      text: '#000000',
     });
     assert.equal(iconChromeForLabel(null).background, '#000000');
   });
@@ -27,12 +27,15 @@ describe('Staff launcher chrome', () => {
     assert.equal(iconLabelForProductApp('staff'), 'Staff');
   });
 
-  it('uses a white Capacitor splash and light status bar for Staff', () => {
+  it('uses a white Capacitor splash and light status bar for Guard and Staff', () => {
     assert.deepEqual(nativeChromeForProductApp('staff'), {
       backgroundColor: '#FFFFFF',
       statusBarStyle: 'LIGHT',
     });
+    assert.deepEqual(nativeChromeForProductApp('guard'), {
+      backgroundColor: '#FFFFFF',
+      statusBarStyle: 'LIGHT',
+    });
     assert.equal(nativeChromeForProductApp('client').backgroundColor, '#000000');
-    assert.equal(nativeChromeForProductApp('guard').statusBarStyle, 'DARK');
   });
 });

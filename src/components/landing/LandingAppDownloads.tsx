@@ -6,6 +6,7 @@ import { GuardrButton } from '../baseui/GuardrButton';
 import type { FormFactor } from '../../lib/platform/device';
 import { FONT_DISPLAY } from '../../theme/typography';
 import { GITHUB_ALL_APKS_ZIP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
+import { productAppHasLightLauncher } from '../../lib/productApps';
 import { Capacitor } from '@capacitor/core';
 
 const APK_QR_URL = '/download/apk-qr.png';
@@ -105,8 +106,10 @@ export function LandingAppDownloads({
                   display: 'block',
                   borderRadius: 12,
                   marginBottom: 12,
-                  background: app.id === 'staff' ? '#ffffff' : '#000000',
-                  border: app.id === 'staff' ? `1px solid ${theme.colors.borderOpaque}` : undefined,
+                  background: productAppHasLightLauncher(app.id) ? '#ffffff' : '#000000',
+                  border: productAppHasLightLauncher(app.id)
+                    ? `1px solid ${theme.colors.borderOpaque}`
+                    : undefined,
                 }}
               />
               <Block

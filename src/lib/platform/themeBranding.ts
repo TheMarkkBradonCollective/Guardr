@@ -5,15 +5,15 @@ export const THEME_ICON_BACKGROUNDS: Record<ThemeMode, string> = {
   dark: '#000000',
 };
 
-/** Browser UI accent (status bar, theme-color meta). Guard/Customer stay black. */
+/** Browser UI accent (status bar, theme-color meta). Customer stays black. */
 export const THEME_BROWSER_COLORS: Record<ThemeMode, string> = {
   light: '#000000',
   dark: '#000000',
 };
 
-/** Staff light theme uses a white status bar so it matches the white launcher. */
+/** Guard and Staff light theme use a white status bar so they match the white launcher. */
 export function themeChromeColor(mode: ThemeMode, productApp?: string | null): string {
-  if (productApp === 'staff' && mode === 'light') return '#FFFFFF';
+  if ((productApp === 'staff' || productApp === 'guard') && mode === 'light') return '#FFFFFF';
   return THEME_BROWSER_COLORS[mode];
 }
 

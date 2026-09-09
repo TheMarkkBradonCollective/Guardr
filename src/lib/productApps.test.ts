@@ -14,6 +14,7 @@ import {
   pathFromDeepLink,
   NATIVE_APPLICATION_IDS,
   PRODUCT_APP_ICON_LABELS,
+  productAppHasLightLauncher,
   installedAuthEntry,
   productAppForRole,
   productAppFromPath,
@@ -105,6 +106,9 @@ describe('role isolation', () => {
     assert.equal(PRODUCT_APP_ICON_LABELS.client, 'Customer');
     assert.equal(PRODUCT_APP_ICON_LABELS.guard, 'Guard');
     assert.equal(PRODUCT_APP_ICON_LABELS.staff, 'Staff');
+    assert.equal(productAppHasLightLauncher('guard'), true);
+    assert.equal(productAppHasLightLauncher('staff'), true);
+    assert.equal(productAppHasLightLauncher('client'), false);
   });
 
   it('skips the log-in-as picker inside a role APK', () => {

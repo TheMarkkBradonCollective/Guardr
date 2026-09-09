@@ -11,17 +11,17 @@ export function iconLabelForProductApp(productApp) {
   return PRODUCT_ICON_LABELS[productApp] || null;
 }
 
-/** Staff is a white tile with a black mark; Guard/Customer stay black with a white mark. */
+/** Guard and Staff are white tiles with a black mark. Customer stays black + white. */
 export function iconChromeForLabel(label) {
-  if (label === 'Staff') {
+  if (label === 'Guard' || label === 'Staff') {
     return { background: '#FFFFFF', mark: 'black', text: '#000000' };
   }
   return { background: '#000000', mark: 'white', text: '#FFFFFF' };
 }
 
-/** Capacitor splash / status bar for a role APK. Staff is a white shell. */
+/** Capacitor splash / status bar for a role APK. Guard and Staff are white shells. */
 export function nativeChromeForProductApp(productApp) {
-  if (productApp === 'staff') {
+  if (productApp === 'guard' || productApp === 'staff') {
     return { backgroundColor: '#FFFFFF', statusBarStyle: 'LIGHT' };
   }
   return { backgroundColor: '#000000', statusBarStyle: 'DARK' };
