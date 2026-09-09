@@ -11,7 +11,14 @@ import QRCode from 'qrcode';
 const ROOT = process.cwd();
 const APK_SLUG = 'guardr';
 const APK_DIRECT_URL = 'https://www.guardr.co/download/guardr.apk';
-const APPS_ZIP_DIRECT_URL = 'https://www.guardr.co/download/guardr-apps.zip';
+const GITHUB_ALL_APKS_ZIP =
+  'https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip';
+const GITHUB_CLIENT_APK =
+  'https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk';
+const GITHUB_GUARD_APK =
+  'https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk';
+const GITHUB_STAFF_APK =
+  'https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk';
 const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
@@ -85,12 +92,12 @@ const downloadManifest = {
   apkVersionCode: versionCode,
   apkUrl: `/download/guardr.apk${apkCacheQuery}`,
   apkDirectUrl: `${APK_DIRECT_URL}${apkCacheQuery}`,
-  appsZipUrl: `/download/guardr-apps.zip${apkCacheQuery}`,
-  appsZipDirectUrl: `${APPS_ZIP_DIRECT_URL}${apkCacheQuery}`,
+  appsZipUrl: GITHUB_ALL_APKS_ZIP,
+  appsZipDirectUrl: GITHUB_ALL_APKS_ZIP,
   apkApps: {
-    client: `/download/guardr-client.apk${apkCacheQuery}`,
-    guard: `/download/guardr-guard.apk${apkCacheQuery}`,
-    staff: `/download/guardr-staff.apk${apkCacheQuery}`,
+    client: GITHUB_CLIENT_APK,
+    guard: GITHUB_GUARD_APK,
+    staff: GITHUB_STAFF_APK,
   },
   updatedAt: new Date().toISOString(),
 };

@@ -149,6 +149,31 @@
         margin-top: 10px;
       }
       .btn.secondary:hover { background: var(--surface); }
+      .app-grid {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .app-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        background: var(--surface);
+      }
+      .app-card h3 {
+        margin: 0 0 6px;
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+      }
+      .app-card p {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+      @media (min-width: 720px) {
+        .app-grid { grid-template-columns: 1fr 1fr 1fr; }
+      }
       .status-grid { display: grid; gap: 12px; }
       .status {
         border: 1px solid var(--border);
@@ -297,7 +322,7 @@
     <div class="wrap">
       <div class="hero">
         <h1>Install Guardr</h1>
-        <p id="page-intro">Choose the lite web app or the full Android app. Both use the same Guardr account.</p>
+        <p id="page-intro">Download the Client, Guard, or Staff app. Same Guardr account on every app.</p>
         <div id="live-context" class="context">Checking your device…</div>
       </div>
 
@@ -321,22 +346,42 @@
         </div>
       </div>
 
+      <div class="panel" id="apps-download-card">
+        <h2>The apps</h2>
+        <p>Pick the app for your role. Each APK installs side by side on Android.</p>
+        <div class="app-grid">
+          <article class="app-card">
+            <h3>Client App</h3>
+            <p>Coverage, activity, and reports.</p>
+            <a class="btn" id="client-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk">Download Client</a>
+          </article>
+          <article class="app-card">
+            <h3>Guard App</h3>
+            <p>Shifts, check-in, and field work.</p>
+            <a class="btn" id="guard-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk">Download Guard</a>
+          </article>
+          <article class="app-card">
+            <h3>Staff App</h3>
+            <p>Operations, people, and administration.</p>
+            <a class="btn" id="staff-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk">Download Staff</a>
+          </article>
+        </div>
+        <a class="btn secondary" id="apps-zip-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip">Download all APKs (GitHub zip)</a>
+        <p class="qr-caption" style="margin-top:12px">
+          Zip is hosted on GitHub Releases, not the website —
+          <a href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest">open the release</a>.
+        </p>
+      </div>
+
       <div class="panel" id="apk-download-card">
-        <h2 id="apk-download-title">APK (Full Version)</h2>
-        <p id="apk-download-copy">Latest APK for guards who want the native app icon, permissions, and more reliable notifications.</p>
+        <h2 id="apk-download-title">Combined APK (existing installs)</h2>
+        <p id="apk-download-copy">Use this only if you already have the single Guardr APK. New installs should use Client, Guard, or Staff above.</p>
         <div class="qr-block">
           <img src="/download/apk-qr.png" width="180" height="180" alt="QR code to download Guardr APK" />
-          <p class="qr-caption">Scan to download the APK directly on Android</p>
+          <p class="qr-caption">Scan to download the combined APK</p>
           <a class="qr-link" id="apk-direct-link" href="https://www.guardr.co/download/guardr.apk">https://www.guardr.co/download/guardr.apk</a>
         </div>
-        <a class="btn" id="apk-download-btn" href="/download/guardr.apk" download="guardr.apk">Download APK</a>
-        <p class="qr-caption" style="margin-top:16px">Or get Client, Guard, and Staff as three APKs in one zip:</p>
-        <a class="btn secondary" id="apps-zip-btn" href="/download/guardr-apps.zip" download="guardr-apps.zip">Download all three APKs (zip)</a>
-        <p class="qr-caption">
-          Individual: <a href="/download/guardr-client.apk" download="guardr-client.apk">Client</a>
-          · <a href="/download/guardr-guard.apk" download="guardr-guard.apk">Guard</a>
-          · <a href="/download/guardr-staff.apk" download="guardr-staff.apk">Staff</a>
-        </p>
+        <a class="btn secondary" id="apk-download-btn" href="/download/guardr.apk" download="guardr.apk">Download combined APK</a>
         <p id="latest-version"></p>
         <ol id="apk-steps">
           <li>Tap <strong>Download APK</strong>.</li>
@@ -633,6 +678,13 @@
             var zipBtn = document.getElementById('apps-zip-btn');
             if (zipBtn) zipBtn.href = latest.appsZipUrl;
           }
+          if (latest.apkApps) {
+            var clientBtn = document.getElementById('client-apk-btn');
+            var guardBtn = document.getElementById('guard-apk-btn');
+            var staffBtn = document.getElementById('staff-apk-btn');
+            if (clientBtn && latest.apkApps.client) clientBtn.href = latest.apkApps.client;
+            if (guardBtn && latest.apkApps.guard) guardBtn.href = latest.apkApps.guard;
+            if (staffBtn && latest.apkApps.staff) staffBtn.href = latest.apkApps.staff;
           }
 
           if (live === 'apk') {

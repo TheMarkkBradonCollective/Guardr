@@ -4,20 +4,21 @@ Guardr ships as a **Capacitor-wrapped Android APK** alongside the web/PWA at [gu
 
 ## Download
 
-- **Install page:** [https://guardr.co/download/](https://guardr.co/download/)
-- **All three apps (zip):** [https://www.guardr.co/download/guardr-apps.zip](https://www.guardr.co/download/guardr-apps.zip) — Client, Guard, and Staff APKs
-- **Direct APK (QR code / combined):** [https://www.guardr.co/download/guardr.apk](https://www.guardr.co/download/guardr.apk) — append `?v=<build>` to bust cache after updates
+- **Install page:** [https://guardr.co/download/](https://guardr.co/download/) — Client App, Guard App, and Staff App
+- **All three APKs (GitHub zip):** [https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip)
+- **Release page:** [https://github.com/TheMarkkBradonCollective/Guardr/releases/latest](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest)
+- **Combined APK (existing installs):** [https://www.guardr.co/download/guardr.apk](https://www.guardr.co/download/guardr.apk)
 
-| App | Package | File |
-|-----|---------|------|
-| Client App | `com.signaturesecurity.guardr.client` | `guardr-client.apk` |
-| Guard App | `com.signaturesecurity.guardr.guard` | `guardr-guard.apk` |
-| Staff App | `com.signaturesecurity.guardr.staff` | `guardr-staff.apk` |
-| Combined (legacy) | `com.signaturesecurity.guardr` | `guardr.apk` |
+| App | Package | GitHub asset |
+|-----|---------|--------------|
+| Client App | `com.signaturesecurity.guardr.client` | `Guardr-Client.apk` |
+| Guard App | `com.signaturesecurity.guardr.guard` | `Guardr-Guard.apk` |
+| Staff App | `com.signaturesecurity.guardr.staff` | `Guardr-Staff.apk` |
+| Combined (legacy) | `com.signaturesecurity.guardr` | site `/download/guardr.apk` |
 
-The three role APKs can be installed side by side. Each opens its own app (not the marketing website).
+The three role APKs can be installed side by side. Each opens its own app (not the marketing website). The all-apps zip is a **GitHub Release** asset (same pattern as MBC All-APKs), not a file on guardr.co.
 
-The install page compares **APK** vs **Save to Home Screen (PWA)**, checks whether an APK update is needed, and explains the tradeoffs (manual APK updates vs auto-updating web shortcut).
+The install page compares **APK** vs **Save to Home Screen (PWA)** and checks whether an update is needed.
 
 Share the install page with the Signature Security network.
 
@@ -126,9 +127,9 @@ The **play** flavor omits sideload-only permissions; **sideload** (`npm run andr
 
 ## CI
 
-GitHub Actions workflow `.github/workflows/android-apk.yml` builds all three role APKs, the combined APK, and `guardr-apps.zip`, then uploads them as the `guardr-android-apk` artifact.
+GitHub Actions workflow `.github/workflows/android-apk.yml` builds the three role APKs plus `Guardr-All-APKs.zip`, uploads them as artifacts, and on `main` publishes a GitHub Release (`apks-v*`).
 
-Run the workflow: [Android Release](https://github.com/TheMarkkBradonCollective/Guardr/actions/workflows/android-apk.yml)
+**Zip download (GitHub, not the site):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
 
 Firebase `google-services.json` currently lists `com.signaturesecurity.guardr`. Role APKs rewrite `package_name` at build time so Gradle accepts the suffixed ids. For native push on the three packages, add matching Android apps in the same Firebase project and ship a `google-services.json` with all four client entries.
 
