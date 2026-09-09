@@ -51,7 +51,7 @@ const SIGNUP_PATH_OPTIONS: ChoiceOption[] = [
     icon: User,
     title: 'I need security',
     description:
-      'Hire licensed guards as yourself or as a company. Sign up and complete activation here — after approval you need the Hire app. Not a job application to Guardr.',
+      'Hire licensed guards as yourself or as a company. Sign up and complete activation here — after approval you need the Customer app. Not a job application to Guardr.',
   },
   {
     id: 'work',
@@ -92,7 +92,7 @@ const SIGNUP_WORK_OPTIONS: ChoiceOption[] = [
     icon: Shield,
     title: "I'm a licensed guard (contractor)",
     description:
-      'Finish application and activation on this website. After staff activates you, you need the Work app to take shifts. Guardr does not employ guards through this signup.',
+      'Finish application and activation on this website. After staff activates you, you need the Guard app to take shifts. Guardr does not employ guards through this signup.',
   },
   {
     id: 'staff',
@@ -249,7 +249,7 @@ interface AuthRoleChoicePageProps {
 }
 
 /**
- * Sign-in: Guard / Client / Staff.
+ * Sign-in: Guard / Client / Staff, then Customer still picks personal / business / PPO.
  * Sign-up: three selection pages — path, then personal/business or guard/staff.
  */
 export function AuthRoleChoicePage({
@@ -268,12 +268,19 @@ export function AuthRoleChoicePage({
   const surface = useSurfaceKind();
   const factor = surface === 'tablet' ? 'tablet' : surface === 'desktop' ? 'desktop' : 'mobile';
   const isMobile = factor === 'mobile';
-  const copyKey = mode === 'sign-in' ? 'sign-in' : signupStep;
-  const copy = COPY[copyKey];
-  const backLabel = mode === 'sign-up' && signupStep !== 'path' ? 'Back' : 'Home';
-  const showHero = !isMobile && (mode === 'sign-in' || signupStep === 'path');
+  const showingClientKinds = signupStep === 'client';
+  const copyKey = showingClientKinds ? 'client' : mode === 'sign-in' ? 'sign-in' : signupStep;
+  const copy = showingClientKinds && mode === 'sign-in'
+    ? { ...COPY.client, kicker: 'Sign in' }
+    : COPY[copyKey];
+  const backLabel = showingClientKinds || (mode === 'sign-up' && signupStep !== 'path') ? 'Back' : 'Home';
+  const showHero = !isMobile && !showingClientKinds && signupStep !== 'work' && (mode === 'sign-in' || signupStep === 'path');
 
   const handleSelect = (id: string) => {
+    if (showingClientKinds) {
+      if (id === 'personal' || id === 'business' || id === 'security-company') onSelectClientType?.(id);
+      return;
+    }
     if (mode === 'sign-in') {
       onSelectRole(id as AuthViewRole);
       return;
@@ -282,21 +289,16 @@ export function AuthRoleChoicePage({
       if (id === 'client' || id === 'work') onSelectSignupPath?.(id);
       return;
     }
-    if (signupStep === 'client') {
-      if (id === 'personal' || id === 'business' || id === 'security-company') onSelectClientType?.(id);
-      return;
-    }
     if (id === 'guard' || id === 'staff') onSelectRole(id);
   };
 
-  const options =
-    mode === 'sign-in'
+  const options = showingClientKinds
+    ? SIGNUP_CLIENT_KIND_OPTIONS
+    : mode === 'sign-in'
       ? SIGN_IN_OPTIONS
-      : signupStep === 'client'
-        ? SIGNUP_CLIENT_KIND_OPTIONS
-        : signupStep === 'work'
-          ? SIGNUP_WORK_OPTIONS
-          : SIGNUP_PATH_OPTIONS;
+      : signupStep === 'work'
+        ? SIGNUP_WORK_OPTIONS
+        : SIGNUP_PATH_OPTIONS;
 
   return (
     <Block
@@ -304,7 +306,7 @@ export function AuthRoleChoicePage({
       height="100dvh"
       className={`auth-role-choice-page${factor === 'tablet' ? ' auth-role-choice-page--tablet' : ''}`}
       data-landing-factor={surface}
-      data-signup-step={mode === 'sign-up' ? signupStep : 'sign-in'}
+      data-signup-step={showingClientKinds ? 'client' : mode === 'sign-up' ? signupStep : 'sign-in'}
       backgroundColor="backgroundPrimary"
       display="flex"
       flexDirection="column"

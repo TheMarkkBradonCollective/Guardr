@@ -75,22 +75,28 @@ export function AuthFormHeader({
       ? 'Guard sign in'
       : role === 'staff'
         ? 'Staff sign in'
-        : 'Customer sign in';
+        : isPersonalClient
+          ? 'Personal sign in'
+          : isSecurityCompanyClient
+            ? 'Security company sign in'
+            : isBusinessClient
+              ? 'Business sign in'
+              : 'Customer sign in';
 
   const title = variant === 'sheet' ? sheetTitle : pageTitle;
 
   const workspaceLabel =
     role === 'guard'
-      ? 'Work'
+      ? 'Guard'
       : role === 'staff'
         ? 'Staff'
         : isPersonalClient
-          ? 'Hire · Personal'
+          ? 'Customer · Personal'
           : isSecurityCompanyClient
-            ? 'Hire · Security company'
+            ? 'Customer · Security company'
             : isBusinessClient
-              ? 'Hire · Business'
-              : 'Hire';
+              ? 'Customer · Business'
+              : 'Customer';
 
   const clientSignupSubtitle = isPersonalClient
     ? 'You hire and pay as an individual. Request coverage once or as often as you need — including recurring services.'
@@ -104,38 +110,38 @@ export function AuthFormHeader({
     variant === 'sheet'
       ? isSignUp
         ? role === 'guard'
-          ? 'Finish application and activation on this website. After that you need the Work app to take shifts.'
+          ? 'Finish application and activation on this website. After that you need the Guard app to take shifts.'
           : role === 'staff'
             ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
             : clientSignupSubtitle
         : role === 'guard'
-          ? 'After activation, shifts live in the Work app. This website stays for your account.'
+          ? 'After activation, shifts live in the Guard app. This website stays for your account.'
           : role === 'staff'
             ? 'Welcome back — your operations workspace is ready.'
-            : 'After approval, coverage lives in the Hire app. This website stays for your account.'
+            : 'After approval, coverage lives in the Customer app. This website stays for your account.'
       : center && hideBadge
         ? isSignUp
           ? role === 'guard'
-            ? 'Finish application and activation on this website. After that you need the Work app to take shifts.'
+            ? 'Finish application and activation on this website. After that you need the Guard app to take shifts.'
             : role === 'staff'
               ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
-              : 'Sign up and complete activation on this website. After approval you need the Hire app to post coverage.'
+              : 'Sign up and complete activation on this website. After approval you need the Customer app to post coverage.'
           : role === 'guard'
-            ? 'After activation, shifts live in the Work app. This website stays for your account.'
+            ? 'After activation, shifts live in the Guard app. This website stays for your account.'
             : role === 'staff'
               ? 'Enter your email and password to sign in'
-              : 'After approval, coverage lives in the Hire app. This website stays for your account.'
+              : 'After approval, coverage lives in the Customer app. This website stays for your account.'
         : isSignUp
         ? role === 'guard'
-          ? 'Finish application and activation on this website. After that you need the Work app to take shifts.'
+          ? 'Finish application and activation on this website. After that you need the Guard app to take shifts.'
           : role === 'staff'
             ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
             : clientSignupSubtitle
         : role === 'guard'
-          ? 'After activation, shifts live in the Work app. This website stays for your account.'
+          ? 'After activation, shifts live in the Guard app. This website stays for your account.'
           : role === 'staff'
             ? 'Welcome back — your operations workspace is ready.'
-            : 'After approval, coverage lives in the Hire app. This website stays for your account.'
+            : 'After approval, coverage lives in the Customer app. This website stays for your account.'
 
   if (variant === 'sheet') {
     return (

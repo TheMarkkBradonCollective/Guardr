@@ -14,6 +14,7 @@ import {
   pathFromDeepLink,
   NATIVE_APPLICATION_IDS,
   PRODUCT_APP_ICON_LABELS,
+  productAppHasLightLauncher,
   installedAuthEntry,
   productAppForRole,
   productAppFromPath,
@@ -56,7 +57,7 @@ describe('product app path resolution', () => {
 });
 
 describe('signed-in landing', () => {
-  it('sends browser sessions to activation until Hire/Work accounts are active', () => {
+  it('sends browser sessions to activation until Customer/Guard accounts are active', () => {
     assert.equal(defaultPathForSignedInUser('client', false), '/client/home');
     assert.equal(defaultPathForSignedInUser('guard', false), '/guard/activation');
     assert.equal(defaultPathForSignedInUser('staff', false), '/staff/overview');
@@ -73,7 +74,7 @@ describe('signed-in landing', () => {
     assert.equal(defaultPathForSignedInUser('staff', true), '/staff/overview');
   });
 
-  it('lets staff use operations in the browser and keeps active Hire/Work on the account website', () => {
+  it('lets staff use operations in the browser and keeps active Customer/Guard on the account website', () => {
     assert.equal(canUseOperationalAppInBrowser('staff'), true);
     assert.equal(canUseOperationalAppInBrowser('client'), false);
     assert.equal(canUseOperationalAppInBrowser('guard'), false);
@@ -83,8 +84,8 @@ describe('signed-in landing', () => {
     assert.equal(websiteShellAccess({ role: 'client', clientStatus: 'active' }), 'account');
     assert.equal(websiteShellAccess({ role: 'guard', guardStatus: 'active' }), 'account');
     assert.equal(websiteShellAccess({ role: 'guard', isInstalledShell: true, guardStatus: 'active' }), 'operations');
-    assert.equal(websiteNeedsAppMessage('client'), 'You need the Hire app to use the platform.');
-    assert.equal(websiteNeedsAppMessage('guard'), 'You need the Work app to use the platform.');
+    assert.equal(websiteNeedsAppMessage('client'), 'You need the Customer app to use the platform.');
+    assert.equal(websiteNeedsAppMessage('guard'), 'You need the Guard app to use the platform.');
     assert.equal(websiteNeedsAppMessage('staff'), '');
   });
 
@@ -102,16 +103,19 @@ describe('role isolation', () => {
     assert.equal(productAppForRole('staff'), 'staff');
     assert.equal(productRoleForApp('website'), null);
     assert.equal(productRoleForApp('guard'), 'guard');
-    assert.equal(PRODUCT_APP_ICON_LABELS.client, 'Hire');
-    assert.equal(PRODUCT_APP_ICON_LABELS.guard, 'Work');
+    assert.equal(PRODUCT_APP_ICON_LABELS.client, 'Customer');
+    assert.equal(PRODUCT_APP_ICON_LABELS.guard, 'Guard');
     assert.equal(PRODUCT_APP_ICON_LABELS.staff, 'Staff');
+    assert.equal(productAppHasLightLauncher('guard'), true);
+    assert.equal(productAppHasLightLauncher('staff'), true);
+    assert.equal(productAppHasLightLauncher('client'), false);
   });
 
   it('skips the log-in-as picker inside a role APK', () => {
     assert.deepEqual(installedAuthEntry('guard', 'sign-in'), { type: 'form', role: 'guard' });
     assert.deepEqual(installedAuthEntry('guard', 'sign-up'), { type: 'form', role: 'guard' });
     assert.deepEqual(installedAuthEntry('staff', 'sign-in'), { type: 'form', role: 'staff' });
-    assert.deepEqual(installedAuthEntry('client', 'sign-in'), { type: 'form', role: 'client' });
+    assert.deepEqual(installedAuthEntry('client', 'sign-in'), { type: 'client-kind' });
     assert.deepEqual(installedAuthEntry('client', 'sign-up'), { type: 'client-kind' });
     assert.deepEqual(installedAuthEntry('website', 'sign-in'), { type: 'role-picker' });
   });
@@ -122,7 +126,7 @@ describe('role isolation', () => {
     assert.equal(roleCanOpenProductApp('staff', 'client'), false);
     assert.equal(roleCanOpenProductApp('client', 'client'), true);
     assert.equal(roleCanOpenProductApp('client', 'website'), true);
-    assert.match(wrongAppMessage('staff', 'client'), /Staff App/);
+    assert.match(wrongAppMessage('staff', 'client'), /Staff/);
   });
 
   it('offers account sections without operational destinations', () => {
@@ -158,8 +162,8 @@ describe('deep links and CTAs', () => {
   });
 
   it('uses role-specific open-app copy', () => {
-    assert.equal(openAppCtaCopy('client').action, 'Open Client App');
-    assert.equal(openAppCtaCopy('guard').action, 'Open Guard App');
+    assert.equal(openAppCtaCopy('client').action, 'Open Customer');
+    assert.equal(openAppCtaCopy('guard').action, 'Open Guard');
     assert.equal(openAppCtaCopy('staff').action, 'Open operations');
     assert.match(openAppCtaCopy('staff').body, /browser/i);
   });

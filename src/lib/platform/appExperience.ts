@@ -7,7 +7,7 @@ function bakedNativeProductApp(): string {
 }
 
 /**
- * True in a Hire / Work / Staff Android shell (Capacitor APK or AAB),
+ * True in a Guard / Customer / Staff Android shell (Capacitor APK or AAB),
  * not the public website in a browser tab.
  *
  * Role APKs also bake `window.__GUARDR_NATIVE_PRODUCT_APP__`. That is the

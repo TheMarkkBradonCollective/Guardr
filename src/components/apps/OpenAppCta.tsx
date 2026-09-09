@@ -23,7 +23,7 @@ interface OpenAppCtaProps {
 }
 
 /**
- * Website → app transition. Hire and Work open the Android app (or the download
+ * Website → app transition. Guard and Customer open the Android app (or the download
  * page). Staff opens operations in this browser tab.
  */
 export function OpenAppCta({

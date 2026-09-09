@@ -70,7 +70,7 @@ export const PLATFORM_HIGHLIGHTS: { icon: LucideIcon; title: string; body: strin
   {
     icon: Smartphone,
     title: 'Mobile-first design',
-    body: 'Sign up and activate on this website, then run coverage and shifts in Hire or Work on Android.',
+    body: 'Sign up and activate on this website, then run coverage and shifts in Guard or Customer on Android.',
   },
   {
     icon: FileText,

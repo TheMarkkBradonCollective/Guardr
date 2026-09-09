@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build Hire, Work, and Staff sideload APKs and zip them together.
+ * Build Guard, Customer, and Staff sideload APKs and zip them together.
  *
  * Outputs:
  *   public/download/Guardr-Client.apk
@@ -73,7 +73,7 @@ try {
   await copyFile(SIDELOAD_APK, path.join(PUBLIC_DOWNLOAD, 'guardr.apk'));
 
   const zipPath = path.join(PUBLIC_DOWNLOAD, 'Guardr-All-APKs.zip');
-  console.log('\n→ Zipping Hire, Work, and Staff APKs for GitHub Releases…');
+  console.log('\n→ Zipping Guard, Customer, and Staff APKs for GitHub Releases…');
   run('zip', ['-j', '-q', zipPath, ...apkPaths]);
 
   console.log('→ Post-build parity audit…');

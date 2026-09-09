@@ -2,8 +2,8 @@
 /**
  * Shared steps for Guardr Android sideload APK and Play Store AAB builds.
  */
-import { unlink } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { readdir, rename, unlink } from 'node:fs/promises';
+import { existsSync, renameSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { isGoogleServicesConfigured, writeGoogleServicesFromEnv } from './write-google-services.mjs';
@@ -63,23 +63,64 @@ export async function prepareAndroidWebBuild({
   console.log('→ Generating Android launcher icons…');
   run('npm', ['run', 'generate:android-icons']);
 
-  const publicApk = path.join(ROOT, 'public/download/guardr.apk');
-  if (removePublicApk && existsSync(publicApk)) {
-    console.log('→ Removing public/download/guardr.apk so the sideload binary is not embedded in the next build…');
-    await unlink(publicApk);
+  const mbcApk = path.join(ROOT, 'public/guardr.apk');
+  const mbcApkPark = path.join(ROOT, '.apk-build-stash-guardr.apk');
+  const restoreParkedMbcApk = () => {
+    if (existsSync(mbcApkPark)) renameSync(mbcApkPark, mbcApk);
+  };
+  process.once('exit', restoreParkedMbcApk);
+
+  async function stripApkZip(dir) {
+    if (!existsSync(dir)) return 0;
+    let count = 0;
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        count += await stripApkZip(full);
+        continue;
+      }
+      if (!/\.(apk|zip)$/i.test(entry.name)) continue;
+      await unlink(full);
+      count += 1;
+    }
+    return count;
   }
 
-  console.log(`→ Building web bundle for Android${playStoreBuild ? ' (Play Store)' : ''}…`);
-  run('npm', ['run', 'build'], {
-    env: {
-      VITE_APP_URL: process.env.VITE_APP_URL || 'https://www.guardr.co',
-      VITE_NATIVE_FCM_CONFIGURED: nativeFcmConfigured ? 'true' : 'false',
-      VITE_PLAY_STORE_BUILD: playStoreBuild ? 'true' : 'false',
-    },
-  });
+  try {
+    if (removePublicApk) {
+      const downloadDir = path.join(ROOT, 'public/download');
+      const stripped = await stripApkZip(downloadDir);
+      if (existsSync(mbcApk)) {
+        await rename(mbcApk, mbcApkPark);
+      }
+      if (stripped > 0 || existsSync(mbcApkPark)) {
+        console.log(
+          '→ Parking public APK/zip binaries so they are not embedded in the Android web bundle…',
+        );
+      }
+    }
 
-  console.log('→ Syncing Capacitor Android project…');
-  run('npx', ['cap', 'sync', 'android']);
+    console.log(`→ Building web bundle for Android${playStoreBuild ? ' (Play Store)' : ''}…`);
+    run('npm', ['run', 'build'], {
+      env: {
+        VITE_APP_URL: process.env.VITE_APP_URL || 'https://www.guardr.co',
+        VITE_NATIVE_FCM_CONFIGURED: nativeFcmConfigured ? 'true' : 'false',
+        VITE_PLAY_STORE_BUILD: playStoreBuild ? 'true' : 'false',
+      },
+    });
+
+    const leftover = await stripApkZip(path.join(ROOT, 'dist'));
+    if (leftover > 0) {
+      console.log(`→ Removed ${leftover} APK/zip file(s) from dist before Capacitor sync`);
+    }
+
+    console.log('→ Syncing Capacitor Android project…');
+    run('npx', ['cap', 'sync', 'android']);
+  } finally {
+    if (existsSync(mbcApkPark)) {
+      await rename(mbcApkPark, mbcApk);
+    }
+  }
 
   return { nativeFcmConfigured };
 }

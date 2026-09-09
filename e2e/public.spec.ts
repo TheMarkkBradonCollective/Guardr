@@ -47,6 +47,19 @@ test.describe('Guardr public pages', () => {
     await expect(page.getByRole('button', { name: /Apply to work at Guardr/i })).toBeVisible();
   });
 
+  test('customer sign-in uses the same hiring options as sign-up', async ({ page }) => {
+    await page.goto('/?auth=sign-in&pick=role');
+    await waitForAppReady(page);
+    await page.getByRole('button', { name: /Log in as customer/i }).click();
+    await expect(page.getByRole('heading', { name: /Who is hiring/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Personal/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Business/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Security company/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /^Personal/i }).click();
+    await expect(page.getByRole('heading', { name: /Personal sign in/i })).toBeVisible();
+  });
+
   test('personal client sign-up hides company fields', async ({ page }) => {
     await page.goto('/?auth=sign-up&ar=client&ct=personal');
     await waitForAppReady(page);
@@ -126,8 +139,7 @@ test.describe('four product environments', () => {
     await page.goto('/');
     await waitForAppReady(page);
     await expect(page.locator('body')).toHaveAttribute('data-product-app', 'website');
-    await expect(page.locator('body')).toContainText(/Hire/i);
-    await expect(page.locator('body')).toContainText(/Work/i);
+    await expect(page.locator('body')).toContainText('Download Guard and Customer');
   });
 
   test('account and app URLs send signed-out visitors to sign-in', async ({ page }) => {

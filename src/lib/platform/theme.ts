@@ -23,7 +23,7 @@ export const THEME_LABELS: Record<ThemeMode, string> = {
 /** Default for the website — field-readable light UI. */
 export const DEFAULT_THEME: ThemeMode = 'light';
 
-/** Hire / Work APKs default to dark to match the black launcher. */
+/** Guard / Customer APKs default to dark to match the black launcher. */
 export const DEFAULT_NATIVE_THEME: ThemeMode = 'dark';
 
 /** Staff APK is a white app with a black logo, so it opens in light theme. */

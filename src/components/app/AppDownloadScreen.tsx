@@ -24,6 +24,7 @@ import {
 } from '../../lib/installSurfaceCopy';
 import { formatAppVersion } from '../../lib/appVersion';
 import { GITHUB_ALL_APKS_ZIP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
+import { productAppHasLightLauncher } from '../../lib/productApps';
 
 interface AppDownloadScreenProps {
   onBack: () => void;
@@ -112,7 +113,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
   const apkDescription = loading
     ? 'Checking your installed version…'
     : !apkInstalled
-      ? 'Hire, Work, and Staff are separate Android apps — native notifications, GPS, and camera.'
+      ? 'Guard, Customer, and Staff are separate Android apps — native notifications, GPS, and camera.'
       : apkNeedsUpdate
         ? `Installed ${formatAppVersion(installedApkVersion!)}. Latest is ${formatAppVersion(manifest!.apkVersion)}.`
         : `Up to date on ${formatAppVersion(installedApkVersion!)}.`;
@@ -237,7 +238,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
                       width={40}
                       height={40}
                       alt=""
-                      className={`install-product-card-icon${app.id === 'staff' ? ' install-product-card-icon--staff' : ''}`}
+                      className={`install-product-card-icon${productAppHasLightLauncher(app.id) ? ' install-product-card-icon--light' : ''}`}
                       style={{ objectFit: 'cover', borderRadius: 10 }}
                     />
                     <div className="install-product-card-head">

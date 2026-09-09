@@ -243,8 +243,8 @@ export function AccountPendingScreen({
       <div className="px-5 pb-8 space-y-3">
         <p className="text-sm text-brand-text-muted leading-relaxed">
           {isGuard
-            ? 'After staff activates you, you need the Work app to take shifts and use the platform. This website stays for profile, payouts, and support.'
-            : 'After staff approves you, you need the Hire app to post coverage and use the platform. This website stays for profile, billing, and support.'}
+            ? 'After staff activates you, you need the Guard app to take shifts and use the platform. This website stays for profile, payouts, and support.'
+            : 'After staff approves you, you need the Customer app to post coverage and use the platform. This website stays for profile, billing, and support.'}
         </p>
         <div className="rounded-xl border border-brand-border bg-brand-bg-sec/40 p-4">
           <UserManualDownloads audienceFilter={isGuard ? 'guard' : 'client'} variant="embedded" />

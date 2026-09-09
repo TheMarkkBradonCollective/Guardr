@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build Hire, Work, and Staff Android App Bundles for Google Play.
+ * Build Guard, Customer, and Staff Android App Bundles for Google Play.
  *
  * Requires android/keystore.properties (see keystore.properties.example).
  *
@@ -78,7 +78,7 @@ try {
   } else {
     console.warn('⚠ Native FCM disabled — push will not work on Play installs.');
   }
-  console.log('Next: upload each AAB to its Play Console listing (Hire, Work, Staff).');
+  console.log('Next: upload each AAB to its Play Console listing (Guard, Customer, Staff).');
   console.log('See docs/GOOGLE-PLAY.md for store listing, Data safety, and reviewer credentials.');
 } catch (error) {
   console.error(error);

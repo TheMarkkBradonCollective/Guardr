@@ -2012,7 +2012,7 @@ export function GuardDashboard({
       fullBleed={shellFullBleed}
       hideBottomNav={showShiftOverlay}
       variant={shellVariant}
-      workspaceLabel="Work"
+      workspaceLabel="Guard"
       productApp="guard"
       mobilePrimaryNav="tabs"
       mobileTabRanks={{ map: 1, myJobs: 2, messages: 3 }}
