@@ -6,16 +6,36 @@ function bakedNativeProductApp(): string {
   return typeof baked === 'string' ? baked.trim() : '';
 }
 
-/**
- * True in a Guard / Customer / Staff Android shell (Capacitor APK or AAB),
- * not the public website in a browser tab.
- *
- * Role APKs also bake `window.__GUARDR_NATIVE_PRODUCT_APP__`. That is the
- * Playwright hook for installed-app tests — not display-mode standalone.
- */
-export function isAppExperience(): boolean {
+function isStandaloneDisplayMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
+}
+
+/** Guard / Customer / Staff Android APK or AAB (baked role). */
+export function isNativeRoleApp(): boolean {
   if (typeof window === 'undefined') return false;
   if (Capacitor.isNativePlatform()) return true;
   const baked = bakedNativeProductApp();
   return baked === 'client' || baked === 'guard' || baked === 'staff';
+}
+
+/**
+ * Combined home-screen app: Guard, Customer, and Staff in one install.
+ * Same login picker as the website. Not a role APK.
+ */
+export function isCombinedPwaExperience(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (isNativeRoleApp()) return false;
+  return isStandaloneDisplayMode();
+}
+
+/**
+ * True in an installed app shell — role APK or the combined PWA —
+ * not the public website in a browser tab.
+ */
+export function isAppExperience(): boolean {
+  return isNativeRoleApp() || isCombinedPwaExperience();
 }

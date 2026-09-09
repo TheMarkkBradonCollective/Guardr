@@ -36,7 +36,7 @@ const OVERRIDE_PARAM = 'ui';
 export interface SurfaceResolutionInput {
   /** Viewport width in CSS pixels. */
   viewportWidth: number;
-  /** browser | native — Android shells never get the desktop UI. */
+  /** browser | pwa | native — installed shells never get the desktop UI. */
   shellKind: ShellKind;
   /** Form factor from `DeviceProvider`, used as the fallback signal. */
   formFactor?: FormFactor;
@@ -64,7 +64,7 @@ export function resolveSurfaceKind(input: SurfaceResolutionInput): SurfaceKind {
   if (input.override && isSurfaceKind(input.override)) return input.override;
 
   const width = Number.isFinite(input.viewportWidth) ? input.viewportWidth : 0;
-  const installed = input.shellKind === 'native';
+  const installed = input.shellKind === 'native' || input.shellKind === 'pwa';
 
   if (width < SURFACE_BOUNDS.tabletMin) return 'mobile';
   if (width < SURFACE_BOUNDS.desktopMin) return 'tablet';

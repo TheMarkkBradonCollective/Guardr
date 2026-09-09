@@ -20,11 +20,12 @@ describe('installSurfaceCopy', () => {
 
   it('points the website at signup-through-activation, then Guard/Customer apps', () => {
     assert.match(downloadScreenIntro('browser'), /Sign up and complete activation/);
+    assert.match(downloadScreenIntro('browser'), /home screen/);
     assert.match(downloadScreenIntro('browser'), /Customer app/);
     assert.match(downloadScreenIntro('browser'), /Guard app/);
     assert.match(downloadScreenIntro('browser'), /Staff app/);
     assert.match(downloadScreenIntro('browser'), /Staff can run the full system in the browser/);
-    assert.doesNotMatch(downloadScreenIntro('browser'), /PWA|home-screen|lite/i);
+    assert.doesNotMatch(downloadScreenIntro('browser'), /\blite\b/i);
   });
 
   it('uses Update in the account menu inside an APK', () => {

@@ -82,9 +82,11 @@ export function LandingAppDownloads({
             marginInline: centered ? 'auto' : undefined,
           }}
         >
-          Download the Guard and Customer apps for Android. Sign up and complete activation on this website.
-          After that, customers need the Customer app and guards need the Guard app. Staff can run the
-          full system here in the browser, or in the Staff app.
+          Download the Guard and Customer apps for Android, or add Guardr to your home screen.
+          After that, customers need the Customer app and guards need the Guard app — or the
+          home-screen app, which is Guard, Customer, and Staff in one (iPhone, no space, or if
+          a download will not install). Staff can run the full system here in the browser, in
+          the Staff app, or on the home screen.
         </Block>
       </Block>
 

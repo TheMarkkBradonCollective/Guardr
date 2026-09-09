@@ -6,15 +6,16 @@ import { SITE_URL } from './siteConfig';
 export type ProductRole = 'client' | 'guard' | 'staff';
 
 /**
- * Four product environments in one platform.
+ * Five product environments in one platform.
  *
  * Device surfaces (mobile / tablet / desktop) are how each environment is
  * laid out. Product apps are *who the product is for*:
  *
  *   website     marketing, signup through activation, customer/guard accounts, and full staff ops
- *   client-app  customer operations (Customer) — Android only after activation
- *   guard-app   guard field operations (Guard) — Android only after activation
- *   staff-app   optional Staff APK; the same system also runs on the website
+ *   pwa         combined home-screen app — Guard + Customer + Staff, website-like login picker
+ *   client-app  customer operations (Customer) — Android APK after activation
+ *   guard-app   guard field operations (Guard) — Android APK after activation
+ *   staff-app   optional Staff APK; the same system also runs on the website and in the PWA
  */
 export type ProductApp = 'website' | 'client' | 'guard' | 'staff';
 
@@ -110,7 +111,8 @@ export function productRoleForApp(app: ProductApp): ProductRole | null {
 
 /**
  * How Sign in / Sign up should open inside an installed Guard / Customer / Staff app.
- * Those shells already are one role — do not show "Use the Guard / Customer / Staff app".
+ * Role APKs already are one role — do not show "Use the Guard / Customer / Staff app".
+ * The combined PWA uses productApp `website` and keeps the website role picker.
  * Customer sign-in and sign-up both pick personal / business / security company.
  */
 export function installedAuthEntry(
@@ -270,10 +272,8 @@ export function resolveProductApp(input: {
   const baked = parseBakedNativeProductApp(
     input.baked === undefined ? bakedNativeProductApp() : input.baked,
   );
-  if (input.isInstalledShell ?? isAppExperience()) {
-    return baked ?? input.stored ?? readStoredProductApp() ?? 'website';
-  }
-  return baked ?? 'website';
+  if (baked) return baked;
+  return 'website';
 }
 
 /** Staff can run operations in a browser tab. Guard and Customer cannot. */
@@ -284,9 +284,9 @@ export function canUseOperationalAppInBrowser(role: ProductRole): boolean {
 /**
  * What a signed-in Guard / Customer / Staff user may do in a website browser tab.
  *
- *   operations  — full role app (Staff, or any role inside an APK)
- *   activation  — signup through activation / pending review (Guard & Customer)
- *   account     — profile, billing, support only; platform use needs the app
+ *   operations  — full role app (Staff, any role inside an APK, or the combined PWA)
+ *   activation  — signup through activation / pending review (Guard & Customer on the website)
+ *   account     — profile, billing, support only; platform use needs an app or the PWA
  */
 export type WebsiteShellAccess = 'operations' | 'activation' | 'account';
 
@@ -341,10 +341,10 @@ export function defaultPathForSignedInUser(
 
 export function websiteNeedsAppMessage(role: ProductRole): string {
   if (role === 'client') {
-    return 'You need the Customer app to use the platform.';
+    return 'You need the Customer app or Guardr on your home screen to use the platform.';
   }
   if (role === 'guard') {
-    return 'You need the Guard app to use the platform.';
+    return 'You need the Guard app or Guardr on your home screen to use the platform.';
   }
   return '';
 }
@@ -370,14 +370,14 @@ export function openAppCtaCopy(role: ProductRole): { title: string; body: string
   if (app === 'client') {
     return {
       title: 'This feature is in the Customer app',
-      body: 'Request coverage, track activity, message guards, and review reports in the Customer app.',
+      body: 'Request coverage, track activity, message guards, and review reports in the Customer app or Guardr on your home screen.',
       action: 'Open the Customer app',
     };
   }
   if (app === 'guard') {
     return {
       title: 'This feature is in the Guard app',
-      body: 'Shifts, check-in, patrols, incidents, and pay live in the Guard app — not on the website.',
+      body: 'Shifts, check-in, patrols, incidents, and pay live in the Guard app or Guardr on your home screen — not on the website.',
       action: 'Open the Guard app',
     };
   }

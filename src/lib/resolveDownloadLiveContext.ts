@@ -4,7 +4,7 @@ import type { DownloadLiveContext } from './installSurfaceCopy';
 
 /**
  * Live shell for download / update UI.
- * Website browser vs native APK/AAB — there is no PWA product.
+ * Website browser, combined PWA, or native APK/AAB.
  */
 export function resolveDownloadLiveContext(): DownloadLiveContext {
   if (typeof window === 'undefined') return 'browser';

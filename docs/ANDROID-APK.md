@@ -18,7 +18,7 @@ Guardr ships as a **website** plus three **Capacitor Android apps** (Guard, Cust
 
 The three role APKs can be installed side by side. Each opens its own app (not the marketing website). The all-apps zip is a **GitHub Release** asset (same pattern as MBC All-APKs), not a file on guardr.co.
 
-The install page lists **Guard, Customer, and Staff** APKs. There is no PWA / Add to Home Screen product.
+The install page lists **Guard, Customer, and Staff** APKs. People who cannot install an APK (iPhone, no space, download blocked) can **Add Guardr to the home screen** — one PWA with the same Guard / Customer / Staff login picker as the website.
 
 Share the install page with the Signature Security network.
 

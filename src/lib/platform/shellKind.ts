@@ -1,15 +1,13 @@
 import { Capacitor } from '@capacitor/core';
-import { isAppExperience } from './appExperience';
+import { isStandaloneDisplay } from './device';
 
-/**
- * How the user opened Guardr — website tab or native Android app.
- * `pwa` remains on the type for older unit tests; live detection never returns it.
- */
+/** How the user opened Guardr — website tab, combined PWA, or a role APK. */
 export type ShellKind = 'browser' | 'pwa' | 'native';
 
 export function getShellKind(): ShellKind {
   if (typeof window === 'undefined') return 'browser';
-  if (Capacitor.isNativePlatform() || isAppExperience()) return 'native';
+  if (Capacitor.isNativePlatform()) return 'native';
+  if (isStandaloneDisplay()) return 'pwa';
   return 'browser';
 }
 
@@ -18,7 +16,7 @@ export function isBrowserShell(): boolean {
 }
 
 export function isPwaShell(): boolean {
-  return false;
+  return getShellKind() === 'pwa';
 }
 
 export function isNativeShellKind(): boolean {

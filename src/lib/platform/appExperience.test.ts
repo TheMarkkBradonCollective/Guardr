@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { isAppExperience } from './appExperience.ts';
+import { isAppExperience, isCombinedPwaExperience, isNativeRoleApp } from './appExperience.ts';
 
 describe('isAppExperience', () => {
   it('returns a boolean for the current runtime shell', () => {
@@ -9,5 +9,7 @@ describe('isAppExperience', () => {
 
   it('is false in the node test runner (no installed shell)', () => {
     assert.equal(isAppExperience(), false);
+    assert.equal(isNativeRoleApp(), false);
+    assert.equal(isCombinedPwaExperience(), false);
   });
 });

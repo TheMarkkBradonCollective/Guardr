@@ -19,7 +19,7 @@ export function resolveViewSurface(shellKind: ShellKind, formFactor: FormFactor)
 
 /** True when the user is in a native Android shell, not a browser tab. */
 export function isInstalledAppSurface(surface: ViewSurface): boolean {
-  return surface.startsWith('native-');
+  return surface.startsWith('native-') || surface.startsWith('pwa-');
 }
 
 /** True when the surface should use tablet merge layouts (rail + touch). */

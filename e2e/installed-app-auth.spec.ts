@@ -7,6 +7,33 @@ async function waitForAppReady(page: Page) {
   await loading.waitFor({ state: 'detached', timeout: 30_000 }).catch(() => {});
 }
 
+async function emulateCombinedPwa(page: Page) {
+  await page.addInitScript(() => {
+    Object.defineProperty(window.navigator, 'standalone', {
+      configurable: true,
+      get: () => true,
+    });
+    const original = window.matchMedia.bind(window);
+    window.matchMedia = ((query: string) => {
+      if (String(query).includes('display-mode: standalone')) {
+        return {
+          matches: true,
+          media: query,
+          onchange: null,
+          addListener() {},
+          removeListener() {},
+          addEventListener() {},
+          removeEventListener() {},
+          dispatchEvent() {
+            return false;
+          },
+        } as MediaQueryList;
+      }
+      return original(query);
+    }) as typeof window.matchMedia;
+  });
+}
+
 async function emulateInstalledApp(page: Page, app: 'client' | 'guard' | 'staff') {
   await page.route('**/native-product-app.js', async (route) => {
     await route.fulfill({
@@ -70,5 +97,20 @@ test.describe('installed Guard / Customer / Staff apps', () => {
 
     await page.getByRole('button', { name: /^Personal/i }).click();
     await expect(page.getByRole('heading', { name: /Personal sign in/i })).toBeVisible();
+  });
+});
+
+test.describe('combined home-screen PWA', () => {
+  test.use({ viewport: { width: 390, height: 727 } });
+
+  test('Sign in uses the website Guard / Customer / Staff picker', async ({ page }) => {
+    await emulateCombinedPwa(page);
+    await page.goto('/');
+    await waitForAppReady(page);
+
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+    await expect(page.getByRole('button', { name: /Use the Guard app/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Use the Customer app/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Use the Staff app/i })).toBeVisible();
   });
 });

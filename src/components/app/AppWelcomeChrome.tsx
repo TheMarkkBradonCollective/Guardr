@@ -26,8 +26,8 @@ const HERO_COPY: Record<ShellKind, { headline: string; sub: string }> = {
     sub: 'Clients and guards on one map-first marketplace — with direct pay.',
   },
   pwa: {
-    headline: 'Your security workspace, anywhere.',
-    sub: 'Post coverage, pick up shifts, and manage live operations from your phone.',
+    headline: 'Guard, Customer, and Staff in one app.',
+    sub: 'Same sign-in as the website — choose who you are. For iPhone, no space, or if an APK will not install.',
   },
   native: {
     headline: 'Field-ready security operations.',
@@ -41,8 +41,8 @@ const TIER_HERO_COPY: Partial<Record<string, { headline: string; sub: string }>>
     sub: 'Same Guardr features with lower data and battery use on cellular.',
   },
   'pwa-full': {
-    headline: 'Your security workspace, anywhere.',
-    sub: 'Post coverage, pick up shifts, and manage live operations from your installed app.',
+    headline: 'Guard, Customer, and Staff in one app.',
+    sub: 'Same sign-in as the website — choose who you are. Works on iPhone and Android without an APK.',
   },
   'apk-full': {
     headline: 'Field-ready security operations.',

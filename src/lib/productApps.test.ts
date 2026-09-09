@@ -87,8 +87,8 @@ describe('signed-in landing', () => {
     assert.equal(websiteShellAccess({ role: 'client', clientStatus: 'active' }), 'account');
     assert.equal(websiteShellAccess({ role: 'guard', guardStatus: 'active' }), 'account');
     assert.equal(websiteShellAccess({ role: 'guard', isInstalledShell: true, guardStatus: 'active' }), 'operations');
-    assert.equal(websiteNeedsAppMessage('client'), 'You need the Customer app to use the platform.');
-    assert.equal(websiteNeedsAppMessage('guard'), 'You need the Guard app to use the platform.');
+    assert.equal(websiteNeedsAppMessage('client'), 'You need the Customer app or Guardr on your home screen to use the platform.');
+    assert.equal(websiteNeedsAppMessage('guard'), 'You need the Guard app or Guardr on your home screen to use the platform.');
     assert.equal(websiteNeedsAppMessage('staff'), '');
     assert.equal(productAppSpokenName('client'), 'Customer app');
     assert.equal(productAppSpokenName('guard'), 'Guard app');
@@ -129,6 +129,7 @@ describe('role isolation', () => {
     assert.deepEqual(installedAuthEntry('client', 'sign-in'), { type: 'client-kind' });
     assert.deepEqual(installedAuthEntry('client', 'sign-up'), { type: 'client-kind' });
     assert.deepEqual(installedAuthEntry('website', 'sign-in'), { type: 'role-picker' });
+    assert.deepEqual(installedAuthEntry('website', 'sign-up'), { type: 'role-picker' });
   });
 
   it('blocks cross-app access at the product boundary', () => {
@@ -188,10 +189,10 @@ describe('resolveProductApp', () => {
     assert.equal(resolveProductApp({ url: '/account', stored: 'guard', isInstalledShell: false }), 'website');
   });
 
-  it('uses stored identity only for installed shells on website paths', () => {
+  it('keeps combined PWA home on the website picker, not a stored role', () => {
     assert.equal(
       resolveProductApp({ url: '/', stored: 'guard', isInstalledShell: true }),
-      'guard',
+      'website',
     );
     assert.equal(
       resolveProductApp({ url: '/', stored: 'guard', isInstalledShell: false }),

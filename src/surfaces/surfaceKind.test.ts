@@ -64,6 +64,11 @@ describe('resolveSurfaceKind', () => {
       'tablet',
       'native at 1600px should stay on the touch tablet app',
     );
+    assert.equal(
+      resolveSurfaceKind({ viewportWidth: 1600, shellKind: 'pwa' }),
+      'tablet',
+      'combined PWA at 1600px should stay on the touch tablet app',
+    );
     assert.equal(resolveSurfaceKind({ viewportWidth: 1600, shellKind: 'browser' }), 'desktop');
   });
 
