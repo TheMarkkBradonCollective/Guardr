@@ -107,15 +107,14 @@ export function productRoleForApp(app: ProductApp): ProductRole | null {
 /**
  * How Sign in / Sign up should open inside an installed Guard / Customer / Staff app.
  * Those shells already are one role — do not show "Log in as guard / customer / staff".
- * Customer sign-up still picks personal / business / security company.
+ * Customer sign-in and sign-up both pick personal / business / security company.
  */
 export function installedAuthEntry(
   productApp: ProductApp,
-  mode: 'sign-in' | 'sign-up',
+  _mode: 'sign-in' | 'sign-up',
 ): { type: 'form'; role: ProductRole } | { type: 'client-kind' } | { type: 'role-picker' } {
   const role = productRoleForApp(productApp);
   if (!role) return { type: 'role-picker' };
-  if (mode === 'sign-in') return { type: 'form', role };
   if (role === 'client') return { type: 'client-kind' };
   return { type: 'form', role };
 }

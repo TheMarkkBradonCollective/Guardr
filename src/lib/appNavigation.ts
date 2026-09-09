@@ -551,8 +551,10 @@ export function readAuthChoiceFromUrl(url: string): AuthViewMode | null {
 
 export function readAuthSignupPickFromUrl(url: string): AuthSignupPick | null {
   const { searchParams } = parsePath(url);
-  if (searchParams.get('auth') !== 'sign-up') return null;
+  const auth = searchParams.get('auth');
   const pick = searchParams.get('pick');
+  if (auth === 'sign-in' && pick === 'client') return 'client';
+  if (auth !== 'sign-up') return null;
   if (pick && AUTH_SIGNUP_PICKS.has(pick as AuthSignupPick)) return pick as AuthSignupPick;
   if (pick === 'role') return 'path';
   return null;
@@ -569,7 +571,9 @@ export function readAuthSignupPickFromWindow(): AuthSignupPick | null {
 }
 
 export function buildAuthChoicePath(mode: AuthViewMode, signupPick?: AuthSignupPick): string {
-  if (mode === 'sign-in') return '/?auth=sign-in&pick=role';
+  if (mode === 'sign-in') {
+    return signupPick === 'client' ? '/?auth=sign-in&pick=client' : '/?auth=sign-in&pick=role';
+  }
   return `/?auth=sign-up&pick=${signupPick ?? 'path'}`;
 }
 
@@ -578,7 +582,8 @@ export function syncAuthChoiceRoute(
   replace = false,
   signupPick?: AuthSignupPick
 ): void {
-  const resolvedPick = mode === 'sign-up' ? signupPick ?? 'path' : undefined;
+  const resolvedPick =
+    mode === 'sign-up' ? signupPick ?? 'path' : signupPick === 'client' ? 'client' : undefined;
   const nextPath = buildAuthChoicePath(mode, resolvedPick);
   const state = { authChoice: mode, authSignupPick: resolvedPick };
   const pathMatches = currentBrowserPath() === nextPath;

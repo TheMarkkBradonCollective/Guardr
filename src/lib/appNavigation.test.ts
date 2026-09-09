@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
 import {
+  buildAuthChoicePath,
   normalizeGuardTabForAccount,
   parseAppRoute,
   readAuthChoiceFromUrl,
@@ -32,10 +33,15 @@ describe('auth role choice URLs', () => {
     assert.equal(readAuthSignupPickFromUrl('/?auth=sign-up&pick=path'), 'path');
     assert.equal(readAuthSignupPickFromUrl('/?auth=sign-up&pick=client'), 'client');
     assert.equal(readAuthSignupPickFromUrl('/?auth=sign-up&pick=work'), 'work');
-    assert.equal(readAuthSignupPickFromUrl('/?auth=sign-up&pick=role'), 'path');
+    assert.equal(readAuthSignupPickFromUrl('/?auth=sign-in&pick=client'), 'client');
+    assert.equal(readAuthChoiceFromUrl('/?auth=sign-in&pick=client'), 'sign-in');
+    assert.equal(parseAppRoute('/?auth=sign-in&pick=client'), null);
     assert.equal(parseAppRoute('/?auth=sign-up&pick=path'), null);
     assert.equal(parseAppRoute('/?auth=sign-up&pick=client'), null);
     assert.equal(parseAppRoute('/?auth=sign-up&pick=work'), null);
+    assert.equal(buildAuthChoicePath('sign-in'), '/?auth=sign-in&pick=role');
+    assert.equal(buildAuthChoicePath('sign-in', 'client'), '/?auth=sign-in&pick=client');
+    assert.equal(buildAuthChoicePath('sign-up', 'client'), '/?auth=sign-up&pick=client');
   });
 
   it('parses personal vs business client sign-up', () => {

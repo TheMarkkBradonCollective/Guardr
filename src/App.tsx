@@ -1782,7 +1782,7 @@ export default function App() {
   };
 
   const openAuthView = (role: AuthViewRole, mode: AuthViewMode, clientKind?: ClientType) => {
-    const kind = role === 'client' && mode === 'sign-up' ? normalizeClientType(clientKind) : undefined;
+    const kind = role === 'client' ? normalizeClientType(clientKind) : undefined;
     setAuthChoiceMode(null);
     setAuthSignupPick(null);
     setInitialAuthRole(role);
@@ -1799,11 +1799,15 @@ export default function App() {
 
   const openAuthChoice = (mode: 'sign-in' | 'sign-up', signupPick: AuthSignupPick = 'path') => {
     setAuthChoiceMode(mode);
-    setAuthSignupPick(mode === 'sign-up' ? signupPick : null);
+    setAuthSignupPick(mode === 'sign-up' || signupPick === 'client' ? signupPick : null);
     setIsAuthView(false);
     setInitialAuthMode(mode);
     if (typeof window !== 'undefined') {
-      syncAuthChoiceRoute(mode, false, mode === 'sign-up' ? signupPick : undefined);
+      syncAuthChoiceRoute(
+        mode,
+        false,
+        mode === 'sign-up' || signupPick === 'client' ? signupPick : undefined,
+      );
     }
   };
 
@@ -1827,7 +1831,7 @@ export default function App() {
           return;
         }
         if (entry.type === 'client-kind') {
-          openAuthChoice('sign-up', 'client');
+          openAuthChoice(authMode, 'client');
           return;
         }
       }
@@ -1836,8 +1840,8 @@ export default function App() {
         return;
       }
     }
-    if (role === 'client' && authMode === 'sign-up') {
-      openAuthChoice('sign-up', 'client');
+    if (role === 'client') {
+      openAuthChoice(authMode, 'client');
       return;
     }
     openAuthView(role ?? 'client', authMode);
@@ -1854,21 +1858,20 @@ export default function App() {
   };
 
   const backToAuthRoleChoice = () => {
-    const stayOnClientKind =
-      initialAuthMode === 'sign-up' && initialAuthRole === 'client';
+    const stayOnClientKind = initialAuthRole === 'client';
     if (isAppExperience() && installedAuthRole && !stayOnClientKind) {
       closeAuthView();
       return;
     }
     navigateHistoryBack(() => {
       const fallbackPick: AuthSignupPick =
-        initialAuthMode === 'sign-up' && initialAuthRole === 'client'
+        initialAuthRole === 'client'
           ? 'client'
           : initialAuthMode === 'sign-up'
             ? 'work'
             : 'path';
-      if (initialAuthMode === 'sign-up') {
-        syncAuthChoiceRoute('sign-up', true, fallbackPick);
+      if (initialAuthRole === 'client' || initialAuthMode === 'sign-up') {
+        syncAuthChoiceRoute(initialAuthMode, true, fallbackPick);
         setAuthSignupPick(fallbackPick);
       } else {
         syncAuthChoiceRoute(initialAuthMode, true);
@@ -1887,7 +1890,7 @@ export default function App() {
       return;
     }
     if (entry.type === 'client-kind' && authSignupPick !== 'client') {
-      openAuthChoice('sign-up', 'client');
+      openAuthChoice(authChoiceMode, 'client');
     }
   }, [currentUser, authChoiceMode, authSignupPick, productApp]);
 
@@ -2071,11 +2074,25 @@ export default function App() {
 
     if (authChoice && !user) {
       setAuthChoiceMode(authChoice);
-      setAuthSignupPick(authChoice === 'sign-up' ? signupPick ?? 'path' : null);
+      setAuthSignupPick(
+        authChoice === 'sign-up'
+          ? signupPick ?? 'path'
+          : signupPick === 'client'
+            ? 'client'
+            : null,
+      );
       setIsAuthView(false);
       setInitialAuthMode(authChoice);
       if (options.source !== 'popstate') {
-        syncAuthChoiceRoute(authChoice, true, authChoice === 'sign-up' ? signupPick ?? 'path' : undefined);
+        syncAuthChoiceRoute(
+          authChoice,
+          true,
+          authChoice === 'sign-up'
+            ? signupPick ?? 'path'
+            : signupPick === 'client'
+              ? 'client'
+              : undefined,
+        );
       }
       return;
     }
@@ -13496,9 +13513,9 @@ export default function App() {
             themeMode={themeMode}
             onChangeTheme={changeThemeMode}
             onNavigateToAuth={navigateToAuth}
-            onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
+            onSelectRole={(role) => navigateToAuth(role, authChoiceMode ?? 'sign-in')}
             onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
-            onSelectClientType={(kind) => openAuthView('client', 'sign-up', kind)}
+            onSelectClientType={(kind) => openAuthView('client', authChoiceMode ?? 'sign-in', kind)}
             onOpenGuide={openPublicGuide}
             onBack={closeAuthChoice}
           />
@@ -13546,9 +13563,9 @@ export default function App() {
                 themeMode={themeMode}
                 onChangeTheme={changeThemeMode}
                 onNavigateToAuth={navigateToAuth}
-                onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
+                onSelectRole={(role) => navigateToAuth(role, authChoiceMode ?? 'sign-in')}
                 onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
-                onSelectClientType={(kind) => openAuthView('client', 'sign-up', kind)}
+                onSelectClientType={(kind) => openAuthView('client', authChoiceMode ?? 'sign-in', kind)}
                 onOpenGuide={openPublicGuide}
                 onBack={closeAuthChoice}
               />
@@ -13560,8 +13577,7 @@ export default function App() {
       // PWA/APK: full-page auth (not bottom sheets / floating cards).
       if (isAuthView) {
         const lockToInstalledApp = Boolean(installedAuthRole);
-        const clientKindStep =
-          initialAuthMode === 'sign-up' && initialAuthRole === 'client';
+        const clientKindStep = initialAuthRole === 'client';
         return (
           <>
             <AuthPage

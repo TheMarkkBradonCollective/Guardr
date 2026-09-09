@@ -75,7 +75,13 @@ export function AuthFormHeader({
       ? 'Guard sign in'
       : role === 'staff'
         ? 'Staff sign in'
-        : 'Customer sign in';
+        : isPersonalClient
+          ? 'Personal sign in'
+          : isSecurityCompanyClient
+            ? 'Security company sign in'
+            : isBusinessClient
+              ? 'Business sign in'
+              : 'Customer sign in';
 
   const title = variant === 'sheet' ? sheetTitle : pageTitle;
 

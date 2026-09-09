@@ -115,7 +115,7 @@ describe('role isolation', () => {
     assert.deepEqual(installedAuthEntry('guard', 'sign-in'), { type: 'form', role: 'guard' });
     assert.deepEqual(installedAuthEntry('guard', 'sign-up'), { type: 'form', role: 'guard' });
     assert.deepEqual(installedAuthEntry('staff', 'sign-in'), { type: 'form', role: 'staff' });
-    assert.deepEqual(installedAuthEntry('client', 'sign-in'), { type: 'form', role: 'client' });
+    assert.deepEqual(installedAuthEntry('client', 'sign-in'), { type: 'client-kind' });
     assert.deepEqual(installedAuthEntry('client', 'sign-up'), { type: 'client-kind' });
     assert.deepEqual(installedAuthEntry('website', 'sign-in'), { type: 'role-picker' });
   });

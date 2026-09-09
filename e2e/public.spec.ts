@@ -47,6 +47,19 @@ test.describe('Guardr public pages', () => {
     await expect(page.getByRole('button', { name: /Apply to work at Guardr/i })).toBeVisible();
   });
 
+  test('customer sign-in uses the same hiring options as sign-up', async ({ page }) => {
+    await page.goto('/?auth=sign-in&pick=role');
+    await waitForAppReady(page);
+    await page.getByRole('button', { name: /Log in as customer/i }).click();
+    await expect(page.getByRole('heading', { name: /Who is hiring/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Personal/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Business/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Security company/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /^Personal/i }).click();
+    await expect(page.getByRole('heading', { name: /Personal sign in/i })).toBeVisible();
+  });
+
   test('personal client sign-up hides company fields', async ({ page }) => {
     await page.goto('/?auth=sign-up&ar=client&ct=personal');
     await waitForAppReady(page);
