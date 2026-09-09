@@ -2683,7 +2683,7 @@ body[data-surface='mobile'] .auth-role-choice-option {
   align-items: flex-start;
   gap: 14px;
   min-height: 72px;
-  padding: 14px 0;
+  padding: 18px 0 22px;
   -webkit-tap-highlight-color: transparent;
 }
 

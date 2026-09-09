@@ -28,7 +28,7 @@ export function UserSettingsScreen({
 }: UserSettingsScreenProps) {
   const { shellKind } = useDevice();
   const surfaceLabel =
-    shellKind === 'native' ? 'Android app' : shellKind === 'pwa' ? 'Installed app' : 'Web';
+    shellKind === 'native' ? 'Android app' : 'Web';
 
   const formContent = (
     <>

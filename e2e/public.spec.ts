@@ -126,8 +126,8 @@ test.describe('four product environments', () => {
     await page.goto('/');
     await waitForAppReady(page);
     await expect(page.locator('body')).toHaveAttribute('data-product-app', 'website');
-    await expect(page.locator('body')).toContainText(/Client App/i);
-    await expect(page.locator('body')).toContainText(/Guard App/i);
+    await expect(page.locator('body')).toContainText(/Hire/i);
+    await expect(page.locator('body')).toContainText(/Work/i);
   });
 
   test('account and app URLs send signed-out visitors to sign-in', async ({ page }) => {
@@ -140,6 +140,10 @@ test.describe('four product environments', () => {
     await expect(page.getByRole('button', { name: 'Sign in', exact: true }).first()).toBeVisible();
 
     await page.goto('/guard/map');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true }).first()).toBeVisible();
+
+    await page.goto('/staff/overview');
     await waitForAppReady(page);
     await expect(page.getByRole('button', { name: 'Sign in', exact: true }).first()).toBeVisible();
   });

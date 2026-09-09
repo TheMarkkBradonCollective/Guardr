@@ -1,6 +1,6 @@
 # Android APK (Guardr)
 
-Guardr ships as a **Capacitor-wrapped Android APK** alongside the web/PWA at [guardr.co](https://guardr.co).
+Guardr ships as a **website** plus three **Capacitor Android apps** (Hire, Work, Staff). Each role has an APK for sideload and an AAB for Google Play.
 
 ## Download
 
@@ -18,7 +18,7 @@ Guardr ships as a **Capacitor-wrapped Android APK** alongside the web/PWA at [gu
 
 The three role APKs can be installed side by side. Each opens its own app (not the marketing website). The all-apps zip is a **GitHub Release** asset (same pattern as MBC All-APKs), not a file on guardr.co.
 
-The install page compares **APK** vs **Save to Home Screen (PWA)** and checks whether an update is needed.
+The install page lists **Hire, Work, and Staff** APKs. There is no PWA / Add to Home Screen product.
 
 Share the install page with the Signature Security network.
 
@@ -42,7 +42,8 @@ export ANDROID_HOME="$HOME/Android/Sdk"
 ```bash
 npm install
 npm run android:apk        # combined APK → public/download/guardr.apk
-npm run android:apk:all    # Client + Guard + Staff + zip
+npm run android:apk:all    # Hire + Work + Staff APKs + zip
+npm run android:play       # Hire + Work + Staff AABs → dist/play-store/
 ```
 
 `npm run android:apk:all` will:
@@ -52,8 +53,14 @@ npm run android:apk:all    # Client + Guard + Staff + zip
 3. Build the Vite web bundle with `VITE_APP_URL=https://guardr.co`
 4. Sync assets into `android/`
 5. Assemble three sideload APKs (`-PguardrProductApp=client|guard|staff`) plus the combined APK
-6. Copy binaries to `public/download/` and zip them as `guardr-apps.zip`
+6. Copy binaries to `public/download/` and zip them as `Guardr-All-APKs.zip`
 7. Re-run the parity audit (warnings if the bundled web assets are stale)
+
+`npm run android:play` builds three signed Play bundles:
+
+- `dist/play-store/Guardr-Client.aab` (Hire)
+- `dist/play-store/Guardr-Guard.aab` (Work)
+- `dist/play-store/Guardr-Staff.aab` (Staff)
 
 ### Verify without building
 
@@ -80,7 +87,7 @@ npm run android:open
 
 - **One codebase** — same React app as the website, bundled into the APK
 - **API calls** — `apiUrl()` in `src/lib/siteConfig.ts` routes `/api/*` to `https://guardr.co` when running in the native shell
-- **Push notifications** — Web/PWA uses Web Push (VAPID). The Android APK uses native FCM via `@capacitor/push-notifications` (requires `android/app/google-services.json` and server `FCM_SERVICE_ACCOUNT_JSON`).
+- **Push notifications** — The website uses Web Push (VAPID). Android APKs/AABs use native FCM via `@capacitor/push-notifications` (requires `android/app/google-services.json` and server `FCM_SERVICE_ACCOUNT_JSON`).
 - **Runtime permissions** — location, camera, photos, and notifications are requested on first launch (see `src/lib/platform/nativePermissions.ts`)
 - **Release signing** — sideload builds use the debug keystore; Play Store builds use `android/keystore.properties` (see [GOOGLE-PLAY.md](GOOGLE-PLAY.md))
 
@@ -120,14 +127,14 @@ Full guide: **[docs/GOOGLE-PLAY.md](GOOGLE-PLAY.md)**
 
 1. Create upload keystore → `android/keystore.properties` (see `keystore.properties.example`)
 2. Add Firebase `google-services.json` for `com.signaturesecurity.guardr`
-3. `npm run android:play` → upload `dist/play-store/guardr-play-release.aab`
+3. `npm run android:play` → upload `dist/play-store/Guardr-Client.aab`, `Guardr-Guard.aab`, and `Guardr-Staff.aab`
 4. Complete Play Console store listing, Data safety, content rating, and reviewer test accounts
 
 The **play** flavor omits sideload-only permissions; **sideload** (`npm run android:apk`) keeps debug signing for guardr.co/download.
 
 ## CI
 
-GitHub Actions workflow `.github/workflows/android-apk.yml` builds the three role APKs plus `Guardr-All-APKs.zip`, uploads them as artifacts, and on `main` publishes a GitHub Release (`apks-v*`).
+GitHub Actions workflow `.github/workflows/android-apk.yml` builds the three role APKs plus `Guardr-All-APKs.zip`, and when a Play upload keystore is configured, the three Play AABs.
 
 **Zip download (GitHub, not the site):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
 

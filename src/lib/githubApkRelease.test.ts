@@ -15,7 +15,7 @@ describe('GitHub APK release URLs', () => {
   });
 
   it('lists Client, Guard, and Staff APK assets', () => {
-    assert.equal(GITHUB_ROLE_APKS.length, 3);
+    assert.equal(GITHUB_ROLE_APKS.map((app) => app.label).join(' '), 'Hire Work Staff');
     assert.equal(GITHUB_CLIENT_APK.endsWith('Guardr-Client.apk'), true);
     assert.equal(GITHUB_GUARD_APK.endsWith('Guardr-Guard.apk'), true);
     assert.equal(GITHUB_STAFF_APK.endsWith('Guardr-Staff.apk'), true);

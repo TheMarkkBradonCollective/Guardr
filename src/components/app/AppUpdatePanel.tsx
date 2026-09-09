@@ -6,7 +6,7 @@ import { appVersionLabel, formatAppVersion } from '../../lib/appVersion';
 import { fetchAppUpdateStatus, installLatestApk } from '../../lib/platform/apkUpdate';
 import { isPlayStoreBuild } from '../../lib/platform/playStoreBuild';
 import { showAppAlert } from '../ui/AppConfirm';
-import { INSTALL_APK_TITLE, INSTALL_PWA_TITLE } from '../../lib/installSurfaceCopy';
+import { INSTALL_APK_TITLE } from '../../lib/installSurfaceCopy';
 
 interface AppUpdatePanelProps {
   onOpenDownload?: () => void;
@@ -142,38 +142,6 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
     );
   }
 
-  if (shellKind === 'pwa') {
-    return (
-      <>
-        <AppSettingsHead>{INSTALL_APK_TITLE}</AppSettingsHead>
-        <AppSettingsSection>
-          <div className="space-y-3">
-            <p className="text-sm text-brand-text-muted">
-              {appVersionLabel()}
-              {' · '}
-              {INSTALL_PWA_TITLE} (auto-updates)
-            </p>
-            <p className="text-sm text-brand-text-muted leading-relaxed">
-              You are on the home-screen PWA, which auto-updates with guardr.co. {INSTALL_APK_TITLE} is
-              optional for stronger notifications, GPS, and camera permissions — and may lag until you
-              install a new build.
-            </p>
-            {onOpenDownload ? (
-              <button
-                type="button"
-                onClick={onOpenDownload}
-                className="app-button-primary app-btn-md w-full sm:w-auto inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-500"
-              >
-                <Download className="w-4 h-4" aria-hidden />
-                Get {INSTALL_APK_TITLE}
-              </button>
-            ) : null}
-          </div>
-        </AppSettingsSection>
-      </>
-    );
-  }
-
   return (
     <>
       <AppSettingsHead>Install Guardr</AppSettingsHead>
@@ -182,11 +150,11 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
           <p className="text-sm text-brand-text-muted">
             {appVersionLabel()}
             {' · '}
-            Web browser
+            Website
           </p>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Install {INSTALL_PWA_TITLE} for quick access, or {INSTALL_APK_TITLE} for guards in the
-            field.
+            Download Hire and Work for Android. Customers and guards use this website for
+            profile, billing, and support. Staff can run the full system in the browser.
           </p>
           {onOpenDownload ? (
             <button
@@ -195,7 +163,7 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
               className="app-button-primary app-btn-md w-full sm:w-auto inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-500"
             >
               <Download className="w-4 h-4" aria-hidden />
-              Install options
+              Download Android apps
             </button>
           ) : null}
         </div>

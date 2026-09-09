@@ -526,15 +526,23 @@ import {
 } from './lib/appNavigation';
 import {
   applyProductAppToDocument,
+  canUseOperationalAppInBrowser,
   consumePostAuthPath,
+  installPathForApp,
+  installedAuthEntry,
   isOperationalAppPath,
+  isWebsiteAccountPath,
+  parseWebsiteAccountView,
   persistPostAuthPath,
   productAppForRole,
   productAppFromPath,
+  productRoleForApp,
   roleCanOpenProductApp,
+  websiteNeedsAppMessage,
   wrongAppMessage,
   type ProductRole,
 } from './lib/productApps';
+import { useProductApp } from './lib/ProductAppProvider';
 import { WebsiteAccountShell } from './components/website/WebsiteAccountShell';
 import { WebsiteAccountHome } from './components/website/WebsiteAccountHome';
 import { WebsiteAccountDocuments } from './components/website/WebsiteAccountDocuments';
@@ -699,7 +707,18 @@ function routeMatchesUser(route: AppRoute, user: SessionUser): boolean {
   return !!role && route.role === role;
 }
 
+function canOpenOperationalRoute(user: SessionUser, route: AppRoute): boolean {
+  if (route.websiteAccount || route.authView) return true;
+  if (!routeMatchesUser(route, user)) return false;
+  const role = appRoleForUser(user);
+  if (!role) return false;
+  if (isAppExperience()) return true;
+  return canUseOperationalAppInBrowser(role);
+}
+
 export default function App() {
+  const { productApp } = useProductApp();
+  const installedAuthRole = productRoleForApp(productApp);
   // ── Session ────────────────────────────────────────────────
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(() => {
     try { const s = localStorage.getItem('guardr_current_user'); return s ? JSON.parse(s) : null; } catch { return null; }
@@ -1795,15 +1814,29 @@ export default function App() {
   };
 
   const navigateToAuth = (role?: AuthViewRole, mode?: AuthViewMode) => {
-    if (!role && (mode === 'sign-up' || mode === 'sign-in')) {
-      openAuthChoice(mode);
-      return;
+    const authMode = mode ?? 'sign-in';
+    if (!role) {
+      if (isAppExperience()) {
+        const entry = installedAuthEntry(productApp, authMode);
+        if (entry.type === 'form') {
+          openAuthView(entry.role, authMode);
+          return;
+        }
+        if (entry.type === 'client-kind') {
+          openAuthChoice('sign-up', 'client');
+          return;
+        }
+      }
+      if (authMode === 'sign-up' || authMode === 'sign-in') {
+        openAuthChoice(authMode);
+        return;
+      }
     }
-    if (role === 'client' && mode === 'sign-up') {
+    if (role === 'client' && authMode === 'sign-up') {
       openAuthChoice('sign-up', 'client');
       return;
     }
-    openAuthView(role ?? 'client', mode ?? 'sign-in');
+    openAuthView(role ?? 'client', authMode);
   };
 
   const closeAuthView = () => {
@@ -1817,6 +1850,12 @@ export default function App() {
   };
 
   const backToAuthRoleChoice = () => {
+    const stayOnClientKind =
+      initialAuthMode === 'sign-up' && initialAuthRole === 'client';
+    if (isAppExperience() && installedAuthRole && !stayOnClientKind) {
+      closeAuthView();
+      return;
+    }
     navigateHistoryBack(() => {
       const fallbackPick: AuthSignupPick =
         initialAuthMode === 'sign-up' && initialAuthRole === 'client'
@@ -1835,6 +1874,18 @@ export default function App() {
       setIsAuthView(false);
     });
   };
+
+  useLayoutEffect(() => {
+    if (currentUser || !isAppExperience() || !authChoiceMode) return;
+    const entry = installedAuthEntry(productApp, authChoiceMode);
+    if (entry.type === 'form') {
+      openAuthView(entry.role, authChoiceMode);
+      return;
+    }
+    if (entry.type === 'client-kind' && authSignupPick !== 'client') {
+      openAuthChoice('sign-up', 'client');
+    }
+  }, [currentUser, authChoiceMode, authSignupPick, productApp]);
 
   const openLegalPage = (page: LegalPageId) => {
     setLegalReturnAuth(isAuthView);
@@ -1911,14 +1962,24 @@ export default function App() {
     const pendingPath = consumePostAuthPath();
     if (pendingPath) {
       const pending = parseAppRoute(pendingPath);
-      if (pending && (pending.websiteAccount || roleCanOpenProductApp(role, productAppFromPath(pendingPath)))) {
-        if (pending.websiteAccount) return websiteAccountRoute(role, pending.accountView ?? 'home');
+      if (pending?.websiteAccount) {
+        return websiteAccountRoute(role, pending.accountView ?? 'home');
+      }
+      if (
+        pending &&
+        roleCanOpenProductApp(role, productAppFromPath(pendingPath)) &&
+        (isAppExperience() || canUseOperationalAppInBrowser(role))
+      ) {
         return { ...pending, role };
       }
     }
     if (!isAppExperience()) {
-      const path = typeof window !== 'undefined' ? window.location.pathname : '/';
-      if (!isOperationalAppPath(path) && !path.startsWith('/legal')) {
+      if (canUseOperationalAppInBrowser(role)) {
+        const path = typeof window !== 'undefined' ? window.location.pathname : '/';
+        if (isWebsiteAccountPath(path)) {
+          return websiteAccountRoute(role, parseWebsiteAccountView(path) ?? 'home');
+        }
+      } else {
         return websiteAccountRoute(role);
       }
     }
@@ -2105,6 +2166,25 @@ export default function App() {
       return;
     }
 
+    if (user && !canOpenOperationalRoute(user, route)) {
+      const role = appRoleForUser(user);
+      if (role) {
+        if (isOperationalAppPath(strippedUrl)) {
+          persistPostAuthPath(strippedUrl);
+          const needsApp = websiteNeedsAppMessage(role);
+          if (needsApp) appToast(needsApp, 'info');
+        }
+        const fallback = websiteAccountRoute(role);
+        applyAppRouteRef.current(fallback);
+        if (options.source === 'popstate') {
+          window.history.replaceState({ appRoute: fallback }, '', buildAppPath(fallback));
+        } else {
+          syncAppRoute(fallback, true);
+        }
+      }
+      return;
+    }
+
     applyAppRouteRef.current(route);
     persistAppRoute(route, user?.id ?? null);
     if (options.source !== 'popstate') {
@@ -2138,6 +2218,7 @@ export default function App() {
 
     if (!route || route.authView) return;
     if (user && !routeMatchesUser(route, user)) return;
+    if (user && !canOpenOperationalRoute(user, route)) return;
 
     applyAppRouteRef.current(route);
     persistAppRoute(route, user?.id ?? null);
@@ -2201,6 +2282,12 @@ export default function App() {
     }
 
     if (route && routeMatchesUser(route, currentUser)) {
+      if (!canOpenOperationalRoute(currentUser, route)) {
+        const fallback = defaultRouteForUser(currentUser);
+        applyAppRouteRef.current(fallback);
+        syncAppRoute(fallback, true);
+        return;
+      }
       applyAppRouteRef.current(route);
       persistAppRoute(route, currentUser.id);
       syncAppRoute(route, true);
@@ -13396,26 +13483,33 @@ export default function App() {
     }
     if (isAppExperience()) {
       if (authChoiceMode) {
-        return (
-          <>
-            <AuthRoleChoicePage
-              mode={authChoiceMode}
-              signupStep={authSignupPick ?? 'path'}
-              themeMode={themeMode}
-              onChangeTheme={changeThemeMode}
-              onNavigateToAuth={navigateToAuth}
-              onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
-              onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
-              onSelectClientType={(kind) => openAuthView('client', 'sign-up', kind)}
-              onOpenGuide={openPublicGuide}
-              onBack={closeAuthChoice}
-            />
-            <InstallPrompt />
-          </>
-        );
+        const entry = installedAuthEntry(productApp, authChoiceMode);
+        const showInstalledChoice = entry.type === 'role-picker' || entry.type === 'client-kind';
+        if (showInstalledChoice) {
+          return (
+            <>
+              <AuthRoleChoicePage
+                mode={authChoiceMode}
+                signupStep={entry.type === 'client-kind' ? 'client' : (authSignupPick ?? 'path')}
+                themeMode={themeMode}
+                onChangeTheme={changeThemeMode}
+                onNavigateToAuth={navigateToAuth}
+                onSelectRole={(role) => openAuthView(role, authChoiceMode ?? 'sign-in')}
+                onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
+                onSelectClientType={(kind) => openAuthView('client', 'sign-up', kind)}
+                onOpenGuide={openPublicGuide}
+                onBack={closeAuthChoice}
+              />
+              <InstallPrompt />
+            </>
+          );
+        }
       }
       // PWA/APK: full-page auth (not bottom sheets / floating cards).
       if (isAuthView) {
+        const lockToInstalledApp = Boolean(installedAuthRole);
+        const clientKindStep =
+          initialAuthMode === 'sign-up' && initialAuthRole === 'client';
         return (
           <>
             <AuthPage
@@ -13426,11 +13520,13 @@ export default function App() {
               isDbConnected={isDbConnected}
               isAppLoading={loading}
               onBackToHome={closeAuthView}
-              onBackToRoleChoice={backToAuthRoleChoice}
+              onBackToRoleChoice={
+                lockToInstalledApp && !clientKindStep ? undefined : backToAuthRoleChoice
+              }
               onOpenLegal={openLegalPage}
               onOpenGuide={openPublicGuide}
               onAuthModeChange={setAuthViewMode}
-              onAuthRoleChange={setAuthViewRole}
+              onAuthRoleChange={lockToInstalledApp ? undefined : setAuthViewRole}
               initialRole={initialAuthRole}
               initialMode={initialAuthMode}
               initialClientType={initialClientType}
@@ -13474,13 +13570,17 @@ export default function App() {
   const signedInRole = appRoleForUser(currentUser);
   const productRole: ProductRole = signedInRole ?? 'client';
   const openSignedInApp = () => {
-    const fallback =
-      productRole === 'guard'
-        ? defaultRouteForRole('guard', findGuardProfileForUser(currentUser, guards))
-        : defaultRouteForRole(productRole);
-    setWebsiteAccountView(null);
-    applyAppRoute(fallback);
-    syncAppRoute(fallback);
+    if (canUseOperationalAppInBrowser(productRole) || isAppExperience()) {
+      const fallback =
+        productRole === 'guard'
+          ? defaultRouteForRole('guard', findGuardProfileForUser(currentUser, guards))
+          : defaultRouteForRole(productRole);
+      setWebsiteAccountView(null);
+      applyAppRoute(fallback);
+      syncAppRoute(fallback);
+      return;
+    }
+    window.location.assign(installPathForApp(productAppForRole(productRole)));
   };
   const goWebsiteAccount = (view: WebsiteAccountView) => {
     const route = websiteAccountRoute(productRole, view);
@@ -13514,8 +13614,8 @@ export default function App() {
             : productRole === 'guard'
               ? sessionGuard?.stripeConnectAccountId
                 ? 'Payouts connected'
-                : 'Connect payouts in the Guard App'
-              : 'Managed in Staff App'
+                : 'Connect payouts in the Work app'
+              : 'Operations run in the browser'
         }
         notificationCount={unreadCount}
         onOpenApp={openSignedInApp}
@@ -13608,8 +13708,8 @@ export default function App() {
             </h1>
             <p className="website-account-lead">
               {productRole === 'guard'
-                ? 'Connect Stripe, request payouts, and review shift pay in the Guard App.'
-                : 'Platform billing and payout administration live in the Staff App.'}
+                ? 'Connect Stripe, request payouts, and review shift pay in the Work app.'
+                : 'Platform billing and payout administration live in operations.'}
             </p>
             <OpenAppCta
               role={productRole}

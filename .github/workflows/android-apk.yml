@@ -13,6 +13,7 @@ on:
       - 'scripts/build-android-play.mjs'
       - 'scripts/build-android-release.mjs'
       - 'scripts/build-android-common.mjs'
+      - 'scripts/android-role-build.mjs'
       - 'scripts/write-google-services.mjs'
       - 'scripts/write-keystore.mjs'
       - 'src/**'
@@ -131,15 +132,16 @@ jobs:
         with:
           name: guardr-android-aab
           path: |
-            android/app/build/outputs/bundle/playRelease/app-play-release.aab
-            dist/play-store/guardr-play-release.aab
+            dist/play-store/Guardr-Client.aab
+            dist/play-store/Guardr-Guard.aab
+            dist/play-store/Guardr-Staff.aab
           if-no-files-found: error
 
       - name: Note missing Play keystore
         if: env.ANDROID_KEYSTORE_READY != 'true'
         run: |
-          echo "::warning::ANDROID_UPLOAD_KEYSTORE_BASE64 is not set — APK was built but AAB was skipped."
-          echo "Add Play upload keystore secrets to build and upload the AAB artifact."
+          echo "::warning::ANDROID_UPLOAD_KEYSTORE_BASE64 is not set — APKs were built but AABs were skipped."
+          echo "Add Play upload keystore secrets to build Hire, Work, and Staff AAB artifacts."
 
     env:
       ANDROID_KEYSTORE_READY: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' }}

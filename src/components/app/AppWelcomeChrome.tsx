@@ -8,6 +8,7 @@ import { AppButton } from '../ui/AppButton';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import { EqualOpportunityNotice } from '../legal/EqualOpportunityNotice';
 import type { LegalPageId } from '../../lib/legalContent';
+import type { ProductApp } from '../../lib/productApps';
 
 /** Soft full-bleed wash — no grid, icons, or glow blobs. */
 export function AppWelcomeBackdrop() {
@@ -53,7 +54,29 @@ const TIER_HERO_COPY: Partial<Record<string, { headline: string; sub: string }>>
   },
 };
 
-function resolveWelcomeCopy(shellKind: ShellKind, experienceTier?: ExperienceTier) {
+const PRODUCT_APP_HERO_COPY: Partial<Record<ProductApp, { headline: string; sub: string }>> = {
+  client: {
+    headline: 'Hire coverage when you need it.',
+    sub: 'Post jobs, track guards on the map, and pay from your phone.',
+  },
+  guard: {
+    headline: 'Field-ready security operations.',
+    sub: 'GPS, camera, push alerts, and shift tools — built for phones in the field.',
+  },
+  staff: {
+    headline: 'Operations in your pocket.',
+    sub: 'Jobs, people, and support — the Guardr control centre on your phone.',
+  },
+};
+
+function resolveWelcomeCopy(
+  shellKind: ShellKind,
+  experienceTier?: ExperienceTier,
+  productApp?: ProductApp,
+) {
+  if (productApp && productApp !== 'website' && PRODUCT_APP_HERO_COPY[productApp]) {
+    return PRODUCT_APP_HERO_COPY[productApp]!;
+  }
   if (experienceTier?.shell === 'pwa') {
     return TIER_HERO_COPY[`pwa-${experienceTier.mode}`] ?? HERO_COPY.pwa;
   }
@@ -67,21 +90,24 @@ export function AppWelcomeHero({
   shellKind,
   isTablet,
   experienceTier,
+  productApp,
 }: {
   shellKind: ShellKind;
   isTablet: boolean;
   experienceTier?: ExperienceTier;
+  productApp?: ProductApp;
 }) {
-  const copy = resolveWelcomeCopy(shellKind, experienceTier);
+  const copy = resolveWelcomeCopy(shellKind, experienceTier, productApp);
 
   return (
     <Block
       className={`app-welcome-hero${isTablet ? ' app-welcome-hero--tablet' : ''}`}
       display="flex"
       flexDirection="column"
-      justifyContent="center"
+      justifyContent="flex-start"
       flex="1"
       minHeight="0"
+      overflow="auto"
     >
       <p className="app-welcome-brand">Guardr</p>
       <h1 className="app-welcome-headline">{copy.headline}</h1>

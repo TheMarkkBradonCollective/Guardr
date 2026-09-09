@@ -112,9 +112,15 @@ if (existsSync(googleServicesPath)) {
 }
 
 if (await fileExists('assets/play-store/icon-512.png')) {
-  ok('Play Store icon generated (assets/play-store/icon-512.png)');
+  ok('Play Store brand icon generated (assets/play-store/icon-512.png)');
 } else {
-  warn('Run npm run play:assets to generate 512×512 icon and feature graphic');
+  warn('Run npm run play:assets to generate 512×512 icons and feature graphic');
+}
+
+if (await fileExists('assets/play-store/staff-icon-512.png')) {
+  ok('Staff Play icon is white + black (assets/play-store/staff-icon-512.png)');
+} else {
+  warn('Run npm run play:assets to generate the Staff listing icon (white field, black logo)');
 }
 
 if (await fileExists('docs/play-store-listing-copy.md')) {
@@ -139,7 +145,7 @@ for (const message of errors) {
 console.log('\n--- Your action required ---');
 console.log('1. Create upload keystore + android/keystore.properties (if not done)');
 console.log('2. Add google-services.json (secrets/ or GOOGLE_SERVICES_JSON)');
-console.log('3. npm run android:play  →  upload dist/play-store/guardr-play-release.aab');
+console.log('3. npm run android:play  →  upload dist/play-store/Guardr-Client.aab, Guardr-Guard.aab, Guardr-Staff.aab');
 console.log('4. Complete Play Console: store listing, Data safety, content rating, app access');
 console.log('   See docs/GOOGLE-PLAY.md and docs/play-store-listing-copy.md\n');
 

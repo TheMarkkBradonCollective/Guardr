@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Download the Guardr Android app or install the lite home-screen version. Same account either way." />
+    <meta name="description" content="Download Hire, Work, and Staff — the Guardr Android apps. Same account on every app." />
     <link rel="manifest" href="/manifest.json" />
-    <title>Install Guardr — APK or Home Screen</title>
+    <title>Download Guardr — Hire, Work, Staff</title>
     <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-dark.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <style>
@@ -73,7 +73,7 @@
       }
       .nav-link:hover { opacity: 1; }
       .wrap {
-        max-width: 640px;
+        max-width: 960px;
         margin: 0 auto;
         padding: 28px 20px 48px;
       }
@@ -164,6 +164,18 @@
         margin: 0 0 6px;
         font-size: 1.05rem;
         letter-spacing: -0.02em;
+      }
+      .app-card-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        margin: 0 0 12px;
+        background: #000;
+        display: block;
+      }
+      .app-card-icon.staff {
+        background: #ffffff;
+        border: 1px solid var(--border);
       }
       .app-card p {
         margin: 0 0 12px;
@@ -321,27 +333,20 @@
 
     <div class="wrap">
       <div class="hero">
-        <h1>Install Guardr</h1>
-        <p id="page-intro">Download the Client, Guard, or Staff app. Same Guardr account on every app.</p>
+        <h1>Download Guardr</h1>
+        <p id="page-intro">Hire and Work are Android apps. This website is for customer and guard accounts. Staff can run the full system in the browser.</p>
         <div id="live-context" class="context">Checking your device…</div>
       </div>
 
       <div class="panel" id="install-status-card">
-        <h2>Your installs</h2>
+        <h2>Your install</h2>
         <div class="status-grid">
           <div class="status" id="apk-status">
             <div class="status-head">
-              <span class="status-title">APK (Full Version)</span>
+              <span class="status-title">Android app</span>
               <span class="badge muted" id="apk-badge">Checking…</span>
             </div>
             <p id="apk-detail">Looking for an installed APK…</p>
-          </div>
-          <div class="status" id="pwa-status">
-            <div class="status-head">
-              <span class="status-title">PWA (Lite Version)</span>
-              <span class="badge muted" id="pwa-badge">Checking…</span>
-            </div>
-            <p id="pwa-detail">Looking for a home-screen install…</p>
           </div>
         </div>
       </div>
@@ -351,17 +356,20 @@
         <p>Pick the app for your role. Each APK installs side by side on Android.</p>
         <div class="app-grid">
           <article class="app-card">
-            <h3>Client App</h3>
+            <img class="app-card-icon" src="/icons/client-192.png" width="56" height="56" alt="Hire app icon" />
+            <h3>Hire</h3>
             <p>Coverage, activity, and reports.</p>
-            <a class="btn" id="client-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk">Download Client</a>
+            <a class="btn" id="client-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk">Download Hire</a>
           </article>
           <article class="app-card">
-            <h3>Guard App</h3>
+            <img class="app-card-icon" src="/icons/guard-192.png" width="56" height="56" alt="Work app icon" />
+            <h3>Work</h3>
             <p>Shifts, check-in, and field work.</p>
-            <a class="btn" id="guard-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk">Download Guard</a>
+            <a class="btn" id="guard-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk">Download Work</a>
           </article>
           <article class="app-card">
-            <h3>Staff App</h3>
+            <img class="app-card-icon staff" src="/icons/staff-192.png" width="56" height="56" alt="Staff app icon" />
+            <h3>Staff</h3>
             <p>Operations, people, and administration.</p>
             <a class="btn" id="staff-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk">Download Staff</a>
           </article>
@@ -375,7 +383,7 @@
 
       <div class="panel" id="apk-download-card">
         <h2 id="apk-download-title">Combined APK (existing installs)</h2>
-        <p id="apk-download-copy">Use this only if you already have the single Guardr APK. New installs should use Client, Guard, or Staff above.</p>
+        <p id="apk-download-copy">Use this only if you already have the single Guardr APK. New installs should use Hire, Work, or Staff above.</p>
         <div class="qr-block">
           <img src="/download/apk-qr.png" width="180" height="180" alt="QR code to download Guardr APK" />
           <p class="qr-caption">Scan to download the combined APK</p>
@@ -388,48 +396,6 @@
           <li>Open the file and tap <strong>Install</strong> (enable unknown apps if prompted).</li>
           <li>Re-open this page after installing — we will detect your version.</li>
         </ol>
-      </div>
-
-      <div class="panel hidden" id="compare-card">
-        <h2>PWA (Lite Version) vs APK (Full Version)</h2>
-        <p>Both use the same Guardr account and data. Pick what fits your workflow — you can switch anytime.</p>
-        <table class="compare">
-          <thead>
-            <tr>
-              <th></th>
-              <th>APK (Full Version)</th>
-              <th>PWA (Lite Version)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th>Updates</th>
-              <td><strong>Manual</strong> — download &amp; reinstall from this page when we ship a new beta APK</td>
-              <td><strong>Automatic</strong> — refreshes with guardr.co (no reinstall)</td>
-            </tr>
-            <tr>
-              <th>Notifications</th>
-              <td>Best for guards — native app + permission prompts, harder for the OS to silence</td>
-              <td>Good — can be less reliable when the phone limits background browser apps</td>
-            </tr>
-            <tr>
-              <th>Permissions</th>
-              <td>Camera, location, photos — full native prompts for field work</td>
-              <td>Browser-controlled — may need to re-allow in Chrome/Safari settings</td>
-            </tr>
-            <tr>
-              <th>Icon on phone</th>
-              <td>Real app icon from the APK install</td>
-              <td>Shortcut icon from your browser’s “Add to Home Screen”</td>
-            </tr>
-            <tr>
-              <th>Best for</th>
-              <td>Guards in the field, daily shifts, job alerts</td>
-              <td>Quick access, clients, staff, trying Guardr without installing an APK</td>
-            </tr>
-          </tbody>
-        </table>
-        <a class="btn secondary" href="https://guardr.co">Open Guardr in browser</a>
       </div>
 
       <a class="back" href="https://guardr.co">← Back to Guardr</a>
@@ -472,18 +438,10 @@
           }
         }
 
-        function isStandalone() {
-          return (
-            window.matchMedia('(display-mode: standalone)').matches ||
-            window.navigator.standalone === true
-          );
-        }
-
         function isAndroidDevice() {
           return /android/i.test(navigator.userAgent || '');
         }
 
-        /** Capacitor / Android WebView — looks like standalone but is the APK, not a PWA. */
         function isAndroidWebView() {
           return isAndroidDevice() && /;\s*wv\)/i.test(navigator.userAgent || '');
         }
@@ -494,11 +452,6 @@
 
         function isLikelyNativeApk() {
           return isNativeShell() || isAndroidWebView();
-        }
-
-        function isLikelyPwaContext() {
-          if (isLikelyNativeApk()) return false;
-          return isStandalone();
         }
 
         function readInstallCookie(name) {
@@ -512,37 +465,32 @@
           };
         }
 
+        function persistSurface(version, versionCode) {
+          var state = readState();
+          state.apk = {
+            version: version,
+            versionCode: versionCode,
+            registeredAt: Date.now(),
+          };
+          delete state.pwa;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          return state;
+        }
+
         function applyQueryRegistration(state) {
           var params = new URLSearchParams(location.search);
           var surface = params.get('surface');
           var version = params.get('version') || params.get('apkVersion');
           var versionCode = params.get('versionCode');
-          if (surface === 'apk' && version) {
+          if ((surface === 'apk' || params.get('apk') === '1' || params.get('from') === 'apk') && version) {
             var code = versionCode ? parseInt(versionCode, 10) : undefined;
-            return persistSurface('apk', version, isNaN(code) ? undefined : code);
-          }
-          if ((params.get('apk') === '1' || params.get('from') === 'apk') && version) {
-            var build = versionCode ? parseInt(versionCode, 10) : undefined;
-            return persistSurface('apk', version, isNaN(build) ? undefined : build);
+            return persistSurface(version, isNaN(code) ? undefined : code);
           }
           return state;
         }
 
-        function mergeCookieInstall(state, liveHint) {
+        function mergeCookieInstall(state) {
           var apkCookie = readInstallCookie('guardr_apk');
-          var pwaCookie = readInstallCookie('guardr_pwa');
-          // Prefer live PWA over a stale APK cookie from a previous install.
-          if (liveHint === 'pwa') {
-            if (pwaCookie && pwaCookie.version) {
-              state.pwa = {
-                version: pwaCookie.version,
-                registeredAt: Date.now(),
-              };
-            }
-            delete state.apk;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            return state;
-          }
           if (apkCookie && apkCookie.version) {
             state.apk = {
               version: apkCookie.version,
@@ -550,18 +498,13 @@
               registeredAt: Date.now(),
             };
             delete state.pwa;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           }
-          if (pwaCookie && pwaCookie.version && !state.apk) {
-            state.pwa = {
-              version: pwaCookie.version,
-              registeredAt: Date.now(),
-            };
-          }
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           return state;
         }
 
         function setBadge(el, text, kind) {
+          if (!el) return;
           el.textContent = text;
           el.className = 'badge ' + (kind || 'muted');
         }
@@ -590,78 +533,35 @@
           });
         }
 
-        function clearStalePwaRecord(state) {
-          if (state.apk) {
-            delete state.pwa;
-            return state;
-          }
-          if (state.pwa && !isLikelyPwaContext() && !readInstallCookie('guardr_pwa')) {
-            delete state.pwa;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-          }
-          return state;
-        }
-
-        function persistSurface(surface, version, versionCode) {
-          var state = readState();
-          state[surface] = {
-            version: version,
-            versionCode: versionCode,
-            registeredAt: Date.now(),
-          };
-          if (surface === 'apk') {
-            delete state.pwa;
-          } else if (surface === 'pwa') {
-            delete state.apk;
-          }
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-          return state;
-        }
-
         function applySurfaceLayout(live) {
           var intro = document.getElementById('page-intro');
           var statusCard = document.getElementById('install-status-card');
-          var pwaStatus = document.getElementById('pwa-status');
-          var compareCard = document.getElementById('compare-card');
           var apkTitle = document.getElementById('apk-download-title');
           var apkSteps = document.getElementById('apk-steps');
 
           if (live === 'apk') {
-            if (intro) intro.textContent = 'Check for updates and install the latest Guardr APK when a new version is available.';
+            if (intro) intro.textContent = 'Check for updates and install the latest Hire, Work, or Staff APK when a new version is available.';
             if (statusCard) statusCard.classList.add('hidden');
-            if (pwaStatus) pwaStatus.classList.add('hidden');
-            if (compareCard) compareCard.classList.add('hidden');
             if (apkTitle) apkTitle.textContent = 'App update';
             if (apkSteps) apkSteps.classList.add('hidden');
             return;
           }
 
-          if (live === 'pwa') {
-            if (intro) intro.textContent = 'You are on the home-screen PWA, which auto-updates with guardr.co. The Android APK below is optional and may need a manual install for new builds.';
-            if (pwaStatus) pwaStatus.classList.remove('hidden');
-            if (compareCard) compareCard.classList.add('hidden');
-            if (apkTitle) apkTitle.textContent = 'APK (Full Version)';
-            return;
-          }
-
-          if (intro) intro.textContent = 'Choose PWA (Lite Version) for quick access, or APK (Full Version) for guards in the field.';
-          if (compareCard) compareCard.classList.remove('hidden');
-          if (apkTitle) apkTitle.textContent = 'APK (Full Version)';
+          if (intro) intro.textContent = 'Download Hire, Work, or Staff. Same Guardr account on every app.';
+          if (apkTitle) apkTitle.textContent = 'Combined APK (existing installs)';
         }
 
         function render(latest, state, live) {
           applySurfaceLayout(live);
           var apkBadge = document.getElementById('apk-badge');
           var apkDetail = document.getElementById('apk-detail');
-          var pwaBadge = document.getElementById('pwa-badge');
-          var pwaDetail = document.getElementById('pwa-detail');
           var liveContext = document.getElementById('live-context');
           var latestVersion = document.getElementById('latest-version');
           var downloadBtn = document.getElementById('apk-download-btn');
           var downloadCopy = document.getElementById('apk-download-copy');
 
           latestVersion.textContent =
-            'Latest APK (Full Version): ' + formatVersionLabel(latest.apkVersion) + ' (build ' + latest.apkVersionCode + ') · PWA (Lite Version): ' + formatVersionLabel(latest.webVersion);
+            'Latest Android apps: ' + formatVersionLabel(latest.apkVersion) + ' (build ' + latest.apkVersionCode + ')';
 
           if (latest.apkDirectUrl) {
             var directLink = document.getElementById('apk-direct-link');
@@ -688,25 +588,21 @@
           }
 
           if (live === 'apk') {
-            liveContext.textContent = 'You are on the full Android app. Install updates below when a new beta build is available.';
-          } else if (live === 'pwa') {
-            liveContext.textContent = 'You are on the PWA (home-screen). It stays current automatically — APK installs below are optional.';
+            liveContext.textContent = 'You are in the Android app. Install updates below when a new build is available.';
           } else {
-            liveContext.textContent = 'Install PWA (Lite Version) for quick access, or APK (Full Version) for guards in the field.';
+            liveContext.textContent = 'This is the website. Hire and Work are Android apps. Staff can work here in the browser.';
           }
 
-          // Live PWA session: never treat a stale APK cookie/localStorage as the current shell.
-          var apkRecord = live === 'pwa' ? null : state.apk;
+          var apkRecord = state.apk;
           var apkInstalled = !!apkRecord;
           var apkNeedsUpdate = apkInstalled && compareVersions(apkRecord.version, latest.apkVersion) < 0;
 
           if (!apkInstalled) {
             setBadge(apkBadge, 'Not detected', 'muted');
             apkDetail.textContent =
-              'No APK install recorded yet. Open the Guardr app at least once, or download below. ' +
-              'If you already installed an older APK, download again to update.';
-            downloadCopy.textContent = 'Install APK (Full Version) for guards who want native icon, permissions, and stronger notifications.';
-            downloadBtn.textContent = 'Get APK (Full Version)';
+              'No APK install recorded yet. Open Hire, Work, or Staff at least once, or download below.';
+            downloadCopy.textContent = 'Use this only if you already have the single Guardr APK. New installs should use Hire, Work, or Staff above.';
+            downloadBtn.textContent = 'Download combined APK';
           } else if (apkNeedsUpdate) {
             setBadge(apkBadge, 'Update available', 'warn');
             apkDetail.textContent =
@@ -723,20 +619,7 @@
               'Re-download only if you reinstall on a new phone.';
             downloadBtn.textContent = live === 'apk'
               ? 'Reinstall (' + formatVersionLabel(latest.apkVersion) + ')'
-              : 'Re-download APK (' + formatVersionLabel(latest.apkVersion) + ')';
-          }
-
-          var pwaRecord = state.pwa;
-          var pwaActive = live === 'pwa' || (!apkInstalled && !!pwaRecord);
-          if (pwaActive) {
-            setBadge(pwaBadge, 'Installed', 'ok');
-            var pwaVersion = pwaRecord ? pwaRecord.version : latest.webVersion;
-            pwaDetail.textContent =
-              'PWA detected (' + formatVersionLabel(pwaVersion) + '). It auto-updates when guardr.co updates — often ahead of a manually installed APK.';
-          } else {
-            setBadge(pwaBadge, 'Not installed', 'muted');
-            pwaDetail.textContent =
-              'Install PWA (Lite Version): open guardr.co in Chrome → menu → Add to Home screen / Install app.';
+              : 'Re-download combined APK (' + formatVersionLabel(latest.apkVersion) + ')';
           }
         }
 
@@ -750,23 +633,19 @@
                 live = 'apk';
               } else if (isLikelyNativeApk()) {
                 live = 'apk';
-              } else if (isLikelyPwaContext()) {
-                live = 'pwa';
               }
 
-              var state = clearStalePwaRecord(mergeCookieInstall(readState(), live));
+              var state = mergeCookieInstall(readState());
               state = applyQueryRegistration(state);
 
               if (nativeInfo && nativeInfo.version) {
                 var code = parseInt(nativeInfo.build, 10);
-                state = persistSurface('apk', nativeInfo.version, isNaN(code) ? undefined : code);
+                state = persistSurface(nativeInfo.version, isNaN(code) ? undefined : code);
               } else if (live === 'apk') {
                 if (!state.apk) {
                   apkDetailPending =
                     'Guardr Android app detected. Open the app once while online so we can read your APK version, or re-download below.';
                 }
-              } else if (live === 'pwa') {
-                state = persistSurface('pwa', latest.webVersion);
               }
 
               render(latest, state, live);
@@ -779,9 +658,8 @@
           })
           .catch(function () {
             document.getElementById('live-context').textContent =
-              'Could not load version info. You can still download the APK below.';
+              'Could not load version info. You can still download the APKs below.';
             setBadge(document.getElementById('apk-badge'), 'Unknown', 'muted');
-            setBadge(document.getElementById('pwa-badge'), 'Unknown', 'muted');
           });
       })();
     </script>

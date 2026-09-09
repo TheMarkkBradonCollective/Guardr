@@ -1,14 +1,21 @@
+import { bakedNativeProductApp } from '../productApps';
 import type { ThemeMode } from './theme';
 export const THEME_ICON_BACKGROUNDS: Record<ThemeMode, string> = {
   light: '#000000',
   dark: '#000000',
 };
 
-/** Browser UI accent (status bar, PWA theme_color). */
+/** Browser UI accent (status bar, theme-color meta). Hire/Work stay black. */
 export const THEME_BROWSER_COLORS: Record<ThemeMode, string> = {
   light: '#000000',
   dark: '#000000',
 };
+
+/** Staff light theme uses a white status bar so it matches the white launcher. */
+export function themeChromeColor(mode: ThemeMode, productApp?: string | null): string {
+  if (productApp === 'staff' && mode === 'light') return '#FFFFFF';
+  return THEME_BROWSER_COLORS[mode];
+}
 
 const ICON_LINK_IDS = {
   faviconPng: 'guardr-theme-favicon',
@@ -55,7 +62,7 @@ function upsertThemeColorMeta(color: string): void {
 export function applyThemeBranding(mode: ThemeMode): void {
   if (typeof document === 'undefined') return;
 
-  upsertThemeColorMeta(THEME_BROWSER_COLORS[mode]);
+  upsertThemeColorMeta(themeChromeColor(mode, bakedNativeProductApp()));
 
   upsertLink(ICON_LINK_IDS.faviconPng, 'icon', `/icons/favicon-${mode}.png`, {
     type: 'image/png',

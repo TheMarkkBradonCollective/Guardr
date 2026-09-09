@@ -198,7 +198,7 @@ function RoleChoiceRow({
         alignItems="flex-start"
         justifyContent="space-between"
         gridGap="scale400"
-        paddingBottom="scale500"
+        paddingBottom="scale700"
         $style={{ borderBottom: `1px solid ${theme.colors.borderOpaque}` }}
       >
         <Block minWidth={0} flex="1" overrides={{ Block: { style: { flex: 1, minWidth: 0 } } }}>
@@ -221,7 +221,8 @@ function RoleChoiceRow({
             margin={0}
             $style={{
               fontSize: '14px',
-              lineHeight: 1.45,
+              lineHeight: 1.5,
+              paddingBottom: '4px',
               color: theme.colors.contentSecondary,
             }}
           >

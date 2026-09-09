@@ -17,7 +17,7 @@ export interface AppUpdateStatus {
   manifest: DownloadVersionManifest;
   installed: InstalledAppVersion | null;
   updateAvailable: boolean;
-  shell: 'native' | 'pwa' | 'browser';
+  shell: 'native' | 'browser';
 }
 
 export async function getInstalledAppVersion(): Promise<InstalledAppVersion | null> {
@@ -41,7 +41,7 @@ export async function fetchAppUpdateStatus(): Promise<AppUpdateStatus> {
   const manifest = await fetchDownloadVersionManifest();
   const installed = await getInstalledAppVersion();
   const live = resolveDownloadLiveContext();
-  const shell = live === 'apk' ? 'native' : live;
+  const shell = live === 'apk' ? 'native' : 'browser';
 
   return {
     manifest,

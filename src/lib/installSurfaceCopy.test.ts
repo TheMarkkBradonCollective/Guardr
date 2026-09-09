@@ -1,27 +1,31 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  accountMenuInstallLabel,
   downloadLiveContextMessage,
   downloadScreenIntro,
   downloadScreenTitle,
 } from './installSurfaceCopy.ts';
 
 describe('installSurfaceCopy', () => {
-  it('titles PWA as app versions, not as the Android APK screen', () => {
+  it('titles the native shell as an app update and the website as downloads', () => {
     assert.equal(downloadScreenTitle('apk'), 'App update');
-    assert.equal(downloadScreenTitle('pwa'), 'App versions');
-    assert.equal(downloadScreenTitle('browser'), 'Install Guardr');
+    assert.equal(downloadScreenTitle('browser'), 'Download the apps');
   });
 
-  it('does not claim the PWA is the full Android app', () => {
-    const apkMsg = downloadLiveContextMessage('apk');
-    const pwaMsg = downloadLiveContextMessage('pwa');
-    assert.match(apkMsg, /full Android app/i);
-    assert.match(pwaMsg, /PWA|home-screen|auto-update/i);
-    assert.doesNotMatch(pwaMsg, /You are on the full Android app/i);
+  it('labels the live context as Android app or website', () => {
+    assert.match(downloadLiveContextMessage('apk'), /Android app/i);
+    assert.equal(downloadLiveContextMessage('browser'), 'Website');
   });
 
-  it('notes that the PWA auto-updates ahead of manual APK installs', () => {
-    assert.match(downloadScreenIntro('pwa'), /auto-update/i);
+  it('points the website at Hire/Work apps and staff-in-browser ops', () => {
+    assert.match(downloadScreenIntro('browser'), /Staff can run the full system in the browser/);
+    assert.match(downloadScreenIntro('browser'), /Hire and Work/);
+    assert.doesNotMatch(downloadScreenIntro('browser'), /PWA|home-screen|lite/i);
+  });
+
+  it('uses Update in the account menu inside an APK', () => {
+    assert.equal(accountMenuInstallLabel('apk'), 'Update');
+    assert.equal(accountMenuInstallLabel('browser'), 'Download');
   });
 });

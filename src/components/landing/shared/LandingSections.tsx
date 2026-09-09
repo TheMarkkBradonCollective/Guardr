@@ -240,7 +240,7 @@ export function LandingBodySections({
             gridGap="scale600"
           >
             <FeatureColumn
-              badge="Client App"
+              badge="Hire"
               headline="Request coverage at your site"
               lead="Post jobs with full site details, review licensed guards, and monitor active coverage — with dedicated messaging and support when you need it."
               features={CLIENT_FEATURES}
@@ -249,7 +249,7 @@ export function LandingBodySections({
               onCta={() => onNavigateToAuth('client', 'sign-up')}
             />
             <FeatureColumn
-              badge="Guard App"
+              badge="Work"
               headline="Work independently, get paid directly"
               lead="Map-first job discovery, earnings tracking, digital credentials, and full shift tools. You contract per assignment — not an employee of Guardr or the client."
               features={GUARD_FEATURES}

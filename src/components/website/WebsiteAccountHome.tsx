@@ -42,11 +42,13 @@ export function WebsiteAccountHome({
         <p className="website-account-kicker">Website account</p>
         <h1>Welcome back, {currentUser.name.split(' ')[0] || currentUser.name}</h1>
         <p className="website-account-lead">
-          Manage billing, profile, and support here. Day-to-day work happens in the {appLabel}.
+          {role === 'staff'
+            ? 'Profile, billing, and support live here. Dispatch, people, and the rest of operations run in this browser — no app required.'
+            : `Manage profile, billing, messages, and support here. Day-to-day work happens in the ${appLabel}.`}
         </p>
         <div className="website-account-hero-actions">
           <AppButton variant="primary" size="lg" onClick={onOpenApp}>
-            Open {appLabel}
+            {role === 'staff' ? 'Open operations' : `Open ${appLabel}`}
             <ArrowRight size={18} strokeWidth={2.25} aria-hidden />
           </AppButton>
           <AppButton variant="outline" size="lg" onClick={onOpenProfile}>
@@ -78,10 +80,10 @@ export function WebsiteAccountHome({
       <section className="website-account-cards">
         <button type="button" className="website-account-card" onClick={onOpenApp}>
           <Smartphone size={22} strokeWidth={2} aria-hidden />
-          <h2>{appLabel}</h2>
+          <h2>{role === 'staff' ? 'Operations' : appLabel}</h2>
           <p>{PRODUCT_APP_TAGLINES[app]}</p>
           <span>
-            Open app <ArrowRight size={14} aria-hidden />
+            {role === 'staff' ? 'Continue' : 'Open app'} <ArrowRight size={14} aria-hidden />
           </span>
         </button>
         <button type="button" className="website-account-card" onClick={onOpenBilling}>
@@ -99,7 +101,7 @@ export function WebsiteAccountHome({
         <button type="button" className="website-account-card" onClick={onOpenProfile}>
           <Bell size={22} strokeWidth={2} aria-hidden />
           <h2>Profile &amp; notifications</h2>
-          <p>Name, photo, and how we reach you. Operational alerts live in the app.</p>
+          <p>Name, photo, and how we reach you{role === 'staff' ? '.' : '. Operational alerts live in the app.'}</p>
           <span>
             Update <ArrowRight size={14} aria-hidden />
           </span>

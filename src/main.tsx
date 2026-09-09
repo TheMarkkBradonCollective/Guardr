@@ -3,7 +3,7 @@ import {createRoot} from 'react-dom/client';
 import { Capacitor } from '@capacitor/core';
 import { ensureNativePermissions } from './lib/platform/nativePermissions';
 import { initNativeSafeArea } from './lib/platform/nativeSafeArea';
-import { registerNativeInstall, registerPwaInstall } from './lib/platform/installRegistry';
+import { registerNativeInstall } from './lib/platform/installRegistry';
 import App from './App.tsx';
 import { OfflineBanner } from './components/OfflineBanner';
 import { AppMotionProvider } from './components/ui/motion/AppMotion';
@@ -96,13 +96,12 @@ async function initNativeShell(): Promise<void> {
 void initNativeShell();
 
 if (!Capacitor.isNativePlatform()) {
-  registerPwaInstall(import.meta.env.VITE_APP_VERSION || '1.0.0');
   void registerServiceWorker()
     .then((registration) => {
       initPwaAutoUpdate(registration);
     })
     .catch((error) => {
-      console.warn('[pwa] service worker registration failed:', error);
+      console.warn('[sw] service worker registration failed:', error);
       initPwaAutoUpdate();
     });
 }

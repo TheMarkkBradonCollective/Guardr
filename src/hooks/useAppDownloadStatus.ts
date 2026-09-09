@@ -23,7 +23,6 @@ export interface AppDownloadStatus {
   installedApkVersionCode: number | undefined;
   liveContext: DownloadLiveContext;
   apkNeedsUpdate: boolean;
-  pwaActive: boolean;
   refresh: () => Promise<void>;
 }
 
@@ -48,24 +47,14 @@ export function useAppDownloadStatus(): AppDownloadStatus {
 
       let state = readInstallState();
 
-      if (live === 'pwa') {
-        // Stale APK cookie/localStorage from a previous install must not label this session as APK.
-        if (state.apk) {
-          delete state.apk;
-          writeInstallState(state);
-        }
-      }
-
       if (nativeInfo?.version && live === 'apk') {
         state = {
-          ...state,
           apk: {
             version: nativeInfo.version,
             versionCode: nativeInfo.versionCode,
             registeredAt: Date.now(),
           },
         };
-        delete state.pwa;
         writeInstallState(state);
       }
 
@@ -92,13 +81,9 @@ export function useAppDownloadStatus(): AppDownloadStatus {
   const apkRecord = liveContext === 'apk' ? installState.apk : undefined;
   const effectiveApkVersion =
     liveContext === 'apk' ? installedApkVersion ?? apkRecord?.version ?? null : null;
-  const apkInstalled = Boolean(effectiveApkVersion);
   const apkNeedsUpdate =
     Boolean(manifest && effectiveApkVersion) &&
     compareVersions(effectiveApkVersion!, manifest!.apkVersion) < 0;
-  const pwaActive =
-    liveContext === 'pwa' ||
-    (liveContext === 'browser' && Boolean(installState.pwa?.version));
 
   return {
     loading,
@@ -109,7 +94,6 @@ export function useAppDownloadStatus(): AppDownloadStatus {
     installedApkVersionCode,
     liveContext,
     apkNeedsUpdate,
-    pwaActive,
     refresh,
   };
 }

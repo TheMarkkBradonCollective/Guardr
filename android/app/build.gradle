@@ -25,9 +25,9 @@ android {
             staff: 'com.signaturesecurity.guardr.staff',
         ]
         def roleLabels = [
-            client: 'Guardr Client',
-            guard: 'Guardr Guard',
-            staff: 'Guardr Staff',
+            client: 'Hire',
+            guard: 'Work',
+            staff: 'Staff',
         ]
         applicationId (roleApplicationIds.containsKey(productApp)
             ? roleApplicationIds[productApp]
@@ -44,6 +44,7 @@ android {
             resValue "string", "title_activity_main", roleLabels[productApp]
             resValue "string", "package_name", roleApplicationIds[productApp]
             resValue "string", "custom_url_scheme", roleApplicationIds[productApp]
+            resValue "color", "ic_launcher_background", productApp == 'staff' ? '#FFFFFF' : '#000000'
         }
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

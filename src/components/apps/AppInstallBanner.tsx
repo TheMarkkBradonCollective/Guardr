@@ -28,12 +28,19 @@ export function AppInstallBanner({ productApp }: AppInstallBannerProps) {
   if (dismissed) return null;
 
   const label = PRODUCT_APP_LABELS[productApp];
+  const copy =
+    productApp === 'staff'
+      ? 'You are using Staff in your browser — that is the full system. The Android app is optional for notifications, camera, and GPS.'
+      : `You are using the ${label} in your browser.`;
 
   return (
     <div className="app-install-banner" role="status">
       <p className="app-install-banner-copy">
-        You&apos;re using the {label} in your browser.{' '}
-        <a href={installPathForApp(productApp)}>Install the app</a> for notifications, camera, and GPS.
+        {copy}{' '}
+        <a href={installPathForApp(productApp)}>
+          {productApp === 'staff' ? 'Optional install' : 'Install the app'}
+        </a>
+        .
       </p>
       <a className="app-install-banner-action" href={installPathForApp(productApp)}>
         <Download size={14} strokeWidth={2.25} aria-hidden />

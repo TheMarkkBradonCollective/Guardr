@@ -165,7 +165,7 @@ export function DesktopStaffAdminShell({
   return (
     <SurfaceAppShell
       title={screenTitle}
-      workspaceLabel="Staff App"
+      workspaceLabel="Staff"
       destinations={destinations}
       activeId={navHighlight}
       onNavigate={handleNav}

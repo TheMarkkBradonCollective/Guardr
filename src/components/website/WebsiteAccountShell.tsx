@@ -82,7 +82,7 @@ export function WebsiteAccountShell({
           </div>
           <div className="website-account-top-actions">
             <AppButton variant="primary" size="sm" onClick={onOpenApp}>
-              Open {appLabel}
+              {role === 'staff' ? 'Open operations' : `Open ${appLabel}`}
             </AppButton>
             <AccountMenu {...accountMenu} triggerVariant="uber-direct" />
           </div>
@@ -120,7 +120,7 @@ export function WebsiteAccountShell({
 
         <main className="website-account-main">
           {children}
-          {activeView !== 'home' ? (
+          {activeView !== 'home' && role !== 'staff' ? (
             <div className="website-account-app-slot website-account-app-slot--quiet">
               <OpenAppCta role={role} compact onOpenWebApp={onOpenApp} />
             </div>
