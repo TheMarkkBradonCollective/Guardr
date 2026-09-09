@@ -521,7 +521,27 @@ import {
   type AuthViewMode,
   type AuthViewRole,
   type AuthSignupPick,
+  type WebsiteAccountView,
+  websiteAccountRoute,
 } from './lib/appNavigation';
+import {
+  applyProductAppToDocument,
+  consumePostAuthPath,
+  isOperationalAppPath,
+  persistPostAuthPath,
+  productAppForRole,
+  productAppFromPath,
+  roleCanOpenProductApp,
+  wrongAppMessage,
+  type ProductRole,
+} from './lib/productApps';
+import { WebsiteAccountShell } from './components/website/WebsiteAccountShell';
+import { WebsiteAccountHome } from './components/website/WebsiteAccountHome';
+import { WebsiteAccountDocuments } from './components/website/WebsiteAccountDocuments';
+import { OpenAppCta } from './components/apps/OpenAppCta';
+import { SupportScreen } from './components/support/SupportScreen';
+import { ClientInvoiceScreen } from './components/client/ClientInvoiceScreen';
+import { PaymentsPage } from './components/payments/PaymentsPage';
 import type { LegalPageId } from './lib/legalContent';
 import { CURRENT_LEGAL_VERSIONS, requiredLegalDocumentsForRole } from './lib/legalContent';
 import { LegalPage } from './components/legal/LegalPage';
@@ -674,6 +694,7 @@ function appRoleForUser(user: SessionUser): AppRole | null {
 }
 
 function routeMatchesUser(route: AppRoute, user: SessionUser): boolean {
+  if (route.websiteAccount) return true;
   const role = appRoleForUser(user);
   return !!role && route.role === role;
 }
@@ -810,6 +831,9 @@ export default function App() {
   const [passwordChangePromptOpen, setPasswordChangePromptOpen] = useState(false);
 
   const initialRoute = readAppRouteFromWindow();
+  const [websiteAccountView, setWebsiteAccountView] = useState<WebsiteAccountView | null>(
+    () => (initialRoute?.websiteAccount ? initialRoute.accountView ?? 'home' : null)
+  );
   const [clientView, setClientViewState] = useState<ClientView>(
     () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'home'
   );
@@ -925,6 +949,8 @@ export default function App() {
     const role = currentUser ? appRoleForUser(currentUser) ?? 'client' : 'client';
     const base: AppRoute = {
       role,
+      websiteAccount: websiteAccountView != null || undefined,
+      accountView: websiteAccountView ?? undefined,
       staffSection,
       guardTab,
       clientView,
@@ -961,6 +987,18 @@ export default function App() {
   };
 
   const applyAppRoute = (route: AppRoute) => {
+    if (route.websiteAccount) {
+      const view = route.accountView ?? 'home';
+      setWebsiteAccountView(view);
+      applyProductAppToDocument('website');
+    } else {
+      setWebsiteAccountView(null);
+      if (route.authView) {
+        applyProductAppToDocument('website');
+      } else {
+        applyProductAppToDocument(productAppForRole(route.role));
+      }
+    }
     if (route.clientView) {
       const currentClientType =
         currentUser?.role === 'client'
@@ -1870,6 +1908,20 @@ export default function App() {
   const defaultRouteForUser = (user: SessionUser): AppRoute => {
     const role = appRoleForUser(user);
     if (!role) return { role: 'client', clientView: 'home' };
+    const pendingPath = consumePostAuthPath();
+    if (pendingPath) {
+      const pending = parseAppRoute(pendingPath);
+      if (pending && (pending.websiteAccount || roleCanOpenProductApp(role, productAppFromPath(pendingPath)))) {
+        if (pending.websiteAccount) return websiteAccountRoute(role, pending.accountView ?? 'home');
+        return { ...pending, role };
+      }
+    }
+    if (!isAppExperience()) {
+      const path = typeof window !== 'undefined' ? window.location.pathname : '/';
+      if (!isOperationalAppPath(path) && !path.startsWith('/legal')) {
+        return websiteAccountRoute(role);
+      }
+    }
     if (role === 'guard') {
       return defaultRouteForRole(role, findGuardProfileForUser(user, guardsRef.current));
     }
@@ -1948,6 +2000,32 @@ export default function App() {
 
     const routeFromUrl = parseAppRoute(strippedUrl);
     const userRole = user ? appRoleForUser(user) : null;
+
+    if (!user && routeFromUrl?.websiteAccount) {
+      persistPostAuthPath(strippedUrl);
+      setAuthChoiceMode(null);
+      setIsAuthView(true);
+      setInitialAuthMode('sign-in');
+      if (options.source !== 'popstate') {
+        syncAppRoute({ role: 'client', authView: 'sign-in', authRole: 'client' }, true);
+      }
+      return;
+    }
+
+    if (!user && routeFromUrl && !routeFromUrl.authView && isOperationalAppPath(strippedUrl)) {
+      persistPostAuthPath(strippedUrl);
+      const authRole: AuthViewRole =
+        routeFromUrl.role === 'guard' || routeFromUrl.role === 'staff' ? routeFromUrl.role : 'client';
+      setAuthChoiceMode(null);
+      setIsAuthView(true);
+      setInitialAuthRole(authRole);
+      setInitialAuthMode('sign-in');
+      if (options.source !== 'popstate') {
+        syncAppRoute({ role: routeFromUrl.role, authView: 'sign-in', authRole }, true);
+      }
+      return;
+    }
+
     const route =
       options.source === 'popstate'
         ? readAppRouteFromPopState(options.event)
@@ -1999,6 +2077,12 @@ export default function App() {
     }
 
     if (user && !routeMatchesUser(route, user)) {
+      if (!route.websiteAccount) {
+        const ownRole = appRoleForUser(user);
+        if (ownRole) {
+          appToast(wrongAppMessage(productAppFromPath(strippedUrl), ownRole), 'info');
+        }
+      }
       if (options.source === 'deeplink') {
         const remapped = remapNotificationUrlForUser(strippedUrl, user);
         if (remapped && remapped !== strippedUrl) {
@@ -13382,6 +13466,192 @@ export default function App() {
           onOpenLegal={openLegalPage}
           onOpenGuide={openPublicGuide}
         />
+        <InstallPrompt />
+      </>
+    );
+  }
+
+  const signedInRole = appRoleForUser(currentUser);
+  const productRole: ProductRole = signedInRole ?? 'client';
+  const openSignedInApp = () => {
+    const fallback =
+      productRole === 'guard'
+        ? defaultRouteForRole('guard', findGuardProfileForUser(currentUser, guards))
+        : defaultRouteForRole(productRole);
+    setWebsiteAccountView(null);
+    applyAppRoute(fallback);
+    syncAppRoute(fallback);
+  };
+  const goWebsiteAccount = (view: WebsiteAccountView) => {
+    const route = websiteAccountRoute(productRole, view);
+    applyAppRoute(route);
+    syncAppRoute(route);
+  };
+
+  if (websiteAccountView) {
+    const clientRecord = clients.find((c) => c.id === currentUser.id);
+    const unreadCount = userNotifications.filter((n) => !n.readAt).length;
+    const accountStatusLabel =
+      currentUser.role === 'client'
+        ? clientRecord?.accountStatus === 'active' || clientRecord?.approved
+          ? 'Active'
+          : 'Pending review'
+        : currentUser.role === 'guard'
+          ? sessionGuard?.userStatus === 'active'
+            ? 'Active'
+            : 'Activation required'
+          : 'Staff';
+
+    let accountBody: React.ReactNode = (
+      <WebsiteAccountHome
+        currentUser={currentUser}
+        role={productRole}
+        statusLabel={accountStatusLabel}
+        statusDetail={currentUser.email}
+        billingSummary={
+          productRole === 'client'
+            ? `${unpaidClientInvoices(clientInvoices, currentUser.id).length} open invoice${unpaidClientInvoices(clientInvoices, currentUser.id).length === 1 ? '' : 's'}`
+            : productRole === 'guard'
+              ? sessionGuard?.stripeConnectAccountId
+                ? 'Payouts connected'
+                : 'Connect payouts in the Guard App'
+              : 'Managed in Staff App'
+        }
+        notificationCount={unreadCount}
+        onOpenApp={openSignedInApp}
+        onOpenBilling={() => goWebsiteAccount(productRole === 'guard' ? 'payouts' : 'billing')}
+        onOpenProfile={() => goWebsiteAccount('profile')}
+      />
+    );
+
+    if (websiteAccountView === 'profile') {
+      accountBody = (
+        <div className="website-account-panel">
+          <UserProfileScreen
+            currentUser={currentUser}
+            client={clientRecord ?? null}
+            guard={
+              currentUser.role === 'client'
+                ? null
+                : guards.find((g) => g.id === currentUser.id) ?? null
+            }
+            onSave={(payload) => {
+              if (currentUser.role === 'client') return handleUpdateClientProfile(currentUser.id, payload);
+              return handleUpdateGuardProfile(currentUser.id, payload);
+            }}
+            onSubmitClientCredential={
+              currentUser.role === 'client'
+                ? (credential) => handleSubmitClientCredential(currentUser.id, credential)
+                : undefined
+            }
+            platformSettings={platformSettings}
+          />
+        </div>
+      );
+    } else if (websiteAccountView === 'settings') {
+      accountBody = (
+        <div className="website-account-panel">
+          <UserSettingsScreen
+            currentUser={currentUser}
+            isDbConnected={isDbConnected}
+            onOpenLegal={openLegalPage}
+            onOpenDownload={openDownloadPage}
+          />
+        </div>
+      );
+    } else if (websiteAccountView === 'support') {
+      accountBody = (
+        <div className="website-account-panel">
+          <SupportScreen
+            currentUser={currentUser}
+            tickets={supportTickets}
+            onSendMessage={handleSendSupportMessage}
+            initialTicketId={supportTicketId}
+            onActiveTicketIdChange={setSupportTicketId}
+            initialSection={supportSection}
+          />
+        </div>
+      );
+    } else if (websiteAccountView === 'documents') {
+      accountBody = (
+        <WebsiteAccountDocuments currentUser={currentUser} onOpenLegal={openLegalPage} />
+      );
+    } else if (websiteAccountView === 'billing' || websiteAccountView === 'payouts') {
+      if (productRole === 'client' && clientRecord) {
+        accountBody = (
+          <ClientCapabilitiesProvider clientType={clientRecord.clientType}>
+            <div className="website-account-panel" style={{ minHeight: 420 }}>
+              <PaymentsPage role="client">
+                <ClientInvoiceScreen
+                  client={clientRecord}
+                  clientEmail={currentUser.email}
+                  requests={displayRequests.filter(
+                    (r) =>
+                      r.clientId === currentUser.id ||
+                      r.clientName === currentUser.clientName ||
+                      r.clientName === currentUser.name
+                  )}
+                  invoices={clientInvoices}
+                  paymentGates={clientPaymentGatesMemo}
+                  selectedRequestId={clientInvoiceRequestId}
+                  onSelectRequestId={(id) => setClientInvoiceRequestIdState(id)}
+                />
+              </PaymentsPage>
+            </div>
+          </ClientCapabilitiesProvider>
+        );
+      } else {
+        accountBody = (
+          <div className="website-account-panel" style={{ padding: 24 }}>
+            <h1 style={{ fontSize: '1.5rem', letterSpacing: '-0.03em', fontWeight: 750, marginBottom: 8 }}>
+              {productRole === 'guard' ? 'Payouts' : 'Billing'}
+            </h1>
+            <p className="website-account-lead">
+              {productRole === 'guard'
+                ? 'Connect Stripe, request payouts, and review shift pay in the Guard App.'
+                : 'Platform billing and payout administration live in the Staff App.'}
+            </p>
+            <OpenAppCta
+              role={productRole}
+              destination={productRole === 'guard' ? '/guard/payments' : '/staff/payments'}
+              onOpenWebApp={() => {
+                const dest =
+                  productRole === 'guard'
+                    ? { role: 'guard' as const, guardTab: 'earnings' as const }
+                    : { role: 'staff' as const, staffSection: 'payments' as const };
+                setWebsiteAccountView(null);
+                applyAppRoute(dest);
+                syncAppRoute(dest);
+              }}
+            />
+          </div>
+        );
+      }
+    }
+
+    return (
+      <>
+        <WebsiteAccountShell
+          role={productRole}
+          userName={currentUser.name}
+          userEmail={currentUser.email}
+          avatarUrl={currentUser.avatar}
+          activeView={websiteAccountView}
+          onNavigate={goWebsiteAccount}
+          onOpenApp={openSignedInApp}
+          onSignOut={handleSignOut}
+          accountMenu={{
+            userName: currentUser.name,
+            userSubtitle: currentUser.email,
+            avatarUrl: currentUser.avatar,
+            onOpenProfile: () => goWebsiteAccount('profile'),
+            onOpenSettings: () => goWebsiteAccount('settings'),
+            onSignOut: handleSignOut,
+            ...accountMenuExtras,
+          }}
+        >
+          {accountBody}
+        </WebsiteAccountShell>
         <InstallPrompt />
       </>
     );

@@ -107,6 +107,30 @@ describe('client and guard nested job routes', () => {
   });
 });
 
+describe('website account vs operational apps', () => {
+  it('parses the website account portal separately from role apps', () => {
+    assert.deepEqual(parseAppRoute('/account'), {
+      role: 'client',
+      websiteAccount: true,
+      accountView: 'home',
+    });
+    assert.equal(parseAppRoute('/account/billing')?.websiteAccount, true);
+    assert.equal(parseAppRoute('/account/billing')?.accountView, 'billing');
+    assert.equal(parseAppRoute('/client/home')?.websiteAccount, undefined);
+    assert.equal(parseAppRoute('/guard/map')?.role, 'guard');
+    assert.equal(parseAppRoute('/staff/overview')?.role, 'staff');
+  });
+
+  it('aliases /app/:role onto the dedicated app paths', () => {
+    assert.deepEqual(parseAppRoute('/app/client/home'), {
+      role: 'client',
+      clientView: 'home',
+    });
+    assert.equal(parseAppRoute('/app/guard/map')?.guardTab, 'map');
+    assert.equal(parseAppRoute('/app/staff/jobs')?.staffSection, 'jobs');
+  });
+});
+
 describe('routeHasNestedSelection', () => {
   it('detects nested route params', () => {
     const route: AppRoute = { role: 'staff', staffSection: 'guards', staffGuardId: 'g1' };

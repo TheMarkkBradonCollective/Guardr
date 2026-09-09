@@ -81,16 +81,16 @@ export function AuthFormHeader({
 
   const workspaceLabel =
     role === 'guard'
-      ? 'Guard workspace'
+      ? 'Guard App'
       : role === 'staff'
-        ? 'Staff workspace'
+        ? 'Staff App'
         : isPersonalClient
-          ? 'Personal account'
+          ? 'Client App · Personal'
           : isSecurityCompanyClient
-            ? 'Security company account'
+            ? 'Client App · Security company'
             : isBusinessClient
-              ? 'Business account'
-              : 'Customer workspace';
+              ? 'Client App · Business'
+              : 'Client App';
 
   const clientSignupSubtitle = isPersonalClient
     ? 'You hire and pay as an individual. Request coverage once or as often as you need — including recurring services.'

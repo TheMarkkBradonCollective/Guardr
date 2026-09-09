@@ -1,0 +1,468 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRODUCT APPS — four environments, one design system
+   Shared brand tokens live in guardr-design-tokens.css / surface-foundation.css.
+   Each product app gets its own chrome, density, and navigation language.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body[data-product-app='website'] {
+  --product-chrome: var(--uber-bg, #f6f6f6);
+  --product-ink: var(--uber-text, #000);
+  --product-accent: var(--uber-text, #000);
+}
+
+body[data-product-app='client'] {
+  --product-chrome: #f3f4f6;
+  --product-ink: #111827;
+  --product-accent: #111827;
+}
+
+body[data-product-app='guard'] {
+  --product-chrome: #0f0f0f;
+  --product-ink: #fafafa;
+  --product-accent: #fafafa;
+}
+
+body[data-product-app='staff'] {
+  --product-chrome: #111111;
+  --product-ink: #f5f5f5;
+  --product-accent: #000;
+}
+
+/* ── Install banner (operational apps in a browser tab) ── */
+
+.app-install-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  background: var(--uber-text, #000);
+  color: var(--uber-bg, #fff);
+  font-size: 13px;
+  line-height: 1.35;
+  z-index: 40;
+}
+
+.app-install-banner-copy {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.app-install-banner-copy a,
+.app-install-banner-action {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.app-install-banner-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 6px 12px;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
+.app-install-banner-dismiss {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* ── Open-app CTA ── */
+
+.open-app-cta {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 20px;
+  border: 1px solid var(--uber-border, #e5e5e5);
+  border-radius: 16px;
+  background: var(--uber-bg, #fff);
+}
+
+.open-app-cta-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--uber-text, #000);
+  color: var(--uber-bg, #fff);
+  flex-shrink: 0;
+}
+
+.open-app-cta-title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.open-app-cta-body {
+  margin: 0 0 14px;
+  color: var(--uber-text-muted, #6b6b6b);
+  font-size: 14px;
+  line-height: 1.45;
+  max-width: 52ch;
+}
+
+.open-app-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.open-app-cta-install {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--uber-text, #000);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.open-app-cta--compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* ── Website account portal ── */
+
+.website-account {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #f6f6f6;
+  color: #111;
+}
+
+.website-account-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.website-account-top-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  min-height: 64px;
+}
+
+.website-account-brand,
+.website-account-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.website-account-logo {
+  display: flex;
+  align-items: center;
+}
+
+.website-account-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.website-account-env {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6b6b;
+  border: 1px solid #e5e5e5;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.website-account-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  gap: 24px;
+  padding: 24px 20px 48px;
+}
+
+.website-account-nav {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.website-account-user {
+  margin: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.website-account-user-name {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.website-account-user-email {
+  font-size: 13px;
+  color: #6b6b6b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.website-account-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 550;
+  color: #333;
+  background: transparent;
+}
+
+.website-account-nav-item.is-active {
+  background: #111;
+  color: #fff;
+}
+
+.website-account-signout {
+  margin-top: 16px;
+  color: #6b6b6b;
+}
+
+.website-account-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.website-account-home h1 {
+  margin: 0 0 8px;
+  font-size: clamp(1.75rem, 3vw, 2.4rem);
+  letter-spacing: -0.04em;
+  font-weight: 750;
+}
+
+.website-account-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6b6b;
+}
+
+.website-account-lead {
+  margin: 0 0 20px;
+  max-width: 52ch;
+  color: #4b4b4b;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.website-account-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.website-account-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 28px 0;
+}
+
+.website-account-metrics article {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.website-account-metric-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6b6b;
+  margin-bottom: 6px;
+}
+
+.website-account-metrics strong {
+  display: block;
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+}
+
+.website-account-metrics p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b6b6b;
+}
+
+.website-account-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.website-account-card {
+  text-align: left;
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  padding: 20px;
+  min-height: 168px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.website-account-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.website-account-card p {
+  margin: 0;
+  flex: 1;
+  color: #5b5b5b;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.website-account-card span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.website-account-mobile-nav {
+  display: none;
+}
+
+.website-account-panel {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  padding: 8px;
+  min-height: 280px;
+}
+
+/* Guard field chrome: larger hits, darker shell on mobile */
+body[data-product-app='guard'][data-surface='mobile'] .sfm-shell {
+  --sf-header-bg: #0f0f0f;
+}
+
+body[data-product-app='guard'][data-surface='mobile'] .sfm-tabbar {
+  background: #111;
+  color: #fff;
+}
+
+body[data-product-app='client'] .sf-shell {
+  --product-workspace-label: 'Client App';
+}
+
+body[data-product-app='staff'] .sf-shell {
+  --product-workspace-label: 'Staff App';
+}
+
+@media (max-width: 900px) {
+  .website-account-body {
+    grid-template-columns: 1fr;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .website-account-nav {
+    display: none;
+  }
+
+  .website-account-metrics,
+  .website-account-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .website-account-mobile-nav {
+    display: flex;
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid #e8e8e8;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 20;
+  }
+
+  .website-account-mobile-nav button {
+    flex: 1;
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b6b6b;
+  }
+
+  .website-account-mobile-nav button.is-active {
+    color: #111;
+  }
+
+  .app-install-banner {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .open-app-cta,
+  .website-account-card {
+    transition: none;
+  }
+}

@@ -7,6 +7,8 @@ import { SurfaceAppShell } from '../../surfaces/SurfaceAppShell';
 import type { SurfaceDestination } from '../../surfaces/surfaceNavigation';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import type { SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
+import type { ProductApp } from '../../lib/productApps';
+import { AppInstallBanner } from '../apps/AppInstallBanner';
 
 /**
  * A destination a role can reach.
@@ -47,13 +49,19 @@ interface RoleAppShellProps {
   sidebarPrimaryAction?: SurfacePrimaryAction | SidebarPrimaryAction;
   sidebarFooter?: React.ReactNode;
   headerContext?: React.ReactNode;
+  /** Which product app this shell belongs to — never mix roles. */
+  productApp?: Exclude<ProductApp, 'website'>;
+  /** Guard/Client use thumb tabs on phone; staff keeps a drawer. */
+  mobilePrimaryNav?: 'tabs' | 'drawer';
+  mobileTabRanks?: Record<string, number>;
 }
 
 /**
  * Guard and client entry point into the three surface applications.
  *
  * Mobile, tablet, and desktop each load their own independent shell via
- * `SurfaceAppShell`. On phone, every role uses the same hamburger drawer nav.
+ * `SurfaceAppShell`. Guard and Client use thumb-first bottom tabs on phone;
+ * Staff keeps a destination drawer because the catalog is much larger.
  */
 export function RoleAppShell({
   title,
@@ -76,6 +84,9 @@ export function RoleAppShell({
   sidebarPrimaryAction,
   sidebarFooter,
   headerContext,
+  productApp = 'client',
+  mobilePrimaryNav = 'tabs',
+  mobileTabRanks,
 }: RoleAppShellProps) {
   const { surface } = useSurface();
   const isMapMode = variant === 'dark';
@@ -94,23 +105,27 @@ export function RoleAppShell({
         badge: item.badge,
         section,
         tabletQuick: options.quick,
+        mobileRank: mobileTabRanks?.[item.id],
       }));
 
     return [
-      ...build(navItems, 'Work', { quick: true }),
+      ...build(navItems, productApp === 'guard' ? 'Field' : 'Work', { quick: true }),
       ...build(messagesNavItems, 'Messages'),
-      ...build(overflowNavItems, 'Manage'),
+      ...build(overflowNavItems, productApp === 'guard' ? 'Account' : 'Manage'),
     ];
-  }, [navItems, messagesNavItems, overflowNavItems]);
+  }, [navItems, messagesNavItems, overflowNavItems, productApp, mobileTabRanks]);
 
   return (
     <SurfaceAppShell
       title={title}
-      workspaceLabel={workspaceLabel ?? 'Client workspace'}
+      workspaceLabel={
+        workspaceLabel ??
+        (productApp === 'guard' ? 'Guard App' : productApp === 'staff' ? 'Staff App' : 'Client App')
+      }
       destinations={destinations}
       activeId={activeNavId}
       onNavigate={onNavigate}
-      mobilePrimaryNav="drawer"
+      mobilePrimaryNav={mobilePrimaryNav}
       notifications={notifications ?? headerRight}
       identity={
         <ProfileAvatar
@@ -135,6 +150,7 @@ export function RoleAppShell({
       hidePrimaryNav={hideBottomNav}
       bleed={bleed}
     >
+      <AppInstallBanner productApp={productApp} />
       {children}
     </SurfaceAppShell>
   );

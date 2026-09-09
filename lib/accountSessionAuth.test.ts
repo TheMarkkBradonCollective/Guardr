@@ -4,6 +4,7 @@ import {
   hasFinancePlatformAccess,
   isStaffPlatformRole,
   resolvePlatformRole,
+  sessionOwnsProductApp,
 } from './accountSessionAuth';
 
 describe('accountSessionAuth', () => {
@@ -47,5 +48,14 @@ describe('accountSessionAuth', () => {
     assert.equal(isStaffPlatformRole('finance'), true);
     assert.equal(hasFinancePlatformAccess('finance'), true);
     assert.equal(hasFinancePlatformAccess('administrator', 'Finance'), true);
+  });
+
+  it('isolates product apps at the session layer', () => {
+    assert.equal(sessionOwnsProductApp({ platformRole: 'client' }, 'client'), true);
+    assert.equal(sessionOwnsProductApp({ platformRole: 'client' }, 'guard'), false);
+    assert.equal(sessionOwnsProductApp({ platformRole: 'client' }, 'staff'), false);
+    assert.equal(sessionOwnsProductApp({ platformRole: 'guard' }, 'staff'), false);
+    assert.equal(sessionOwnsProductApp({ platformRole: 'director' }, 'staff'), true);
+    assert.equal(sessionOwnsProductApp({ platformRole: 'finance' }, 'staff'), true);
   });
 });

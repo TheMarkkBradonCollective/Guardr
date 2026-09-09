@@ -140,16 +140,16 @@ export function clientPrimaryNav(
   const type = resolveType(clientOrType);
   if (type === 'security-company') {
     return [
-      { id: 'home', label: 'Home' },
+      { id: 'home', label: 'Overview' },
       { id: 'requests', label: 'Jobs' },
       { id: 'operations', label: 'Live ops' },
       { id: 'roster', label: 'Roster' },
     ];
   }
   return [
-    { id: 'home', label: 'Home' },
-    { id: 'requests', label: 'Jobs' },
-    { id: 'map', label: 'Map' },
+    { id: 'home', label: 'Overview' },
+    { id: 'requests', label: type === 'personal' ? 'Coverage' : 'Jobs' },
+    { id: 'map', label: 'Activity' },
   ];
 }
 

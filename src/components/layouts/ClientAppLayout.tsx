@@ -170,41 +170,29 @@ export function ClientAppLayout({
           : activeView;
 
   const navItems = useMemo(() => {
-    if (caps.isSecurityCompany) {
-      return caps.primaryNav.map((item) => {
-        if (item.id === 'home') return { id: 'home', label: item.label, icon: Home };
-        if (item.id === 'requests') {
-          return {
-            id: 'requests',
-            label: item.label,
-            icon: ClipboardList,
-            children: [
-              { id: 'requests-today', label: 'Today' },
-              { id: 'requests-future', label: 'Future' },
-              { id: 'requests-past', label: 'Past' },
-            ],
-          };
-        }
-        if (item.id === 'operations') return { id: 'operations', label: item.label, icon: Radio };
-        if (item.id === 'roster') return { id: 'roster', label: item.label, icon: UsersRound };
-        return { id: item.id, label: item.label, icon: Home };
-      });
-    }
-    return [
-      { id: 'home', label: 'Home', icon: Home },
-      {
-        id: 'requests',
-        label: 'Jobs',
-        icon: ClipboardList,
-        children: [
-          { id: 'requests-today', label: 'Today' },
-          { id: 'requests-future', label: 'Future' },
-          { id: 'requests-past', label: 'Past' },
-        ],
-      },
-      { id: 'map', label: 'Map', icon: Map },
-    ];
-  }, [caps.isSecurityCompany, caps.primaryNav]);
+    const ICONS: Record<string, typeof Home> = {
+      home: Home,
+      requests: ClipboardList,
+      map: Map,
+      operations: Radio,
+      roster: UsersRound,
+    };
+    return caps.primaryNav.map((item) => {
+      if (item.id === 'requests') {
+        return {
+          id: 'requests',
+          label: item.label,
+          icon: ClipboardList,
+          children: [
+            { id: 'requests-today', label: 'Today' },
+            { id: 'requests-future', label: 'Future' },
+            { id: 'requests-past', label: 'Past' },
+          ],
+        };
+      }
+      return { id: item.id, label: item.label, icon: ICONS[item.id] ?? Home };
+    });
+  }, [caps.primaryNav]);
 
   const messagesNavItems = useMemo(
     () => [
@@ -301,7 +289,10 @@ export function ClientAppLayout({
       fullBleed={fullBleed}
       hideHeader={shellHideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
-      workspaceLabel="Client workspace"
+      workspaceLabel="Client App"
+      productApp="client"
+      mobilePrimaryNav="tabs"
+      mobileTabRanks={{ home: 1, requests: 2, map: 3, operations: 3, messages: 4 }}
       headerContext={headerContext}
       sidebarFooter={sidebarFooter}
     >
