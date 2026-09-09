@@ -107,6 +107,7 @@ export function AppWelcomeHero({
       justifyContent="flex-start"
       flex="1"
       minHeight="0"
+      overflow="auto"
     >
       <p className="app-welcome-brand">Guardr</p>
       <AppWelcomeShellBadge

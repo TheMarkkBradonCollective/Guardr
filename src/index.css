@@ -23584,6 +23584,7 @@ html.theme-dark .app-welcome-backdrop-band {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  gap: 1rem;
   padding-inline: max(1.25rem, env(safe-area-inset-left, 0px)) max(1.25rem, env(safe-area-inset-right, 0px));
 }
 
@@ -23591,14 +23592,14 @@ html.theme-dark .app-welcome-backdrop-band {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   max-width: 22rem;
-  padding-block: 0.75rem 1.25rem;
+  padding-block: 0.75rem 0.5rem;
   animation: app-welcome-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -23651,7 +23652,7 @@ html.theme-dark .app-welcome-backdrop-band {
   flex-direction: column;
   gap: 0.875rem;
   padding:
-    0.75rem
+    1.25rem
     0
     max(1.35rem, var(--gr-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   border: none;

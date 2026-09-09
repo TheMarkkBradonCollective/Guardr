@@ -97,6 +97,7 @@ export function AppHomeScreen({
         flexDirection={isTablet ? 'row' : 'column'}
         flex="1"
         minHeight="0"
+        overflow="hidden"
         position="relative"
         overrides={{ Block: { style: { zIndex: 1 } } }}
       >

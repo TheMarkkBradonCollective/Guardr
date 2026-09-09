@@ -8,8 +8,19 @@ async function waitForAppReady(page: Page) {
 }
 
 async function emulateInstalledApp(page: Page, app: 'client' | 'guard' | 'staff') {
+  await page.route('**/native-product-app.js', async (route) => {
+    await route.fulfill({
+      contentType: 'application/javascript',
+      body: `window.__GUARDR_NATIVE_PRODUCT_APP__ = ${JSON.stringify(app)};`,
+    });
+  });
   await page.addInitScript((productApp) => {
     window.__GUARDR_NATIVE_PRODUCT_APP__ = productApp;
+    try {
+      localStorage.setItem('guardr_product_app', productApp);
+    } catch {
+      /* ignore */
+    }
     const original = window.matchMedia.bind(window);
     window.matchMedia = ((query: string) => {
       if (query.includes('display-mode: standalone')) {
@@ -44,12 +55,12 @@ test.describe('installed Hire / Work / Staff apps', () => {
     await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 
     const sub = page.locator('.app-welcome-sub');
-    const signIn = page.getByRole('button', { name: 'Sign in', exact: true });
+    const dock = page.locator('.app-welcome-dock');
     const subBox = await sub.boundingBox();
-    const btnBox = await signIn.boundingBox();
+    const dockBox = await dock.boundingBox();
     expect(subBox, 'welcome subtitle should be laid out').toBeTruthy();
-    expect(btnBox, 'Sign in should be laid out').toBeTruthy();
-    expect(subBox!.y + subBox!.height).toBeLessThanOrEqual(btnBox!.y + 1);
+    expect(dockBox, 'sign-in dock should be laid out').toBeTruthy();
+    expect(subBox!.y + subBox!.height).toBeLessThanOrEqual(dockBox!.y + 1);
   });
 
   test('Work Sign in opens the guard form, not Log in as', async ({ page }) => {
