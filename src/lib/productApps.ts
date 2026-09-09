@@ -172,19 +172,48 @@ export function persistProductApp(app: ProductApp): void {
  * Native APK / PWA should open the role app, never the marketing website.
  * Browser tabs open the website unless the URL is already an app path.
  */
+declare global {
+  interface Window {
+    __GUARDR_NATIVE_PRODUCT_APP__?: string;
+  }
+}
+
+export const NATIVE_APPLICATION_IDS: Record<Exclude<ProductApp, 'website'>, string> = {
+  client: 'com.signaturesecurity.guardr.client',
+  guard: 'com.signaturesecurity.guardr.guard',
+  staff: 'com.signaturesecurity.guardr.staff',
+};
+
+export function parseBakedNativeProductApp(
+  value: string | null | undefined,
+): Exclude<ProductApp, 'website'> | null {
+  if (value === 'client' || value === 'guard' || value === 'staff') return value;
+  return null;
+}
+
+/** Product app baked into a role-specific APK (empty string on website / combined APK). */
+export function bakedNativeProductApp(): Exclude<ProductApp, 'website'> | null {
+  if (typeof window === 'undefined') return null;
+  return parseBakedNativeProductApp(window.__GUARDR_NATIVE_PRODUCT_APP__);
+}
+
 export function resolveProductApp(input: {
   url?: string;
   isInstalledShell?: boolean;
   stored?: ProductApp | null;
+  baked?: ProductApp | null;
 }): ProductApp {
   const url = input.url ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
   const fromPath = productAppFromPath(url);
   if (fromPath !== 'website') return fromPath;
   if (isWebsiteAccountPath(url)) return 'website';
+  const baked = parseBakedNativeProductApp(
+    input.baked === undefined ? bakedNativeProductApp() : input.baked,
+  );
   if (input.isInstalledShell ?? isAppExperience()) {
-    return input.stored ?? readStoredProductApp() ?? 'website';
+    return baked ?? input.stored ?? readStoredProductApp() ?? 'website';
   }
-  return 'website';
+  return baked ?? 'website';
 }
 
 export function shouldLandOnWebsiteAccount(isInstalledShell = isAppExperience()): boolean {

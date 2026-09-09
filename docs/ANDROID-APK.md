@@ -5,11 +5,21 @@ Guardr ships as a **Capacitor-wrapped Android APK** alongside the web/PWA at [gu
 ## Download
 
 - **Install page:** [https://guardr.co/download/](https://guardr.co/download/)
-- **Direct APK (QR code):** [https://www.guardr.co/download/guardr.apk?v=167](https://www.guardr.co/download/guardr.apk?v=167) — append `?v=<build>` to bust cache after updates
+- **All three apps (zip):** [https://www.guardr.co/download/guardr-apps.zip](https://www.guardr.co/download/guardr-apps.zip) — Client, Guard, and Staff APKs
+- **Direct APK (QR code / combined):** [https://www.guardr.co/download/guardr.apk](https://www.guardr.co/download/guardr.apk) — append `?v=<build>` to bust cache after updates
 
-The install page compares your **APK** vs **Save to Home Screen (PWA)** install, checks whether an APK update is needed (reads the version inside your installed APK), and explains the tradeoffs (manual APK updates vs auto-updating web shortcut).
+| App | Package | File |
+|-----|---------|------|
+| Client App | `com.signaturesecurity.guardr.client` | `guardr-client.apk` |
+| Guard App | `com.signaturesecurity.guardr.guard` | `guardr-guard.apk` |
+| Staff App | `com.signaturesecurity.guardr.staff` | `guardr-staff.apk` |
+| Combined (legacy) | `com.signaturesecurity.guardr` | `guardr.apk` |
 
-Share the install page with guards in the Signature Security network.
+The three role APKs can be installed side by side. Each opens its own app (not the marketing website).
+
+The install page compares **APK** vs **Save to Home Screen (PWA)**, checks whether an APK update is needed, and explains the tradeoffs (manual APK updates vs auto-updating web shortcut).
+
+Share the install page with the Signature Security network.
 
 ## Build locally
 
@@ -30,17 +40,18 @@ export ANDROID_HOME="$HOME/Android/Sdk"
 
 ```bash
 npm install
-npm run android:apk
+npm run android:apk        # combined APK → public/download/guardr.apk
+npm run android:apk:all    # Client + Guard + Staff + zip
 ```
 
-This will:
+`npm run android:apk:all` will:
 
 1. Sync `public/download/version.json` and `android/app/build.gradle` from `package.json`
 2. Run `npm run apk:audit` to catch version drift before building
 3. Build the Vite web bundle with `VITE_APP_URL=https://guardr.co`
 4. Sync assets into `android/`
-5. Run `./gradlew assembleRelease`
-6. Copy the APK to `public/download/guardr.apk` for static hosting
+5. Assemble three sideload APKs (`-PguardrProductApp=client|guard|staff`) plus the combined APK
+6. Copy binaries to `public/download/` and zip them as `guardr-apps.zip`
 7. Re-run the parity audit (warnings if the bundled web assets are stale)
 
 ### Verify without building
@@ -115,7 +126,11 @@ The **play** flavor omits sideload-only permissions; **sideload** (`npm run andr
 
 ## CI
 
-GitHub Actions workflow `.github/workflows/android-apk.yml` builds the APK on demand and uploads it as an artifact.
+GitHub Actions workflow `.github/workflows/android-apk.yml` builds all three role APKs, the combined APK, and `guardr-apps.zip`, then uploads them as the `guardr-android-apk` artifact.
+
+Run the workflow: [Android Release](https://github.com/TheMarkkBradonCollective/Guardr/actions/workflows/android-apk.yml)
+
+Firebase `google-services.json` currently lists `com.signaturesecurity.guardr`. Role APKs rewrite `package_name` at build time so Gradle accepts the suffixed ids. For native push on the three packages, add matching Android apps in the same Firebase project and ship a `google-services.json` with all four client entries.
 
 Required secrets for a push-enabled APK:
 
