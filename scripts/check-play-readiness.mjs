@@ -112,9 +112,15 @@ if (existsSync(googleServicesPath)) {
 }
 
 if (await fileExists('assets/play-store/icon-512.png')) {
-  ok('Play Store icon generated (assets/play-store/icon-512.png)');
+  ok('Play Store brand icon generated (assets/play-store/icon-512.png)');
 } else {
-  warn('Run npm run play:assets to generate 512×512 icon and feature graphic');
+  warn('Run npm run play:assets to generate 512×512 icons and feature graphic');
+}
+
+if (await fileExists('assets/play-store/staff-icon-512.png')) {
+  ok('Staff Play icon is white + black (assets/play-store/staff-icon-512.png)');
+} else {
+  warn('Run npm run play:assets to generate the Staff listing icon (white field, black logo)');
 }
 
 if (await fileExists('docs/play-store-listing-copy.md')) {

@@ -105,6 +105,7 @@ export function LandingAppDownloads({
                   borderRadius: 12,
                   marginBottom: 12,
                   background: app.id === 'staff' ? '#ffffff' : '#000000',
+                  border: app.id === 'staff' ? `1px solid ${theme.colors.borderOpaque}` : undefined,
                 }}
               />
               <Block

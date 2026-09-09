@@ -237,7 +237,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
                       width={40}
                       height={40}
                       alt=""
-                      className="install-product-card-icon"
+                      className={`install-product-card-icon${app.id === 'staff' ? ' install-product-card-icon--staff' : ''}`}
                       style={{ objectFit: 'cover', borderRadius: 10 }}
                     />
                     <div className="install-product-card-head">

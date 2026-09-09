@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { bakedNativeProductApp } from '../productApps';
 import { applyThemeBranding } from './themeBranding';
 import { applyNativeThemeChrome } from './nativeThemeChrome';
 
@@ -8,6 +9,7 @@ export {
   THEME_ICON_BACKGROUNDS,
   THEME_BROWSER_COLORS,
   applyThemeBranding,
+  themeChromeColor,
   themeIconAssetPath,
 } from './themeBranding';
 
@@ -18,16 +20,19 @@ export const THEME_LABELS: Record<ThemeMode, string> = {
   light: 'Light',
 };
 
-/** Default for PWA / web — white install icon and field-readable UI. */
+/** Default for the website — field-readable light UI. */
 export const DEFAULT_THEME: ThemeMode = 'light';
 
-/** APK defaults to dark to match black launcher icon and splash. */
+/** Hire / Work APKs default to dark to match the black launcher. */
 export const DEFAULT_NATIVE_THEME: ThemeMode = 'dark';
 
-function defaultThemeForPlatform(): ThemeMode {
-  if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
-    return DEFAULT_NATIVE_THEME;
-  }
+/** Staff APK is a white app with a black logo, so it opens in light theme. */
+export const DEFAULT_STAFF_NATIVE_THEME: ThemeMode = 'light';
+
+export function defaultThemeForPlatform(): ThemeMode {
+  if (typeof window === 'undefined') return DEFAULT_THEME;
+  if (bakedNativeProductApp() === 'staff') return DEFAULT_STAFF_NATIVE_THEME;
+  if (Capacitor.isNativePlatform()) return DEFAULT_NATIVE_THEME;
   return DEFAULT_THEME;
 }
 

@@ -19,6 +19,14 @@ export function iconChromeForLabel(label) {
   return { background: '#000000', mark: 'white', text: '#FFFFFF' };
 }
 
+/** Capacitor splash / status bar for a role APK. Staff is a white shell. */
+export function nativeChromeForProductApp(productApp) {
+  if (productApp === 'staff') {
+    return { backgroundColor: '#FFFFFF', statusBarStyle: 'LIGHT' };
+  }
+  return { backgroundColor: '#000000', statusBarStyle: 'DARK' };
+}
+
 async function tintMarkPng(iconMaster, size, color) {
   const { data, info } = await iconMaster
     .clone()

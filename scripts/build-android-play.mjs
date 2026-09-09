@@ -17,9 +17,8 @@ import { isReleaseKeystoreConfigured, writeKeystoreFromEnv } from './write-keyst
 import {
   ANDROID_ROLES,
   generateAndroidIcons,
-  patchGoogleServicesPackage,
-  restoreGoogleServices,
   rolePackage,
+  withRoleBuildPatches,
   writeNativeProductAppJs,
 } from './android-role-build.mjs';
 
@@ -55,16 +54,11 @@ const aabPaths = [];
 try {
   for (const role of ANDROID_ROLES) {
     console.log(`\n→ Bundling ${role.id} Play AAB (${rolePackage(role.id)})…`);
-    await writeNativeProductAppJs(role.id);
-    generateAndroidIcons(role.id);
-    const originalServices = await patchGoogleServicesPackage(rolePackage(role.id));
-    try {
+    await withRoleBuildPatches(role.id, async () => {
       run(GRADLE, ['bundlePlayRelease', `-PguardrProductApp=${role.id}`], {
         cwd: path.join(ROOT, 'android'),
       });
-    } finally {
-      await restoreGoogleServices(originalServices);
-    }
+    });
     if (!existsSync(playAab)) {
       console.error(`✗ Missing Gradle output: ${playAab}`);
       process.exit(1);

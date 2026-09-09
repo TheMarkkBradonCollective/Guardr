@@ -23,12 +23,14 @@ const config = {
     SplashScreen: {
       launchAutoHide: false,
       launchShowDuration: 0,
+      // Hire/Work default. Staff APK builds patch this to #FFFFFF.
       backgroundColor: '#000000',
       showSpinner: false,
     },
     StatusBar: {
-      // Light (white) status-bar icons on the black APK splash/shell.
+      // Light (white) status-bar icons on the black Hire/Work splash.
       // Capacitor: Style.Dark = light icons; Style.Light = dark icons.
+      // Staff builds patch style to LIGHT and background to #FFFFFF.
       style: 'DARK',
       backgroundColor: '#000000',
       overlaysWebView: false,

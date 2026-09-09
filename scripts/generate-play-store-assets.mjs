@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { PRODUCT_ICON_LABELS, renderBrandedIcon } from './branded-icon.mjs';
 
 const ROOT = process.cwd();
 const ICON_SOURCE = path.join(ROOT, 'assets', 'logos', 'icon-source.png');
@@ -107,10 +108,18 @@ async function main() {
   await sharp(await renderStoreIcon(iconMaster, 512)).toFile(path.join(OUT_DIR, 'icon-512.png'));
   await sharp(await renderFeatureGraphic(iconMaster)).toFile(path.join(OUT_DIR, 'feature-graphic-1024x500.png'));
 
+  for (const [productApp, label] of Object.entries(PRODUCT_ICON_LABELS)) {
+    const dest = path.join(OUT_DIR, `${productApp}-icon-512.png`);
+    await sharp(await renderBrandedIcon(iconMaster, 512, { label })).toFile(dest);
+  }
+
   console.log('Generated Play Store assets:');
-  console.log(`  ${path.join(OUT_DIR, 'icon-512.png')}`);
+  console.log(`  ${path.join(OUT_DIR, 'icon-512.png')}  (unlabeled brand)`);
   console.log(`  ${path.join(OUT_DIR, 'feature-graphic-1024x500.png')}`);
-  console.log('\nUpload these in Play Console → Main store listing.');
+  console.log(`  ${path.join(OUT_DIR, 'client-icon-512.png')}  Hire — black + white`);
+  console.log(`  ${path.join(OUT_DIR, 'guard-icon-512.png')}  Work — black + white`);
+  console.log(`  ${path.join(OUT_DIR, 'staff-icon-512.png')}  Staff — white + black`);
+  console.log('\nUpload the matching 512 icon in each Play Console listing.');
   console.log('Phone screenshots still need to be captured from a device or emulator.');
 }
 

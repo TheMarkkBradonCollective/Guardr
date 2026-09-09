@@ -24,9 +24,8 @@ import {
 import {
   ANDROID_ROLES,
   generateAndroidIcons,
-  patchGoogleServicesPackage,
-  restoreGoogleServices,
   rolePackage,
+  withRoleBuildPatches,
   writeNativeProductAppJs,
 } from './android-role-build.mjs';
 
@@ -49,16 +48,11 @@ const apkPaths = [];
 try {
   for (const role of ANDROID_ROLES) {
     console.log(`\n→ Assembling ${role.id} sideload APK (${rolePackage(role.id)})…`);
-    await writeNativeProductAppJs(role.id);
-    generateAndroidIcons(role.id);
-    const originalServices = await patchGoogleServicesPackage(rolePackage(role.id));
-    try {
+    await withRoleBuildPatches(role.id, async () => {
       run(GRADLE, ['assembleSideloadRelease', `-PguardrProductApp=${role.id}`], {
         cwd: path.join(ROOT, 'android'),
       });
-    } finally {
-      await restoreGoogleServices(originalServices);
-    }
+    });
     if (!existsSync(SIDELOAD_APK)) {
       console.error(`✗ Missing Gradle output: ${SIDELOAD_APK}`);
       process.exit(1);
