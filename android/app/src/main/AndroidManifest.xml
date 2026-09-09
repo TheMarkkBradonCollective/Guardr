@@ -23,6 +23,32 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="guardr-client" />
+                <data android:scheme="guardr-guard" />
+                <data android:scheme="guardr-staff" />
+                <data android:scheme="guardr" />
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="www.guardr.co" android:pathPrefix="/client" />
+                <data android:scheme="https" android:host="www.guardr.co" android:pathPrefix="/guard" />
+                <data android:scheme="https" android:host="www.guardr.co" android:pathPrefix="/staff" />
+                <data android:scheme="https" android:host="www.guardr.co" android:pathPrefix="/account" />
+                <data android:scheme="https" android:host="www.guardr.co" android:pathPrefix="/app" />
+                <data android:scheme="https" android:host="guardr.co" android:pathPrefix="/client" />
+                <data android:scheme="https" android:host="guardr.co" android:pathPrefix="/guard" />
+                <data android:scheme="https" android:host="guardr.co" android:pathPrefix="/staff" />
+                <data android:scheme="https" android:host="guardr.co" android:pathPrefix="/account" />
+                <data android:scheme="https" android:host="guardr.co" android:pathPrefix="/app" />
+            </intent-filter>
+
         </activity>
 
         <meta-data

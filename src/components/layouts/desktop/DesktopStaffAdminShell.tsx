@@ -16,6 +16,7 @@ import { useSurface } from '../../../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../../../surfaces/SurfaceAppShell';
 import type { SurfaceDestination } from '../../../surfaces/surfaceNavigation';
 import { ProfileAvatar } from '../../profile/ProfileAvatar';
+import { AppInstallBanner } from '../../apps/AppInstallBanner';
 
 interface DesktopStaffAdminShellProps {
   children: React.ReactNode;
@@ -164,7 +165,7 @@ export function DesktopStaffAdminShell({
   return (
     <SurfaceAppShell
       title={screenTitle}
-      workspaceLabel="Staff operations"
+      workspaceLabel="Staff App"
       destinations={destinations}
       activeId={navHighlight}
       onNavigate={handleNav}
@@ -203,6 +204,7 @@ export function DesktopStaffAdminShell({
         },
       ]}
     >
+      <AppInstallBanner productApp="staff" />
       {children}
     </SurfaceAppShell>
   );

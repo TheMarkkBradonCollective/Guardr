@@ -1306,8 +1306,8 @@ export function GuardDashboard({
   const showVehicleTab = guardVehicleTabVisible(guard);
 
   const GUARD_PRIMARY_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
-    { id: 'map', icon: Map, label: 'Map' },
-    { id: 'myJobs', icon: Briefcase, label: 'Jobs' },
+    { id: 'map', icon: Map, label: 'Field' },
+    { id: 'myJobs', icon: Briefcase, label: 'Shifts' },
   ];
 
   const GUARD_MESSAGES_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
@@ -1316,11 +1316,11 @@ export function GuardDashboard({
   ];
 
   const GUARD_MANAGEMENT_NAV: { id: GuardTab; icon: typeof Map; label: string }[] = [
-    { id: 'availability', icon: CalendarDays, label: 'Availability' },
+    { id: 'availability', icon: CalendarDays, label: 'Schedule' },
     { id: 'preferences', icon: SlidersHorizontal, label: 'Preferences' },
-    { id: 'performance', icon: BarChart3, label: 'Performance' },
+    { id: 'performance', icon: BarChart3, label: 'Standing' },
     ...(showVehicleTab ? [{ id: 'vehicle' as const, icon: Car, label: 'Vehicle' }] : []),
-    { id: 'earnings', icon: DollarSign, label: 'Payments' },
+    { id: 'earnings', icon: DollarSign, label: 'Pay' },
   ];
 
   const accountMenu = {
@@ -2012,7 +2012,10 @@ export function GuardDashboard({
       fullBleed={shellFullBleed}
       hideBottomNav={showShiftOverlay}
       variant={shellVariant}
-      workspaceLabel="Guard workspace"
+      workspaceLabel="Guard App"
+      productApp="guard"
+      mobilePrimaryNav="tabs"
+      mobileTabRanks={{ map: 1, myJobs: 2, messages: 3 }}
       sidebarFooter={
         <SidebarFooterLinks
           onOpenSettings={() => setTab('settings')}

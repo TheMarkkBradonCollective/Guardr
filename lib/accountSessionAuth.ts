@@ -176,6 +176,16 @@ async function verifyFieldGuardSession(
   return { userId: data.id, email, role: platformRole, platformRole, sideRole };
 }
 
+/** True when the verified session is allowed to use this product app. */
+export function sessionOwnsProductApp(
+  session: Pick<VerifiedSession, 'platformRole'>,
+  app: 'client' | 'guard' | 'staff'
+): boolean {
+  if (app === 'client') return session.platformRole === 'client';
+  if (app === 'guard') return session.platformRole === 'guard';
+  return isStaffPlatformRole(session.platformRole);
+}
+
 export async function verifyAccountSession(
   db: SupabaseClient,
   credentials: SessionCredentials | null | undefined

@@ -120,3 +120,27 @@ test.describe('Guardr public pages', () => {
     await expect(page.locator('#auth-accept-terms')).toBeChecked();
   });
 });
+
+test.describe('four product environments', () => {
+  test('public website publishes the website product app', async ({ page }) => {
+    await page.goto('/');
+    await waitForAppReady(page);
+    await expect(page.locator('body')).toHaveAttribute('data-product-app', 'website');
+    await expect(page.locator('body')).toContainText(/Client App/i);
+    await expect(page.locator('body')).toContainText(/Guard App/i);
+  });
+
+  test('account and app URLs send signed-out visitors to sign-in', async ({ page }) => {
+    await page.goto('/account');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true }).first()).toBeVisible();
+
+    await page.goto('/client/home');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true }).first()).toBeVisible();
+
+    await page.goto('/guard/map');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true }).first()).toBeVisible();
+  });
+});

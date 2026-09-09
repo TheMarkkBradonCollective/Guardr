@@ -10,6 +10,7 @@ import { AppMotionProvider } from './components/ui/motion/AppMotion';
 import { AppSnackbarProvider } from './components/ui/AppToast';
 import { AppConfirmHost } from './components/ui/AppConfirm';
 import { DeviceProvider } from './lib/platform';
+import { ProductAppProvider } from './lib/ProductAppProvider';
 import { SurfaceProvider } from './surfaces/SurfaceProvider';
 import { preloadSurface } from './surfaces/SurfaceAppShell';
 import { currentSurfaceOverride, detectCoarsePointer, resolveSurfaceKind } from './surfaces/surfaceKind';
@@ -50,6 +51,8 @@ import './styles/gr-forms.css';
 import './styles/gr-text-case.css';
 import './styles/legal-accept.css';
 import './styles/surface-look.css';
+import './styles/product-apps.css';
+import { pathFromDeepLink } from './lib/productApps';
 
 applyThemeToDocument(loadTheme());
 
@@ -74,6 +77,20 @@ async function initNativeShell(): Promise<void> {
   await restoreNativePushIfEnabled();
   await registerNativeInstall();
   initNativePushListeners();
+  void import('@capacitor/app').then(({ App: CapApp }) => {
+    void CapApp.getLaunchUrl().then((result) => {
+      const path = result?.url ? pathFromDeepLink(result.url) : null;
+      if (path && path !== window.location.pathname + window.location.search) {
+        window.history.replaceState({}, '', path);
+      }
+    });
+    void CapApp.addListener('appUrlOpen', ({ url }) => {
+      const path = pathFromDeepLink(url);
+      if (!path) return;
+      window.history.pushState({}, '', path);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+  });
 }
 
 void initNativeShell();
@@ -96,6 +113,7 @@ function renderApp(children: React.ReactNode) {
   root.render(
     <StrictMode>
       <DeviceProvider>
+        <ProductAppProvider>
         <SurfaceProvider>
           <BaseUIProvider>
             <AppMotionProvider>
@@ -107,6 +125,7 @@ function renderApp(children: React.ReactNode) {
             </AppMotionProvider>
           </BaseUIProvider>
         </SurfaceProvider>
+        </ProductAppProvider>
       </DeviceProvider>
     </StrictMode>,
   );

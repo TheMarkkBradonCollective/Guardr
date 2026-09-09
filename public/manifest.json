@@ -52,17 +52,25 @@
   ],
   "shortcuts": [
     {
-      "name": "Open Guardr",
-      "short_name": "Home",
-      "url": "/",
-      "description": "Launch Guardr security marketplace",
-      "icons": [
-        {
-          "src": "/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "name": "Client App",
+      "short_name": "Client",
+      "url": "/client/home",
+      "description": "Open the Guardr Client App",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Guard App",
+      "short_name": "Guard",
+      "url": "/guard/map",
+      "description": "Open the Guardr Guard App",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Staff App",
+      "short_name": "Staff",
+      "url": "/staff/overview",
+      "description": "Open the Guardr Staff App",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

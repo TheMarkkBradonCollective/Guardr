@@ -8,6 +8,14 @@ import type { PerformanceFactorId } from './guardPerformanceFactorDetail';
 import { isPerformanceFactorId } from './guardPerformanceFactorDetail';
 import type { LegalPageId } from './legalContent';
 import { normalizeStaffSection, resolveStaffSection, staffSectionFromMessageTab, type ApprovalQueueId, type StaffSection } from './staffOps';
+import {
+  buildWebsiteAccountPath,
+  isWebsiteAccountView,
+  parseWebsiteAccountView,
+  type WebsiteAccountView,
+} from './productApps';
+
+export type { WebsiteAccountView } from './productApps';
 
 export type ClientJobsTab = 'open' | 'scheduled' | 'completed' | 'missed';
 
@@ -99,6 +107,12 @@ export interface AppRoute {
   authRole?: AuthViewRole;
   /** Client sign-up — personal vs business contracting party. */
   authClientType?: ClientType;
+  /**
+   * Website account portal — billing, profile, settings, support.
+   * Operational work still lives in the dedicated role app.
+   */
+  websiteAccount?: boolean;
+  accountView?: WebsiteAccountView;
 }
 
 const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
@@ -362,6 +376,18 @@ export function parseAppRoute(url: string): AppRoute | null {
     return null;
   }
 
+  if (pathname === '/account' || pathname.startsWith('/account/')) {
+    const accountView = parseWebsiteAccountView(pathname) ?? 'home';
+    return { role: 'client', websiteAccount: true, accountView, ...nested };
+  }
+
+  const appAlias = pathname.match(/^\/app\/(client|guard|staff)(?:\/(.*))?$/);
+  if (appAlias) {
+    const restPath = appAlias[2] ? `/${appAlias[1]}/${appAlias[2]}` : `/${appAlias[1]}`;
+    const qs = searchParams.toString();
+    return parseAppRoute(qs ? `${restPath}?${qs}` : restPath);
+  }
+
   if (pathname === '/dispatch') {
     return { role: 'staff', staffSection: 'jobs', ...nested };
   }
@@ -382,6 +408,14 @@ export function parseAppRoute(url: string): AppRoute | null {
 
   if (pathname === '/guard') {
     return { role: 'guard', guardTab: 'map', ...nested };
+  }
+
+  if (pathname === '/client') {
+    return { role: 'client', clientView: 'home', ...nested };
+  }
+
+  if (pathname === '/staff') {
+    return { role: 'staff', staffSection: 'overview', ...nested };
   }
 
   const guardWithIdMatch = pathname.match(/^\/guard\/([^/]+)$/);
@@ -474,6 +508,11 @@ export function buildAppPath(route: AppRoute): string {
     const params = buildNestedQuery(route);
     const qs = params.toString();
     return qs ? `/?${qs}` : '/';
+  }
+
+  if (route.websiteAccount) {
+    const view = isWebsiteAccountView(route.accountView) ? route.accountView : 'home';
+    return buildWebsiteAccountPath(view);
   }
 
   let base: string;
@@ -701,6 +740,13 @@ export function defaultRouteForRole(
     case 'client':
       return { role: 'client', clientView: 'home' };
   }
+}
+
+export function websiteAccountRoute(
+  role: AppRole,
+  view: WebsiteAccountView = 'home'
+): AppRoute {
+  return { role, websiteAccount: true, accountView: view };
 }
 
 /** Clear nested selection params while keeping the top-level section/view. */

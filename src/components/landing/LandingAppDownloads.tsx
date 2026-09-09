@@ -100,7 +100,8 @@ export function LandingAppDownloads({
           }}
         >
           Get {INSTALL_APK_TITLE} for field work, or save {INSTALL_PWA_TITLE} to your home screen — same
-          account, same login either way.
+          account, same login either way. After you sign in, the website stays for billing and account
+          settings. Day-to-day work opens in the Client App, Guard App, or Staff App.
         </Block>
       </Block>
 

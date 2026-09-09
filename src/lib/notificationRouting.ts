@@ -1,6 +1,7 @@
 import { resolveNotificationUrlForRole } from '../../lib/push/routing';
 import type { PushNotificationType } from '../../lib/push/types';
 import type { SessionUser, UserNotification } from '../types';
+import { isStaffRole } from './permissions';
 import type { AppRole } from './appNavigation';
 
 function platformRoleForUser(user: SessionUser): string {
@@ -11,16 +12,7 @@ function platformRoleForUser(user: SessionUser): string {
 function appRoleForUser(user: SessionUser): AppRole | null {
   if (user.role === 'client') return 'client';
   if (user.role === 'guard') return 'guard';
-  if (
-    user.role === 'support' ||
-    user.role === 'moderator' ||
-    user.role === 'administrator' ||
-    user.role === 'manager' ||
-    user.role === 'director' ||
-    user.role === 'owner'
-  ) {
-    return 'staff';
-  }
+  if (isStaffRole(user.role)) return 'staff';
   return null;
 }
 
