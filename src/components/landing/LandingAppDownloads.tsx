@@ -81,9 +81,9 @@ export function LandingAppDownloads({
             marginInline: centered ? 'auto' : undefined,
           }}
         >
-          Download Hire and Work for Android. Customers and guards use this website for
-          profile, billing, messages, and support. Staff can run the full system here in
-          the browser.
+          Download Hire and Work for Android. Sign up and complete activation on this website.
+          After that, customers and guards need the app to use the platform. Staff can run the
+          full system here in the browser.
         </Block>
       </Block>
 

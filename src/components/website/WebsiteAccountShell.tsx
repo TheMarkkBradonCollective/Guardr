@@ -15,7 +15,7 @@ import { Logo } from '../Logo';
 import { AccountMenu, type AccountMenuProps } from '../layouts/AccountMenu';
 import { AppButton } from '../ui/AppButton';
 import {
-  PRODUCT_APP_LABELS,
+  PRODUCT_APP_ICON_LABELS,
   websiteAccountViewsForRole,
   type ProductRole,
   type WebsiteAccountView,
@@ -43,6 +43,7 @@ interface WebsiteAccountShellProps {
   onOpenApp: () => void;
   onSignOut: () => void;
   onBackToSite?: () => void;
+  onboardingOpen?: boolean;
   accountMenu: AccountMenuProps;
   themeMode?: ThemeMode;
   children: React.ReactNode;
@@ -57,11 +58,12 @@ export function WebsiteAccountShell({
   onOpenApp,
   onSignOut,
   onBackToSite,
+  onboardingOpen = false,
   accountMenu,
   children,
 }: WebsiteAccountShellProps) {
   const nav = websiteAccountViewsForRole(role);
-  const appLabel = PRODUCT_APP_LABELS[role === 'client' ? 'client' : role === 'guard' ? 'guard' : 'staff'];
+  const appLabel = PRODUCT_APP_ICON_LABELS[role === 'client' ? 'client' : role === 'guard' ? 'guard' : 'staff'];
 
   return (
     <div className="website-account" data-product-app="website">
@@ -82,7 +84,7 @@ export function WebsiteAccountShell({
           </div>
           <div className="website-account-top-actions">
             <AppButton variant="primary" size="sm" onClick={onOpenApp}>
-              {role === 'staff' ? 'Open operations' : `Open ${appLabel}`}
+              {role === 'staff' ? 'Open operations' : onboardingOpen ? 'Continue application' : `Get ${appLabel}`}
             </AppButton>
             <AccountMenu {...accountMenu} triggerVariant="uber-direct" />
           </div>
@@ -120,7 +122,7 @@ export function WebsiteAccountShell({
 
         <main className="website-account-main">
           {children}
-          {activeView !== 'home' && role !== 'staff' ? (
+          {activeView !== 'home' && role !== 'staff' && !onboardingOpen ? (
             <div className="website-account-app-slot website-account-app-slot--quiet">
               <OpenAppCta role={role} compact onOpenWebApp={onOpenApp} />
             </div>

@@ -298,7 +298,6 @@ import {
 } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
 import { isInactiveGuardSession } from './lib/guardActivationSync';
-import { isClientAccountPending } from './lib/accountStatus';
 import { holdJobPayment, releasePayout, refundPayment, createTipCheckoutSession } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, loadTheme, normalizeThemeMode, saveTheme } from './lib/platform/theme';
 import { isAppExperience } from './lib/platform/appExperience';
@@ -308,6 +307,7 @@ import { personNameFromPayload, resolvePersonNameParts } from './lib/personName'
 import {
   getClientAccountStatus,
   getGuardUserStatus,
+  isClientAccountPending,
   isGuardAccountApproved,
   isGuardAccountPending,
 } from './lib/accountStatus';
@@ -526,7 +526,6 @@ import {
 } from './lib/appNavigation';
 import {
   applyProductAppToDocument,
-  canUseOperationalAppInBrowser,
   consumePostAuthPath,
   installPathForApp,
   installedAuthEntry,
@@ -539,8 +538,10 @@ import {
   productRoleForApp,
   roleCanOpenProductApp,
   websiteNeedsAppMessage,
+  websiteShellAccess,
   wrongAppMessage,
   type ProductRole,
+  type WebsiteShellAccess,
 } from './lib/productApps';
 import { useProductApp } from './lib/ProductAppProvider';
 import { WebsiteAccountShell } from './components/website/WebsiteAccountShell';
@@ -707,13 +708,14 @@ function routeMatchesUser(route: AppRoute, user: SessionUser): boolean {
   return !!role && route.role === role;
 }
 
-function canOpenOperationalRoute(user: SessionUser, route: AppRoute): boolean {
+function canOpenOperationalRoute(
+  user: SessionUser,
+  route: AppRoute,
+  access: WebsiteShellAccess,
+): boolean {
   if (route.websiteAccount || route.authView) return true;
   if (!routeMatchesUser(route, user)) return false;
-  const role = appRoleForUser(user);
-  if (!role) return false;
-  if (isAppExperience()) return true;
-  return canUseOperationalAppInBrowser(role);
+  return access === 'operations' || access === 'activation';
 }
 
 export default function App() {
@@ -818,6 +820,8 @@ export default function App() {
   const activationSupportBackfillRunningRef = useRef(false);
   const activationSupportCreationInFlightRef = useRef(new Set<string>());
   const [clients,  setClients]  = useState<Client[]>([]);
+  const clientsRef = useRef(clients);
+  clientsRef.current = clients;
   const [requests, setRequests] = useState<SecurityRequest[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => loadSupportTicketsFromStorage());
@@ -1956,31 +1960,53 @@ export default function App() {
   const loadAppDataRef = useRef<() => void>(() => {});
   const loggedInUserIdRef = useRef<string | null>(currentUser?.id ?? null);
 
+  const resolveWebsiteAccess = (user: SessionUser): WebsiteShellAccess => {
+    const role = appRoleForUser(user);
+    if (!role) return 'account';
+    if (role === 'guard') {
+      const guard = findGuardProfileForUser(user, guardsRef.current);
+      return websiteShellAccess({
+        role: 'guard',
+        isInstalledShell: isAppExperience(),
+        guardStatus: guard?.userStatus ?? null,
+      });
+    }
+    if (role === 'client') {
+      const client = clientsRef.current.find((item) => item.id === user.id);
+      return websiteShellAccess({
+        role: 'client',
+        isInstalledShell: isAppExperience(),
+        clientStatus: client ? getClientAccountStatus(client) : null,
+      });
+    }
+    return websiteShellAccess({ role, isInstalledShell: isAppExperience() });
+  };
+
   const defaultRouteForUser = (user: SessionUser): AppRoute => {
     const role = appRoleForUser(user);
     if (!role) return { role: 'client', clientView: 'home' };
+    const access = resolveWebsiteAccess(user);
     const pendingPath = consumePostAuthPath();
     if (pendingPath) {
       const pending = parseAppRoute(pendingPath);
       if (pending?.websiteAccount) {
         return websiteAccountRoute(role, pending.accountView ?? 'home');
       }
-      if (
-        pending &&
-        roleCanOpenProductApp(role, productAppFromPath(pendingPath)) &&
-        (isAppExperience() || canUseOperationalAppInBrowser(role))
-      ) {
+      if (pending && roleCanOpenProductApp(role, productAppFromPath(pendingPath)) && access !== 'account') {
         return { ...pending, role };
       }
     }
     if (!isAppExperience()) {
-      if (canUseOperationalAppInBrowser(role)) {
-        const path = typeof window !== 'undefined' ? window.location.pathname : '/';
-        if (isWebsiteAccountPath(path)) {
-          return websiteAccountRoute(role, parseWebsiteAccountView(path) ?? 'home');
-        }
-      } else {
+      if (access === 'account') {
         return websiteAccountRoute(role);
+      }
+      if (access === 'activation') {
+        if (role === 'guard') return { role: 'guard', guardTab: 'activation' };
+        if (role === 'client') return { role: 'client', clientView: 'home' };
+      }
+      const path = typeof window !== 'undefined' ? window.location.pathname : '/';
+      if (isWebsiteAccountPath(path)) {
+        return websiteAccountRoute(role, parseWebsiteAccountView(path) ?? 'home');
       }
     }
     if (role === 'guard') {
@@ -2166,7 +2192,7 @@ export default function App() {
       return;
     }
 
-    if (user && !canOpenOperationalRoute(user, route)) {
+    if (user && !canOpenOperationalRoute(user, route, resolveWebsiteAccess(user))) {
       const role = appRoleForUser(user);
       if (role) {
         if (isOperationalAppPath(strippedUrl)) {
@@ -2218,7 +2244,7 @@ export default function App() {
 
     if (!route || route.authView) return;
     if (user && !routeMatchesUser(route, user)) return;
-    if (user && !canOpenOperationalRoute(user, route)) return;
+    if (user && !canOpenOperationalRoute(user, route, resolveWebsiteAccess(user))) return;
 
     applyAppRouteRef.current(route);
     persistAppRoute(route, user?.id ?? null);
@@ -2282,7 +2308,7 @@ export default function App() {
     }
 
     if (route && routeMatchesUser(route, currentUser)) {
-      if (!canOpenOperationalRoute(currentUser, route)) {
+      if (!canOpenOperationalRoute(currentUser, route, resolveWebsiteAccess(currentUser))) {
         const fallback = defaultRouteForUser(currentUser);
         applyAppRouteRef.current(fallback);
         syncAppRoute(fallback, true);
@@ -3883,6 +3909,32 @@ export default function App() {
   const activationSupportChat = sessionGuard
     ? findActivationSupportChat(supportTickets, { id: sessionGuard.id, email: sessionGuard.email })
     : null;
+
+  const websiteAccessRef = useRef<WebsiteShellAccess | null>(null);
+
+  useEffect(() => {
+    if (!currentUser) {
+      websiteAccessRef.current = null;
+      return;
+    }
+    // Wait until roster data is loaded so missing profiles are not treated as
+    // "still activating" (which would toast on every refresh for active users).
+    if (loading) return;
+    const access = resolveWebsiteAccess(currentUser);
+    const previous = websiteAccessRef.current;
+    websiteAccessRef.current = access;
+    if (isAppExperience()) return;
+    const role = appRoleForUser(currentUser);
+    if (!role || role === 'staff' || access !== 'account') return;
+    if (!websiteAccountView) {
+      applyAppRoute(websiteAccountRoute(role));
+      syncAppRoute(websiteAccountRoute(role), true);
+    }
+    if (previous === 'activation') {
+      const message = websiteNeedsAppMessage(role);
+      if (message) appToast(message, 'info');
+    }
+  }, [currentUser?.id, currentUser?.role, loading, sessionGuard?.userStatus, clients]);
 
   useEffect(() => {
     if (loading || !currentUser || activationSupportBackfillRunningRef.current) return;
@@ -13570,11 +13622,14 @@ export default function App() {
   const signedInRole = appRoleForUser(currentUser);
   const productRole: ProductRole = signedInRole ?? 'client';
   const openSignedInApp = () => {
-    if (canUseOperationalAppInBrowser(productRole) || isAppExperience()) {
+    const access = resolveWebsiteAccess(currentUser);
+    if (access === 'operations' || access === 'activation') {
       const fallback =
-        productRole === 'guard'
-          ? defaultRouteForRole('guard', findGuardProfileForUser(currentUser, guards))
-          : defaultRouteForRole(productRole);
+        access === 'activation' && productRole === 'guard'
+          ? { role: 'guard' as const, guardTab: 'activation' as const }
+          : productRole === 'guard'
+            ? defaultRouteForRole('guard', findGuardProfileForUser(currentUser, guards))
+            : defaultRouteForRole(productRole);
       setWebsiteAccountView(null);
       applyAppRoute(fallback);
       syncAppRoute(fallback);
@@ -13618,6 +13673,7 @@ export default function App() {
               : 'Operations run in the browser'
         }
         notificationCount={unreadCount}
+        onboardingOpen={resolveWebsiteAccess(currentUser) === 'activation'}
         onOpenApp={openSignedInApp}
         onOpenBilling={() => goWebsiteAccount(productRole === 'guard' ? 'payouts' : 'billing')}
         onOpenProfile={() => goWebsiteAccount('profile')}
@@ -13739,6 +13795,7 @@ export default function App() {
           activeView={websiteAccountView}
           onNavigate={goWebsiteAccount}
           onOpenApp={openSignedInApp}
+          onboardingOpen={resolveWebsiteAccess(currentUser) === 'activation'}
           onSignOut={handleSignOut}
           accountMenu={{
             userName: currentUser.name,

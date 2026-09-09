@@ -70,7 +70,7 @@ export const PLATFORM_HIGHLIGHTS: { icon: LucideIcon; title: string; body: strin
   {
     icon: Smartphone,
     title: 'Mobile-first design',
-    body: 'Built for guards on the move. Full functionality on any device, installable as a PWA.',
+    body: 'Sign up and activate on this website, then run coverage and shifts in Hire or Work on Android.',
   },
   {
     icon: FileText,

@@ -21,6 +21,8 @@ import {
   resolveProductApp,
   roleCanOpenProductApp,
   websiteAccountViewsForRole,
+  websiteNeedsAppMessage,
+  websiteShellAccess,
   wrongAppMessage,
 } from './productApps.ts';
 
@@ -54,10 +56,15 @@ describe('product app path resolution', () => {
 });
 
 describe('signed-in landing', () => {
-  it('sends browser sessions to the website account portal for customers and guards only', () => {
-    assert.equal(defaultPathForSignedInUser('client', false), '/account');
-    assert.equal(defaultPathForSignedInUser('guard', false), '/account');
+  it('sends browser sessions to activation until Hire/Work accounts are active', () => {
+    assert.equal(defaultPathForSignedInUser('client', false), '/client/home');
+    assert.equal(defaultPathForSignedInUser('guard', false), '/guard/activation');
     assert.equal(defaultPathForSignedInUser('staff', false), '/staff/overview');
+    assert.equal(defaultPathForSignedInUser('client', false, { clientStatus: 'pending' }), '/client/home');
+    assert.equal(defaultPathForSignedInUser('client', false, { clientStatus: 'active' }), '/account');
+    assert.equal(defaultPathForSignedInUser('guard', false, { guardStatus: 'pending' }), '/guard/activation');
+    assert.equal(defaultPathForSignedInUser('guard', false, { guardStatus: 'active' }), '/account');
+    assert.equal(defaultPathForSignedInUser('guard', false, { guardStatus: 'approved' }), '/guard/activation');
   });
 
   it('sends installed shells straight into the role app', () => {
@@ -66,10 +73,19 @@ describe('signed-in landing', () => {
     assert.equal(defaultPathForSignedInUser('staff', true), '/staff/overview');
   });
 
-  it('lets staff use operations in the browser and keeps Hire/Work on the account website', () => {
+  it('lets staff use operations in the browser and keeps active Hire/Work on the account website', () => {
     assert.equal(canUseOperationalAppInBrowser('staff'), true);
     assert.equal(canUseOperationalAppInBrowser('client'), false);
     assert.equal(canUseOperationalAppInBrowser('guard'), false);
+    assert.equal(websiteShellAccess({ role: 'staff' }), 'operations');
+    assert.equal(websiteShellAccess({ role: 'client' }), 'activation');
+    assert.equal(websiteShellAccess({ role: 'guard', guardStatus: 'approved' }), 'activation');
+    assert.equal(websiteShellAccess({ role: 'client', clientStatus: 'active' }), 'account');
+    assert.equal(websiteShellAccess({ role: 'guard', guardStatus: 'active' }), 'account');
+    assert.equal(websiteShellAccess({ role: 'guard', isInstalledShell: true, guardStatus: 'active' }), 'operations');
+    assert.equal(websiteNeedsAppMessage('client'), 'You need the Hire app to use the platform.');
+    assert.equal(websiteNeedsAppMessage('guard'), 'You need the Work app to use the platform.');
+    assert.equal(websiteNeedsAppMessage('staff'), '');
   });
 
   it('keeps operational defaults distinct per role', () => {

@@ -112,7 +112,7 @@ const AUTH_HERO_CONTENT: Record<'client' | 'guard' | 'staff', AuthHeroContent> =
   client: {
     icon: Building2,
     headline: 'Coverage for your site, on your terms.',
-    sub: 'Post jobs, review licensed guards, and track live coverage from one dashboard.',
+    sub: 'Sign up and complete activation on this website. After approval, post coverage and track shifts in the Hire app.',
     features: [
       { icon: MapPin, text: 'Post coverage by site in minutes' },
       { icon: BadgeCheck, text: 'Browse licensed, verified guards' },
@@ -123,7 +123,7 @@ const AUTH_HERO_CONTENT: Record<'client' | 'guard' | 'staff', AuthHeroContent> =
   guard: {
     icon: Shield,
     headline: 'Work independently. Get paid directly.',
-    sub: 'Browse open jobs on the map, choose what fits your schedule, and manage every shift from one place.',
+    sub: 'Sign up and complete activation on this website. After staff activates you, browse jobs and manage shifts in the Work app.',
     features: [
       { icon: MapPin, text: 'Browse jobs near you on the map' },
       { icon: Lock, text: 'Your credentials, verified and portable' },
@@ -1006,7 +1006,7 @@ export function AuthPage({
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
                     For licensed independent contractors — not Guardr employment. After approval,
                     upload five credentials (ID, COI, guard card, PTA/UOF, and 32-hour BSIS CE) on the
-                    activation screen.
+                    activation screen. After staff activates you, you need the Work app to take shifts.
                   </p>
 
                   <div className="grid grid-cols-2 gap-3">

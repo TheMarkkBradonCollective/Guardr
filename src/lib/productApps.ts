@@ -11,9 +11,9 @@ export type ProductRole = 'client' | 'guard' | 'staff';
  * Device surfaces (mobile / tablet / desktop) are how each environment is
  * laid out. Product apps are *who the product is for*:
  *
- *   website     marketing, signup, customer/guard accounts, and full staff ops
- *   client-app  client operations (Hire) — Android only
- *   guard-app   guard field operations (Work) — Android only
+ *   website     marketing, signup through activation, customer/guard accounts, and full staff ops
+ *   client-app  client operations (Hire) — Android only after activation
+ *   guard-app   guard field operations (Work) — Android only after activation
  *   staff-app   optional Staff APK; the same system also runs on the website
  */
 export type ProductApp = 'website' | 'client' | 'guard' | 'staff';
@@ -254,12 +254,39 @@ export function canUseOperationalAppInBrowser(role: ProductRole): boolean {
   return role === 'staff';
 }
 
+/**
+ * What a signed-in Hire / Work / Staff user may do in a website browser tab.
+ *
+ *   operations  — full role app (Staff, or any role inside an APK)
+ *   activation  — signup through activation / pending review (Hire & Work)
+ *   account     — profile, billing, support only; platform use needs the app
+ */
+export type WebsiteShellAccess = 'operations' | 'activation' | 'account';
+
+export function websiteShellAccess(input: {
+  role: ProductRole;
+  isInstalledShell?: boolean;
+  guardStatus?: string | null;
+  clientStatus?: string | null;
+}): WebsiteShellAccess {
+  if (input.isInstalledShell) return 'operations';
+  if (input.role === 'staff') return 'operations';
+  if (input.role === 'guard') {
+    const status = (input.guardStatus ?? '').trim().toLowerCase();
+    if (status === 'active' || status === 'suspended' || status === 'blocked') return 'account';
+    return 'activation';
+  }
+  const status = (input.clientStatus ?? '').trim().toLowerCase();
+  if (status === 'active' || status === 'suspended') return 'account';
+  return 'activation';
+}
+
 export function shouldLandOnWebsiteAccount(
   role: ProductRole,
   isInstalledShell = isAppExperience(),
+  status?: { guardStatus?: string | null; clientStatus?: string | null },
 ): boolean {
-  if (isInstalledShell) return false;
-  return !canUseOperationalAppInBrowser(role);
+  return websiteShellAccess({ role, isInstalledShell, ...status }) === 'account';
 }
 
 export function defaultOperationalPathForRole(role: ProductRole): string {
@@ -268,17 +295,29 @@ export function defaultOperationalPathForRole(role: ProductRole): string {
   return '/staff/overview';
 }
 
-export function defaultPathForSignedInUser(role: ProductRole, isInstalledShell = isAppExperience()): string {
-  if (shouldLandOnWebsiteAccount(role, isInstalledShell)) return '/account';
+export function defaultActivationPathForRole(role: ProductRole): string {
+  if (role === 'guard') return '/guard/activation';
+  if (role === 'client') return '/client/home';
+  return defaultOperationalPathForRole(role);
+}
+
+export function defaultPathForSignedInUser(
+  role: ProductRole,
+  isInstalledShell = isAppExperience(),
+  status?: { guardStatus?: string | null; clientStatus?: string | null },
+): string {
+  const access = websiteShellAccess({ role, isInstalledShell, ...status });
+  if (access === 'account') return '/account';
+  if (access === 'activation') return defaultActivationPathForRole(role);
   return defaultOperationalPathForRole(role);
 }
 
 export function websiteNeedsAppMessage(role: ProductRole): string {
   if (role === 'client') {
-    return 'Coverage, activity, and job messages are in the Hire app.';
+    return 'You need the Hire app to use the platform.';
   }
   if (role === 'guard') {
-    return 'Shifts, check-in, and field work are in the Work app.';
+    return 'You need the Work app to use the platform.';
   }
   return '';
 }

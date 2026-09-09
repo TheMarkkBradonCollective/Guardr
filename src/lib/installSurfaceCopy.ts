@@ -17,7 +17,7 @@ export function downloadScreenIntro(context: DownloadLiveContext): string {
   if (context === 'apk') {
     return 'Install the latest Hire, Work, or Staff build when an update is available. Your account and data stay synced.';
   }
-  return 'Hire and Work are Android apps. Customers and guards use this website for account, billing, and support. Staff can run the full system in the browser.';
+  return 'Sign up and complete activation on this website. After that, customers and guards need Hire or Work to use the platform. Staff can run the full system in the browser.';
 }
 
 export function downloadLiveContextMessage(context: DownloadLiveContext): string {
