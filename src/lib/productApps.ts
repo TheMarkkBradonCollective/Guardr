@@ -11,10 +11,10 @@ export type ProductRole = 'client' | 'guard' | 'staff';
  * Device surfaces (mobile / tablet / desktop) are how each environment is
  * laid out. Product apps are *who the product is for*:
  *
- *   website     public marketing + signup + account management
- *   client-app  client operations
- *   guard-app   guard field operations
- *   staff-app   internal operations / control centre
+ *   website     marketing, signup, customer/guard accounts, and full staff ops
+ *   client-app  client operations (Hire) — Android only
+ *   guard-app   guard field operations (Work) — Android only
+ *   staff-app   optional Staff APK; the same system also runs on the website
  */
 export type ProductApp = 'website' | 'client' | 'guard' | 'staff';
 
@@ -202,8 +202,8 @@ export function persistProductApp(app: ProductApp): void {
 }
 
 /**
- * Native APK / PWA should open the role app, never the marketing website.
- * Browser tabs open the website unless the URL is already an app path.
+ * Native APK should open the role app, never the marketing website.
+ * Browser tabs: customers and guards stay on /account; staff get /staff.
  */
 declare global {
   interface Window {
@@ -249,8 +249,17 @@ export function resolveProductApp(input: {
   return baked ?? 'website';
 }
 
-export function shouldLandOnWebsiteAccount(isInstalledShell = isAppExperience()): boolean {
-  return !isInstalledShell;
+/** Staff can run operations in a browser tab. Hire and Work cannot. */
+export function canUseOperationalAppInBrowser(role: ProductRole): boolean {
+  return role === 'staff';
+}
+
+export function shouldLandOnWebsiteAccount(
+  role: ProductRole,
+  isInstalledShell = isAppExperience(),
+): boolean {
+  if (isInstalledShell) return false;
+  return !canUseOperationalAppInBrowser(role);
 }
 
 export function defaultOperationalPathForRole(role: ProductRole): string {
@@ -260,8 +269,18 @@ export function defaultOperationalPathForRole(role: ProductRole): string {
 }
 
 export function defaultPathForSignedInUser(role: ProductRole, isInstalledShell = isAppExperience()): string {
-  if (shouldLandOnWebsiteAccount(isInstalledShell)) return '/account';
+  if (shouldLandOnWebsiteAccount(role, isInstalledShell)) return '/account';
   return defaultOperationalPathForRole(role);
+}
+
+export function websiteNeedsAppMessage(role: ProductRole): string {
+  if (role === 'client') {
+    return 'Coverage, activity, and job messages are in the Hire app.';
+  }
+  if (role === 'guard') {
+    return 'Shifts, check-in, and field work are in the Work app.';
+  }
+  return '';
 }
 
 export function websiteAccountViewsForRole(role: ProductRole): { id: WebsiteAccountView; label: string }[] {
@@ -297,9 +316,9 @@ export function openAppCtaCopy(role: ProductRole): { title: string; body: string
     };
   }
   return {
-    title: 'This feature is available in the Staff App',
-    body: 'Dispatch, people, incidents, and administration run in the Staff App.',
-    action: 'Open Staff App',
+    title: 'Open operations',
+    body: 'Dispatch, people, incidents, and administration run here in the browser. The Staff app is optional.',
+    action: 'Open operations',
   };
 }
 

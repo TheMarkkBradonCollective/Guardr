@@ -3,6 +3,7 @@ import { ArrowUpRight, Smartphone } from 'lucide-react';
 import { AppButton } from '../ui/AppButton';
 import {
   installPathForApp,
+  canUseOperationalAppInBrowser,
   isNativePlatform,
   nativeDeepLinkForRole,
   openAppCtaCopy,
@@ -22,8 +23,8 @@ interface OpenAppCtaProps {
 }
 
 /**
- * Website → app transition. Opens the dedicated role app (web or native)
- * instead of performing operational work on the marketing/account website.
+ * Website → app transition. Hire and Work open the Android app (or the download
+ * page). Staff opens operations in this browser tab.
  */
 export function OpenAppCta({
   role,
@@ -47,7 +48,7 @@ export function OpenAppCta({
   };
 
   const openNativeOrWeb = () => {
-    if (installed) {
+    if (installed || canUseOperationalAppInBrowser(role)) {
       openWebApp();
       return;
     }
@@ -60,7 +61,7 @@ export function OpenAppCta({
     window.setTimeout(() => {
       iframe.remove();
       if (Date.now() - started < 1800 && document.visibilityState === 'visible') {
-        openWebApp();
+        window.location.assign(installPathForApp(app));
       }
     }, 700);
   };
@@ -71,7 +72,7 @@ export function OpenAppCta({
         <AppButton variant="primary" size="md" onClick={openNativeOrWeb}>
           {copy.action}
         </AppButton>
-        {!installed ? (
+        {!installed && !canUseOperationalAppInBrowser(role) ? (
           <a className="open-app-cta-install" href={installPathForApp(app)}>
             Install {copy.action.replace(/^Open /, '')}
           </a>
@@ -93,7 +94,7 @@ export function OpenAppCta({
             {copy.action}
             <ArrowUpRight size={16} strokeWidth={2.25} aria-hidden />
           </AppButton>
-          {!installed ? (
+          {!installed && !canUseOperationalAppInBrowser(role) ? (
             <a className="open-app-cta-install" href={installPathForApp(app)}>
               Download {copy.action.replace(/^Open /, '')}
             </a>

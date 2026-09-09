@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   buildWebsiteAccountPath,
+  canUseOperationalAppInBrowser,
   defaultPathForSignedInUser,
   defaultOperationalPathForRole,
   isOperationalAppPath,
@@ -53,16 +54,22 @@ describe('product app path resolution', () => {
 });
 
 describe('signed-in landing', () => {
-  it('sends browser sessions to the website account portal', () => {
+  it('sends browser sessions to the website account portal for customers and guards only', () => {
     assert.equal(defaultPathForSignedInUser('client', false), '/account');
     assert.equal(defaultPathForSignedInUser('guard', false), '/account');
-    assert.equal(defaultPathForSignedInUser('staff', false), '/account');
+    assert.equal(defaultPathForSignedInUser('staff', false), '/staff/overview');
   });
 
   it('sends installed shells straight into the role app', () => {
     assert.equal(defaultPathForSignedInUser('client', true), '/client/home');
     assert.equal(defaultPathForSignedInUser('guard', true), '/guard/map');
     assert.equal(defaultPathForSignedInUser('staff', true), '/staff/overview');
+  });
+
+  it('lets staff use operations in the browser and keeps Hire/Work on the account website', () => {
+    assert.equal(canUseOperationalAppInBrowser('staff'), true);
+    assert.equal(canUseOperationalAppInBrowser('client'), false);
+    assert.equal(canUseOperationalAppInBrowser('guard'), false);
   });
 
   it('keeps operational defaults distinct per role', () => {
@@ -137,7 +144,8 @@ describe('deep links and CTAs', () => {
   it('uses role-specific open-app copy', () => {
     assert.equal(openAppCtaCopy('client').action, 'Open Client App');
     assert.equal(openAppCtaCopy('guard').action, 'Open Guard App');
-    assert.equal(openAppCtaCopy('staff').action, 'Open Staff App');
+    assert.equal(openAppCtaCopy('staff').action, 'Open operations');
+    assert.match(openAppCtaCopy('staff').body, /browser/i);
   });
 });
 

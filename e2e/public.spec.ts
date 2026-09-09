@@ -142,5 +142,9 @@ test.describe('four product environments', () => {
     await page.goto('/guard/map');
     await waitForAppReady(page);
     await expect(page.getByRole('button', { name: 'Sign in', exact: true }).first()).toBeVisible();
+
+    await page.goto('/staff/overview');
+    await waitForAppReady(page);
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true }).first()).toBeVisible();
   });
 });

@@ -153,8 +153,8 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
             Website
           </p>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Download Hire, Work, or Staff for Android. This website stays for billing and account
-            settings.
+            Download Hire and Work for Android. Customers and guards use this website for
+            profile, billing, and support. Staff can run the full system in the browser.
           </p>
           {onOpenDownload ? (
             <button

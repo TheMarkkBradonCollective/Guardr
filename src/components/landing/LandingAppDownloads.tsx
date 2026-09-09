@@ -81,8 +81,9 @@ export function LandingAppDownloads({
             marginInline: centered ? 'auto' : undefined,
           }}
         >
-          Download Hire, Work, or Staff for Android. After you sign in, this website stays for
-          billing and account settings.
+          Download Hire and Work for Android. Customers and guards use this website for
+          profile, billing, messages, and support. Staff can run the full system here in
+          the browser.
         </Block>
       </Block>
 
