@@ -1,8 +1,8 @@
 {
   "id": "https://guardr.co/client",
-  "name": "Guardr Client",
-  "short_name": "Client",
-  "description": "Client App — coverage, activity, reports, and messaging for Guardr customers.",
+  "name": "Hire",
+  "short_name": "Hire",
+  "description": "Hire — coverage, activity, reports, and messaging for Guardr customers.",
   "start_url": "/client/home",
   "scope": "/",
   "display": "standalone",

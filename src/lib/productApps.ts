@@ -44,12 +44,24 @@ export const PRODUCT_APP_LABELS: Record<ProductApp, string> = {
   staff: 'Staff App',
 };
 
-export const PRODUCT_APP_SHORT_LABELS: Record<ProductApp, string> = {
-  website: 'Website',
-  client: 'Client',
-  guard: 'Guard',
+/** Text under the Guardr logo / home-screen icon. */
+export const PRODUCT_APP_ICON_LABELS: Record<ProductApp, string> = {
+  website: 'Guardr',
+  client: 'Hire',
+  guard: 'Work',
   staff: 'Staff',
 };
+
+export const PRODUCT_APP_SHORT_LABELS: Record<ProductApp, string> = {
+  website: 'Website',
+  client: 'Hire',
+  guard: 'Work',
+  staff: 'Staff',
+};
+
+export function productAppIconLabel(role: ProductRole | string | null | undefined): string {
+  return PRODUCT_APP_ICON_LABELS[productAppForRole(role)];
+}
 
 export const PRODUCT_APP_TAGLINES: Record<ProductApp, string> = {
   website: 'Account, billing, and support',

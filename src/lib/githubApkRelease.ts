@@ -16,21 +16,21 @@ export const GITHUB_STAFF_APK = ASSET('Guardr-Staff.apk');
 export const GITHUB_ROLE_APKS = [
   {
     id: 'client' as const,
-    label: 'Client App',
+    label: 'Hire',
     tagline: 'Coverage, activity, and reports',
     file: 'Guardr-Client.apk',
     url: GITHUB_CLIENT_APK,
   },
   {
     id: 'guard' as const,
-    label: 'Guard App',
+    label: 'Work',
     tagline: 'Shifts, check-in, and field work',
     file: 'Guardr-Guard.apk',
     url: GITHUB_GUARD_APK,
   },
   {
     id: 'staff' as const,
-    label: 'Staff App',
+    label: 'Staff',
     tagline: 'Operations, people, and administration',
     file: 'Guardr-Staff.apk',
     url: GITHUB_STAFF_APK,

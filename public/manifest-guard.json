@@ -1,8 +1,8 @@
 {
   "id": "https://guardr.co/guard",
-  "name": "Guardr Guard",
-  "short_name": "Guard",
-  "description": "Guard App — shifts, check-in, patrols, incidents, and pay for licensed guards.",
+  "name": "Work",
+  "short_name": "Work",
+  "description": "Work — shifts, check-in, patrols, incidents, and pay for licensed guards.",
   "start_url": "/guard/map",
   "scope": "/",
   "display": "standalone",

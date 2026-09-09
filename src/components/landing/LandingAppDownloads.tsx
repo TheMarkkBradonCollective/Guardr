@@ -100,7 +100,7 @@ export function LandingAppDownloads({
           }}
         >
           Get {INSTALL_APK_TITLE} for field work, or save {INSTALL_PWA_TITLE} to your home screen — same
-          account, same login either way. Client, Guard, and Staff apps are on the{' '}
+          account, same login either way. Hire, Work, and Staff are on the{' '}
           <a href={DOWNLOAD_PAGE_URL} style={{ color: 'inherit', fontWeight: 600 }}>
             downloads page
           </a>
@@ -186,7 +186,7 @@ export function LandingAppDownloads({
             startEnhancer={<Download className="w-4 h-4" />}
             overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
           >
-            Get Client, Guard, and Staff
+            Get Hire, Work, and Staff
           </GuardrButton>
           <Block
             as="a"

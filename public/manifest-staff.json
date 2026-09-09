@@ -1,6 +1,6 @@
 {
   "id": "https://guardr.co/staff",
-  "name": "Guardr Staff",
+  "name": "Staff",
   "short_name": "Staff",
   "description": "Staff App — operations, people, dispatch, incidents, and administration.",
   "start_url": "/staff/overview",

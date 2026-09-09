@@ -7,7 +7,7 @@ import { SurfaceAppShell } from '../../surfaces/SurfaceAppShell';
 import type { SurfaceDestination } from '../../surfaces/surfaceNavigation';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import type { SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
-import type { ProductApp } from '../../lib/productApps';
+import { PRODUCT_APP_ICON_LABELS, type ProductApp } from '../../lib/productApps';
 import { AppInstallBanner } from '../apps/AppInstallBanner';
 
 /**
@@ -118,10 +118,7 @@ export function RoleAppShell({
   return (
     <SurfaceAppShell
       title={title}
-      workspaceLabel={
-        workspaceLabel ??
-        (productApp === 'guard' ? 'Guard App' : productApp === 'staff' ? 'Staff App' : 'Client App')
-      }
+      workspaceLabel={workspaceLabel ?? PRODUCT_APP_ICON_LABELS[productApp]}
       destinations={destinations}
       activeId={activeNavId}
       onNavigate={onNavigate}

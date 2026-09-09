@@ -12,6 +12,7 @@ import {
   parseWebsiteAccountView,
   pathFromDeepLink,
   NATIVE_APPLICATION_IDS,
+  PRODUCT_APP_ICON_LABELS,
   productAppForRole,
   productAppFromPath,
   resolveProductApp,
@@ -74,6 +75,9 @@ describe('role isolation', () => {
     assert.equal(productAppForRole('client'), 'client');
     assert.equal(productAppForRole('guard'), 'guard');
     assert.equal(productAppForRole('staff'), 'staff');
+    assert.equal(PRODUCT_APP_ICON_LABELS.client, 'Hire');
+    assert.equal(PRODUCT_APP_ICON_LABELS.guard, 'Work');
+    assert.equal(PRODUCT_APP_ICON_LABELS.staff, 'Staff');
   });
 
   it('blocks cross-app access at the product boundary', () => {

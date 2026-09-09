@@ -289,7 +289,7 @@ export function ClientAppLayout({
       fullBleed={fullBleed}
       hideHeader={shellHideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
-      workspaceLabel="Client App"
+      workspaceLabel="Hire"
       productApp="client"
       mobilePrimaryNav="tabs"
       mobileTabRanks={{ home: 1, requests: 2, map: 3, operations: 3, messages: 4 }}

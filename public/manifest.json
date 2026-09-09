@@ -52,24 +52,24 @@
   ],
   "shortcuts": [
     {
-      "name": "Client App",
-      "short_name": "Client",
+      "name": "Hire",
+      "short_name": "Hire",
       "url": "/client/home",
-      "description": "Open the Guardr Client App",
+      "description": "Open Hire — coverage, activity, and reports",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Guard App",
-      "short_name": "Guard",
+      "name": "Work",
+      "short_name": "Work",
       "url": "/guard/map",
-      "description": "Open the Guardr Guard App",
+      "description": "Open Work — shifts, check-in, and field work",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Staff App",
+      "name": "Staff",
       "short_name": "Staff",
       "url": "/staff/overview",
-      "description": "Open the Guardr Staff App",
+      "description": "Open Staff — operations and administration",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
