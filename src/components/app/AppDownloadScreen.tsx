@@ -112,7 +112,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
   const apkDescription = loading
     ? 'Checking your installed version…'
     : !apkInstalled
-      ? 'Hire, Work, and Staff are separate Android apps — native notifications, GPS, and camera.'
+      ? 'Guard, Customer, and Staff are separate Android apps — native notifications, GPS, and camera.'
       : apkNeedsUpdate
         ? `Installed ${formatAppVersion(installedApkVersion!)}. Latest is ${formatAppVersion(manifest!.apkVersion)}.`
         : `Up to date on ${formatAppVersion(installedApkVersion!)}.`;

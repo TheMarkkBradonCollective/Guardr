@@ -154,7 +154,7 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
           </p>
           <p className="text-sm text-brand-text-muted leading-relaxed">
             Sign up and complete activation on this website. After that, customers and guards
-            need Hire or Work to use the platform. Staff can run the full system in the browser.
+            need Guard or Customer to use the platform. Staff can run the full system in the browser.
           </p>
           {onOpenDownload ? (
             <button

@@ -12,8 +12,8 @@ export type ProductRole = 'client' | 'guard' | 'staff';
  * laid out. Product apps are *who the product is for*:
  *
  *   website     marketing, signup through activation, customer/guard accounts, and full staff ops
- *   client-app  client operations (Hire) — Android only after activation
- *   guard-app   guard field operations (Work) — Android only after activation
+ *   client-app  customer operations (Customer) — Android only after activation
+ *   guard-app   guard field operations (Guard) — Android only after activation
  *   staff-app   optional Staff APK; the same system also runs on the website
  */
 export type ProductApp = 'website' | 'client' | 'guard' | 'staff';
@@ -39,23 +39,23 @@ const WEBSITE_ACCOUNT_VIEWS = new Set<WebsiteAccountView>([
 
 export const PRODUCT_APP_LABELS: Record<ProductApp, string> = {
   website: 'Guardr',
-  client: 'Client App',
-  guard: 'Guard App',
-  staff: 'Staff App',
+  client: 'Customer',
+  guard: 'Guard',
+  staff: 'Staff',
 };
 
 /** Text under the Guardr logo / home-screen icon. */
 export const PRODUCT_APP_ICON_LABELS: Record<ProductApp, string> = {
   website: 'Guardr',
-  client: 'Hire',
-  guard: 'Work',
+  client: 'Customer',
+  guard: 'Guard',
   staff: 'Staff',
 };
 
 export const PRODUCT_APP_SHORT_LABELS: Record<ProductApp, string> = {
   website: 'Website',
-  client: 'Hire',
-  guard: 'Work',
+  client: 'Customer',
+  guard: 'Guard',
   staff: 'Staff',
 };
 
@@ -100,9 +100,9 @@ export function productRoleForApp(app: ProductApp): ProductRole | null {
 }
 
 /**
- * How Sign in / Sign up should open inside an installed Hire / Work / Staff app.
+ * How Sign in / Sign up should open inside an installed Guard / Customer / Staff app.
  * Those shells already are one role — do not show "Log in as guard / customer / staff".
- * Hire sign-up still picks personal / business / security company.
+ * Customer sign-up still picks personal / business / security company.
  */
 export function installedAuthEntry(
   productApp: ProductApp,
@@ -249,16 +249,16 @@ export function resolveProductApp(input: {
   return baked ?? 'website';
 }
 
-/** Staff can run operations in a browser tab. Hire and Work cannot. */
+/** Staff can run operations in a browser tab. Guard and Customer cannot. */
 export function canUseOperationalAppInBrowser(role: ProductRole): boolean {
   return role === 'staff';
 }
 
 /**
- * What a signed-in Hire / Work / Staff user may do in a website browser tab.
+ * What a signed-in Guard / Customer / Staff user may do in a website browser tab.
  *
  *   operations  — full role app (Staff, or any role inside an APK)
- *   activation  — signup through activation / pending review (Hire & Work)
+ *   activation  — signup through activation / pending review (Guard & Customer)
  *   account     — profile, billing, support only; platform use needs the app
  */
 export type WebsiteShellAccess = 'operations' | 'activation' | 'account';
@@ -314,10 +314,10 @@ export function defaultPathForSignedInUser(
 
 export function websiteNeedsAppMessage(role: ProductRole): string {
   if (role === 'client') {
-    return 'You need the Hire app to use the platform.';
+    return 'You need the Customer app to use the platform.';
   }
   if (role === 'guard') {
-    return 'You need the Work app to use the platform.';
+    return 'You need the Guard app to use the platform.';
   }
   return '';
 }
@@ -342,16 +342,16 @@ export function openAppCtaCopy(role: ProductRole): { title: string; body: string
   const app = productAppForRole(role);
   if (app === 'client') {
     return {
-      title: 'This feature is available in the Client App',
-      body: 'Request coverage, track activity, message guards, and review reports in the Client App.',
-      action: 'Open Client App',
+      title: 'This feature is available in Customer',
+      body: 'Request coverage, track activity, message guards, and review reports in the Customer app.',
+      action: 'Open Customer',
     };
   }
   if (app === 'guard') {
     return {
-      title: 'This feature is available in the Guard App',
-      body: 'Shifts, check-in, patrols, incidents, and pay live in the Guard App — not on the website.',
-      action: 'Open Guard App',
+      title: 'This feature is available in Guard',
+      body: 'Shifts, check-in, patrols, incidents, and pay live in the Guard app — not on the website.',
+      action: 'Open Guard',
     };
   }
   return {

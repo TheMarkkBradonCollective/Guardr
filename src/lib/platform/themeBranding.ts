@@ -5,7 +5,7 @@ export const THEME_ICON_BACKGROUNDS: Record<ThemeMode, string> = {
   dark: '#000000',
 };
 
-/** Browser UI accent (status bar, theme-color meta). Hire/Work stay black. */
+/** Browser UI accent (status bar, theme-color meta). Guard/Customer stay black. */
 export const THEME_BROWSER_COLORS: Record<ThemeMode, string> = {
   light: '#000000',
   dark: '#000000',

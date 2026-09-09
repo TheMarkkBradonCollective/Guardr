@@ -85,7 +85,7 @@ function parseProductAppArg() {
   return null;
 }
 
-/** Role launcher: Staff is white + black mark; Hire/Work are black + white mark. */
+/** Role launcher: Staff is white + black mark; Guard/Customer are black + white mark. */
 async function renderLauncherIcon(iconMaster, size, label) {
   return renderBrandedIcon(iconMaster, size, {
     label,

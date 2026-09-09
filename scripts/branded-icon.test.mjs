@@ -11,13 +11,13 @@ describe('Staff launcher chrome', () => {
     });
   });
 
-  it('keeps Hire and Work as black tiles with a white mark', () => {
-    assert.deepEqual(iconChromeForLabel('Hire'), {
+  it('keeps Guard and Customer as black tiles with a white mark', () => {
+    assert.deepEqual(iconChromeForLabel('Guard'), {
       background: '#000000',
       mark: 'white',
       text: '#FFFFFF',
     });
-    assert.equal(iconChromeForLabel('Work').background, '#000000');
+    assert.equal(iconChromeForLabel('Customer').background, '#000000');
   });
 
   it('uses a white Capacitor splash and light status bar for Staff', () => {

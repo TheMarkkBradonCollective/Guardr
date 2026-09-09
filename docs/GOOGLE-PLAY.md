@@ -1,6 +1,6 @@
 # Google Play Console — Guardr
 
-Step-by-step guide to upload **Hire, Work, and Staff** to Google Play. Each app has its own package id. Your developer account is already set up; this doc covers build prep, Console forms, and release.
+Step-by-step guide to upload **Guard, Customer, and Staff** to Google Play. Each app has its own package id. Your developer account is already set up; this doc covers build prep, Console forms, and release.
 
 ## Quick commands
 
@@ -8,13 +8,13 @@ Step-by-step guide to upload **Hire, Work, and Staff** to Google Play. Each app 
 |---------|---------|
 | `npm run play:check` | Verify repo is ready (stops at missing keystore / Firebase) |
 | `npm run play:assets` | Generate 512×512 icon + 1024×500 feature graphic |
-| `npm run android:play` | Build signed Hire, Work, and Staff AABs |
+| `npm run android:play` | Build signed Guard, Customer, and Staff AABs |
 
 Output AABs after a successful build:
 
 ```
-dist/play-store/Guardr-Client.aab   (Hire — com.signaturesecurity.guardr.client)
-dist/play-store/Guardr-Guard.aab    (Work — com.signaturesecurity.guardr.guard)
+dist/play-store/Guardr-Guard.aab    (Guard — com.signaturesecurity.guardr.guard)
+dist/play-store/Guardr-Client.aab   (Customer — com.signaturesecurity.guardr.client)
 dist/play-store/Guardr-Staff.aab    (Staff — com.signaturesecurity.guardr.staff)
 ```
 
@@ -25,7 +25,7 @@ dist/play-store/Guardr-Staff.aab    (Staff — com.signaturesecurity.guardr.staf
 - **Play vs sideload flavors** — `play` build has no `REQUEST_INSTALL_PACKAGES` (Play policy safe); `sideload` keeps in-app APK updates for guardr.co/download
 - **Release signing** — reads `android/keystore.properties` (see `keystore.properties.example`)
 - **Play build flag** — `VITE_PLAY_STORE_BUILD=true` hides sideload update UI in Settings
-- **Store assets script** — unlabeled `icon-512.png`, Hire/Work/Staff `*-icon-512.png`, `feature-graphic-1024x500.png`
+- **Store assets script** — unlabeled `icon-512.png`, Guard/Customer/Staff `*-icon-512.png`, `feature-graphic-1024x500.png`
 - **Listing copy draft** — `docs/play-store-listing-copy.md`
 
 Sideload APK builds are unchanged: `npm run android:apk` → `public/download/guardr.apk`.
@@ -112,8 +112,8 @@ Upload from `assets/play-store/`:
 
 | Asset | File |
 |-------|------|
-| Hire app icon (512×512) | `client-icon-512.png` (black field, white logo) |
-| Work app icon (512×512) | `guard-icon-512.png` (black field, white logo) |
+| Guard app icon (512×512) | `guard-icon-512.png` (black field, white logo) |
+| Customer app icon (512×512) | `client-icon-512.png` (black field, white logo) |
 | Staff app icon (512×512) | `staff-icon-512.png` (white field, black logo) |
 | Brand / fallback icon | `icon-512.png` |
 | Feature graphic (1024×500) | `feature-graphic-1024x500.png` |

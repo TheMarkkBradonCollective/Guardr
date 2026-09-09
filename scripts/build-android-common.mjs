@@ -2,7 +2,7 @@
 /**
  * Shared steps for Guardr Android sideload APK and Play Store AAB builds.
  */
-import { unlink } from 'node:fs/promises';
+import { readdir, unlink } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -63,10 +63,21 @@ export async function prepareAndroidWebBuild({
   console.log('→ Generating Android launcher icons…');
   run('npm', ['run', 'generate:android-icons']);
 
-  const publicApk = path.join(ROOT, 'public/download/guardr.apk');
-  if (removePublicApk && existsSync(publicApk)) {
-    console.log('→ Removing public/download/guardr.apk so the sideload binary is not embedded in the next build…');
-    await unlink(publicApk);
+  if (removePublicApk) {
+    const downloadDir = path.join(ROOT, 'public/download');
+    const stripped = [];
+    if (existsSync(downloadDir)) {
+      for (const name of await readdir(downloadDir)) {
+        if (!/\.(apk|zip)$/i.test(name)) continue;
+        await unlink(path.join(downloadDir, name));
+        stripped.push(name);
+      }
+    }
+    if (stripped.length > 0) {
+      console.log(
+        '→ Removing public/download APK/zip binaries so they are not embedded in the next web bundle…',
+      );
+    }
   }
 
   console.log(`→ Building web bundle for Android${playStoreBuild ? ' (Play Store)' : ''}…`);

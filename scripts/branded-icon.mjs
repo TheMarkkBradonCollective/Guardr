@@ -2,8 +2,8 @@ import sharp from 'sharp';
 
 /** Text drawn under the Guardr shield on home-screen icons. */
 export const PRODUCT_ICON_LABELS = {
-  client: 'Hire',
-  guard: 'Work',
+  client: 'Customer',
+  guard: 'Guard',
   staff: 'Staff',
 };
 
@@ -11,7 +11,7 @@ export function iconLabelForProductApp(productApp) {
   return PRODUCT_ICON_LABELS[productApp] ?? null;
 }
 
-/** Staff is a white tile with a black mark; Hire/Work stay black with a white mark. */
+/** Staff is a white tile with a black mark; Guard/Customer stay black with a white mark. */
 export function iconChromeForLabel(label) {
   if (label === 'Staff') {
     return { background: '#FFFFFF', mark: 'black', text: '#000000' };
@@ -92,7 +92,7 @@ function parseBackground(background) {
 }
 
 /**
- * Role icon: shield + Hire/Work/Staff under the logo.
+ * Role icon: shield + Guard/Customer/Staff under the logo.
  * `safeZone` keeps mark + label inside an Android/maskable crop.
  */
 export async function renderBrandedIcon(iconMaster, size, {
@@ -115,7 +115,8 @@ export async function renderBrandedIcon(iconMaster, size, {
       top: logoTop,
     });
 
-    const fontSize = Math.max(8, Math.round(size * (safeZone ? 0.09 : 0.115)));
+    const lengthScale = String(label).length > 6 ? 0.82 : 1;
+    const fontSize = Math.max(8, Math.round(size * (safeZone ? 0.09 : 0.115) * lengthScale));
     const labelPng = await renderLabelPng(label, size, fontSize, chrome.text);
     const labelMeta = await sharp(labelPng).metadata();
     const labelTop = Math.min(

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build sideload APKs (Hire, Work, Staff + combined) and Play Store AABs.
+ * Build sideload APKs (Guard, Customer, Staff + combined) and Play Store AABs.
  */
 import { spawnSync } from 'node:child_process';
 

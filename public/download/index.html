@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Download Hire, Work, and Staff — the Guardr Android apps. Same account on every app." />
+    <meta name="description" content="Download Guard, Customer, and Staff — the Guardr Android apps. Same account on every app." />
     <link rel="manifest" href="/manifest.json" />
-    <title>Download Guardr — Hire, Work, Staff</title>
+    <title>Download Guardr — Guard, Customer, Staff</title>
     <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-dark.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <style>
@@ -334,7 +334,7 @@
     <div class="wrap">
       <div class="hero">
         <h1>Download Guardr</h1>
-        <p id="page-intro">Sign up and complete activation on this website. After that, customers and guards need Hire or Work to use the platform. Staff can run the full system in the browser.</p>
+        <p id="page-intro">Sign up and complete activation on this website. After that, customers and guards need Guard or Customer to use the platform. Staff can run the full system in the browser.</p>
         <div id="live-context" class="context">Checking your device…</div>
       </div>
 
@@ -356,16 +356,16 @@
         <p>Pick the app for your role. Each APK installs side by side on Android.</p>
         <div class="app-grid">
           <article class="app-card">
-            <img class="app-card-icon" src="/icons/client-192.png" width="56" height="56" alt="Hire app icon" />
-            <h3>Hire</h3>
-            <p>Coverage, activity, and reports.</p>
-            <a class="btn" id="client-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk">Download Hire</a>
+            <img class="app-card-icon" src="/icons/guard-192.png" width="56" height="56" alt="Guard app icon" />
+            <h3>Guard</h3>
+            <p>Shifts, check-in, and field work.</p>
+            <a class="btn" id="guard-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk">Download Guard</a>
           </article>
           <article class="app-card">
-            <img class="app-card-icon" src="/icons/guard-192.png" width="56" height="56" alt="Work app icon" />
-            <h3>Work</h3>
-            <p>Shifts, check-in, and field work.</p>
-            <a class="btn" id="guard-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk">Download Work</a>
+            <img class="app-card-icon" src="/icons/client-192.png" width="56" height="56" alt="Customer app icon" />
+            <h3>Customer</h3>
+            <p>Coverage, activity, and reports.</p>
+            <a class="btn" id="client-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk">Download Customer</a>
           </article>
           <article class="app-card">
             <img class="app-card-icon staff" src="/icons/staff-192.png" width="56" height="56" alt="Staff app icon" />
@@ -383,7 +383,7 @@
 
       <div class="panel" id="apk-download-card">
         <h2 id="apk-download-title">Combined APK (existing installs)</h2>
-        <p id="apk-download-copy">Use this only if you already have the single Guardr APK. New installs should use Hire, Work, or Staff above.</p>
+        <p id="apk-download-copy">Use this only if you already have the single Guardr APK. New installs should use Guard, Customer, or Staff above.</p>
         <div class="qr-block">
           <img src="/download/apk-qr.png" width="180" height="180" alt="QR code to download Guardr APK" />
           <p class="qr-caption">Scan to download the combined APK</p>
@@ -540,14 +540,14 @@
           var apkSteps = document.getElementById('apk-steps');
 
           if (live === 'apk') {
-            if (intro) intro.textContent = 'Check for updates and install the latest Hire, Work, or Staff APK when a new version is available.';
+            if (intro) intro.textContent = 'Check for updates and install the latest Guard, Customer, or Staff APK when a new version is available.';
             if (statusCard) statusCard.classList.add('hidden');
             if (apkTitle) apkTitle.textContent = 'App update';
             if (apkSteps) apkSteps.classList.add('hidden');
             return;
           }
 
-          if (intro) intro.textContent = 'Download Hire, Work, or Staff. Same Guardr account on every app.';
+          if (intro) intro.textContent = 'Download Guard, Customer, or Staff. Same Guardr account on every app.';
           if (apkTitle) apkTitle.textContent = 'Combined APK (existing installs)';
         }
 
@@ -600,8 +600,8 @@
           if (!apkInstalled) {
             setBadge(apkBadge, 'Not detected', 'muted');
             apkDetail.textContent =
-              'No APK install recorded yet. Open Hire, Work, or Staff at least once, or download below.';
-            downloadCopy.textContent = 'Use this only if you already have the single Guardr APK. New installs should use Hire, Work, or Staff above.';
+              'No APK install recorded yet. Open Guard, Customer, or Staff at least once, or download below.';
+            downloadCopy.textContent = 'Use this only if you already have the single Guardr APK. New installs should use Guard, Customer, or Staff above.';
             downloadBtn.textContent = 'Download combined APK';
           } else if (apkNeedsUpdate) {
             setBadge(apkBadge, 'Update available', 'warn');

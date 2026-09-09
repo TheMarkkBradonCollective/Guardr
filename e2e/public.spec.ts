@@ -126,8 +126,7 @@ test.describe('four product environments', () => {
     await page.goto('/');
     await waitForAppReady(page);
     await expect(page.locator('body')).toHaveAttribute('data-product-app', 'website');
-    await expect(page.locator('body')).toContainText(/Hire/i);
-    await expect(page.locator('body')).toContainText(/Work/i);
+    await expect(page.locator('body')).toContainText('Download Guard and Customer');
   });
 
   test('account and app URLs send signed-out visitors to sign-in', async ({ page }) => {

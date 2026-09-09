@@ -25,8 +25,8 @@ android {
             staff: 'com.signaturesecurity.guardr.staff',
         ]
         def roleLabels = [
-            client: 'Hire',
-            guard: 'Work',
+            client: 'Customer',
+            guard: 'Guard',
             staff: 'Staff',
         ]
         applicationId (roleApplicationIds.containsKey(productApp)

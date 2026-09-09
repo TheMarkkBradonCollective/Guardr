@@ -13669,7 +13669,7 @@ export default function App() {
             : productRole === 'guard'
               ? sessionGuard?.stripeConnectAccountId
                 ? 'Payouts connected'
-                : 'Connect payouts in the Work app'
+                : 'Connect payouts in the Guard app'
               : 'Operations run in the browser'
         }
         notificationCount={unreadCount}
@@ -13764,7 +13764,7 @@ export default function App() {
             </h1>
             <p className="website-account-lead">
               {productRole === 'guard'
-                ? 'Connect Stripe, request payouts, and review shift pay in the Work app.'
+                ? 'Connect Stripe, request payouts, and review shift pay in the Guard app.'
                 : 'Platform billing and payout administration live in operations.'}
             </p>
             <OpenAppCta
