@@ -1,7 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { apiUrl, SITE_URL } from '../siteConfig';
-import { isAndroid, isStandaloneDisplay } from './device';
 
 export const INSTALL_STORAGE_KEY = 'guardr_install_v1';
 export const INSTALL_REGISTER_ORIGIN = SITE_URL;
@@ -14,7 +13,6 @@ export interface InstallRecord {
 
 export interface InstallState {
   apk?: InstallRecord;
-  pwa?: InstallRecord;
 }
 
 export function readInstallState(): InstallState {
@@ -30,19 +28,13 @@ export function writeInstallState(state: InstallState): void {
   localStorage.setItem(INSTALL_STORAGE_KEY, JSON.stringify(state));
 }
 
-export function writeInstallSurface(surface: 'apk' | 'pwa', record: InstallRecord): void {
+export function writeInstallSurface(surface: 'apk', record: InstallRecord): void {
   const state = readInstallState();
   state[surface] = record;
-  if (surface === 'apk') {
-    delete state.pwa;
-  } else {
-    // Active PWA session — drop a stale APK record so update UI does not claim Android.
-    delete state.apk;
-  }
   writeInstallState(state);
 }
 
-function registerViaIframe(surface: 'apk' | 'pwa', version: string, versionCode?: number): void {
+function registerViaIframe(surface: 'apk', version: string, versionCode?: number): void {
   if (typeof document === 'undefined') return;
   const params = new URLSearchParams({ surface, version });
   if (versionCode != null) params.set('versionCode', String(versionCode));
@@ -56,7 +48,7 @@ function registerViaIframe(surface: 'apk' | 'pwa', version: string, versionCode?
 }
 
 async function registerInstallCookie(
-  surface: 'apk' | 'pwa',
+  surface: 'apk',
   version: string,
   versionCode?: number
 ): Promise<void> {
@@ -92,26 +84,7 @@ export async function registerNativeInstall(): Promise<void> {
   }
 }
 
-/**
- * Record PWA install when running from a browser home-screen shortcut only.
- * Android APK WebViews also report standalone display mode — exclude those.
- */
-export function registerPwaInstall(webVersion: string): void {
-  if (Capacitor.isNativePlatform()) return;
-  if (!isStandaloneDisplay()) return;
-  if (isAndroid() && isAndroidWebView()) return;
-
-  const record: InstallRecord = {
-    version: webVersion,
-    registeredAt: Date.now(),
-  };
-  writeInstallSurface('pwa', record);
-  void registerInstallCookie('pwa', webVersion).catch((error) => {
-    console.warn('[install] pwa cookie registration failed:', error);
-  });
-}
-
-/** Android System WebView (including Capacitor) — not a Chrome PWA shortcut. */
+/** Android System WebView (including Capacitor) — not Chrome. */
 export function isAndroidWebView(): boolean {
   if (typeof navigator === 'undefined') return false;
   return /android/i.test(navigator.userAgent) && /;\s*wv\)/i.test(navigator.userAgent);

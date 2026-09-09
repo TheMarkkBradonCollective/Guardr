@@ -139,7 +139,7 @@ for (const message of errors) {
 console.log('\n--- Your action required ---');
 console.log('1. Create upload keystore + android/keystore.properties (if not done)');
 console.log('2. Add google-services.json (secrets/ or GOOGLE_SERVICES_JSON)');
-console.log('3. npm run android:play  →  upload dist/play-store/guardr-play-release.aab');
+console.log('3. npm run android:play  →  upload dist/play-store/Guardr-Client.aab, Guardr-Guard.aab, Guardr-Staff.aab');
 console.log('4. Complete Play Console: store listing, Data safety, content rating, app access');
 console.log('   See docs/GOOGLE-PLAY.md and docs/play-store-listing-copy.md\n');
 

@@ -1,15 +1,14 @@
 import sharp from 'sharp';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { iconLabelForProductApp, renderBrandedIcon, whiteMarkPng } from './branded-icon.mjs';
+import { blackMarkPng, iconChromeForLabel, iconLabelForProductApp, renderBrandedIcon, whiteMarkPng } from './branded-icon.mjs';
 
 const ROOT = process.cwd();
 const ICON_SOURCE = path.join(ROOT, 'assets', 'logos', 'icon-source.png');
 const RES = path.join(ROOT, 'android/app/src/main/res');
 
-/** APK home-screen icon — black background with white shield (no Lite tag; PWA owns Lite). */
-const ICON_BACKGROUND = '#000000';
-const SPLASH_BACKGROUND = '#000000';
+/** Combined APK splash fallback — role builds use iconChromeForLabel(). */
+const DEFAULT_SPLASH_BACKGROUND = '#000000';
 
 /** Launcher mipmaps (legacy + round). */
 const LAUNCHER_SIZES = [
@@ -86,11 +85,10 @@ function parseProductAppArg() {
   return null;
 }
 
-/** Black background + white shield, Hire/Work/Staff under the logo when this is a role APK. */
+/** Role launcher: Staff is white + black mark; Hire/Work are black + white mark. */
 async function renderLauncherIcon(iconMaster, size, label) {
   return renderBrandedIcon(iconMaster, size, {
     label,
-    background: ICON_BACKGROUND,
     safeZone: false,
   });
 }
@@ -104,14 +102,18 @@ async function renderForegroundIcon(iconMaster, size, label) {
   });
 }
 
-/** APK splash — black fill with centered white shield. */
-async function renderSplash(iconMaster, width, height) {
+/** APK splash — Staff is a white field with a black shield; others stay black + white. */
+async function renderSplash(iconMaster, width, height, label) {
+  const chrome = iconChromeForLabel(label);
   const logoSize = Math.round(Math.min(width, height) * 0.34);
   const offsetX = Math.round((width - logoSize) / 2);
   const offsetY = Math.round((height - logoSize) / 2);
-  const logo = await whiteMarkPng(iconMaster, logoSize);
+  const logo =
+    chrome.mark === 'black'
+      ? await blackMarkPng(iconMaster, logoSize)
+      : await whiteMarkPng(iconMaster, logoSize);
   return sharp({
-    create: { width, height, channels: 4, background: SPLASH_BACKGROUND },
+    create: { width, height, channels: 4, background: chrome.background },
   })
     .composite([{ input: logo, left: offsetX, top: offsetY }])
     .png()
@@ -141,18 +143,19 @@ async function main() {
   }
 
   for (const { dir, width, height } of SPLASH_SCREENS) {
-    const splash = await renderSplash(iconMaster, width, height);
+    const splash = await renderSplash(iconMaster, width, height, label);
     await writePng(dir, 'splash.png', splash);
   }
 
-  const defaultSplash = await renderSplash(iconMaster, 480, 800);
+  const defaultSplash = await renderSplash(iconMaster, 480, 800, label);
   await writePng('drawable', 'splash.png', defaultSplash);
 
+  const chrome = iconChromeForLabel(label);
   console.log('Generated Guardr-branded Android icons and splash screens');
   console.log(
     label
-      ? `Launcher icon: black (${ICON_BACKGROUND}) + white shield + "${label}" under the logo`
-      : `Launcher icon: black (${ICON_BACKGROUND}) + white shield (no role label); splash: ${SPLASH_BACKGROUND}`,
+      ? `Launcher icon: ${chrome.background} field + ${chrome.mark} shield + "${label}" under the logo`
+      : `Launcher icon: black (${DEFAULT_SPLASH_BACKGROUND}) + white shield (no role label); splash: ${DEFAULT_SPLASH_BACKGROUND}`,
   );
 }
 

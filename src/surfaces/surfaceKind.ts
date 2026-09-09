@@ -4,7 +4,7 @@
  * Guardr ships three separately designed applications that share branding,
  * domain logic, and data but no layouts, navigation, or page structure:
  *
- *   mobile   — one-handed app UI (PWA + Android APK are the primary experience)
+ *   mobile   — one-handed app UI (website mobile + Android APKs)
  *   tablet   — split-view touch UI built for larger touchscreens
  *   desktop  — pointer/keyboard operations center
  *
@@ -36,7 +36,7 @@ const OVERRIDE_PARAM = 'ui';
 export interface SurfaceResolutionInput {
   /** Viewport width in CSS pixels. */
   viewportWidth: number;
-  /** browser | pwa | native — installed shells never get the desktop UI. */
+  /** browser | native — Android shells never get the desktop UI. */
   shellKind: ShellKind;
   /** Form factor from `DeviceProvider`, used as the fallback signal. */
   formFactor?: FormFactor;
@@ -55,7 +55,7 @@ export function isSurfaceKind(value: unknown): value is SurfaceKind {
  *
  * Rules, in order:
  *  1. An explicit override always wins (used by `?ui=`, settings, and E2E).
- *  2. Installed shells (PWA / APK) never load the desktop operations center —
+ *  2. Installed Android shells never load the desktop operations center —
  *     a 13" Android tablet is still a touch device, so it gets the tablet app.
  *  3. Otherwise width decides, with a coarse-pointer guard so touchscreen
  *     laptops below the desktop floor stay on the tablet app.
@@ -64,7 +64,7 @@ export function resolveSurfaceKind(input: SurfaceResolutionInput): SurfaceKind {
   if (input.override && isSurfaceKind(input.override)) return input.override;
 
   const width = Number.isFinite(input.viewportWidth) ? input.viewportWidth : 0;
-  const installed = input.shellKind === 'pwa' || input.shellKind === 'native';
+  const installed = input.shellKind === 'native';
 
   if (width < SURFACE_BOUNDS.tabletMin) return 'mobile';
   if (width < SURFACE_BOUNDS.desktopMin) return 'tablet';

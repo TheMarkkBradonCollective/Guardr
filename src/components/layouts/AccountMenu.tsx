@@ -93,7 +93,7 @@ export function AccountMenu({
   const unread = accountMenuUnreadCount(notifications);
   const shellKind = getShellKind();
   const installMenuLabel = accountMenuInstallLabel(
-    shellKind === 'native' ? 'apk' : shellKind === 'pwa' ? 'pwa' : 'browser',
+    shellKind === 'native' ? 'apk' : 'browser',
   );
 
   useEffect(() => {

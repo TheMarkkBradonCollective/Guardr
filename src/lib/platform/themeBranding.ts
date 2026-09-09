@@ -4,7 +4,7 @@ export const THEME_ICON_BACKGROUNDS: Record<ThemeMode, string> = {
   dark: '#000000',
 };
 
-/** Browser UI accent (status bar, PWA theme_color). */
+/** Browser UI accent (status bar, theme-color meta). */
 export const THEME_BROWSER_COLORS: Record<ThemeMode, string> = {
   light: '#000000',
   dark: '#000000',

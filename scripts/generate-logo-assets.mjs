@@ -8,10 +8,8 @@ const PUBLIC = path.join(ROOT, 'public');
 const ICONS_DIR = path.join(PUBLIC, 'icons');
 const ASSETS = path.join(ROOT, 'assets', 'logos');
 
-/** Install / launcher chrome — black field with white shield. */
+/** Website favicon / share icons — black field with white shield. */
 const INSTALL_ICON_BACKGROUND = '#000000';
-/** Red Lite ribbon — PWA install icons only (APK stays clean). */
-const LITE_TAG_RED = '#E10600';
 
 const THEME_ICON_BACKGROUNDS = {
   light: '#FFFFFF',
@@ -153,50 +151,14 @@ async function writeWordmarkPng(master, height, dest) {
     .toFile(dest);
 }
 
-/** Red "Lite" pill for PWA home-screen icons only. */
-async function renderLiteTag(size) {
-  const tagW = Math.max(28, Math.round(size * 0.4));
-  const tagH = Math.max(12, Math.round(size * 0.15));
-  const radius = Math.round(tagH / 2);
-  const fontSize = Math.max(8, Math.round(size * 0.085));
-  const svg = `
-<svg width="${tagW}" height="${tagH}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="${tagW}" height="${tagH}" rx="${radius}" ry="${radius}" fill="${LITE_TAG_RED}"/>
-  <text
-    x="50%"
-    y="54%"
-    text-anchor="middle"
-    dominant-baseline="middle"
-    font-family="Arial Black, Arial, Helvetica, sans-serif"
-    font-weight="800"
-    font-size="${fontSize}"
-    fill="#FFFFFF"
-    letter-spacing="0.06em"
-  >Lite</text>
-</svg>`;
-  return sharp(Buffer.from(svg)).png().toBuffer();
-}
-
 /**
- * White shield on solid background. Optional red Lite tag (PWA install assets only).
+ * White shield on solid background.
  */
-async function renderIconOnBackground(iconMaster, size, background, { liteTag = false, markRatio = 0.72 } = {}) {
+async function renderIconOnBackground(iconMaster, size, background, { markRatio = 0.72 } = {}) {
   const markSize = Math.round(size * markRatio);
   const offset = Math.round((size - markSize) / 2);
   const mark = await (await whiteMarkFromIcon(iconMaster, markSize)).toBuffer();
   const layers = [{ input: mark, left: offset, top: offset }];
-
-  if (liteTag) {
-    const tag = await renderLiteTag(size);
-    const tagMeta = await sharp(tag).metadata();
-    const margin = Math.max(4, Math.round(size * 0.05));
-    layers.push({
-      input: tag,
-      left: size - (tagMeta.width || 0) - margin,
-      top: size - (tagMeta.height || 0) - margin,
-    });
-  }
-
   return sharp({
     create: { width: size, height: size, channels: 4, background },
   })
@@ -205,9 +167,9 @@ async function renderIconOnBackground(iconMaster, size, background, { liteTag = 
     .toBuffer();
 }
 
-/** Maskable safe-zone icon — white mark, optional Lite tag. */
-async function renderMaskableOnBackground(iconMaster, size, background, { liteTag = false } = {}) {
-  return renderIconOnBackground(iconMaster, size, background, { liteTag, markRatio: 0.58 });
+/** Maskable safe-zone icon — white mark. */
+async function renderMaskableOnBackground(iconMaster, size, background) {
+  return renderIconOnBackground(iconMaster, size, background, { markRatio: 0.58 });
 }
 
 async function writeThemeIcons(iconMaster) {
@@ -230,18 +192,18 @@ async function writeThemeIcons(iconMaster) {
     await sharp(maskable).toFile(path.join(ICONS_DIR, `maskable-${theme}-512.png`));
   }
 
-  // Default PWA install assets: black + white shield + red Lite tag.
+  // Default website icons: black + white shield (not an installable PWA).
   await sharp(
-    await renderIconOnBackground(iconMaster, 192, INSTALL_ICON_BACKGROUND, { liteTag: true }),
+    await renderIconOnBackground(iconMaster, 192, INSTALL_ICON_BACKGROUND),
   ).toFile(path.join(PUBLIC, 'icon-192.png'));
   await sharp(
-    await renderIconOnBackground(iconMaster, 512, INSTALL_ICON_BACKGROUND, { liteTag: true }),
+    await renderIconOnBackground(iconMaster, 512, INSTALL_ICON_BACKGROUND),
   ).toFile(path.join(PUBLIC, 'icon-512.png'));
   await sharp(
-    await renderIconOnBackground(iconMaster, 180, INSTALL_ICON_BACKGROUND, { liteTag: true }),
+    await renderIconOnBackground(iconMaster, 180, INSTALL_ICON_BACKGROUND),
   ).toFile(path.join(PUBLIC, 'apple-touch-icon.png'));
   await sharp(
-    await renderMaskableOnBackground(iconMaster, 512, INSTALL_ICON_BACKGROUND, { liteTag: true }),
+    await renderMaskableOnBackground(iconMaster, 512, INSTALL_ICON_BACKGROUND),
   ).toFile(path.join(PUBLIC, 'icon-maskable-512.png'));
 }
 
@@ -283,19 +245,12 @@ async function main() {
   await writeFile(path.join(PUBLIC, 'logo.svg'), svg);
   await writeFile(path.join(ROOT, 'logo.svg'), svg);
 
-  // Role PWA / download icons: shield + Hire / Work / Staff under the logo.
+  // Role download icons: shield + Hire / Work / Staff. Staff is white + black mark.
   for (const [productApp, label] of Object.entries(PRODUCT_ICON_LABELS)) {
-    const any192 = await renderBrandedIcon(iconMaster, 192, {
-      label,
-      background: INSTALL_ICON_BACKGROUND,
-    });
-    const any512 = await renderBrandedIcon(iconMaster, 512, {
-      label,
-      background: INSTALL_ICON_BACKGROUND,
-    });
+    const any192 = await renderBrandedIcon(iconMaster, 192, { label });
+    const any512 = await renderBrandedIcon(iconMaster, 512, { label });
     const maskable = await renderBrandedIcon(iconMaster, 512, {
       label,
-      background: INSTALL_ICON_BACKGROUND,
       safeZone: true,
     });
     await sharp(any192).toFile(path.join(ICONS_DIR, `${productApp}-192.png`));
@@ -305,10 +260,8 @@ async function main() {
   console.log('Generated public logo assets from real transparent uploads');
   console.log(`  icon: ${path.relative(ROOT, ICON_SOURCE)}`);
   console.log(`  wordmark: ${path.relative(ROOT, WORDMARK_SOURCE)}`);
-  console.log(
-    `PWA install icons: black (#000000) + white shield + red Lite tag (${LITE_TAG_RED})`,
-  );
-  console.log('Role icons: Hire / Work / Staff drawn under the shield in /icons/{client,guard,staff}-*.png');
+  console.log('Website icons: black (#000000) + white shield');
+  console.log('Role icons: Hire / Work black+white; Staff white+black, in /icons/{client,guard,staff}-*.png');
 }
 
 main().catch((err) => {

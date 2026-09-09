@@ -17,9 +17,9 @@ export function resolveViewSurface(shellKind: ShellKind, formFactor: FormFactor)
   return `${shellKind}-${formFactor}` as ViewSurface;
 }
 
-/** True when the user is in an installed app shell (PWA or APK), not a browser tab. */
+/** True when the user is in a native Android shell, not a browser tab. */
 export function isInstalledAppSurface(surface: ViewSurface): boolean {
-  return surface.startsWith('pwa-') || surface.startsWith('native-');
+  return surface.startsWith('native-');
 }
 
 /** True when the surface should use tablet merge layouts (rail + touch). */
@@ -34,7 +34,7 @@ export function isAdvancedDesktopSurface(surface: ViewSurface): boolean {
 
 /**
  * Slide-up cards, bottom sheets, and swipe-to-confirm.
- * Keep on mobile/tablet browser, all PWA, and all APK — not the website desktop workbench.
+ * Keep on mobile/tablet browser and all APK — not the website desktop workbench.
  */
 export function prefersMobileGestureUi(surface: ViewSurface): boolean {
   return !isAdvancedDesktopSurface(surface);

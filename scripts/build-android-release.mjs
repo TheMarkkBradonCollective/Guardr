@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build both sideload APK (guardr.co/download) and Play Store AAB for a full release.
+ * Build sideload APKs (Hire, Work, Staff + combined) and Play Store AABs.
  */
 import { spawnSync } from 'node:child_process';
 
@@ -11,5 +11,5 @@ function run(script) {
   }
 }
 
-run('scripts/build-android-apk.mjs');
+run('scripts/build-android-apk-all.mjs');
 run('scripts/build-android-play.mjs');

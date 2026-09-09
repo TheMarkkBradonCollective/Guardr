@@ -5,15 +5,28 @@
   "description": "Map-first independent security marketplace. Clients post coverage; licensed guards apply, track shifts, and get paid — all in one platform.",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
+  "display": "browser",
   "orientation": "portrait",
   "background_color": "#000000",
   "theme_color": "#000000",
   "lang": "en-US",
   "dir": "ltr",
   "categories": ["business", "utilities", "productivity"],
-  "prefer_related_applications": false,
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.signaturesecurity.guardr.client"
+    },
+    {
+      "platform": "play",
+      "id": "com.signaturesecurity.guardr.guard"
+    },
+    {
+      "platform": "play",
+      "id": "com.signaturesecurity.guardr.staff"
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -32,45 +45,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/narrow.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Guardr mobile workspace"
-    },
-    {
-      "src": "/screenshots/wide.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Guardr tablet and desktop ops"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Hire",
-      "short_name": "Hire",
-      "url": "/client/home",
-      "description": "Open Hire — coverage, activity, and reports",
-      "icons": [{ "src": "/icons/client-192.png", "sizes": "192x192", "type": "image/png" }]
-    },
-    {
-      "name": "Work",
-      "short_name": "Work",
-      "url": "/guard/map",
-      "description": "Open Work — shifts, check-in, and field work",
-      "icons": [{ "src": "/icons/guard-192.png", "sizes": "192x192", "type": "image/png" }]
-    },
-    {
-      "name": "Staff",
-      "short_name": "Staff",
-      "url": "/staff/overview",
-      "description": "Open Staff — operations and administration",
-      "icons": [{ "src": "/icons/staff-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Google Play Console — Guardr
 
-Step-by-step guide to upload **Guardr** (`com.signaturesecurity.guardr`) to Google Play. Your developer account is already set up; this doc covers build prep, Console forms, and release.
+Step-by-step guide to upload **Hire, Work, and Staff** to Google Play. Each app has its own package id. Your developer account is already set up; this doc covers build prep, Console forms, and release.
 
 ## Quick commands
 
@@ -8,12 +8,14 @@ Step-by-step guide to upload **Guardr** (`com.signaturesecurity.guardr`) to Goog
 |---------|---------|
 | `npm run play:check` | Verify repo is ready (stops at missing keystore / Firebase) |
 | `npm run play:assets` | Generate 512×512 icon + 1024×500 feature graphic |
-| `npm run android:play` | Build signed AAB for Play Console upload |
+| `npm run android:play` | Build signed Hire, Work, and Staff AABs |
 
-Output AAB after a successful build:
+Output AABs after a successful build:
 
 ```
-dist/play-store/guardr-play-release.aab
+dist/play-store/Guardr-Client.aab   (Hire — com.signaturesecurity.guardr.client)
+dist/play-store/Guardr-Guard.aab    (Work — com.signaturesecurity.guardr.guard)
+dist/play-store/Guardr-Staff.aab    (Staff — com.signaturesecurity.guardr.staff)
 ```
 
 ---
@@ -91,7 +93,7 @@ npm run play:assets    # optional but recommended before Console upload
 npm run android:play
 ```
 
-Upload **`dist/play-store/guardr-play-release.aab`** — not `public/guardr.apk` (debug-signed sideload build).
+Upload the three AABs under `dist/play-store/` (`Guardr-Client.aab`, `Guardr-Guard.aab`, `Guardr-Staff.aab`) — not `public/guardr.apk` (debug-signed sideload build). Each listing is a separate Play app.
 
 ---
 
@@ -210,7 +212,7 @@ When prompted for sensitive permissions:
 ## Step 6 — Upload and release
 
 1. **Testing → Internal testing** (recommended first)
-2. **Create release** → upload `dist/play-store/guardr-play-release.aab`
+2. **Create release** → upload that app’s AAB (`Guardr-Client.aab`, `Guardr-Guard.aab`, or `Guardr-Staff.aab`)
 3. Release name: e.g. `1.0.122 (222)` matching `versionName` / `versionCode` in `android/app/build.gradle`
 4. Add release notes
 5. **Save → Review → Start rollout**

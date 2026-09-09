@@ -21,24 +21,6 @@ async function emulateInstalledApp(page: Page, app: 'client' | 'guard' | 'staff'
     } catch {
       /* ignore */
     }
-    const original = window.matchMedia.bind(window);
-    window.matchMedia = ((query: string) => {
-      if (query.includes('display-mode: standalone')) {
-        return {
-          matches: true,
-          media: query,
-          onchange: null,
-          addListener() {},
-          removeListener() {},
-          addEventListener() {},
-          removeEventListener() {},
-          dispatchEvent() {
-            return false;
-          },
-        } as MediaQueryList;
-      }
-      return original(query);
-    }) as typeof window.matchMedia;
   }, app);
 }
 

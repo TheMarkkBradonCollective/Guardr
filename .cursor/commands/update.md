@@ -47,15 +47,15 @@ Do not proceed to release steps with open PRs that should ship in this release.
 
 1. Bump version in `package.json`
 2. Run `npm run generate:download-version`
-3. Bust PWA/service worker cache when needed
+3. Bust service worker cache when needed
 4. Run `npm run lint`, `npm test`, and `npm run build`
 5. Rebuild Android **APK and AAB** via `npm run android:release` or CI (**no** `ALLOW_APK_WITHOUT_FCM`)
 6. Confirm APK binary version matches `package.json` — not just `version.json`
-7. Confirm Play AAB is uploaded (`dist/play-store/guardr-play-release.aab`) alongside the sideload APK
+7. Confirm Play AABs are uploaded (`dist/play-store/Guardr-Client.aab`, `Guardr-Guard.aab`, `Guardr-Staff.aab`) alongside the sideload APKs
 
 ## Phase 4 — Verify surfaces
 
-1. **Authentication** — sign-in, session, role routing on web, PWA, APK
+1. **Authentication** — sign-in, session, role routing on website and APK
 2. **Push** — web push (VAPID) and native FCM on APK
 3. **Realtime** — messages, notifications, audit log, live location where applicable
 4. Wire missing Supabase realtime subscriptions
@@ -109,8 +109,8 @@ After merging what belongs on `main`:
 - Branch names: `cursor/<descriptive-name>-97bf`
 - Commit and push as you go
 - Never ship an APK where `version.json` says N but the binary is N-1
-- Website, PWA, APK, and AAB must be on the **same build** for a release
-- Every `/update` ships **both** sideload APK (`public/download/guardr.apk`) and Play AAB (`dist/play-store/guardr-play-release.aab`)
+- Website, APK, and AAB must be on the **same build** for a release
+- Every `/update` ships sideload APKs (`public/download/Guardr-*.apk`) and Play AABs (`dist/play-store/Guardr-*.aab`)
 - Always end on `main` merged and deployed
 
 ## Report back

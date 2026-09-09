@@ -11,7 +11,15 @@ export function iconLabelForProductApp(productApp) {
   return PRODUCT_ICON_LABELS[productApp] ?? null;
 }
 
-export async function whiteMarkPng(iconMaster, size) {
+/** Staff is a white tile with a black mark; Hire/Work stay black with a white mark. */
+export function iconChromeForLabel(label) {
+  if (label === 'Staff') {
+    return { background: '#FFFFFF', mark: 'black', text: '#000000' };
+  }
+  return { background: '#000000', mark: 'white', text: '#FFFFFF' };
+}
+
+async function tintMarkPng(iconMaster, size, color) {
   const { data, info } = await iconMaster
     .clone()
     .resize(size, size)
@@ -19,11 +27,14 @@ export async function whiteMarkPng(iconMaster, size) {
     .raw()
     .toBuffer({ resolveWithObject: true });
 
+  const r = color === 'black' ? 0 : 255;
+  const g = r;
+  const b = r;
   for (let i = 0; i < data.length; i += 4) {
     if (data[i + 3] > 0) {
-      data[i] = 255;
-      data[i + 1] = 255;
-      data[i + 2] = 255;
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
     }
   }
 
@@ -34,6 +45,14 @@ export async function whiteMarkPng(iconMaster, size) {
     .toBuffer();
 }
 
+export async function whiteMarkPng(iconMaster, size) {
+  return tintMarkPng(iconMaster, size, 'white');
+}
+
+export async function blackMarkPng(iconMaster, size) {
+  return tintMarkPng(iconMaster, size, 'black');
+}
+
 function escapeXml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -41,7 +60,7 @@ function escapeXml(value) {
     .replaceAll('>', '&gt;');
 }
 
-async function renderLabelPng(label, width, fontSize) {
+async function renderLabelPng(label, width, fontSize, fill) {
   const height = Math.ceil(fontSize * 1.45);
   const svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
   <text
@@ -52,7 +71,7 @@ async function renderLabelPng(label, width, fontSize) {
     font-family="DejaVu Sans, Liberation Sans, Arial Black, Arial, Helvetica, sans-serif"
     font-weight="800"
     font-size="${fontSize}"
-    fill="#FFFFFF"
+    fill="${fill}"
     letter-spacing="${Math.max(0.4, fontSize * 0.04)}"
   >${escapeXml(label)}</text>
 </svg>`;
@@ -65,15 +84,17 @@ function parseBackground(background) {
 }
 
 /**
- * Black (or transparent) field, white shield, optional Hire/Work/Staff under the logo.
- * `safeZone` keeps mark + label inside an Android/PWA maskable crop.
+ * Role icon: shield + Hire/Work/Staff under the logo.
+ * `safeZone` keeps mark + label inside an Android/maskable crop.
  */
 export async function renderBrandedIcon(iconMaster, size, {
   label = null,
-  background = '#000000',
+  background,
   safeZone = false,
 } = {}) {
+  const chrome = iconChromeForLabel(label);
   const layers = [];
+  const markColor = chrome.mark;
 
   if (label) {
     const logoRatio = safeZone ? 0.42 : 0.5;
@@ -81,13 +102,13 @@ export async function renderBrandedIcon(iconMaster, size, {
     const logoTop = Math.round(size * (safeZone ? 0.2 : 0.12));
     const logoLeft = Math.round((size - logoSize) / 2);
     layers.push({
-      input: await whiteMarkPng(iconMaster, logoSize),
+      input: await tintMarkPng(iconMaster, logoSize, markColor),
       left: logoLeft,
       top: logoTop,
     });
 
     const fontSize = Math.max(8, Math.round(size * (safeZone ? 0.09 : 0.115)));
-    const labelPng = await renderLabelPng(label, size, fontSize);
+    const labelPng = await renderLabelPng(label, size, fontSize, chrome.text);
     const labelMeta = await sharp(labelPng).metadata();
     const labelTop = Math.min(
       size - (labelMeta.height || fontSize) - Math.round(size * (safeZone ? 0.18 : 0.08)),
@@ -103,16 +124,21 @@ export async function renderBrandedIcon(iconMaster, size, {
     const logoSize = Math.round(size * logoRatio);
     const offset = Math.round((size - logoSize) / 2);
     layers.push({
-      input: await whiteMarkPng(iconMaster, logoSize),
+      input: await tintMarkPng(iconMaster, logoSize, markColor),
       left: offset,
       top: offset,
     });
   }
 
+  const resolvedBackground =
+    background !== undefined
+      ? background
+      : chrome.background;
+
   const canvas =
-    background == null || (typeof background === 'object' && background.alpha === 0)
+    resolvedBackground == null || (typeof resolvedBackground === 'object' && resolvedBackground.alpha === 0)
       ? { r: 0, g: 0, b: 0, alpha: 0 }
-      : parseBackground(background);
+      : parseBackground(resolvedBackground);
 
   return sharp({
     create: { width: size, height: size, channels: 4, background: canvas },

@@ -376,18 +376,6 @@ export function applyProductAppToDocument(app: ProductApp): void {
   document.body.classList.toggle('product-guard', app === 'guard');
   document.body.classList.toggle('product-staff', app === 'staff');
   persistProductApp(app);
-  const manifest = document.querySelector('link[rel="manifest"]');
-  if (manifest instanceof HTMLLinkElement) {
-    const href =
-      app === 'client'
-        ? '/manifest-client.json'
-        : app === 'guard'
-          ? '/manifest-guard.json'
-          : app === 'staff'
-            ? '/manifest-staff.json'
-            : '/manifest.json';
-    if (!manifest.href.endsWith(href)) manifest.href = href;
-  }
 }
 
 export function isNativePlatform(): boolean {

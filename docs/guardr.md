@@ -86,15 +86,14 @@ Guardr staff **verify guard licenses and credentials** so clients know who they'
 
 ## Get the app
 
-Guardr works in any browser. For the best field experience, install it on your phone:
+Guardr works in any browser. For field work, install the Android app for your role:
 
 | Option | Best for | How |
 |--------|----------|-----|
-| **Website** | Desktop, quick access | Open [guardr.co](https://guardr.co) |
-| **Home screen app (PWA)** | iPhone, Android, Chromebook | Safari → Share → **Add to Home Screen** (iOS) or Chrome → **Install app** (Android). Updates automatically. |
-| **Android APK** | Guards in the field | Download at [guardr.co/download](https://www.guardr.co/download) (currently v1.0.67) |
+| **Website** | Account, billing, desktop | Open [guardr.co](https://guardr.co) |
+| **Hire / Work / Staff APK** | Android phones | Download at [guardr.co/download](https://www.guardr.co/download) or GitHub Releases |
 
-The Android app and home-screen shortcut use the same account. The APK is best for push notifications and configurable alert sounds during active shifts. Reinstall from the download page when an update is available — the APK does not auto-update like the PWA.
+Each role is its own Android app. Reinstall from the download page when an update is available. Google Play listings use a separate AAB per app.
 
 ---
 

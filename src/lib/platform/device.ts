@@ -71,12 +71,12 @@ export function isTouchDevice(): boolean {
 
 import { isAppExperience } from './appExperience';
 
-/** True when running as installed PWA or Capacitor shell (alias: isInstalledApp). */
+/** True when running in a Capacitor APK/AAB (alias: isInstalledApp). */
 export function isNativeShell(): boolean {
   return isAppExperience();
 }
 
-/** Installed app shell — PWA home-screen shortcut or native APK. */
+/** Installed Android app shell — not the public website. */
 export function isInstalledApp(): boolean {
   return isAppExperience();
 }
