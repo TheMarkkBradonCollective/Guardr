@@ -18,9 +18,10 @@ describe('installSurfaceCopy', () => {
     assert.equal(downloadLiveContextMessage('browser'), 'Website');
   });
 
-  it('points the website at Hire/Work apps and staff-in-browser ops', () => {
+  it('points the website at signup-through-activation, then Hire/Work apps', () => {
+    assert.match(downloadScreenIntro('browser'), /Sign up and complete activation/);
+    assert.match(downloadScreenIntro('browser'), /need Hire or Work to use the platform/);
     assert.match(downloadScreenIntro('browser'), /Staff can run the full system in the browser/);
-    assert.match(downloadScreenIntro('browser'), /Hire and Work/);
     assert.doesNotMatch(downloadScreenIntro('browser'), /PWA|home-screen|lite/i);
   });
 

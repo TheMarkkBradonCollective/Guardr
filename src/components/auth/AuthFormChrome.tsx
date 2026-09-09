@@ -98,36 +98,36 @@ export function AuthFormHeader({
       ? 'Your licensed PPO hires independent contractor guards through Guardr — upload your PPO license after sign-up.'
       : isBusinessClient
         ? 'Your organization hires and pays, with extra tools for sites, staffing, and team access.'
-        : 'Post jobs, browse guards, and manage coverage from your dashboard.';
+        : 'Post coverage after staff approves you — sign up and activation stay on this website.';
 
   const subtitle =
     variant === 'sheet'
       ? isSignUp
         ? role === 'guard'
-          ? 'Independent contractors manage credentials, jobs, and pay here.'
+          ? 'Finish application and activation on this website. After that you need the Work app to take shifts.'
           : role === 'staff'
             ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
             : clientSignupSubtitle
         : role === 'guard'
-          ? 'Welcome back — your jobs and earnings are ready.'
+          ? 'After activation, shifts live in the Work app. This website stays for your account.'
           : role === 'staff'
             ? 'Welcome back — your operations workspace is ready.'
-            : 'Welcome back — your requests and coverage are ready.'
+            : 'After approval, coverage lives in the Hire app. This website stays for your account.'
       : center && hideBadge
         ? isSignUp
           ? 'Enter your email below to create your account'
           : 'Enter your email and password to sign in'
         : isSignUp
-          ? role === 'guard'
-            ? 'Independent contractors manage credentials, jobs, and pay here.'
-            : role === 'staff'
-              ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
-              : clientSignupSubtitle
-          : role === 'guard'
-            ? 'Welcome back — your jobs and earnings are ready.'
-            : role === 'staff'
-              ? 'Welcome back — your operations workspace is ready.'
-              : 'Welcome back — your requests and coverage are ready.';
+        ? role === 'guard'
+          ? 'Finish application and activation on this website. After that you need the Work app to take shifts.'
+          : role === 'staff'
+            ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
+            : clientSignupSubtitle
+        : role === 'guard'
+          ? 'After activation, shifts live in the Work app. This website stays for your account.'
+          : role === 'staff'
+            ? 'Welcome back — your operations workspace is ready.'
+            : 'After approval, coverage lives in the Hire app. This website stays for your account.'
 
   if (variant === 'sheet') {
     return (

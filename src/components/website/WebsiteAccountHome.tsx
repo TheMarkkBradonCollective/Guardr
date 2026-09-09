@@ -7,7 +7,7 @@ import {
   Smartphone,
 } from 'lucide-react';
 import type { SessionUser } from '../../types';
-import { PRODUCT_APP_LABELS, PRODUCT_APP_TAGLINES, productAppForRole, type ProductRole } from '../../lib/productApps';
+import { PRODUCT_APP_ICON_LABELS, PRODUCT_APP_TAGLINES, productAppForRole, type ProductRole } from '../../lib/productApps';
 import { AppButton } from '../ui/AppButton';
 
 interface WebsiteAccountHomeProps {
@@ -17,6 +17,7 @@ interface WebsiteAccountHomeProps {
   statusDetail?: string;
   billingSummary?: string;
   notificationCount?: number;
+  onboardingOpen?: boolean;
   onOpenApp: () => void;
   onOpenBilling: () => void;
   onOpenProfile: () => void;
@@ -29,12 +30,16 @@ export function WebsiteAccountHome({
   statusDetail,
   billingSummary,
   notificationCount = 0,
+  onboardingOpen = false,
   onOpenApp,
   onOpenBilling,
   onOpenProfile,
 }: WebsiteAccountHomeProps) {
   const app = productAppForRole(role);
-  const appLabel = PRODUCT_APP_LABELS[app];
+  const appLabel = PRODUCT_APP_ICON_LABELS[app];
+  const hireWorkLead = onboardingOpen
+    ? `Finish signup and activation here so you can see the current Guardr requirements. After activation you need the ${appLabel} to use the platform. This website stays for profile, billing, messages, and support.`
+    : `Manage profile, billing, messages, and support here. After activation you need the ${appLabel} to use the platform.`;
 
   return (
     <div className="website-account-home">
@@ -44,11 +49,11 @@ export function WebsiteAccountHome({
         <p className="website-account-lead">
           {role === 'staff'
             ? 'Profile, billing, and support live here. Dispatch, people, and the rest of operations run in this browser — no app required.'
-            : `Manage profile, billing, messages, and support here. Day-to-day work happens in the ${appLabel}.`}
+            : hireWorkLead}
         </p>
         <div className="website-account-hero-actions">
           <AppButton variant="primary" size="lg" onClick={onOpenApp}>
-            {role === 'staff' ? 'Open operations' : `Open ${appLabel}`}
+            {role === 'staff' ? 'Open operations' : onboardingOpen ? 'Continue application' : `Get ${appLabel}`}
             <ArrowRight size={18} strokeWidth={2.25} aria-hidden />
           </AppButton>
           <AppButton variant="outline" size="lg" onClick={onOpenProfile}>
@@ -80,10 +85,16 @@ export function WebsiteAccountHome({
       <section className="website-account-cards">
         <button type="button" className="website-account-card" onClick={onOpenApp}>
           <Smartphone size={22} strokeWidth={2} aria-hidden />
-          <h2>{role === 'staff' ? 'Operations' : appLabel}</h2>
-          <p>{PRODUCT_APP_TAGLINES[app]}</p>
+          <h2>{role === 'staff' ? 'Operations' : onboardingOpen ? 'Application' : appLabel}</h2>
+          <p>
+            {role === 'staff'
+              ? PRODUCT_APP_TAGLINES[app]
+              : onboardingOpen
+                ? 'Complete activation on the website. Then you need the app to use the platform.'
+                : PRODUCT_APP_TAGLINES[app]}
+          </p>
           <span>
-            {role === 'staff' ? 'Continue' : 'Open app'} <ArrowRight size={14} aria-hidden />
+            {role === 'staff' ? 'Continue' : onboardingOpen ? 'Continue' : 'Get the app'} <ArrowRight size={14} aria-hidden />
           </span>
         </button>
         <button type="button" className="website-account-card" onClick={onOpenBilling}>
