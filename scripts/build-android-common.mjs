@@ -2,7 +2,7 @@
 /**
  * Shared steps for Guardr Android sideload APK and Play Store AAB builds.
  */
-import { unlink } from 'node:fs/promises';
+import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { existsSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -134,6 +134,15 @@ export async function prepareAndroidWebBuild({
 
   console.log('→ Syncing Capacitor Android project…');
   run('npx', ['cap', 'sync', 'android']);
+
+  if (productApp) {
+    const nativeJsDir = path.join(ROOT, 'android/app/src/main/assets/public');
+    await mkdir(nativeJsDir, { recursive: true });
+    await writeFile(
+      path.join(nativeJsDir, 'native-product-app.js'),
+      `window.__GUARDR_NATIVE_PRODUCT_APP__='${productApp}';\n`,
+    );
+  }
 
   return { nativeFcmConfigured };
 }

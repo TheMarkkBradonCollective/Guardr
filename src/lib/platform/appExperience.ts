@@ -3,7 +3,10 @@ import { Capacitor } from '@capacitor/core';
 function hasBakedProductApp(): boolean {
   const env = typeof import.meta !== 'undefined' ? import.meta.env : undefined;
   const baked = env?.VITE_PRODUCT_APP;
-  return baked === 'client' || baked === 'guard' || baked === 'staff';
+  if (baked === 'client' || baked === 'guard' || baked === 'staff') return true;
+  if (typeof window === 'undefined') return false;
+  const fromWindow = window.__GUARDR_NATIVE_PRODUCT_APP__;
+  return fromWindow === 'client' || fromWindow === 'guard' || fromWindow === 'staff';
 }
 
 /**

@@ -9,10 +9,12 @@ import {
   nativeDeepLinkForRole,
   openAppCtaCopy,
   parseProductAppRole,
+  parseBakedNativeProductApp,
   parseWebsiteAccountView,
   pathFromDeepLink,
   PRODUCT_APP_LAUNCHER_NAMES,
   PRODUCT_APP_PACKAGE_IDS,
+  NATIVE_APPLICATION_IDS,
   productAppForRole,
   productAppFromPath,
   resolveProductApp,
@@ -110,6 +112,14 @@ describe('deep links and CTAs', () => {
     assert.equal(nativeDeepLinkForRole('client', '/client/messages'), 'guardr-client://messages');
   });
 
+  it('assigns distinct Android application ids per app', () => {
+    assert.equal(NATIVE_APPLICATION_IDS.client, 'com.signaturesecurity.guardr.client');
+    assert.equal(NATIVE_APPLICATION_IDS.guard, 'com.signaturesecurity.guardr.guard');
+    assert.equal(NATIVE_APPLICATION_IDS.staff, 'com.signaturesecurity.guardr.staff');
+    assert.equal(parseBakedNativeProductApp('staff'), 'staff');
+    assert.equal(parseBakedNativeProductApp(''), null);
+  });
+
   it('uses role-specific open-app copy', () => {
     assert.equal(openAppCtaCopy('client').action, 'Open Client App');
     assert.equal(openAppCtaCopy('guard').action, 'Open Guard App');
@@ -160,6 +170,17 @@ describe('resolveProductApp', () => {
 
   it('still prefers an operational URL over the baked identity', () => {
     assert.equal(resolveProductApp({ url: '/staff/overview', baked: 'client' }), 'staff');
+  });
+
+  it('prefers a baked APK identity over stored website on launch', () => {
+    assert.equal(
+      resolveProductApp({ url: '/', stored: null, isInstalledShell: true, baked: 'client' }),
+      'client',
+    );
+    assert.equal(
+      resolveProductApp({ url: '/', stored: 'staff', isInstalledShell: true, baked: 'guard' }),
+      'guard',
+    );
   });
 });
 

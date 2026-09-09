@@ -111,6 +111,20 @@
       ]
     },
     {
+      "source": "/download/guardr-apps.zip",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/zip" }
+      ]
+    },
+    {
+      "source": "/download/guardr-(client|guard|staff).apk",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" }
+      ]
+    },
+    {
       "source": "/download/version.json",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }

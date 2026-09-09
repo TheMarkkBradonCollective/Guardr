@@ -13,10 +13,17 @@ export interface DownloadVersionManifest {
   apkDirectUrl?: string;
   zipUrl?: string;
   zipDirectUrl?: string;
+  appsZipUrl?: string;
+  appsZipDirectUrl?: string;
   apps?: {
     client?: ProductAppApkLinks;
     guard?: ProductAppApkLinks;
     staff?: ProductAppApkLinks;
+  };
+  apkApps?: {
+    client?: string;
+    guard?: string;
+    staff?: string;
   };
   updatedAt?: string;
 }

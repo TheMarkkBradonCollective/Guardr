@@ -11,8 +11,11 @@ export function resolveApkDownloadUrl(
   return (
     roleLinks?.apkDirectUrl ||
     roleLinks?.apkUrl ||
+    (role && manifest.apkApps?.[role]) ||
     manifest.zipDirectUrl ||
     manifest.zipUrl ||
+    manifest.appsZipDirectUrl ||
+    manifest.appsZipUrl ||
     manifest.apkDirectUrl ||
     manifest.apkUrl
   );

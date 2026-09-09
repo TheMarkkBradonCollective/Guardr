@@ -99,6 +99,8 @@ const downloadManifest = {
   apkDirectUrl: `${APPS_ZIP_DIRECT_URL}${apkCacheQuery}`,
   zipUrl: `/download/${APPS_ZIP_FILE}${apkCacheQuery}`,
   zipDirectUrl: `${APPS_ZIP_DIRECT_URL}${apkCacheQuery}`,
+  appsZipUrl: `/download/${APPS_ZIP_FILE}${apkCacheQuery}`,
+  appsZipDirectUrl: `${APPS_ZIP_DIRECT_URL}${apkCacheQuery}`,
   apps,
   updatedAt: new Date().toISOString(),
 };

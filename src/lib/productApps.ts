@@ -96,7 +96,23 @@ export function parseProductAppRole(value: string | null | undefined): Exclude<P
  */
 export function bakedProductApp(): Exclude<ProductApp, 'website'> | null {
   const env = typeof import.meta !== 'undefined' ? import.meta.env : undefined;
-  return parseProductAppRole(env?.VITE_PRODUCT_APP);
+  const fromVite = parseProductAppRole(env?.VITE_PRODUCT_APP);
+  if (fromVite) return fromVite;
+  if (typeof window === 'undefined') return null;
+  return parseProductAppRole(window.__GUARDR_NATIVE_PRODUCT_APP__);
+}
+
+/** @deprecated Use PRODUCT_APP_PACKAGE_IDS */
+export const NATIVE_APPLICATION_IDS = PRODUCT_APP_PACKAGE_IDS;
+/** @deprecated Use parseProductAppRole */
+export const parseBakedNativeProductApp = parseProductAppRole;
+/** @deprecated Use bakedProductApp */
+export const bakedNativeProductApp = bakedProductApp;
+
+declare global {
+  interface Window {
+    __GUARDR_NATIVE_PRODUCT_APP__?: string;
+  }
 }
 
 export function isWebsiteAccountView(value: string | null | undefined): value is WebsiteAccountView {
@@ -210,7 +226,7 @@ export function resolveProductApp(input: {
   const fromPath = productAppFromPath(url);
   if (fromPath !== 'website') return fromPath;
   if (isWebsiteAccountPath(url)) return 'website';
-  const baked = parseProductAppRole(input.baked ?? bakedProductApp());
+  const baked = parseProductAppRole(input.baked === undefined ? bakedProductApp() : input.baked);
   if (baked) return baked;
   if (input.isInstalledShell ?? isAppExperience()) {
     return input.stored ?? readStoredProductApp() ?? 'website';

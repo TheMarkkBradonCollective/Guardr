@@ -140,6 +140,7 @@
         text-decoration: none;
         cursor: pointer;
       }
+      .btn + .btn { margin-top: 10px; }
       .btn:hover { background: #1a1a1a; }
       .btn.secondary {
         background: #ffffff;
@@ -642,6 +643,11 @@
             downloadBtn.href = roleApps[requestedApp].apkUrl;
             downloadBtn.setAttribute('download', 'guardr-' + requestedApp + '.apk');
             downloadBtn.textContent = 'Download ' + (roleApps[requestedApp].label || requestedApp);
+          }
+          if (latest.appsZipUrl) {
+            var zipBtn = document.getElementById('apps-zip-btn');
+            if (zipBtn) zipBtn.href = latest.appsZipUrl;
+          }
           }
 
           if (live === 'apk') {
