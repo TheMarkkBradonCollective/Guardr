@@ -11,6 +11,7 @@ import type { FormFactor } from '../../lib/platform/device';
 import { INSTALL_APK_TITLE, INSTALL_PWA_TITLE } from '../../lib/installSurfaceCopy';
 import { FONT_DISPLAY } from '../../theme/typography';
 const APK_DOWNLOAD_URL = '/download/guardr.apk';
+const APPS_ZIP_URL = '/download/guardr-apps.zip';
 const APK_QR_URL = '/download/apk-qr.png';
 const DOWNLOAD_PAGE_URL = '/download';
 
@@ -185,6 +186,21 @@ export function LandingAppDownloads({
           >
             Get {INSTALL_APK_TITLE}
           </GuardrButton>
+          <Block
+            as="a"
+            href={APPS_ZIP_URL}
+            download="guardr-apps.zip"
+            margin="8px 0 0"
+            $style={{
+              fontSize: '13px',
+              fontWeight: 600,
+              color: theme.colors.contentSecondary,
+              textDecoration: 'underline',
+              textAlign: 'center',
+            }}
+          >
+            Download Client, Guard, and Staff APKs (zip)
+          </Block>
         </Block>
 
         {/* Home screen / PWA panel */}

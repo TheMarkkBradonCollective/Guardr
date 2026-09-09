@@ -11,6 +11,7 @@ import QRCode from 'qrcode';
 const ROOT = process.cwd();
 const APK_SLUG = 'guardr';
 const APK_DIRECT_URL = 'https://www.guardr.co/download/guardr.apk';
+const APPS_ZIP_DIRECT_URL = 'https://www.guardr.co/download/guardr-apps.zip';
 const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
@@ -84,6 +85,13 @@ const downloadManifest = {
   apkVersionCode: versionCode,
   apkUrl: `/download/guardr.apk${apkCacheQuery}`,
   apkDirectUrl: `${APK_DIRECT_URL}${apkCacheQuery}`,
+  appsZipUrl: `/download/guardr-apps.zip${apkCacheQuery}`,
+  appsZipDirectUrl: `${APPS_ZIP_DIRECT_URL}${apkCacheQuery}`,
+  apkApps: {
+    client: `/download/guardr-client.apk${apkCacheQuery}`,
+    guard: `/download/guardr-guard.apk${apkCacheQuery}`,
+    staff: `/download/guardr-staff.apk${apkCacheQuery}`,
+  },
   updatedAt: new Date().toISOString(),
 };
 

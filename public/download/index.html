@@ -140,7 +140,7 @@
         text-decoration: none;
         cursor: pointer;
       }
-      .btn:hover { background: #1a1a1a; }
+      .btn + .btn { margin-top: 10px; }
       .btn.secondary {
         background: #ffffff;
         border: 1px solid var(--border);
@@ -329,6 +329,13 @@
           <a class="qr-link" id="apk-direct-link" href="https://www.guardr.co/download/guardr.apk">https://www.guardr.co/download/guardr.apk</a>
         </div>
         <a class="btn" id="apk-download-btn" href="/download/guardr.apk" download="guardr.apk">Download APK</a>
+        <p class="qr-caption" style="margin-top:16px">Or get Client, Guard, and Staff as three APKs in one zip:</p>
+        <a class="btn secondary" id="apps-zip-btn" href="/download/guardr-apps.zip" download="guardr-apps.zip">Download all three APKs (zip)</a>
+        <p class="qr-caption">
+          Individual: <a href="/download/guardr-client.apk" download="guardr-client.apk">Client</a>
+          · <a href="/download/guardr-guard.apk" download="guardr-guard.apk">Guard</a>
+          · <a href="/download/guardr-staff.apk" download="guardr-staff.apk">Staff</a>
+        </p>
         <p id="latest-version"></p>
         <ol id="apk-steps">
           <li>Tap <strong>Download APK</strong>.</li>
@@ -620,6 +627,11 @@
 
           if (latest.apkUrl) {
             downloadBtn.href = latest.apkUrl;
+          }
+          if (latest.appsZipUrl) {
+            var zipBtn = document.getElementById('apps-zip-btn');
+            if (zipBtn) zipBtn.href = latest.appsZipUrl;
+          }
           }
 
           if (live === 'apk') {

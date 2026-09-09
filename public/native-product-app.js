@@ -1,0 +1,1 @@
+window.__GUARDR_NATIVE_PRODUCT_APP__ = '';

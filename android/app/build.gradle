@@ -14,14 +14,37 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.signaturesecurity.guardr"
     compileSdk rootProject.ext.compileSdkVersion
+    buildFeatures {
+        buildConfig true
+    }
     defaultConfig {
-        applicationId "com.signaturesecurity.guardr"
+        def productApp = (findProperty('guardrProductApp') ?: '').toString().trim()
+        def roleApplicationIds = [
+            client: 'com.signaturesecurity.guardr.client',
+            guard: 'com.signaturesecurity.guardr.guard',
+            staff: 'com.signaturesecurity.guardr.staff',
+        ]
+        def roleLabels = [
+            client: 'Guardr Client',
+            guard: 'Guardr Guard',
+            staff: 'Guardr Staff',
+        ]
+        applicationId (roleApplicationIds.containsKey(productApp)
+            ? roleApplicationIds[productApp]
+            : 'com.signaturesecurity.guardr')
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Keep in sync with package.json via npm run generate:download-version
         versionCode 231
         versionName "1.0.131-beta"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField "String", "PRODUCT_APP", "\"${productApp}\""
+        if (roleLabels.containsKey(productApp)) {
+            resValue "string", "app_name", roleLabels[productApp]
+            resValue "string", "title_activity_main", roleLabels[productApp]
+            resValue "string", "package_name", roleApplicationIds[productApp]
+            resValue "string", "custom_url_scheme", roleApplicationIds[productApp]
+        }
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61

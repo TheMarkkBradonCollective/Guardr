@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { isAppExperience } from './platform/appExperience';
 import {
   applyProductAppToDocument,
+  parseBakedNativeProductApp,
   persistProductApp,
   productAppFromPath,
   readStoredProductApp,
@@ -21,11 +22,15 @@ const ProductAppContext = createContext<ProductAppContextValue>({
 
 function readCurrentProductApp(): ProductApp {
   if (typeof window === 'undefined') return 'website';
-  return resolveProductApp({
+  const baked = parseBakedNativeProductApp(window.__GUARDR_NATIVE_PRODUCT_APP__);
+  const resolved = resolveProductApp({
     url: window.location.pathname + window.location.search,
     isInstalledShell: isAppExperience(),
     stored: readStoredProductApp(),
+    baked,
   });
+  if (baked) persistProductApp(baked);
+  return resolved;
 }
 
 export function ProductAppProvider({ children }: { children: React.ReactNode }) {

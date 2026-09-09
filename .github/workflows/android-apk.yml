@@ -9,6 +9,7 @@ on:
       - 'android/**'
       - 'capacitor.config.ts'
       - 'scripts/build-android-apk.mjs'
+      - 'scripts/build-android-apk-all.mjs'
       - 'scripts/build-android-play.mjs'
       - 'scripts/build-android-release.mjs'
       - 'scripts/build-android-common.mjs'
@@ -54,8 +55,8 @@ jobs:
         run: npm run apk:audit
         continue-on-error: true
 
-      - name: Build APK
-        run: npm run android:apk
+      - name: Build APKs
+        run: npm run android:apk:all
         env:
           VITE_APP_URL: https://www.guardr.co
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -71,6 +72,10 @@ jobs:
           path: |
             android/app/build/outputs/apk/sideload/release/app-sideload-release.apk
             public/download/guardr.apk
+            public/download/guardr-client.apk
+            public/download/guardr-guard.apk
+            public/download/guardr-staff.apk
+            public/download/guardr-apps.zip
           if-no-files-found: error
 
       - name: Write Play upload keystore

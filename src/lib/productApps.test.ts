@@ -8,8 +8,10 @@ import {
   isWebsiteAccountPath,
   nativeDeepLinkForRole,
   openAppCtaCopy,
+  parseBakedNativeProductApp,
   parseWebsiteAccountView,
   pathFromDeepLink,
+  NATIVE_APPLICATION_IDS,
   productAppForRole,
   productAppFromPath,
   resolveProductApp,
@@ -107,6 +109,14 @@ describe('deep links and CTAs', () => {
     assert.equal(nativeDeepLinkForRole('client', '/client/messages'), 'guardr-client://messages');
   });
 
+  it('assigns distinct Android application ids per app', () => {
+    assert.equal(NATIVE_APPLICATION_IDS.client, 'com.signaturesecurity.guardr.client');
+    assert.equal(NATIVE_APPLICATION_IDS.guard, 'com.signaturesecurity.guardr.guard');
+    assert.equal(NATIVE_APPLICATION_IDS.staff, 'com.signaturesecurity.guardr.staff');
+    assert.equal(parseBakedNativeProductApp('staff'), 'staff');
+    assert.equal(parseBakedNativeProductApp(''), null);
+  });
+
   it('uses role-specific open-app copy', () => {
     assert.equal(openAppCtaCopy('client').action, 'Open Client App');
     assert.equal(openAppCtaCopy('guard').action, 'Open Guard App');
@@ -128,6 +138,17 @@ describe('resolveProductApp', () => {
     assert.equal(
       resolveProductApp({ url: '/', stored: 'guard', isInstalledShell: false }),
       'website',
+    );
+  });
+
+  it('prefers a baked APK identity over stored website on launch', () => {
+    assert.equal(
+      resolveProductApp({ url: '/', stored: null, isInstalledShell: true, baked: 'client' }),
+      'client',
+    );
+    assert.equal(
+      resolveProductApp({ url: '/', stored: 'staff', isInstalledShell: true, baked: 'guard' }),
+      'guard',
     );
   });
 });

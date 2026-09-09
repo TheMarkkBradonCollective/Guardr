@@ -4,5 +4,12 @@ export interface DownloadVersionManifest {
   apkVersionCode: number;
   apkUrl: string;
   apkDirectUrl?: string;
+  appsZipUrl?: string;
+  appsZipDirectUrl?: string;
+  apkApps?: {
+    client: string;
+    guard: string;
+    staff: string;
+  };
   updatedAt?: string;
 }
