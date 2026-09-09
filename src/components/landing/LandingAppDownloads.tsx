@@ -10,8 +10,7 @@ import type { FormFactor } from '../../lib/platform/device';
 
 import { INSTALL_APK_TITLE, INSTALL_PWA_TITLE } from '../../lib/installSurfaceCopy';
 import { FONT_DISPLAY } from '../../theme/typography';
-const APK_DOWNLOAD_URL = '/download/guardr.apk';
-const APPS_ZIP_URL = '/download/guardr-apps.zip';
+import { GITHUB_ALL_APKS_ZIP } from '../../lib/githubApkRelease';
 const APK_QR_URL = '/download/apk-qr.png';
 const DOWNLOAD_PAGE_URL = '/download';
 
@@ -101,8 +100,11 @@ export function LandingAppDownloads({
           }}
         >
           Get {INSTALL_APK_TITLE} for field work, or save {INSTALL_PWA_TITLE} to your home screen — same
-          account, same login either way. After you sign in, the website stays for billing and account
-          settings. Day-to-day work opens in the Client App, Guard App, or Staff App.
+          account, same login either way. Client, Guard, and Staff apps are on the{' '}
+          <a href={DOWNLOAD_PAGE_URL} style={{ color: 'inherit', fontWeight: 600 }}>
+            downloads page
+          </a>
+          . After you sign in, the website stays for billing and account settings.
         </Block>
       </Block>
 
@@ -180,16 +182,15 @@ export function LandingAppDownloads({
           </Block>
           <GuardrButton
             kind="primary"
-            {...({ $as: 'a', href: APK_DOWNLOAD_URL, download: 'guardr.apk' } as Record<string, unknown>)}
+            {...({ $as: 'a', href: DOWNLOAD_PAGE_URL } as Record<string, unknown>)}
             startEnhancer={<Download className="w-4 h-4" />}
             overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
           >
-            Get {INSTALL_APK_TITLE}
+            Get Client, Guard, and Staff
           </GuardrButton>
           <Block
             as="a"
-            href={APPS_ZIP_URL}
-            download="guardr-apps.zip"
+            href={GITHUB_ALL_APKS_ZIP}
             margin="8px 0 0"
             $style={{
               fontSize: '13px',
@@ -199,7 +200,7 @@ export function LandingAppDownloads({
               textAlign: 'center',
             }}
           >
-            Download Client, Guard, and Staff APKs (zip)
+            Download all APKs from GitHub
           </Block>
         </Block>
 

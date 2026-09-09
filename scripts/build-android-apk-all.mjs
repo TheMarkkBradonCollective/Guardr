@@ -3,11 +3,11 @@
  * Build Client, Guard, and Staff sideload APKs and zip them together.
  *
  * Outputs:
- *   public/download/guardr-client.apk
- *   public/download/guardr-guard.apk
- *   public/download/guardr-staff.apk
- *   public/download/guardr-apps.zip
- *   public/download/guardr.apk          (combined package, existing installers)
+ *   public/download/Guardr-Client.apk
+ *   public/download/Guardr-Guard.apk
+ *   public/download/Guardr-Staff.apk
+ *   public/download/Guardr-All-APKs.zip   (GitHub Release asset)
+ *   public/download/guardr.apk            (combined package, existing installers)
  *
  * Each role APK uses a distinct applicationId so all three can be installed
  * on one device. Pass -PguardrProductApp=<role> through Gradle.
@@ -23,9 +23,9 @@ import {
 } from './build-android-common.mjs';
 
 const ROLES = [
-  { id: 'client', file: 'guardr-client.apk' },
-  { id: 'guard', file: 'guardr-guard.apk' },
-  { id: 'staff', file: 'guardr-staff.apk' },
+  { id: 'client', file: 'guardr-client.apk', release: 'Guardr-Client.apk' },
+  { id: 'guard', file: 'guardr-guard.apk', release: 'Guardr-Guard.apk' },
+  { id: 'staff', file: 'guardr-staff.apk', release: 'Guardr-Staff.apk' },
 ];
 
 const SERVICES_PATH = path.join(ROOT, 'android/app/google-services.json');
@@ -93,8 +93,9 @@ try {
     }
     const dest = path.join(PUBLIC_DOWNLOAD, role.file);
     await copyFile(SIDELOAD_APK, dest);
-    apkPaths.push(dest);
-    console.log(`✓ ${role.file}`);
+    await copyFile(SIDELOAD_APK, path.join(PUBLIC_DOWNLOAD, role.release));
+    apkPaths.push(path.join(PUBLIC_DOWNLOAD, role.release));
+    console.log(`✓ ${role.release}`);
   }
 
   console.log('\n→ Assembling combined sideload APK (com.signaturesecurity.guardr)…');
@@ -104,8 +105,8 @@ try {
   });
   await copyFile(SIDELOAD_APK, path.join(PUBLIC_DOWNLOAD, 'guardr.apk'));
 
-  const zipPath = path.join(PUBLIC_DOWNLOAD, 'guardr-apps.zip');
-  console.log('\n→ Zipping Client, Guard, and Staff APKs…');
+  const zipPath = path.join(PUBLIC_DOWNLOAD, 'Guardr-All-APKs.zip');
+  console.log('\n→ Zipping Client, Guard, and Staff APKs for GitHub Releases…');
   run('zip', ['-j', '-q', zipPath, ...apkPaths]);
 
   console.log('→ Post-build parity audit…');
@@ -118,7 +119,7 @@ try {
   } else {
     console.warn('⚠ Native FCM disabled in this APK build.');
   }
-  console.log('Share zip: https://guardr.co/download/guardr-apps.zip');
+  console.log('Share zip: https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip');
 } catch (error) {
   console.error(error);
   process.exit(1);

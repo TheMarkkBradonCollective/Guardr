@@ -20,6 +20,9 @@ on:
       - 'package.json'
       - 'package-lock.json'
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -45,6 +48,10 @@ jobs:
 
       - name: Sync version manifests
         run: npm run generate:download-version
+
+      - name: Read app version
+        id: ver
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Write Firebase google-services.json
         run: node scripts/write-google-services.mjs
@@ -72,11 +79,33 @@ jobs:
           path: |
             android/app/build/outputs/apk/sideload/release/app-sideload-release.apk
             public/download/guardr.apk
-            public/download/guardr-client.apk
-            public/download/guardr-guard.apk
-            public/download/guardr-staff.apk
-            public/download/guardr-apps.zip
+            public/download/Guardr-Client.apk
+            public/download/Guardr-Guard.apk
+            public/download/Guardr-Staff.apk
+            public/download/Guardr-All-APKs.zip
           if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apks-v${{ steps.ver.outputs.version }}
+          name: Guardr APKs ${{ steps.ver.outputs.version }}
+          make_latest: true
+          fail_on_unmatched_files: true
+          files: |
+            public/download/Guardr-All-APKs.zip
+            public/download/Guardr-Client.apk
+            public/download/Guardr-Guard.apk
+            public/download/Guardr-Staff.apk
+          body: |
+            Client, Guard, and Staff Android APKs.
+
+            **All three (zip):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
+
+            - [Guardr-Client.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk)
+            - [Guardr-Guard.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk)
+            - [Guardr-Staff.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk)
 
       - name: Write Play upload keystore
         run: node scripts/write-keystore.mjs
