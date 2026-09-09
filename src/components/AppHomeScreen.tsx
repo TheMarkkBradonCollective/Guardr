@@ -19,6 +19,7 @@ import type { ProductApp } from '../lib/productApps';
 import {
   AppWelcomeBackdrop,
   AppWelcomeHero,
+  AppWelcomeShellBadge,
   AppWelcomeSignInDock,
 } from './app/AppWelcomeChrome';
 
@@ -87,6 +88,7 @@ export function AppHomeScreen({
       {showBackdrop ? <AppWelcomeBackdrop /> : null}
 
       <header className="app-welcome-topbar">
+        <AppWelcomeShellBadge shellKind={shellKind} experienceTier={experienceTier} />
         <ThemeToggle value={themeMode} onChange={onChangeTheme} size="sm" />
       </header>
 

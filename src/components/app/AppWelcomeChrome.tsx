@@ -8,7 +8,7 @@ import { AppButton } from '../ui/AppButton';
 import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import { EqualOpportunityNotice } from '../legal/EqualOpportunityNotice';
 import type { LegalPageId } from '../../lib/legalContent';
-import { PRODUCT_APP_ICON_LABELS, type ProductApp } from '../../lib/productApps';
+import type { ProductApp } from '../../lib/productApps';
 
 /** Soft full-bleed wash — no grid, icons, or glow blobs. */
 export function AppWelcomeBackdrop() {
@@ -110,11 +110,6 @@ export function AppWelcomeHero({
       overflow="auto"
     >
       <p className="app-welcome-brand">Guardr</p>
-      <AppWelcomeShellBadge
-        shellKind={shellKind}
-        experienceTier={experienceTier}
-        productApp={productApp}
-      />
       <h1 className="app-welcome-headline">{copy.headline}</h1>
       <p className="app-welcome-sub">{copy.sub}</p>
     </Block>
@@ -158,28 +153,21 @@ export function AppWelcomeSignInDock({
   );
 }
 
-/** Label under the Guardr wordmark — Hire, Work, or Staff in a role app. */
+/** Compact status chip for the header — no accent glow. */
 export function AppWelcomeShellBadge({
   shellKind,
   experienceTier,
-  productApp,
 }: {
   shellKind: ShellKind;
   experienceTier?: ExperienceTier;
-  productApp?: ProductApp;
 }) {
-  if (productApp && productApp !== 'website') {
-    return (
-      <p className="app-welcome-kicker">{PRODUCT_APP_ICON_LABELS[productApp]}</p>
-    );
-  }
   if (shellKind === 'native') {
     const premium = experienceTier?.shell === 'native' && experienceTier.mode === 'premium';
-    return <p className="app-welcome-kicker">{premium ? 'Premium' : 'App'}</p>;
+    return <span className="app-welcome-shell-status">{premium ? 'Premium' : 'App'}</span>;
   }
   if (shellKind === 'pwa') {
     const lite = experienceTier?.shell === 'pwa' && experienceTier.mode === 'lite';
-    return <p className="app-welcome-kicker">{lite ? 'Lite' : 'Installed'}</p>;
+    return <span className="app-welcome-shell-status">{lite ? 'Lite' : 'Installed'}</span>;
   }
   return null;
 }

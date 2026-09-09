@@ -165,6 +165,14 @@
         font-size: 1.05rem;
         letter-spacing: -0.02em;
       }
+      .app-card-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        margin: 0 0 12px;
+        background: #000;
+        display: block;
+      }
       .app-card p {
         margin: 0 0 12px;
         color: var(--muted);
@@ -351,16 +359,19 @@
         <p>Pick the app for your role. Each APK installs side by side on Android.</p>
         <div class="app-grid">
           <article class="app-card">
+            <img class="app-card-icon" src="/icons/client-192.png" width="56" height="56" alt="Hire app icon" />
             <h3>Hire</h3>
             <p>Coverage, activity, and reports.</p>
             <a class="btn" id="client-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk">Download Hire</a>
           </article>
           <article class="app-card">
+            <img class="app-card-icon" src="/icons/guard-192.png" width="56" height="56" alt="Work app icon" />
             <h3>Work</h3>
             <p>Shifts, check-in, and field work.</p>
             <a class="btn" id="guard-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk">Download Work</a>
           </article>
           <article class="app-card">
+            <img class="app-card-icon" src="/icons/staff-192.png" width="56" height="56" alt="Staff app icon" />
             <h3>Staff</h3>
             <p>Operations, people, and administration.</p>
             <a class="btn" id="staff-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk">Download Staff</a>

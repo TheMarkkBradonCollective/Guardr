@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { PRODUCT_ICON_LABELS, renderBrandedIcon } from './branded-icon.mjs';
 
 const ROOT = process.cwd();
 const PUBLIC = path.join(ROOT, 'public');
@@ -282,12 +283,32 @@ async function main() {
   await writeFile(path.join(PUBLIC, 'logo.svg'), svg);
   await writeFile(path.join(ROOT, 'logo.svg'), svg);
 
+  // Role PWA / download icons: shield + Hire / Work / Staff under the logo.
+  for (const [productApp, label] of Object.entries(PRODUCT_ICON_LABELS)) {
+    const any192 = await renderBrandedIcon(iconMaster, 192, {
+      label,
+      background: INSTALL_ICON_BACKGROUND,
+    });
+    const any512 = await renderBrandedIcon(iconMaster, 512, {
+      label,
+      background: INSTALL_ICON_BACKGROUND,
+    });
+    const maskable = await renderBrandedIcon(iconMaster, 512, {
+      label,
+      background: INSTALL_ICON_BACKGROUND,
+      safeZone: true,
+    });
+    await sharp(any192).toFile(path.join(ICONS_DIR, `${productApp}-192.png`));
+    await sharp(any512).toFile(path.join(ICONS_DIR, `${productApp}-512.png`));
+    await sharp(maskable).toFile(path.join(ICONS_DIR, `${productApp}-maskable-512.png`));
+  }
   console.log('Generated public logo assets from real transparent uploads');
   console.log(`  icon: ${path.relative(ROOT, ICON_SOURCE)}`);
   console.log(`  wordmark: ${path.relative(ROOT, WORDMARK_SOURCE)}`);
   console.log(
     `PWA install icons: black (#000000) + white shield + red Lite tag (${LITE_TAG_RED})`,
   );
+  console.log('Role icons: Hire / Work / Staff drawn under the shield in /icons/{client,guard,staff}-*.png');
 }
 
 main().catch((err) => {

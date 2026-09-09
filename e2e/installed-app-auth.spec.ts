@@ -50,7 +50,6 @@ test.describe('installed Hire / Work / Staff apps', () => {
     await page.goto('/');
     await waitForAppReady(page);
 
-    await expect(page.locator('.app-welcome-kicker')).toHaveText(/Work/i);
     await expect(page.locator('.app-welcome-sub')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 
@@ -78,7 +77,6 @@ test.describe('installed Hire / Work / Staff apps', () => {
     await page.goto('/');
     await waitForAppReady(page);
 
-    await expect(page.locator('.app-welcome-kicker')).toHaveText(/Hire/i);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page.getByRole('button', { name: /Log in as/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Customer sign in/i })).toBeVisible();

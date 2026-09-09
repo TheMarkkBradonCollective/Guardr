@@ -79,6 +79,7 @@ try {
   for (const role of ROLES) {
     console.log(`\n→ Assembling ${role.id} sideload APK (${rolePackage(role.id)})…`);
     await writeNativeProductAppJs(role.id);
+    run('node', ['scripts/generate-android-icons.mjs', `--productApp=${role.id}`]);
     const originalServices = await patchGoogleServicesPackage(rolePackage(role.id));
     try {
       run(GRADLE, ['assembleSideloadRelease', `-PguardrProductApp=${role.id}`], {
@@ -100,6 +101,7 @@ try {
 
   console.log('\n→ Assembling combined sideload APK (com.signaturesecurity.guardr)…');
   await writeNativeProductAppJs('');
+  run('node', ['scripts/generate-android-icons.mjs']);
   run(GRADLE, ['assembleSideloadRelease'], {
     cwd: path.join(ROOT, 'android'),
   });

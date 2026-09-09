@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { iconLabelForProductApp, renderBrandedIcon, whiteMarkPng } from './branded-icon.mjs';
 
 const ROOT = process.cwd();
 const ICON_SOURCE = path.join(ROOT, 'assets', 'logos', 'icon-source.png');
@@ -78,59 +79,29 @@ async function prepareIconMaster() {
   return sharp(await squared.png().toBuffer());
 }
 
-/** Solid white mark preserving alpha. */
-async function whiteMarkPng(iconMaster, size) {
-  const { data, info } = await iconMaster
-    .clone()
-    .resize(size, size)
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] > 0) {
-      data[i] = 255;
-      data[i + 1] = 255;
-      data[i + 2] = 255;
-    }
-  }
-
-  return sharp(data, {
-    raw: { width: info.width, height: info.height, channels: 4 },
-  })
-    .png()
-    .toBuffer();
+function parseProductAppArg() {
+  const arg = process.argv.find((item) => item.startsWith('--productApp='));
+  const value = (arg?.slice('--productApp='.length) || process.env.GUARDR_PRODUCT_APP || '').trim();
+  if (value === 'client' || value === 'guard' || value === 'staff') return value;
+  return null;
 }
 
-/** Black background + centered white shield (launcher icon). */
-async function renderLauncherIcon(iconMaster, size) {
-  const logoSize = Math.round(size * 0.7);
-  const offset = Math.round((size - logoSize) / 2);
-  const logo = await whiteMarkPng(iconMaster, logoSize);
-  return sharp({
-    create: { width: size, height: size, channels: 4, background: ICON_BACKGROUND },
-  })
-    .composite([{ input: logo, left: offset, top: offset }])
-    .png()
-    .toBuffer();
+/** Black background + white shield, Hire/Work/Staff under the logo when this is a role APK. */
+async function renderLauncherIcon(iconMaster, size, label) {
+  return renderBrandedIcon(iconMaster, size, {
+    label,
+    background: ICON_BACKGROUND,
+    safeZone: false,
+  });
 }
 
-/** Transparent layer with white shield for adaptive icon foreground. */
-async function renderForegroundIcon(iconMaster, size) {
-  const logoSize = Math.round(size * 0.58);
-  const offset = Math.round((size - logoSize) / 2);
-  const logo = await whiteMarkPng(iconMaster, logoSize);
-  return sharp({
-    create: {
-      width: size,
-      height: size,
-      channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    },
-  })
-    .composite([{ input: logo, left: offset, top: offset }])
-    .png()
-    .toBuffer();
+/** Transparent adaptive foreground — label stays inside the maskable safe zone. */
+async function renderForegroundIcon(iconMaster, size, label) {
+  return renderBrandedIcon(iconMaster, size, {
+    label,
+    background: { r: 0, g: 0, b: 0, alpha: 0 },
+    safeZone: true,
+  });
 }
 
 /** APK splash — black fill with centered white shield. */
@@ -155,15 +126,17 @@ async function writePng(dir, filename, buffer) {
 
 async function main() {
   const iconMaster = await prepareIconMaster();
+  const productApp = parseProductAppArg();
+  const label = iconLabelForProductApp(productApp);
 
   for (const { dir, size } of LAUNCHER_SIZES) {
-    const icon = await renderLauncherIcon(iconMaster, size);
+    const icon = await renderLauncherIcon(iconMaster, size, label);
     await writePng(dir, 'ic_launcher.png', icon);
     await writePng(dir, 'ic_launcher_round.png', icon);
   }
 
   for (const { dir, size } of FOREGROUND_SIZES) {
-    const foreground = await renderForegroundIcon(iconMaster, size);
+    const foreground = await renderForegroundIcon(iconMaster, size, label);
     await writePng(dir, 'ic_launcher_foreground.png', foreground);
   }
 
@@ -177,7 +150,9 @@ async function main() {
 
   console.log('Generated Guardr-branded Android icons and splash screens');
   console.log(
-    `Launcher icon: black (${ICON_BACKGROUND}) + white shield (no Lite tag); splash: ${SPLASH_BACKGROUND}`,
+    label
+      ? `Launcher icon: black (${ICON_BACKGROUND}) + white shield + "${label}" under the logo`
+      : `Launcher icon: black (${ICON_BACKGROUND}) + white shield (no role label); splash: ${SPLASH_BACKGROUND}`,
   );
 }
 

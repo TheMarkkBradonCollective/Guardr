@@ -56,21 +56,21 @@
       "short_name": "Hire",
       "url": "/client/home",
       "description": "Open Hire — coverage, activity, and reports",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icons/client-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Work",
       "short_name": "Work",
       "url": "/guard/map",
       "description": "Open Work — shifts, check-in, and field work",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icons/guard-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Staff",
       "short_name": "Staff",
       "url": "/staff/overview",
       "description": "Open Staff — operations and administration",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icons/staff-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }
