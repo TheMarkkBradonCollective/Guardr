@@ -115,8 +115,16 @@ export function AuthFormHeader({
             : 'After approval, coverage lives in the Hire app. This website stays for your account.'
       : center && hideBadge
         ? isSignUp
-          ? 'Enter your email below to create your account'
-          : 'Enter your email and password to sign in'
+          ? role === 'guard'
+            ? 'Finish application and activation on this website. After that you need the Work app to take shifts.'
+            : role === 'staff'
+              ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
+              : 'Sign up and complete activation on this website. After approval you need the Hire app to post coverage.'
+          : role === 'guard'
+            ? 'After activation, shifts live in the Work app. This website stays for your account.'
+            : role === 'staff'
+              ? 'Enter your email and password to sign in'
+              : 'After approval, coverage lives in the Hire app. This website stays for your account.'
         : isSignUp
         ? role === 'guard'
           ? 'Finish application and activation on this website. After that you need the Work app to take shifts.'

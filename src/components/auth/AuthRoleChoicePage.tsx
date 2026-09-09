@@ -51,7 +51,7 @@ const SIGNUP_PATH_OPTIONS: ChoiceOption[] = [
     icon: User,
     title: 'I need security',
     description:
-      'Hire licensed guards as yourself or as a company. Not a job application to Guardr.',
+      'Hire licensed guards as yourself or as a company. Sign up and complete activation here — after approval you need the Hire app. Not a job application to Guardr.',
   },
   {
     id: 'work',
@@ -92,7 +92,7 @@ const SIGNUP_WORK_OPTIONS: ChoiceOption[] = [
     icon: Shield,
     title: "I'm a licensed guard (contractor)",
     description:
-      'Browse shifts on the map and work as an independent contractor. Guardr does not employ guards through this signup.',
+      'Finish application and activation on this website. After staff activates you, you need the Work app to take shifts. Guardr does not employ guards through this signup.',
   },
   {
     id: 'staff',
