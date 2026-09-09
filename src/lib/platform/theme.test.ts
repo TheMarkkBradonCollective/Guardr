@@ -81,7 +81,7 @@ describe('themeBranding', () => {
     assert.equal(themeIconAssetPath('dark', 'apple-touch-icon'), '/icons/apple-touch-icon-dark.png');
     assert.equal(THEME_ICON_BACKGROUNDS.light, '#000000');
     assert.equal(THEME_ICON_BACKGROUNDS.dark, '#000000');
-    assert.equal(themeChromeColor('light', 'staff'), '#FFFFFF');
+    assert.equal(themeChromeColor('light', 'staff'), '#6B6B6B');
     assert.equal(themeChromeColor('light', 'guard'), '#FFFFFF');
     assert.equal(themeChromeColor('dark', 'staff'), '#000000');
     assert.equal(themeChromeColor('light', 'client'), '#000000');

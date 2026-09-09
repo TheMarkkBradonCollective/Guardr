@@ -245,7 +245,7 @@ async function main() {
   await writeFile(path.join(PUBLIC, 'logo.svg'), svg);
   await writeFile(path.join(ROOT, 'logo.svg'), svg);
 
-  // Role download icons: Guard unlabeled on white; Staff labeled on white; Customer unlabeled on black.
+  // Role download icons: Guard unlabeled on white; Staff unlabeled on grey; Customer unlabeled on black.
   for (const [productApp, label] of Object.entries(PRODUCT_ICON_LABELS)) {
     const any192 = await renderBrandedIcon(iconMaster, 192, { productApp, label: label || null });
     const any512 = await renderBrandedIcon(iconMaster, 512, { productApp, label: label || null });
@@ -262,7 +262,7 @@ async function main() {
   console.log(`  icon: ${path.relative(ROOT, ICON_SOURCE)}`);
   console.log(`  wordmark: ${path.relative(ROOT, WORDMARK_SOURCE)}`);
   console.log('Website icons: black (#000000) + white shield');
-  console.log('Role icons: Guard unlabeled white+black, Customer unlabeled black, Staff labeled white+black, in /icons/{client,guard,staff}-*.png');
+  console.log('Role icons: Guard unlabeled white+black, Staff unlabeled grey+white, Customer unlabeled black, in /icons/{client,guard,staff}-*.png');
 }
 
 main().catch((err) => {

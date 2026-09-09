@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  STAFF_LAUNCHER_BACKGROUND,
   iconChromeForLabel,
   iconChromeForProductApp,
   iconLabelForProductApp,
@@ -8,20 +9,17 @@ import {
 } from './branded-icon.mjs';
 
 describe('Staff launcher chrome', () => {
-  it('is a white tile with a black mark and black Staff label', () => {
-    assert.deepEqual(iconChromeForLabel('Staff'), {
-      background: '#FFFFFF',
-      mark: 'black',
-      text: '#000000',
-    });
+  it('is a grey tile with a white mark and no Staff word', () => {
     assert.deepEqual(iconChromeForProductApp('staff'), {
-      background: '#FFFFFF',
-      mark: 'black',
-      text: '#000000',
+      background: STAFF_LAUNCHER_BACKGROUND,
+      mark: 'white',
+      text: '#FFFFFF',
     });
+    assert.equal(iconLabelForProductApp('staff'), null);
+    assert.deepEqual(iconChromeForLabel('Staff'), iconChromeForProductApp('staff'));
   });
 
-  it('keeps Guard white like Staff even with no word on the icon', () => {
+  it('keeps Guard white and Customer black, both unlabeled', () => {
     assert.deepEqual(iconChromeForProductApp('guard'), {
       background: '#FFFFFF',
       mark: 'black',
@@ -29,18 +27,14 @@ describe('Staff launcher chrome', () => {
     });
     assert.equal(iconChromeForProductApp('client').background, '#000000');
     assert.equal(iconChromeForLabel(null).background, '#000000');
-  });
-
-  it('draws no word on the Guard or Customer launchers', () => {
     assert.equal(iconLabelForProductApp('client'), null);
     assert.equal(iconLabelForProductApp('guard'), null);
-    assert.equal(iconLabelForProductApp('staff'), 'Staff');
   });
 
-  it('uses a white Capacitor splash and light status bar for Guard and Staff', () => {
+  it('uses a grey Capacitor splash for Staff and white for Guard', () => {
     assert.deepEqual(nativeChromeForProductApp('staff'), {
-      backgroundColor: '#FFFFFF',
-      statusBarStyle: 'LIGHT',
+      backgroundColor: STAFF_LAUNCHER_BACKGROUND,
+      statusBarStyle: 'DARK',
     });
     assert.deepEqual(nativeChromeForProductApp('guard'), {
       backgroundColor: '#FFFFFF',

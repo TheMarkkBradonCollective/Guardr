@@ -11,9 +11,10 @@ export const THEME_BROWSER_COLORS: Record<ThemeMode, string> = {
   dark: '#000000',
 };
 
-/** Guard and Staff light theme use a white status bar so they match the white launcher. */
+/** Guard light theme uses a white status bar. Staff light theme uses grey to match the grey launcher. */
 export function themeChromeColor(mode: ThemeMode, productApp?: string | null): string {
-  if ((productApp === 'staff' || productApp === 'guard') && mode === 'light') return '#FFFFFF';
+  if (productApp === 'staff' && mode === 'light') return '#6B6B6B';
+  if (productApp === 'guard' && mode === 'light') return '#FFFFFF';
   return THEME_BROWSER_COLORS[mode];
 }
 

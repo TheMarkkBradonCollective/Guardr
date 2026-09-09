@@ -1,35 +1,45 @@
 import sharp from 'sharp';
 
-/** Text drawn under the Guardr shield on home-screen icons. Guard and Customer are shield-only. */
+/** Text drawn under the Guardr shield on home-screen icons. All three role icons are shield-only. */
 export const PRODUCT_ICON_LABELS = {
   client: null,
   guard: null,
-  staff: 'Staff',
+  staff: null,
 };
+
+/** Staff tile — mid grey so it sits between Customer black and Guard white. */
+export const STAFF_LAUNCHER_BACKGROUND = '#6B6B6B';
 
 export function iconLabelForProductApp(productApp) {
   return PRODUCT_ICON_LABELS[productApp] || null;
 }
 
-/** Guard and Staff are white tiles with a black mark. Customer stays black + white. */
+/**
+ * Guard: white + black mark. Customer: black + white mark.
+ * Staff: grey + white mark. None of the role icons paint a word.
+ */
 export function iconChromeForProductApp(productApp) {
-  if (productApp === 'guard' || productApp === 'staff') {
+  if (productApp === 'staff') {
+    return { background: STAFF_LAUNCHER_BACKGROUND, mark: 'white', text: '#FFFFFF' };
+  }
+  if (productApp === 'guard') {
     return { background: '#FFFFFF', mark: 'black', text: '#000000' };
   }
   return { background: '#000000', mark: 'white', text: '#FFFFFF' };
 }
 
-/** Staff still paints a word, so label-based chrome stays for that path. */
 export function iconChromeForLabel(label) {
-  if (label === 'Staff' || label === 'Guard') {
-    return iconChromeForProductApp('staff');
-  }
+  if (label === 'Staff') return iconChromeForProductApp('staff');
+  if (label === 'Guard') return iconChromeForProductApp('guard');
   return iconChromeForProductApp(null);
 }
 
-/** Capacitor splash / status bar for a role APK. Guard and Staff are white shells. */
+/** Capacitor splash / status bar. Staff is a grey shell; Guard is white; Customer is black. */
 export function nativeChromeForProductApp(productApp) {
-  if (productApp === 'guard' || productApp === 'staff') {
+  if (productApp === 'staff') {
+    return { backgroundColor: STAFF_LAUNCHER_BACKGROUND, statusBarStyle: 'DARK' };
+  }
+  if (productApp === 'guard') {
     return { backgroundColor: '#FFFFFF', statusBarStyle: 'LIGHT' };
   }
   return { backgroundColor: '#000000', statusBarStyle: 'DARK' };
@@ -100,9 +110,8 @@ function parseBackground(background) {
 }
 
 /**
- * Role icon: shield plus optional Staff word under the logo.
- * Guard and Customer are unlabeled (shield only). `safeZone` keeps mark + label
- * inside an Android/maskable crop.
+ * Role icon: unlabeled shield on the role field (black / white / grey).
+ * `safeZone` keeps the mark inside an Android/maskable crop.
  */
 export async function renderBrandedIcon(iconMaster, size, {
   label = null,

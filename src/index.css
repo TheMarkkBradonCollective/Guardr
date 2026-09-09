@@ -23093,10 +23093,13 @@ body[data-surface="desktop"] .staff-overview-insights .staff-overview-feed-card 
   color: var(--brand-primary);
 }
 
-.install-product-card-icon--light,
-.install-product-card-icon--staff {
+.install-product-card-icon--light {
   background: #ffffff;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-text) 16%, transparent);
+}
+
+.install-product-card-icon--staff {
+  background: #6b6b6b;
 }
 
 .install-product-card-head {
