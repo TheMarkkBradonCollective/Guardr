@@ -118,7 +118,7 @@ async function main() {
   console.log(`  ${path.join(OUT_DIR, 'feature-graphic-1024x500.png')}`);
   console.log(`  ${path.join(OUT_DIR, 'client-icon-512.png')}  Customer — unlabeled black + white`);
   console.log(`  ${path.join(OUT_DIR, 'guard-icon-512.png')}  Guard — unlabeled white + black`);
-  console.log(`  ${path.join(OUT_DIR, 'staff-icon-512.png')}  Staff — white + black`);
+  console.log(`  ${path.join(OUT_DIR, 'staff-icon-512.png')}  Staff — unlabeled grey + white`);
   console.log('\nUpload the matching 512 icon in each Play Console listing.');
   console.log('Phone screenshots still need to be captured from a device or emulator.');
 }

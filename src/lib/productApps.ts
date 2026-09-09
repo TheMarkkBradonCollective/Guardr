@@ -63,9 +63,13 @@ export function productAppIconLabel(role: ProductRole | string | null | undefine
   return PRODUCT_APP_ICON_LABELS[productAppForRole(role)];
 }
 
-/** Guard and Staff launchers are white tiles with a black mark. Customer is black + white. */
+/** Guard launcher is a white tile with a black mark. Customer is black + white. Staff is grey. */
 export function productAppHasLightLauncher(app: ProductApp | string): boolean {
-  return app === 'guard' || app === 'staff';
+  return app === 'guard';
+}
+
+export function productAppHasGreyLauncher(app: ProductApp | string): boolean {
+  return app === 'staff';
 }
 
 export const PRODUCT_APP_TAGLINES: Record<ProductApp, string> = {

@@ -15,6 +15,7 @@ import {
   NATIVE_APPLICATION_IDS,
   PRODUCT_APP_ICON_LABELS,
   productAppHasLightLauncher,
+  productAppHasGreyLauncher,
   installedAuthEntry,
   productAppForRole,
   productAppFromPath,
@@ -107,7 +108,8 @@ describe('role isolation', () => {
     assert.equal(PRODUCT_APP_ICON_LABELS.guard, 'Guard');
     assert.equal(PRODUCT_APP_ICON_LABELS.staff, 'Staff');
     assert.equal(productAppHasLightLauncher('guard'), true);
-    assert.equal(productAppHasLightLauncher('staff'), true);
+    assert.equal(productAppHasLightLauncher('staff'), false);
+    assert.equal(productAppHasGreyLauncher('staff'), true);
     assert.equal(productAppHasLightLauncher('client'), false);
   });
 

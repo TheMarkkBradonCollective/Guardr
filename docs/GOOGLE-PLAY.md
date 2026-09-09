@@ -25,7 +25,7 @@ dist/play-store/Guardr-Staff.aab    (Staff — com.signaturesecurity.guardr.staf
 - **Play vs sideload flavors** — `play` build has no `REQUEST_INSTALL_PACKAGES` (Play policy safe); `sideload` keeps in-app APK updates for guardr.co/download
 - **Release signing** — reads `android/keystore.properties` (see `keystore.properties.example`)
 - **Play build flag** — `VITE_PLAY_STORE_BUILD=true` hides sideload update UI in Settings
-- **Store assets script** — unlabeled `icon-512.png`, Guard (white + black, no word) / Customer (black, no word) / Staff (white + black, labeled) `*-icon-512.png`, `feature-graphic-1024x500.png`
+- **Store assets script** — unlabeled `icon-512.png`, Guard (white + black, no word) / Customer (black, no word) / Staff (grey + white, no word) `*-icon-512.png`, `feature-graphic-1024x500.png`
 - **Listing copy draft** — `docs/play-store-listing-copy.md`
 
 Sideload APK builds are unchanged: `npm run android:apk` → `public/download/guardr.apk`.
@@ -114,7 +114,7 @@ Upload from `assets/play-store/`:
 |-------|------|
 | Guard app icon (512×512) | `guard-icon-512.png` (white field, black logo, no word) |
 | Customer app icon (512×512) | `client-icon-512.png` (black field, white logo, no word) |
-| Staff app icon (512×512) | `staff-icon-512.png` (white field, black logo) |
+| Staff app icon (512×512) | `staff-icon-512.png` (grey field, white logo, no word) |
 | Brand / fallback icon | `icon-512.png` |
 | Feature graphic (1024×500) | `feature-graphic-1024x500.png` |
 

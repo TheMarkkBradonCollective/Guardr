@@ -24,7 +24,7 @@ import {
 } from '../../lib/installSurfaceCopy';
 import { formatAppVersion } from '../../lib/appVersion';
 import { GITHUB_ALL_APKS_ZIP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
-import { productAppHasLightLauncher } from '../../lib/productApps';
+import { productAppHasGreyLauncher, productAppHasLightLauncher } from '../../lib/productApps';
 
 interface AppDownloadScreenProps {
   onBack: () => void;
@@ -238,7 +238,13 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
                       width={40}
                       height={40}
                       alt=""
-                      className={`install-product-card-icon${productAppHasLightLauncher(app.id) ? ' install-product-card-icon--light' : ''}`}
+                      className={`install-product-card-icon${
+                        productAppHasGreyLauncher(app.id)
+                          ? ' install-product-card-icon--staff'
+                          : productAppHasLightLauncher(app.id)
+                            ? ' install-product-card-icon--light'
+                            : ''
+                      }`}
                       style={{ objectFit: 'cover', borderRadius: 10 }}
                     />
                     <div className="install-product-card-head">
