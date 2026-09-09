@@ -10,7 +10,7 @@ Pick the door that matches what you want. Guardr runs **two separate worlds**:
 | Guards do **not** work for Guardr | Staff do **not** take guard shifts |
 | Sign up: **I need security** → Personal or Business, or **I want to work** → licensed guard | Sign up: **I want to work** → **Apply to work at Guardr** |
 
-Open [guardr.co](https://guardr.co) → create account or sign in. Returning marketplace hiring accounts use **Log in as customer** on the role picker.
+Open [guardr.co](https://guardr.co) → create account or sign in. Returning marketplace hiring accounts use **Use the Customer app** on the role picker.
 
 ---
 

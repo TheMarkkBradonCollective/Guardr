@@ -19,8 +19,10 @@ import {
   installedAuthEntry,
   productAppForRole,
   productAppFromPath,
+  productAppSpokenName,
   productRoleForApp,
   resolveProductApp,
+  wrongRoleUseAppMessage,
   roleCanOpenProductApp,
   websiteAccountViewsForRole,
   websiteNeedsAppMessage,
@@ -88,6 +90,13 @@ describe('signed-in landing', () => {
     assert.equal(websiteNeedsAppMessage('client'), 'You need the Customer app to use the platform.');
     assert.equal(websiteNeedsAppMessage('guard'), 'You need the Guard app to use the platform.');
     assert.equal(websiteNeedsAppMessage('staff'), '');
+    assert.equal(productAppSpokenName('client'), 'Customer app');
+    assert.equal(productAppSpokenName('guard'), 'Guard app');
+    assert.equal(productAppSpokenName('staff'), 'Staff app');
+    assert.match(wrongRoleUseAppMessage('staff'), /Staff app/);
+    assert.match(wrongRoleUseAppMessage('staff'), /browser/i);
+    assert.equal(wrongRoleUseAppMessage('guard'), 'This is a guard account. Sign in with the Guard app.');
+    assert.equal(wrongRoleUseAppMessage('client'), 'This is a customer account. Sign in with the Customer app.');
   });
 
   it('keeps operational defaults distinct per role', () => {
@@ -128,7 +137,8 @@ describe('role isolation', () => {
     assert.equal(roleCanOpenProductApp('staff', 'client'), false);
     assert.equal(roleCanOpenProductApp('client', 'client'), true);
     assert.equal(roleCanOpenProductApp('client', 'website'), true);
-    assert.match(wrongAppMessage('staff', 'client'), /Staff/);
+    assert.match(wrongAppMessage('staff', 'client'), /Staff app/);
+    assert.match(wrongAppMessage('staff', 'client'), /Customer app/);
   });
 
   it('offers account sections without operational destinations', () => {
@@ -164,9 +174,10 @@ describe('deep links and CTAs', () => {
   });
 
   it('uses role-specific open-app copy', () => {
-    assert.equal(openAppCtaCopy('client').action, 'Open Customer');
-    assert.equal(openAppCtaCopy('guard').action, 'Open Guard');
-    assert.equal(openAppCtaCopy('staff').action, 'Open operations');
+    assert.equal(openAppCtaCopy('client').action, 'Open the Customer app');
+    assert.equal(openAppCtaCopy('guard').action, 'Open the Guard app');
+    assert.equal(openAppCtaCopy('staff').action, 'Open Staff');
+    assert.match(openAppCtaCopy('staff').body, /Staff app/i);
     assert.match(openAppCtaCopy('staff').body, /browser/i);
   });
 });

@@ -69,7 +69,7 @@ import { signInWithCredentials } from '../lib/auth/authService';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
 import { useProductApp } from '../lib/ProductAppProvider';
-import { productRoleForApp } from '../lib/productApps';
+import { productRoleForApp, wrongRoleUseAppMessage } from '../lib/productApps';
 import { useSurfaceKind } from '../surfaces';
 import { useStyletron } from 'baseui';
 import { normalizeGuardServiceAreas } from '../lib/californiaCities';
@@ -134,7 +134,7 @@ const AUTH_HERO_CONTENT: Record<'client' | 'guard' | 'staff', AuthHeroContent> =
   staff: {
     icon: Briefcase,
     headline: 'Run the platform. Keep operations moving.',
-    sub: 'Review applications, monitor jobs, and support customers and guards from one staff workspace.',
+    sub: 'Review applications, monitor jobs, and support customers and guards in this browser or the Staff app.',
     features: [
       { icon: BadgeCheck, text: 'Approve applications and follow up on reports' },
       { icon: MapPin, text: 'Watch live coverage across open markets' },
@@ -675,7 +675,7 @@ export function AuthPage({
 
     if (bootstrapOwner) {
       if (role !== 'staff') {
-        setErrorMsg('This is a staff account. Use Log in as staff.');
+        setErrorMsg(wrongRoleUseAppMessage('staff'));
         return;
       }
       if (password !== bootstrapOwner.password) {
@@ -726,7 +726,7 @@ export function AuthPage({
 
     if (bootstrapDirector) {
       if (role !== 'staff') {
-        setErrorMsg('This is a staff account. Use Log in as staff.');
+        setErrorMsg(wrongRoleUseAppMessage('staff'));
         return;
       }
       if (password !== bootstrapDirector.password) {
@@ -793,13 +793,7 @@ export function AuthPage({
       return;
     }
     if (signInAttempt.status === 'role_mismatch') {
-      if (signInAttempt.actualPath === 'staff') {
-        setErrorMsg('This is a staff account. Use Log in as staff.');
-      } else if (signInAttempt.actualPath === 'guard') {
-        setErrorMsg('This is a guard account. Use Log in as guard.');
-      } else {
-        setErrorMsg('This is a customer account. Use Log in as customer to sign in.');
-      }
+      setErrorMsg(wrongRoleUseAppMessage(signInAttempt.actualPath));
       return;
     }
     if (!isDbConnected && isAppLoading) {

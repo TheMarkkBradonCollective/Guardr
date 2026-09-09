@@ -260,7 +260,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
                         <Download className="w-4 h-4" />
                       </span>
                       <span className="install-cta-copy">
-                        <span className="install-cta-title">Download {app.label}</span>
+                        <span className="install-cta-title">Download the {app.label} app</span>
                         <span className="install-cta-sub">{app.file}</span>
                       </span>
                     </a>

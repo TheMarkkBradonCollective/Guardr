@@ -6,7 +6,7 @@ import { appVersionLabel, formatAppVersion } from '../../lib/appVersion';
 import { fetchAppUpdateStatus, installLatestApk } from '../../lib/platform/apkUpdate';
 import { isPlayStoreBuild } from '../../lib/platform/playStoreBuild';
 import { showAppAlert } from '../ui/AppConfirm';
-import { INSTALL_APK_TITLE } from '../../lib/installSurfaceCopy';
+import { downloadScreenIntro, INSTALL_APK_TITLE } from '../../lib/installSurfaceCopy';
 
 interface AppUpdatePanelProps {
   onOpenDownload?: () => void;
@@ -153,8 +153,7 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
             Website
           </p>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Sign up and complete activation on this website. After that, customers and guards
-            need Guard or Customer to use the platform. Staff can run the full system in the browser.
+            {downloadScreenIntro('browser')}
           </p>
           {onOpenDownload ? (
             <button

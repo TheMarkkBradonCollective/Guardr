@@ -15,7 +15,7 @@ import { Logo } from '../Logo';
 import { AccountMenu, type AccountMenuProps } from '../layouts/AccountMenu';
 import { AppButton } from '../ui/AppButton';
 import {
-  PRODUCT_APP_ICON_LABELS,
+  productAppSpokenName,
   websiteAccountViewsForRole,
   type ProductRole,
   type WebsiteAccountView,
@@ -63,7 +63,7 @@ export function WebsiteAccountShell({
   children,
 }: WebsiteAccountShellProps) {
   const nav = websiteAccountViewsForRole(role);
-  const appLabel = PRODUCT_APP_ICON_LABELS[role === 'client' ? 'client' : role === 'guard' ? 'guard' : 'staff'];
+  const appName = productAppSpokenName(role);
 
   return (
     <div className="website-account" data-product-app="website">
@@ -84,7 +84,7 @@ export function WebsiteAccountShell({
           </div>
           <div className="website-account-top-actions">
             <AppButton variant="primary" size="sm" onClick={onOpenApp}>
-              {role === 'staff' ? 'Open operations' : onboardingOpen ? 'Continue application' : `Get ${appLabel}`}
+              {role === 'staff' ? 'Open Staff' : onboardingOpen ? 'Continue application' : `Get the ${appName}`}
             </AppButton>
             <AccountMenu {...accountMenu} triggerVariant="uber-direct" />
           </div>

@@ -72,7 +72,7 @@ export function AuthFormHeader({
               ? 'Create your business account'
               : 'Create your account'
     : role === 'guard'
-      ? 'Guard sign in'
+      ? 'Guard app sign in'
       : role === 'staff'
         ? 'Staff sign in'
         : isPersonalClient
@@ -81,7 +81,7 @@ export function AuthFormHeader({
             ? 'Security company sign in'
             : isBusinessClient
               ? 'Business sign in'
-              : 'Customer sign in';
+              : 'Customer app sign in';
 
   const title = variant === 'sheet' ? sheetTitle : pageTitle;
 
@@ -112,35 +112,35 @@ export function AuthFormHeader({
         ? role === 'guard'
           ? 'Finish application and activation on this website. After that you need the Guard app to take shifts.'
           : role === 'staff'
-            ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
+            ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews. Staff runs in the browser; the Staff app is optional.'
             : clientSignupSubtitle
         : role === 'guard'
           ? 'After activation, shifts live in the Guard app. This website stays for your account.'
           : role === 'staff'
-            ? 'Welcome back — your operations workspace is ready.'
+            ? 'Welcome back. Sign in with the Staff app, or continue here in the browser.'
             : 'After approval, coverage lives in the Customer app. This website stays for your account.'
       : center && hideBadge
         ? isSignUp
           ? role === 'guard'
             ? 'Finish application and activation on this website. After that you need the Guard app to take shifts.'
             : role === 'staff'
-              ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
+              ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews. Staff runs in the browser; the Staff app is optional.'
               : 'Sign up and complete activation on this website. After approval you need the Customer app to post coverage.'
           : role === 'guard'
             ? 'After activation, shifts live in the Guard app. This website stays for your account.'
             : role === 'staff'
-              ? 'Enter your email and password to sign in'
+              ? 'Sign in with the Staff app, or enter your email and password here in the browser.'
               : 'After approval, coverage lives in the Customer app. This website stays for your account.'
         : isSignUp
         ? role === 'guard'
           ? 'Finish application and activation on this website. After that you need the Guard app to take shifts.'
           : role === 'staff'
-            ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews.'
+            ? 'Apply to work at Guardr — sign in anytime to finish ID and Stripe setup while a Director reviews. Staff runs in the browser; the Staff app is optional.'
             : clientSignupSubtitle
         : role === 'guard'
           ? 'After activation, shifts live in the Guard app. This website stays for your account.'
           : role === 'staff'
-            ? 'Welcome back — your operations workspace is ready.'
+            ? 'Welcome back. Sign in with the Staff app, or continue here in the browser.'
             : 'After approval, coverage lives in the Customer app. This website stays for your account.'
 
   if (variant === 'sheet') {

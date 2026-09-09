@@ -31,7 +31,7 @@ export const GITHUB_ROLE_APKS = [
   {
     id: 'staff' as const,
     label: 'Staff',
-    tagline: 'Operations, people, and administration',
+    tagline: 'Optional Android app — the same operations run in the browser',
     file: 'Guardr-Staff.apk',
     url: GITHUB_STAFF_APK,
   },

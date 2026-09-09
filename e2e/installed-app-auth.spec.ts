@@ -51,7 +51,8 @@ test.describe('installed Guard / Customer / Staff apps', () => {
 
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page.getByRole('button', { name: /Log in as/i })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: /Guard sign in/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Use the Guard app/i })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /Guard app sign in/i })).toBeVisible();
   });
 
   test('Customer Sign in asks personal, business, or security company, not Log in as', async ({ page }) => {
@@ -61,6 +62,7 @@ test.describe('installed Guard / Customer / Staff apps', () => {
 
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page.getByRole('button', { name: /Log in as/i })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Use the Customer app/i })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /Who is hiring/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Personal/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Business/i })).toBeVisible();

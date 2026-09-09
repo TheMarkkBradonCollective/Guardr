@@ -57,15 +57,15 @@ const TIER_HERO_COPY: Partial<Record<string, { headline: string; sub: string }>>
 const PRODUCT_APP_HERO_COPY: Partial<Record<ProductApp, { headline: string; sub: string }>> = {
   client: {
     headline: 'Hire coverage when you need it.',
-    sub: 'Post jobs, track guards on the map, and pay from your phone.',
+    sub: 'Post jobs, track guards on the map, and pay in the Customer app.',
   },
   guard: {
     headline: 'Field-ready security operations.',
-    sub: 'GPS, camera, push alerts, and shift tools — built for phones in the field.',
+    sub: 'GPS, camera, push alerts, and shift tools in the Guard app.',
   },
   staff: {
     headline: 'Operations in your pocket.',
-    sub: 'Jobs, people, and support — the Guardr control centre on your phone.',
+    sub: 'Jobs, people, and support in the Staff app. The same system also runs in the browser.',
   },
 };
 

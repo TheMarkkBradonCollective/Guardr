@@ -23,10 +23,10 @@ test.describe('Guardr public pages', () => {
   test('role picker deep link survives refresh', async ({ page }) => {
     await page.goto('/?auth=sign-in&pick=role');
     await waitForAppReady(page);
-    await expect(page.getByRole('button', { name: /Log in as guard/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Use the Guard app/i })).toBeVisible();
     await page.reload();
     await waitForAppReady(page);
-    await expect(page.getByRole('button', { name: /Log in as guard/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Use the Guard app/i })).toBeVisible();
   });
 
   test('sign-up uses three selection pages', async ({ page }) => {
@@ -50,7 +50,7 @@ test.describe('Guardr public pages', () => {
   test('customer sign-in uses the same hiring options as sign-up', async ({ page }) => {
     await page.goto('/?auth=sign-in&pick=role');
     await waitForAppReady(page);
-    await page.getByRole('button', { name: /Log in as customer/i }).click();
+    await page.getByRole('button', { name: /Use the Customer app/i }).click();
     await expect(page.getByRole('heading', { name: /Who is hiring/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Personal/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Business/i })).toBeVisible();
@@ -139,7 +139,7 @@ test.describe('four product environments', () => {
     await page.goto('/');
     await waitForAppReady(page);
     await expect(page.locator('body')).toHaveAttribute('data-product-app', 'website');
-    await expect(page.locator('body')).toContainText('Download Guard and Customer');
+    await expect(page.locator('body')).toContainText('Download the Guard and Customer apps');
   });
 
   test('account and app URLs send signed-out visitors to sign-in', async ({ page }) => {

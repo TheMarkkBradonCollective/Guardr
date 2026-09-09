@@ -7084,7 +7084,7 @@ export default function App() {
       currentUser,
       guardId,
       'Application approved',
-      'Your guard application is approved. Open Guardr to upload your activation credentials.'
+      'Your guard application is approved. Open the Guard app to upload your activation credentials.'
     );
     await ensureActivationSupportTicket(approvedGuard);
   };

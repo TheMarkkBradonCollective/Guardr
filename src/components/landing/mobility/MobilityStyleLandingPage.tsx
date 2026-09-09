@@ -131,7 +131,7 @@ export function MobilityStyleLandingPage({
       {/* App download CTA */}
       <Block
         as="section"
-        aria-label="Download the app"
+        aria-label="Download the Guard, Customer, and Staff apps"
         padding={isMobile ? 'scale600' : 'scale800'}
         backgroundColor="backgroundSecondary"
       >

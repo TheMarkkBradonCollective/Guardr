@@ -28,20 +28,20 @@ const SIGN_IN_OPTIONS: ChoiceOption[] = [
   {
     id: 'guard',
     icon: Shield,
-    title: 'Log in as guard',
-    description: 'Independent contractor — your marketplace jobs and earnings.',
+    title: 'Use the Guard app',
+    description: 'Sign in here to activate. After that, shifts and check-in live in the Guard app.',
   },
   {
     id: 'client',
     icon: User,
-    title: 'Log in as customer',
-    description: 'Personal or business — whoever is hiring and paying for coverage.',
+    title: 'Use the Customer app',
+    description: 'Sign in here to activate. After that, coverage and sites live in the Customer app.',
   },
   {
     id: 'staff',
     icon: Briefcase,
-    title: 'Log in as staff',
-    description: 'Guardr platform team — operations and support workspace.',
+    title: 'Use the Staff app',
+    description: 'Sign in here in the browser, or install the Staff app — operations, payroll, and support.',
   },
 ];
 
@@ -99,7 +99,7 @@ const SIGNUP_WORK_OPTIONS: ChoiceOption[] = [
     icon: Briefcase,
     title: 'Apply to work at Guardr',
     description:
-      'Platform operations role (Support to start). Government ID, Stripe payout setup, and Director review — not guard or client signup.',
+      'Platform operations role (Support to start). After you are hired, use Staff in the browser or the Staff app. Government ID, Stripe payout setup, and Director review — not guard or customer signup.',
     badge: 'Guardr employment',
     emphasized: true,
   },
@@ -110,9 +110,10 @@ const COPY: Record<
   { heading: string; subheading: string; ariaLabel: string; kicker?: string }
 > = {
   'sign-in': {
-    heading: 'Log in to your account',
-    subheading: 'Choose the workspace that matches how you use Guardr.',
-    ariaLabel: 'Choose how to log in',
+    heading: 'Choose your app',
+    subheading:
+      'Customers and guards activate on this website, then use the Customer or Guard app. Staff can run the full system here or in the Staff app.',
+    ariaLabel: 'Choose which app to sign in with',
   },
   path: {
     heading: 'Create an account',

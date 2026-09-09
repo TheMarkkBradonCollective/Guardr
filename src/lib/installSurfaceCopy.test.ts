@@ -20,7 +20,9 @@ describe('installSurfaceCopy', () => {
 
   it('points the website at signup-through-activation, then Guard/Customer apps', () => {
     assert.match(downloadScreenIntro('browser'), /Sign up and complete activation/);
-    assert.match(downloadScreenIntro('browser'), /need Guard or Customer to use the platform/);
+    assert.match(downloadScreenIntro('browser'), /Customer app/);
+    assert.match(downloadScreenIntro('browser'), /Guard app/);
+    assert.match(downloadScreenIntro('browser'), /Staff app/);
     assert.match(downloadScreenIntro('browser'), /Staff can run the full system in the browser/);
     assert.doesNotMatch(downloadScreenIntro('browser'), /PWA|home-screen|lite/i);
   });

@@ -69,7 +69,7 @@ export function LandingAppDownloads({
             color: theme.colors.contentPrimary,
           }}
         >
-          It&apos;s easier in the app
+          It&apos;s easier in the Guard and Customer apps
         </Block>
         <Block
           as="p"
@@ -82,9 +82,9 @@ export function LandingAppDownloads({
             marginInline: centered ? 'auto' : undefined,
           }}
         >
-          Download Guard and Customer for Android. Sign up and complete activation on this website.
-          After that, customers and guards need the app to use the platform. Staff can run the
-          full system here in the browser.
+          Download the Guard and Customer apps for Android. Sign up and complete activation on this website.
+          After that, customers need the Customer app and guards need the Guard app. Staff can run the
+          full system here in the browser, or in the Staff app.
         </Block>
       </Block>
 
@@ -139,7 +139,7 @@ export function LandingAppDownloads({
               startEnhancer={<Download className="w-4 h-4" />}
               overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
             >
-              Download {app.label}
+              Download the {app.label} app
             </GuardrButton>
           </Block>
         ))}

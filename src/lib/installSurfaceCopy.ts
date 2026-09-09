@@ -17,7 +17,7 @@ export function downloadScreenIntro(context: DownloadLiveContext): string {
   if (context === 'apk') {
     return 'Install the latest Guard, Customer, or Staff build when an update is available. Your account and data stay synced.';
   }
-  return 'Sign up and complete activation on this website. After that, customers and guards need Guard or Customer to use the platform. Staff can run the full system in the browser.';
+  return 'Sign up and complete activation on this website. After that, customers need the Customer app and guards need the Guard app. Staff can run the full system in the browser or the Staff app.';
 }
 
 export function downloadLiveContextMessage(context: DownloadLiveContext): string {

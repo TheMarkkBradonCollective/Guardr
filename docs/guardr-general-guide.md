@@ -33,9 +33,9 @@ Guardr uses different words depending on who is looking at the screen. Internal 
 |----------|--------------|-------|
 | **Guards** | **Customer** on shifts, messages, and job details | The person or business hiring coverage for that job |
 | **Staff ops** | **Customers** in the sidebar and roster panels | Formerly labeled "Clients" in staff UI |
-| **Sign-in** | **Log in as customer** | Marketplace hiring party (personal or business account) |
+| **Sign-in** | **Use the Customer app** | Marketplace hiring party (personal or business account) |
 | **Sign-up** | **I need security** → Personal or Business account | Unchanged marketing path on the homepage |
-| **Auth chrome** | **Customer sign in** / **Customer workspace** | Login and session headers for hiring accounts |
+| **Auth chrome** | **Customer app sign in** / **Customer** | Login and session headers for hiring accounts |
 
 Staff **create** actions (add customer, guard, staff, credential, job) appear **on the page** — not as buttons in the left sidebar. **Management** and **Credentials** always show their add controls when your role allows them.
 

@@ -110,7 +110,7 @@ export function productRoleForApp(app: ProductApp): ProductRole | null {
 
 /**
  * How Sign in / Sign up should open inside an installed Guard / Customer / Staff app.
- * Those shells already are one role — do not show "Log in as guard / customer / staff".
+ * Those shells already are one role — do not show "Use the Guard / Customer / Staff app".
  * Customer sign-in and sign-up both pick personal / business / security company.
  */
 export function installedAuthEntry(
@@ -125,6 +125,25 @@ export function installedAuthEntry(
 
 export function productAppLabelForRole(role: ProductRole | string | null | undefined): string {
   return PRODUCT_APP_LABELS[productAppForRole(role)];
+}
+
+/** Spoken product name: "Customer app", "Guard app", "Staff app". */
+export function productAppSpokenName(role: ProductRole | string | null | undefined): string {
+  return `${productAppLabelForRole(role)} app`;
+}
+
+/**
+ * Wrong-role sign-in: tell people to use the matching app, not "Log in as…".
+ * Staff also runs in the browser; Guard and Customer need their APKs after activation.
+ */
+export function wrongRoleUseAppMessage(actual: ProductRole | 'staff' | 'guard' | 'client'): string {
+  if (actual === 'staff') {
+    return 'This is a staff account. Sign in with the Staff app. Staff also runs in this browser.';
+  }
+  if (actual === 'guard') {
+    return 'This is a guard account. Sign in with the Guard app.';
+  }
+  return 'This is a customer account. Sign in with the Customer app.';
 }
 
 function parsePathname(url: string): string {
@@ -350,22 +369,22 @@ export function openAppCtaCopy(role: ProductRole): { title: string; body: string
   const app = productAppForRole(role);
   if (app === 'client') {
     return {
-      title: 'This feature is available in Customer',
+      title: 'This feature is in the Customer app',
       body: 'Request coverage, track activity, message guards, and review reports in the Customer app.',
-      action: 'Open Customer',
+      action: 'Open the Customer app',
     };
   }
   if (app === 'guard') {
     return {
-      title: 'This feature is available in Guard',
+      title: 'This feature is in the Guard app',
       body: 'Shifts, check-in, patrols, incidents, and pay live in the Guard app — not on the website.',
-      action: 'Open Guard',
+      action: 'Open the Guard app',
     };
   }
   return {
-    title: 'Open operations',
+    title: 'This is Staff',
     body: 'Dispatch, people, incidents, and administration run here in the browser. The Staff app is optional.',
-    action: 'Open operations',
+    action: 'Open Staff',
   };
 }
 
@@ -458,9 +477,10 @@ export function roleCanOpenProductApp(role: ProductRole, app: ProductApp): boole
 }
 
 export function wrongAppMessage(requested: ProductApp, role: ProductRole): string {
-  const requestedLabel = PRODUCT_APP_LABELS[requested];
-  const ownLabel = productAppLabelForRole(role);
-  return `${requestedLabel} is for a different role. Opening ${ownLabel} instead.`;
+  const requestedName =
+    requested === 'website' ? PRODUCT_APP_LABELS.website : `${PRODUCT_APP_LABELS[requested]} app`;
+  const ownName = productAppSpokenName(role);
+  return `The ${requestedName} is for a different role. Opening the ${ownName} instead.`;
 }
 
 const POST_AUTH_PATH_KEY = 'guardr_post_auth_path';

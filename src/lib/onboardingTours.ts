@@ -142,7 +142,7 @@ export const GUARD_ONBOARDING_TOUR: OnboardingTour = {
       title: 'Messages — job threads',
       body: 'Job chats and coordination with clients live under Messages.',
       detail:
-        'Each active job can have its own thread shared with assigned guards and the client contact. Unread badges appear on the sidebar tab and bottom navigation. Messages support text and photo attachments for incident documentation or gate updates. Push notifications (when enabled) alert you to new messages even when the app is in the background.',
+        'Each active job can have its own thread shared with assigned guards and the client contact. Unread badges appear on the sidebar tab and bottom navigation. Messages support text and photo attachments for incident documentation or gate updates. Push notifications (when enabled) alert you to new messages even when the Guard app is in the background.',
       tips: [
         'Keep job-related communication inside the thread for audit purposes.',
         'Photos of incidents should be sent here, not only by SMS.',
@@ -210,7 +210,7 @@ export const GUARD_ONBOARDING_TOUR: OnboardingTour = {
     {
       id: 'settings-availability',
       title: 'Account — availability & preferences',
-      body: 'Set when you are bookable and how the app should behave on shift days.',
+      body: 'Set when you are bookable and how the Guard app should behave on shift days.',
       detail:
         'Weekly availability tells clients and matching engines when you prefer work. Vehicle, gear, and job-type preferences filter which postings surface prominently. Notification settings control push, email, and SMS for applications, messages, and shift reminders. Legal documents — Terms, Privacy, ICA, and Code of Conduct — are linked from the sidebar footer.',
       tips: [
@@ -224,11 +224,11 @@ export const GUARD_ONBOARDING_TOUR: OnboardingTour = {
     {
       id: 'settings-finish',
       title: 'Wrap-up — you are ready',
-      body: 'You have toured every major area of the guard app.',
+      body: 'You have toured every major area of the Guard app.',
       detail:
         'Day-to-day flow: browse Open jobs on the Map, apply from the detail sheet, track approvals on My Jobs, check in when scheduled, coordinate in Messages, and confirm pay in Pay. Sample data from this tutorial is removed when you tap Finish or End tutorial. Welcome to Guardr — stay safe and professional on every shift.',
       tips: [
-        'Pin the app to your home screen for faster check-ins on site.',
+        'Pin the Guard app to your home screen for faster check-ins on site.',
         'Re-run the tutorial after major app updates from Guide.',
         'Contact Support if anything in the live app does not match this walkthrough.',
       ],
@@ -506,7 +506,7 @@ export const STAFF_ONBOARDING_TOUR: OnboardingTour = {
       title: 'Jobs — live roster',
       body: 'The Jobs board is the canonical list of every client posting on the platform.',
       detail:
-        'Filter by status, city, client, date range, or assigned guard. Edit listings, adjust pay, reassign guards, open job chat, or force status transitions when field reality diverges from the app. Most day-to-day ops work happens here — Overview is the alarm bell, Jobs is the workbench.',
+        'Filter by status, city, client, date range, or assigned guard. Edit listings, adjust pay, reassign guards, open job chat, or force status transitions when field reality diverges from Staff. Most day-to-day ops work happens here — Overview is the alarm bell, Jobs is the workbench.',
       tips: [
         'Use toolbar filters during busy weekends with overlapping events.',
         'Split view on desktop keeps the detail pane open while scanning rows.',
