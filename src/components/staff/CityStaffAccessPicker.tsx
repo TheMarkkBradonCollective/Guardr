@@ -4,7 +4,7 @@ import { ROLE_LABELS, canModerateStaffMember, staffRoleToPlatformRole } from '..
 import { formatCityLabel } from '../../lib/californiaCities';
 import { normalizeManagedCities } from '../../lib/platformCities';
 import type { PlatformCity } from '../../lib/platformCities';
-import { WfSearchBar } from '../ui/wireframe';
+import { getStaffDisplayName } from '../../lib/staffProfile';
 
 interface CityStaffAccessPickerProps {
   cityName: string;
@@ -45,7 +45,7 @@ export function CityStaffAccessPicker({
     () =>
       staffRoster
         .filter((member) => member.isStaff && member.staffRole)
-        .sort((a, b) => (a.badgeNumber || a.name).localeCompare(b.badgeNumber || b.name)),
+        .sort((a, b) => getStaffDisplayName(a).localeCompare(getStaffDisplayName(b))),
     [staffRoster]
   );
 
@@ -53,7 +53,7 @@ export function CityStaffAccessPicker({
     const q = search.trim().toLowerCase();
     if (!q) return eligibleStaff;
     return eligibleStaff.filter((member) => {
-      const label = `${member.badgeNumber ?? ''} ${member.name} ${member.staffRole ?? ''}`.toLowerCase();
+      const label = `${getStaffDisplayName(member)} ${member.badgeNumber ?? ''} ${member.name} ${member.staffRole ?? ''}`.toLowerCase();
       return label.includes(q);
     });
   }, [eligibleStaff, search]);
@@ -144,11 +144,11 @@ export function CityStaffAccessPicker({
                   className="rounded border-brand-border"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block font-medium truncate">{member.badgeNumber || member.name}</span>
+                  <span className="block font-medium truncate">{getStaffDisplayName(member)}</span>
                   <span className="block text-xs text-brand-text-muted truncate">
                     {implicitFull
                       ? 'Full platform access'
-                      : `${member.badgeNumber ? member.name : roleLabel} · ${roleLabel}`}
+                      : `${[member.badgeNumber, roleLabel].filter(Boolean).join(' · ')}`}
                   </span>
                 </span>
               </label>

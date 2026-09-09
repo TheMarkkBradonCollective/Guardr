@@ -27,7 +27,7 @@ import { WfBadge, WfSearchBar, WfSectionHeader } from '../ui/wireframe';
 import { Building2, ChevronRight, Search, Shield, UserCheck } from 'lucide-react';
 import { StaffGuardApplicationReviewPanel } from './StaffGuardApplicationReviewPanel';
 import { StaffClientApplicationReviewPanel } from './StaffClientApplicationReviewPanel';
-import { StaffStaffApplicationReviewPanel } from './StaffStaffApplicationReviewPanel';
+import { getStaffDisplayName } from '../../lib/staffProfile';
 import { StaffAddGuardForm } from './StaffAddGuardForm';
 import type { StaffAddGuardInput } from './StaffAddGuardForm';
 import { StaffAddClientForm } from './StaffAddClientForm';
@@ -414,7 +414,7 @@ export function StaffApplications({
     if (kind === 'staff') {
       const member = guards.find((g) => g.id === entry.item.id && g.isStaff);
       if (!member) return null;
-      const title = member.name || member.badgeNumber || feedItem.title;
+      const title = getStaffDisplayName(member);
       const detailBody = (
         <StaffStaffApplicationReviewPanel
           member={member}

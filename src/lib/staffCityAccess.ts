@@ -91,5 +91,5 @@ export function managerStaffForCityAssignment(
 ): Array<{ id: string; badgeNumber?: string; name: string }> {
   return staffRoster
     .filter((member) => member.staffRole === 'Manager')
-    .sort((a, b) => (a.badgeNumber || a.name).localeCompare(b.badgeNumber || b.name));
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
