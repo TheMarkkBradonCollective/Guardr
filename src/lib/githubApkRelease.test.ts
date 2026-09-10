@@ -25,9 +25,7 @@ describe('GitHub APK release URLs', () => {
   it('offers Messenger as a website companion download, not in the three-app zip', () => {
     assert.equal(GITHUB_MESSENGER_APP.file, 'Guardr-Messenger.apk');
     assert.equal(GITHUB_MESSENGER_APP.url, '/download/Guardr-Messenger.apk');
-    assert.equal(
-      GITHUB_ROLE_APKS.some((app) => app.id === 'messenger'),
-      false,
-    );
+    assert.equal(GITHUB_ROLE_APKS.length, 3);
+    assert.ok(!GITHUB_ROLE_APKS.map((app) => app.label).includes('Messenger'));
   });
 });

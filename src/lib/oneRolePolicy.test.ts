@@ -115,8 +115,8 @@ describe('one-role policy', () => {
   it('collects staff from the guards list via isStaff', () => {
     const accounts = collectRoleAccounts(
       [
-        { id: 'g1', name: 'G', email: 'g@x.com', phone: '1', isStaff: false },
-        { id: 's1', name: 'S', email: 's@x.com', phone: '1', isStaff: true },
+        { id: 'g1', name: 'G', email: 'g@x.com', phone: '5551112222', isStaff: false },
+        { id: 's1', name: 'S', email: 's@x.com', phone: '5551112222', isStaff: true },
       ],
       [],
     );
