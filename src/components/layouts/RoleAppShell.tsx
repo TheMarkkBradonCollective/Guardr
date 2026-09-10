@@ -110,7 +110,7 @@ export function RoleAppShell({
 
     return [
       ...build(navItems, productApp === 'guard' ? 'Field' : 'Work', { quick: true }),
-      ...build(messagesNavItems, 'Messages'),
+      ...build(messagesNavItems, 'Messages', { quick: navItems.length === 0 }),
       ...build(overflowNavItems, productApp === 'guard' ? 'Account' : 'Manage'),
     ];
   }, [navItems, messagesNavItems, overflowNavItems, productApp, mobileTabRanks]);

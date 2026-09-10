@@ -28,7 +28,7 @@ describe('GitHub APK release URLs', () => {
   it('offers Messenger as a website sign-in app, not in the three-app zip', () => {
     assert.equal(GITHUB_MESSENGER_APP.file, 'Guardr-Messenger.apk');
     assert.equal(GITHUB_MESSENGER_APP.url, '/download/Guardr-Messenger.apk');
-    assert.match(GITHUB_MESSENGER_APP.tagline, /Sign in and pick Guard, Customer, or Staff/);
+    assert.match(GITHUB_MESSENGER_APP.tagline, /Messages and support/);
     assert.equal(GITHUB_ROLE_APKS.length, 3);
     assert.ok(!GITHUB_ROLE_APKS.map((app) => app.label).includes('Messenger'));
   });

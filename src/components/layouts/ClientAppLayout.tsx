@@ -45,6 +45,7 @@ interface ClientAppLayoutProps {
   messagesBadge?: number;
   supportBadge?: number;
   hideHeader?: boolean;
+  messagesOnly?: boolean;
   headerRight?: React.ReactNode;
   messagesChrome?: MessagesChrome;
   invoicesBadge?: number;
@@ -128,6 +129,7 @@ export function ClientAppLayout({
   supportBadge = 0,
   invoicesBadge = 0,
   hideHeader = false,
+  messagesOnly = false,
   headerRight,
   messagesChrome = EMPTY_MESSAGES_CHROME,
   accountNotifications,
@@ -281,15 +283,15 @@ export function ClientAppLayout({
         themeMode,
         onChangeTheme,
       }}
-      navItems={navItems}
+      navItems={messagesOnly ? [] : navItems}
       messagesNavItems={messagesNavItems}
-      overflowNavItems={accountPending ? [] : overflowNavItems}
+      overflowNavItems={messagesOnly || accountPending ? [] : overflowNavItems}
       activeNavId={navHighlightView}
       onNavigate={handleNavigate}
       fullBleed={fullBleed}
       hideHeader={shellHideHeader}
       variant={activeView === 'map' ? 'dark' : 'default'}
-      workspaceLabel="Customer"
+      workspaceLabel={messagesOnly ? 'Messenger' : 'Customer'}
       productApp="client"
       mobilePrimaryNav="tabs"
       mobileTabRanks={{ home: 1, requests: 2, map: 3, operations: 3, messages: 4 }}

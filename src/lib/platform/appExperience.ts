@@ -6,7 +6,7 @@ function bakedNativeProductApp(): string {
   return typeof baked === 'string' ? baked.trim() : '';
 }
 
-/** Messenger APK — sign in, pick Guard / Customer / Staff, then run that role. */
+/** Messenger APK — messages and support for the signed-in Guard, Customer, or Staff account. */
 export function isMessengerExperience(): boolean {
   return bakedNativeProductApp() === 'messenger';
 }
@@ -17,8 +17,8 @@ export function isMessengerExperience(): boolean {
  *
  * Role APKs also bake `window.__GUARDR_NATIVE_PRODUCT_APP__`. That is the
  * Playwright hook for installed-app tests — not display-mode standalone.
- * Messenger is an installed shell with a role picker (it does not bake a
- * single Guard / Customer / Staff product app).
+ * Messenger is an installed shell for messages and support. It does not bake a
+ * single Guard / Customer / Staff product app.
  */
 export function isAppExperience(): boolean {
   if (typeof window === 'undefined') return false;

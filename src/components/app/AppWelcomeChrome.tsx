@@ -77,8 +77,8 @@ function resolveWelcomeCopy(
 ) {
   if (isMessengerExperience()) {
     return {
-      headline: 'Sign in. Pick your role.',
-      sub: 'Guard, Customer, or Staff — one person, one role. Signing into a second role locks both accounts.',
+      headline: 'Messages and support.',
+      sub: 'Sign in as Guard, Customer, or Staff. Job chats, team messages, and support live here — field work stays in the role app.',
     };
   }
   if (productApp && productApp !== 'website' && PRODUCT_APP_HERO_COPY[productApp]) {

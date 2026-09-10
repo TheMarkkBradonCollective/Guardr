@@ -46,6 +46,7 @@ interface DesktopStaffAdminShellProps {
   headerOverride?: React.ReactNode;
   sidebarPrimaryAction?: SurfacePrimaryAction | SidebarPrimaryAction;
   sidebarPrimaryActions?: Array<SurfacePrimaryAction | SidebarPrimaryAction>;
+  workspaceLabel?: string;
 }
 
 /** Section groups for rail / sidebar / More sheet — see staffNavGroups.ts */
@@ -88,6 +89,7 @@ export function DesktopStaffAdminShell({
   headerOverride,
   sidebarPrimaryAction,
   sidebarPrimaryActions,
+  workspaceLabel = 'Staff',
 }: DesktopStaffAdminShellProps) {
   const { surface } = useSurface();
   const accessFlags = {
@@ -115,7 +117,7 @@ export function DesktopStaffAdminShell({
           label: item.label,
           icon: item.icon,
           section: group.title ?? 'Operations',
-          tabletQuick: TABLET_QUICK.includes(item.id),
+          tabletQuick: TABLET_QUICK.includes(item.id) || (navItems.length <= 2 && (item.id === 'messages' || item.id === 'support')),
           keywords: [group.title ?? '', item.id],
         })),
     );
@@ -165,7 +167,7 @@ export function DesktopStaffAdminShell({
   return (
     <SurfaceAppShell
       title={screenTitle}
-      workspaceLabel="Staff"
+      workspaceLabel={workspaceLabel}
       destinations={destinations}
       activeId={navHighlight}
       onNavigate={handleNav}

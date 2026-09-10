@@ -1,6 +1,6 @@
 # Android APK (Guardr)
 
-Guardr ships as a **website** plus three **Capacitor Android apps** (Guard, Customer, Staff) and **Messenger**. Each role has an APK for sideload and an AAB for Google Play. Messenger is its own app: sign in, pick Guard / Customer / Staff, then use that role. There is no switch-account.
+Guardr ships as a **website** plus three **Capacitor Android apps** (Guard, Customer, Staff) and **Messenger**. Each role has an APK for sideload and an AAB for Google Play. Messenger is a companion app: sign in as Guard, Customer, or Staff, then use **messages and support**. Field work, jobs, map, and dispatch stay in the role app or on the website. There is no switch-account.
 
 ## Download
 
@@ -17,7 +17,7 @@ Guardr ships as a **website** plus three **Capacitor Android apps** (Guard, Cust
 | Messenger (companion) | `com.signaturesecurity.guardr.messenger` | site `/download/Guardr-Messenger.apk` |
 | Combined (legacy) | `com.signaturesecurity.guardr` | site `/download/guardr.apk` |
 
-The three role APKs can be installed side by side. Each opens its own app (not the marketing website). The all-apps zip is a **GitHub Release** asset (same pattern as MBC All-APKs), not a file on guardr.co. **Messenger is not in that zip** — sign in there and select Guard, Customer, or Staff. There is no switch-account: sign out, then sign in.
+The three role APKs can be installed side by side. Each opens its own app (not the marketing website). The all-apps zip is a **GitHub Release** asset (same pattern as MBC All-APKs), not a file on guardr.co. **Messenger is not in that zip** — sign in there as Guard, Customer, or Staff for messages and support. There is no switch-account: sign out, then sign in.
 
 **One person, one role.** Nobody may be a Guard and a Customer, a Customer and Staff, or Staff and a Guard. Signing into a second role on the website or in an app locks both accounts until a manager, director, administrator, or owner reviews the hold and either clears it or blocks both.
 

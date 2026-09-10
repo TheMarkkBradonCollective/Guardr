@@ -41,7 +41,7 @@ export const GITHUB_ROLE_APKS = [
 export const GITHUB_MESSENGER_APP = {
   id: 'messenger' as const,
   label: 'Messenger',
-  tagline: 'Sign in and pick Guard, Customer, or Staff',
+  tagline: 'Messages and support for your Guardr account',
   file: 'Guardr-Messenger.apk',
   url: '/download/Guardr-Messenger.apk',
 };
