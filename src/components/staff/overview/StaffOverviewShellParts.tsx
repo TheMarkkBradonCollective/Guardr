@@ -73,6 +73,7 @@ export const QUICK_LINK_META: Record<
   guide: { label: 'Guide', icon: LayoutDashboard, sub: 'How-to' },
   'dev-updates': { label: 'Dev notes', icon: LayoutDashboard, sub: 'Release log' },
   'business-plan': { label: 'Business plan', icon: LineChart, sub: 'Strategy & finance' },
+  'company-package': { label: 'Company package', icon: LineChart, sub: 'Stakeholder docs' },
   profile: { label: 'Profile', icon: UserCheck, sub: 'Your account' },
   preferences: { label: 'Preferences', icon: Settings, sub: 'Settings' },
 };

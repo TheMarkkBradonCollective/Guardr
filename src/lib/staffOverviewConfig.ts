@@ -64,6 +64,7 @@ const EXECUTIVE_QUICK_LINKS: StaffSection[] = [
   'agreements',
   'audit-log',
   'business-plan',
+  'company-package',
   'team',
   'management',
   'analytics',
@@ -175,7 +176,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
     showActivityFeed: true,
     emptyAttentionCopy:
       'Platform is clear. Review governance settings, financials, or staff activity.',
-    quickLinkSections: ['settings', 'platform-fees', 'staff-compensation', 'agreements', 'audit-log', 'business-plan', 'team', 'management', 'payments', 'analytics', 'map', 'applications'],
+    quickLinkSections: ['settings', 'platform-fees', 'staff-compensation', 'agreements', 'audit-log', 'business-plan', 'company-package', 'team', 'management', 'payments', 'analytics', 'map', 'applications'],
   },
   finance: {
     roleLabel: ROLE_LABELS.finance,

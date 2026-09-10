@@ -42,6 +42,14 @@ User-facing overview of Guardr: **[docs/guardr.md](docs/guardr.md)** (what it is
 
 Head-to-toe company briefing for legal counsel, advisors, investors, and partners: **[docs/company-information-package.md](docs/company-information-package.md)**
 
+| Document | Printable PDF |
+|----------|---------------|
+| [Executive summary](docs/executive-summary.md) (1 page) | `npm run docs:stakeholder-pdf` → `public/stakeholder/Guardr-Executive-Summary.pdf` |
+| [Company package](docs/company-information-package.md) | `Guardr-Company-Information-Package.pdf` |
+| [Legal counsel intake form](docs/counsel-intake-form.html) | `Guardr-Counsel-Intake-Form.pdf` |
+
+Manager+ staff: open **Company package** in the staff app to view, download, or print.
+
 User manuals (PDF files): **[/manuals/Guardr-User-Manuals-Combined.pdf](https://www.guardr.co/manuals/Guardr-User-Manuals-Combined.pdf)** — website nav **Manuals**, in-app **Guide / Settings / pending screens → Download PDF manuals**
 
 ## Deploy to guardr.co

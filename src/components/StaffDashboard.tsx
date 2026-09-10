@@ -129,6 +129,7 @@ import { STAFF_SECTION_ACCESS_MESSAGES, isStaffNavSectionAccessible } from '../l
 import type { OneRoleCase } from '../lib/oneRolePolicy';
 import { DevNotesPage } from './docs/DevNotesPage';
 import { BusinessPlanPage } from './docs/BusinessPlanPage';
+import { CompanyPackagePage } from './docs/CompanyPackagePage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
 import { ProfileSavePayload, UserProfileScreen } from './profile/UserProfileScreen';
 import { UserSettingsScreen } from './profile/UserSettingsScreen';
@@ -1290,6 +1291,16 @@ export function StaffDashboard({
             title={STAFF_SECTION_ACCESS_MESSAGES['business-plan']!.title}
             message={STAFF_SECTION_ACCESS_MESSAGES['business-plan']!.message}
             placeholders={['Executive summary', 'Financial projections']}
+          />
+        );
+      case 'company-package':
+        return showManagement ? (
+          <CompanyPackagePage />
+        ) : (
+          <AppBlockedAccessScreen
+            title={STAFF_SECTION_ACCESS_MESSAGES['company-package']!.title}
+            message={STAFF_SECTION_ACCESS_MESSAGES['company-package']!.message}
+            placeholders={['Executive summary', 'Counsel intake form', 'Company package PDF']}
           />
         );
       case 'agreements':

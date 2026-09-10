@@ -22,6 +22,16 @@ Sections marked **(Gap)** indicate information not currently on file in company 
 
 For deeper detail, see the full business plan at `docs/business-plan.md` and the public product guide at `docs/guardr.md`.
 
+### Printable versions (Manager+ only)
+
+| Document | Source | PDF |
+|----------|--------|-----|
+| **Executive Summary** (1 page) | `docs/executive-summary.md` | `Guardr-Executive-Summary.pdf` |
+| **Company Information Package** (this document) | `docs/company-information-package.md` | `Guardr-Company-Information-Package.pdf` |
+| **Legal Counsel Intake Form** (fillable) | `docs/counsel-intake-form.html` | `Guardr-Counsel-Intake-Form.pdf` |
+
+Build PDFs: `npm run docs:stakeholder-pdf`. In the staff app: **Resources → Company package** (Manager roles and above).
+
 ---
 
 ## 1. Company at a Glance
