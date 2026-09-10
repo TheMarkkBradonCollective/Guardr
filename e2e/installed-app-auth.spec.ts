@@ -8,14 +8,21 @@ async function waitForAppReady(page: Page) {
 }
 
 async function emulateInstalledApp(page: Page, app: 'client' | 'guard' | 'staff' | 'messenger') {
-  await page.route('**/native-product-app.js', async (route) => {
+  const bake = `window.__GUARDR_NATIVE_PRODUCT_APP__ = ${JSON.stringify(app)};`;
+  await page.route(/native-product-app\.js/, async (route) => {
     await route.fulfill({
       contentType: 'application/javascript',
-      body: `window.__GUARDR_NATIVE_PRODUCT_APP__ = ${JSON.stringify(app)};`,
+      body: bake,
     });
   });
   await page.addInitScript((productApp) => {
-    window.__GUARDR_NATIVE_PRODUCT_APP__ = productApp;
+    Object.defineProperty(window, '__GUARDR_NATIVE_PRODUCT_APP__', {
+      configurable: true,
+      get: () => productApp,
+      set: () => {
+        /* website native-product-app.js must not clear a baked APK identity */
+      },
+    });
     try {
       if (productApp !== 'messenger') {
         localStorage.setItem('guardr_product_app', productApp);
