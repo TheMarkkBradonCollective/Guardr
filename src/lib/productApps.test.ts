@@ -12,6 +12,7 @@ import {
   parseBakedNativeProductApp,
   parseWebsiteAccountView,
   pathFromDeepLink,
+  installPathForApp,
   NATIVE_APPLICATION_IDS,
   PRODUCT_APP_ICON_LABELS,
   productAppHasLightLauncher,
@@ -52,8 +53,10 @@ describe('product app path resolution', () => {
     assert.equal(parseWebsiteAccountView('/account/profile'), 'profile');
     assert.equal(parseWebsiteAccountView('/account/payments'), 'billing');
     assert.equal(parseWebsiteAccountView('/account/receipts'), 'billing');
+    assert.equal(parseWebsiteAccountView('/account/downloads'), 'downloads');
     assert.equal(buildWebsiteAccountPath('home'), '/account');
     assert.equal(buildWebsiteAccountPath('settings'), '/account/settings');
+    assert.equal(buildWebsiteAccountPath('downloads'), '/account/downloads');
   });
 });
 
@@ -139,6 +142,8 @@ describe('role isolation', () => {
     assert.ok(guardViews.includes('payouts'));
     assert.ok(!guardViews.includes('billing'));
     assert.ok(clientViews.includes('home'));
+    assert.ok(clientViews.includes('downloads'));
+    assert.ok(guardViews.includes('downloads'));
   });
 });
 
@@ -161,6 +166,12 @@ describe('deep links and CTAs', () => {
     assert.equal(NATIVE_APPLICATION_IDS.staff, 'com.signaturesecurity.guardr.staff');
     assert.equal(parseBakedNativeProductApp('staff'), 'staff');
     assert.equal(parseBakedNativeProductApp(''), null);
+  });
+
+  it('sends install links to the private account Downloads tab', () => {
+    assert.equal(installPathForApp('client'), '/account/downloads');
+    assert.equal(installPathForApp('guard'), '/account/downloads');
+    assert.equal(installPathForApp('staff'), '/account/downloads');
   });
 
   it('uses role-specific open-app copy', () => {

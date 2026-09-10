@@ -30,7 +30,6 @@ import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import type { FormFactor } from '../../../lib/platform/device';
 import type { AuthViewRole } from '../../../lib/appNavigation';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
-import { resolveAppDownloadPageUrl } from '../../../lib/siteConfig';
 import {
   CLIENT_FEATURES,
   COVERAGE_TYPES,
@@ -375,7 +374,7 @@ export function LandingBodySections({
                 I&apos;m a guard
               </AppButton>
             </Block>
-            <LandingAppDownloads formFactor={formFactor} variant="cta" />
+            <LandingAppDownloads formFactor={formFactor} variant="cta" onNavigateToAuth={onNavigateToAuth} />
             <Block marginTop="scale400">
               <AppButton variant="ghost" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>
                 Sign in to your account
@@ -467,7 +466,7 @@ export function LandingHeroSection({
             >
               <LandingPathCards onNavigateToAuth={onNavigateToAuth} layout={formFactor} />
               <Block marginTop="scale500">
-                <LandingAppDownloads formFactor={formFactor} variant="hero" id="get-app" />
+                <LandingAppDownloads formFactor={formFactor} variant="hero" id="get-app" onNavigateToAuth={onNavigateToAuth} />
               </Block>
               <Block marginTop="scale400">
                 <AppButton variant="ghost" size="sm" onClick={() => onNavigateToAuth(undefined, 'sign-in')}>
@@ -567,18 +566,6 @@ export function LandingFooter({
                 Guide
               </AppButton>
             ) : null}
-            <AppButton
-              variant="ghost"
-              size="sm"
-              {...({
-                $as: 'a',
-                href: resolveAppDownloadPageUrl(),
-                target: '_blank',
-                rel: 'noopener noreferrer',
-              } as Record<string, unknown>)}
-            >
-              Download
-            </AppButton>
             <AppButton
               variant="ghost"
               size="sm"

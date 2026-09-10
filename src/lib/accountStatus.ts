@@ -88,6 +88,24 @@ export function isGuardAccountPreActive(guard: Pick<SecurityGuard, 'userStatus' 
   return !guard.isStaff && (status === 'pending' || status === 'approved');
 }
 
+/** Android APKs are private until the signed-in account is active. */
+export function accountCanDownloadApks(input: {
+  role?: string | null;
+  client?: Pick<Client, 'accountStatus' | 'approved'> | null;
+  guard?: Pick<SecurityGuard, 'userStatus' | 'isStaff'> | null;
+}): boolean {
+  if (input.role === 'client') {
+    return input.client ? isClientAccountActive(input.client) : false;
+  }
+  if (input.role === 'staff' || input.guard?.isStaff) {
+    return input.guard ? isStaffUserStatusActive(input.guard) : false;
+  }
+  if (input.role === 'guard') {
+    return input.guard ? isGuardUserStatusActive(input.guard) : false;
+  }
+  return false;
+}
+
 export const CLIENT_ACCOUNT_STATUS_LABELS: Record<ClientAccountStatus, string> = {
   pending: 'Pending approval',
   active: 'Active',

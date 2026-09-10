@@ -16,7 +16,6 @@ import { MobilityExploreGrid, MobilityLoginBand } from './MobilityExploreGrid';
 import { MobilityLandingHeroVisual, MobilityLandingLoginVisual } from './MobilityLandingVisuals';
 import type { LandingSectionsProps } from '../shared/LandingSections';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
-import { resolveAppDownloadPageUrl } from '../../../lib/siteConfig';
 
 type MobilityFormFactor = 'mobile' | 'tablet' | 'desktop';
 
@@ -131,12 +130,12 @@ export function MobilityStyleLandingPage({
       {/* App download CTA */}
       <Block
         as="section"
-        aria-label="Download the app"
+        aria-label="Sign up for the apps"
         padding={isMobile ? 'scale600' : 'scale800'}
         backgroundColor="backgroundSecondary"
       >
         <Block maxWidth="1280px" margin="0 auto" $style={{ textAlign: 'center' }}>
-          <LandingAppDownloads formFactor={formFactor} variant="cta" />
+          <LandingAppDownloads formFactor={formFactor} variant="cta" onNavigateToAuth={onNavigateToAuth} />
         </Block>
       </Block>
 
@@ -165,15 +164,6 @@ export function MobilityStyleLandingPage({
             © {new Date().getFullYear()} <LegalEntityName />
           </ParagraphMedium>
           <Block display="flex" flexDirection={isMobile ? 'column' : 'row'} alignItems={isMobile ? 'flex-start' : 'center'} gridGap="scale400">
-            <a
-              className="uber-landing-nav-link"
-              href={resolveAppDownloadPageUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: 'inherit' }}
-            >
-              Download
-            </a>
             <a
               className="uber-landing-nav-link"
               href={resolveManualPdfUrl(USER_MANUALS_COMBINED_HREF)}

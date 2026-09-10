@@ -27,8 +27,10 @@ import { GITHUB_ALL_APKS_ZIP, GITHUB_MESSENGER_APP, GITHUB_ROLE_APKS } from '../
 import { productAppHasGreyLauncher, productAppHasLightLauncher } from '../../lib/productApps';
 
 interface AppDownloadScreenProps {
-  onBack: () => void;
+  onBack?: () => void;
   headerRight?: React.ReactNode;
+  /** Account Downloads tab — APK cards only, no public overlay chrome. */
+  embedded?: boolean;
 }
 
 type ProductStatus = 'installed' | 'update' | 'available' | 'current' | 'checking';
@@ -61,7 +63,7 @@ function FeatureRow({ icon: Icon, children }: { icon: typeof Bell; children: Rea
   );
 }
 
-export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProps) {
+export function AppDownloadScreen({ onBack, headerRight, embedded = false }: AppDownloadScreenProps) {
   const {
     loading,
     error,
@@ -130,47 +132,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
 
   const apkActionHint = manifest?.apkVersion ? formatAppVersion(manifest.apkVersion) : undefined;
 
-  return (
-    <div className="install-screen page-shell min-h-screen bg-brand-bg text-brand-text">
-      <header className="install-screen-header">
-        <div className="install-screen-header-inner">
-          <button type="button" onClick={onBack} className="app-subscreen-back">
-            <ArrowLeft className="w-4 h-4" aria-hidden />
-            Back
-          </button>
-          <div className="install-screen-header-end">
-            {headerRight}
-            <div className="install-screen-brand">
-              <Logo size={22} className="text-brand-primary" />
-              <span>{SITE_NAME}</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="install-screen-main">
-        <section className="install-screen-hero">
-          <p className="install-screen-eyebrow">
-            <Sparkles className="w-3.5 h-3.5" aria-hidden />
-            Android apps
-          </p>
-          <h1 className="install-screen-title">{downloadScreenTitle(liveContext)}</h1>
-          <p className="install-screen-lead">{downloadScreenIntro(liveContext)}</p>
-
-          <div className="install-screen-context">
-            <span className="install-screen-context-label">You are here</span>
-            <span className="install-screen-context-value">
-              {loading ? 'Checking…' : downloadLiveContextMessage(liveContext)}
-            </span>
-          </div>
-
-          {manifest ? (
-            <p className="install-screen-versions">
-              Latest {INSTALL_APK_SHORT} {formatAppVersion(manifest.apkVersion)}
-            </p>
-          ) : null}
-        </section>
-
+  const apkStack = (
         <div className="install-screen-stack">
           {isNativeView ? (
             <article className="install-product-card install-product-card--full install-product-card--highlight">
@@ -273,20 +235,87 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
               <a href={GITHUB_MESSENGER_APP.url} download={GITHUB_MESSENGER_APP.file} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
                 Download Messenger
               </a>
-              <div className="install-qr-block">
-                <img
-                  src="/download/apk-qr.png"
-                  alt="QR code to the Guardr download page"
-                  className="install-qr-image"
-                />
-                <p className="install-qr-caption">
-                  <QrCode className="w-3.5 h-3.5" aria-hidden />
-                  Scan on another device
-                </p>
-              </div>
+              {!embedded ? (
+                <div className="install-qr-block">
+                  <img
+                    src="/download/apk-qr.png"
+                    alt="QR code to the Guardr download page"
+                    className="install-qr-image"
+                  />
+                  <p className="install-qr-caption">
+                    <QrCode className="w-3.5 h-3.5" aria-hidden />
+                    Scan on another device
+                  </p>
+                </div>
+              ) : null}
             </>
           )}
         </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className="install-screen install-screen--embedded">
+        {manifest ? (
+          <p className="install-screen-versions" style={{ marginBottom: 16 }}>
+            Latest {INSTALL_APK_SHORT} {formatAppVersion(manifest.apkVersion)}
+          </p>
+        ) : null}
+        {apkStack}
+        {error ? (
+          <div className="install-screen-error" role="alert">
+            <p>{error}</p>
+            <button type="button" onClick={() => void refresh()} className="install-screen-error-retry">
+              Try again
+            </button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="install-screen page-shell min-h-screen bg-brand-bg text-brand-text">
+      <header className="install-screen-header">
+        <div className="install-screen-header-inner">
+          <button type="button" onClick={onBack} className="app-subscreen-back">
+            <ArrowLeft className="w-4 h-4" aria-hidden />
+            Back
+          </button>
+          <div className="install-screen-header-end">
+            {headerRight}
+            <div className="install-screen-brand">
+              <Logo size={22} className="text-brand-primary" />
+              <span>{SITE_NAME}</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="install-screen-main">
+        <section className="install-screen-hero">
+          <p className="install-screen-eyebrow">
+            <Sparkles className="w-3.5 h-3.5" aria-hidden />
+            Android apps
+          </p>
+          <h1 className="install-screen-title">{downloadScreenTitle(liveContext)}</h1>
+          <p className="install-screen-lead">{downloadScreenIntro(liveContext)}</p>
+
+          <div className="install-screen-context">
+            <span className="install-screen-context-label">You are here</span>
+            <span className="install-screen-context-value">
+              {loading ? 'Checking…' : downloadLiveContextMessage(liveContext)}
+            </span>
+          </div>
+
+          {manifest ? (
+            <p className="install-screen-versions">
+              Latest {INSTALL_APK_SHORT} {formatAppVersion(manifest.apkVersion)}
+            </p>
+          ) : null}
+        </section>
+
+        {apkStack}
 
         {error ? (
           <div className="install-screen-error" role="alert">

@@ -310,6 +310,7 @@ import {
   isClientAccountPending,
   isGuardAccountApproved,
   isGuardAccountPending,
+  accountCanDownloadApks,
 } from './lib/accountStatus';
 import { isGuardAccountActive } from './lib/guardAccountActivation';
 import { updateGuardAccountRow } from './lib/guardDatabaseWrite';
@@ -528,7 +529,6 @@ import {
   applyProductAppToDocument,
   clearStoredProductApp,
   consumePostAuthPath,
-  installPathForApp,
   installedAuthEntry,
   isOperationalAppPath,
   isWebsiteAccountPath,
@@ -562,6 +562,7 @@ import { useProductApp } from './lib/ProductAppProvider';
 import { WebsiteAccountShell } from './components/website/WebsiteAccountShell';
 import { WebsiteAccountHome } from './components/website/WebsiteAccountHome';
 import { WebsiteAccountDocuments } from './components/website/WebsiteAccountDocuments';
+import { WebsiteAccountDownloads } from './components/website/WebsiteAccountDownloads';
 import { OpenAppCta } from './components/apps/OpenAppCta';
 import { SupportScreen } from './components/support/SupportScreen';
 import { ClientInvoiceScreen } from './components/client/ClientInvoiceScreen';
@@ -1920,9 +1921,21 @@ export default function App() {
   };
 
   const openDownloadPage = () => {
-    setDownloadPageOpen(true);
     setLegalPageState(null);
     setPublicGuideOpen(false);
+    if (isAppExperience()) {
+      setDownloadPageOpen(true);
+      return;
+    }
+    setDownloadPageOpen(false);
+    const role = currentUser ? appRoleForUser(currentUser) : null;
+    if (!currentUser || !role) {
+      openAuthChoice('sign-in');
+      return;
+    }
+    const route = websiteAccountRoute(role, 'downloads');
+    applyAppRoute(route);
+    syncAppRoute(route);
   };
 
   const closeDownloadPage = () => {
@@ -10605,8 +10618,25 @@ export default function App() {
       }
     : {};
 
+  const canDownloadApks = Boolean(
+    currentUser &&
+      accountCanDownloadApks({
+        role: appRoleForUser(currentUser),
+        client:
+          currentUser.role === 'client'
+            ? clients.find((item) => item.id === currentUser.id) ?? null
+            : null,
+        guard:
+          currentUser.role === 'client'
+            ? null
+            : guards.find((item) => item.id === currentUser.id) ??
+              findGuardProfileForUser(currentUser, guards) ??
+              null,
+      }),
+  );
+
   const accountMenuExtras = {
-    onOpenDownload: openDownloadPage,
+    onOpenDownload: isAppExperience() || canDownloadApks ? openDownloadPage : undefined,
     themeMode,
     onChangeTheme: changeThemeMode,
     ...accountNotificationMenuProps,
@@ -13571,7 +13601,7 @@ export default function App() {
     return <LoadingScreen />;
   }
 
-  if (downloadPageOpen) {
+  if (downloadPageOpen && isAppExperience()) {
     return (
       <>
         <AppDownloadScreen
@@ -13785,7 +13815,9 @@ export default function App() {
       syncAppRoute(fallback);
       return;
     }
-    window.location.assign(installPathForApp(productAppForRole(productRole)));
+    const downloads = websiteAccountRoute(productRole, 'downloads');
+    applyAppRoute(downloads);
+    syncAppRoute(downloads);
   };
   const goWebsiteAccount = (view: WebsiteAccountView) => {
     const route = websiteAccountRoute(productRole, view);
@@ -13861,7 +13893,7 @@ export default function App() {
             currentUser={currentUser}
             isDbConnected={isDbConnected}
             onOpenLegal={openLegalPage}
-            onOpenDownload={openDownloadPage}
+            onOpenDownload={canDownloadApks ? () => goWebsiteAccount('downloads') : undefined}
           />
         </div>
       );
@@ -13881,6 +13913,10 @@ export default function App() {
     } else if (websiteAccountView === 'documents') {
       accountBody = (
         <WebsiteAccountDocuments currentUser={currentUser} onOpenLegal={openLegalPage} />
+      );
+    } else if (websiteAccountView === 'downloads') {
+      accountBody = (
+        <WebsiteAccountDownloads role={productRole} canDownloadApks={canDownloadApks} />
       );
     } else if (websiteAccountView === 'billing' || websiteAccountView === 'payouts') {
       if (productRole === 'client' && clientRecord) {
@@ -13946,6 +13982,7 @@ export default function App() {
           onNavigate={goWebsiteAccount}
           onOpenApp={openSignedInApp}
           onboardingOpen={resolveWebsiteAccess(currentUser) === 'activation'}
+          canDownloadApks={canDownloadApks}
           onSignOut={handleSignOut}
           accountMenu={{
             userName: currentUser.name,

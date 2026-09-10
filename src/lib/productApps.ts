@@ -23,6 +23,7 @@ export type WebsiteAccountView =
   | 'profile'
   | 'billing'
   | 'payouts'
+  | 'downloads'
   | 'settings'
   | 'support'
   | 'documents';
@@ -32,6 +33,7 @@ const WEBSITE_ACCOUNT_VIEWS = new Set<WebsiteAccountView>([
   'profile',
   'billing',
   'payouts',
+  'downloads',
   'settings',
   'support',
   'documents',
@@ -349,6 +351,7 @@ export function websiteAccountViewsForRole(role: ProductRole): { id: WebsiteAcco
   if (role === 'guard') views.push({ id: 'payouts', label: 'Payouts' });
   if (role === 'staff') views.push({ id: 'billing', label: 'Billing' });
   views.push(
+    { id: 'downloads', label: 'Downloads' },
     { id: 'settings', label: 'Settings' },
     { id: 'documents', label: 'Documents' },
     { id: 'support', label: 'Support' },
@@ -379,8 +382,8 @@ export function openAppCtaCopy(role: ProductRole): { title: string; body: string
   };
 }
 
-export function installPathForApp(app: Exclude<ProductApp, 'website'>): string {
-  return `/download?app=${app}`;
+export function installPathForApp(_app: Exclude<ProductApp, 'website'>): string {
+  return buildWebsiteAccountPath('downloads');
 }
 
 export function webAppPathForRole(role: ProductRole, destination?: string): string {

@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
@@ -28,5 +31,20 @@ describe('GitHub APK release URLs', () => {
     assert.match(GITHUB_MESSENGER_APP.tagline, /Sign in and pick Guard, Customer, or Staff/);
     assert.equal(GITHUB_ROLE_APKS.length, 3);
     assert.ok(!GITHUB_ROLE_APKS.map((app) => app.label).includes('Messenger'));
+  });
+
+  it('does not publish APK hrefs on the public /download page', () => {
+    const html = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), '../../public/download/index.html'),
+      'utf8',
+    );
+    assert.match(html, /Android apps are private/);
+    assert.match(html, /\?auth=sign-up/);
+    assert.match(html, /\?auth=sign-in/);
+    assert.doesNotMatch(html, /Guardr-Guard\.apk/);
+    assert.doesNotMatch(html, /Guardr-Client\.apk/);
+    assert.doesNotMatch(html, /Guardr-Staff\.apk/);
+    assert.doesNotMatch(html, /Guardr-Messenger\.apk/);
+    assert.doesNotMatch(html, /Guardr-All-APKs\.zip/);
   });
 });

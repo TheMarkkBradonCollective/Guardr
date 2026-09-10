@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ArrowLeft,
   CreditCard,
+  Download,
   FileText,
   LifeBuoy,
   LogOut,
@@ -29,6 +30,7 @@ const VIEW_ICONS: Record<WebsiteAccountView, LucideIcon> = {
   profile: UserRound,
   billing: CreditCard,
   payouts: Wallet,
+  downloads: Download,
   settings: Settings,
   support: LifeBuoy,
   documents: FileText,
@@ -45,6 +47,7 @@ interface WebsiteAccountShellProps {
   onSignOut: () => void;
   onBackToSite?: () => void;
   onboardingOpen?: boolean;
+  canDownloadApks?: boolean;
   accountMenu: AccountMenuProps;
   themeMode?: ThemeMode;
   children: React.ReactNode;
@@ -60,10 +63,13 @@ export function WebsiteAccountShell({
   onSignOut,
   onBackToSite,
   onboardingOpen = false,
+  canDownloadApks = false,
   accountMenu,
   children,
 }: WebsiteAccountShellProps) {
-  const nav = websiteAccountViewsForRole(role);
+  const nav = websiteAccountViewsForRole(role).filter(
+    (item) => item.id !== 'downloads' || canDownloadApks,
+  );
   const appLabel = PRODUCT_APP_ICON_LABELS[role === 'client' ? 'client' : role === 'guard' ? 'guard' : 'staff'];
 
   return (
@@ -128,7 +134,7 @@ export function WebsiteAccountShell({
 
         <main className="website-account-main">
           {children}
-          {activeView !== 'home' && role !== 'staff' && !onboardingOpen ? (
+          {activeView !== 'home' && activeView !== 'downloads' && role !== 'staff' && !onboardingOpen ? (
             <div className="website-account-app-slot website-account-app-slot--quiet">
               <OpenAppCta role={role} compact onOpenWebApp={onOpenApp} />
             </div>
