@@ -18,4 +18,5 @@ android/keystore.properties
 dist/play-store/
 *.apk
 !public/download/guardr.apk
+!public/download/Guardr-Messenger.apk
 !public/guardr.apk

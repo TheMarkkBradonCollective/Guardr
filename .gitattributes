@@ -1,1 +1,4 @@
 *.apk filter=lfs diff=lfs merge=lfs -text
+# Messenger companion is a regular git file so the website can serve it
+# without using the Git LFS quota (already used by the combined guardr.apk).
+public/download/Guardr-Messenger.apk -filter -diff -merge
