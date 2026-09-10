@@ -53,8 +53,6 @@ import './styles/legal-accept.css';
 import './styles/surface-look.css';
 import './styles/product-apps.css';
 import { pathFromDeepLink } from './lib/productApps';
-import { isMessengerExperience } from './lib/platform/appExperience';
-import { MessengerHome } from './components/messenger/MessengerHome';
 
 applyThemeToDocument(loadTheme());
 
@@ -74,7 +72,6 @@ void initSentry();
 async function initNativeShell(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   initNativeSafeArea();
-  if (isMessengerExperience()) return;
   initNativePushBridge();
   await ensureNativePermissions();
   await restoreNativePushIfEnabled();
@@ -142,8 +139,6 @@ const wantsUiPreview =
 
 if (wantsUiPreview) {
   void import('./dev/SurfacePreview').then(({ default: SurfacePreview }) => renderApp(<SurfacePreview />));
-} else if (isMessengerExperience()) {
-  renderApp(<MessengerHome />);
 } else {
   renderApp(<App />);
 }

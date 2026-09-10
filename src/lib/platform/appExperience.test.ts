@@ -11,4 +11,15 @@ describe('isAppExperience', () => {
     assert.equal(isAppExperience(), false);
     assert.equal(isMessengerExperience(), false);
   });
+
+  it('treats a baked messenger APK as an installed app', () => {
+    const previous = globalThis.window;
+    globalThis.window = { __GUARDR_NATIVE_PRODUCT_APP__: 'messenger' } as Window & typeof globalThis;
+    try {
+      assert.equal(isMessengerExperience(), true);
+      assert.equal(isAppExperience(), true);
+    } finally {
+      globalThis.window = previous;
+    }
+  });
 });

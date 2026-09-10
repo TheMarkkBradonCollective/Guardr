@@ -209,6 +209,16 @@ export function persistProductApp(app: ProductApp): void {
   }
 }
 
+/** Messenger sign-out: forget the last role so the next sign-in picks Guard / Customer / Staff again. */
+export function clearStoredProductApp(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(PRODUCT_APP_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 /**
  * Native APK should open the role app, never the marketing website.
  * Browser tabs: customers and guards stay on /account; staff get /staff.
