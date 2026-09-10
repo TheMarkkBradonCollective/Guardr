@@ -83,6 +83,7 @@ jobs:
             public/download/Guardr-Client.apk
             public/download/Guardr-Guard.apk
             public/download/Guardr-Staff.apk
+            public/download/Guardr-Messenger.apk
             public/download/Guardr-All-APKs.zip
           if-no-files-found: error
 
@@ -99,14 +100,16 @@ jobs:
             public/download/Guardr-Client.apk
             public/download/Guardr-Guard.apk
             public/download/Guardr-Staff.apk
+            public/download/Guardr-Messenger.apk
           body: |
-            Guard, Customer, and Staff Android APKs.
+            Guard, Customer, and Staff Android APKs, plus the Messenger companion launcher.
 
-            **All three (zip):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
+            **All three role APKs (zip):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
 
             - [Guardr-Guard.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk) — Guard
             - [Guardr-Client.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk) — Customer
             - [Guardr-Staff.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk) — Staff
+            - [Guardr-Messenger.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Messenger.apk) — Messenger (opens the one role app already installed; not in the zip)
 
       - name: Write Play upload keystore
         run: node scripts/write-keystore.mjs

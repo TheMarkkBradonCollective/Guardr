@@ -34,6 +34,8 @@ import { StaffAddClientForm } from './StaffAddClientForm';
 import type { StaffAddClientInput } from './StaffAddClientForm';
 import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
+import { StaffOneRoleHolds } from './StaffOneRoleHolds';
+import type { OneRoleCase } from '../../lib/oneRolePolicy';
 import { useLayoutFormFactor } from '../../surfaces';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
@@ -53,6 +55,9 @@ interface StaffApplicationsProps {
   currentUser: SessionUser;
   guards: SecurityGuard[];
   clients: Client[];
+  oneRoleCases?: OneRoleCase[];
+  onIgnoreOneRoleCase?: (caseId: string) => void;
+  onBlockOneRoleCase?: (caseId: string) => void;
   canApproveGuardAccounts?: boolean;
   canManageGuardAccounts?: boolean;
   canManageClientAccounts?: boolean;
@@ -246,6 +251,9 @@ export function StaffApplications({
   currentUser,
   guards,
   clients,
+  oneRoleCases = [],
+  onIgnoreOneRoleCase,
+  onBlockOneRoleCase,
   canApproveGuardAccounts = false,
   canManageGuardAccounts = false,
   canManageClientAccounts = false,
@@ -617,9 +625,21 @@ export function StaffApplications({
     </>
   ) : null;
 
+  const oneRoleHolds = (
+    <StaffOneRoleHolds
+      currentUser={currentUser}
+      cases={oneRoleCases}
+      guards={guards}
+      clients={clients}
+      onIgnore={onIgnoreOneRoleCase ?? (() => undefined)}
+      onBlock={onBlockOneRoleCase ?? (() => undefined)}
+    />
+  );
+
   if (formFactor === 'desktop') {
     return (
       <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-applications">
+        {oneRoleHolds}
         <WorkbenchSplit
           list={
             visibleEntries.length === 0 ? (
@@ -653,6 +673,7 @@ export function StaffApplications({
 
   return (
     <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-applications">
+      {oneRoleHolds}
       {visibleEntries.length === 0 ? (
         <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
           {search.trim()

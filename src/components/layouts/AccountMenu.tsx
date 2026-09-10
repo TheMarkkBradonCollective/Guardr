@@ -10,6 +10,7 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { useFloatingPanelPosition } from '../../lib/ui/useFloatingPanelPosition';
 import { getShellKind } from '../../lib/platform/shellKind';
 import { accountMenuInstallLabel } from '../../lib/installSurfaceCopy';
+import { ONE_ROLE_SIGN_OUT_ONLY_COPY } from '../../lib/oneRolePolicy';
 import {
   NotificationInboxSection,
   accountMenuUnreadCount,
@@ -160,7 +161,7 @@ export function AccountMenu({
     void (async () => {
       const confirmed = await showAppConfirm({
         title: 'Sign out?',
-        message: 'You can sign back in anytime to pick up where you left off.',
+        message: ONE_ROLE_SIGN_OUT_ONLY_COPY,
         confirmLabel: 'Sign out',
         cancelLabel: 'Stay signed in',
         tone: 'danger',

@@ -14,6 +14,17 @@ import { resolvePersonNameParts } from '../personName';
 import { getGuardUserStatus } from '../accountStatus';
 import { staffLoginEmailMatches, staffLoginEmailOrFilter, staffWorkLoginEmail } from '../staffEmail';
 import { normalizeGuardIndependentContractorNumber } from '../guardContractorNumber';
+import {
+  ONE_ROLE_LOCK_MESSAGE,
+  buildOneRoleCase,
+  collectRoleAccounts,
+  kindFromGuardLike,
+  openHoldForAccount,
+  readDeviceRoleAccount,
+  withDeviceConflict,
+  type OneRoleAccountRef,
+  type OneRoleCase,
+} from '../oneRolePolicy';
 
 export type AuthRole = 'guard' | 'client' | 'staff';
 
@@ -43,7 +54,9 @@ export type SignInAttemptResult =
   | { status: 'invalid_password' }
   | { status: 'blocked' }
   | { status: 'pending_approval' }
-  | { status: 'role_mismatch'; expectedPath: AuthRole; actualPath: AuthRole };
+  | { status: 'role_mismatch'; expectedPath: AuthRole; actualPath: AuthRole }
+  | { status: 'one_role_hold'; case: OneRoleCase; message: string }
+  | { status: 'one_role_violation'; draftCase: OneRoleCase; message: string };
 
 async function verifyStoredPassword(
   stored: string | null | undefined,
@@ -311,7 +324,8 @@ export async function signInWithCredentials(
   password: string,
   guards: SecurityGuard[],
   clients: Client[],
-  expectedPath?: AuthRole
+  expectedPath?: AuthRole,
+  oneRoleCases: OneRoleCase[] = [],
 ): Promise<SignInAttemptResult> {
   const emailLower = email.trim().toLowerCase();
   if (!emailLower) return { status: 'not_found' };
@@ -331,6 +345,36 @@ export async function signInWithCredentials(
       status: 'role_mismatch',
       expectedPath,
       actualPath: authPathForProfile(profile),
+    };
+  }
+
+  const seed: OneRoleAccountRef = {
+    kind:
+      profile.table === 'clients' || profile.role === 'client'
+        ? 'client'
+        : kindFromGuardLike(profile.guard?.isStaff === true || profile.table === 'staff'),
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    phone: profile.guard?.phone ?? profile.client?.phone ?? '',
+  };
+  const existingHold = openHoldForAccount(oneRoleCases, seed);
+  if (existingHold?.status === 'blocked') {
+    return { status: 'blocked' };
+  }
+  if (existingHold?.status === 'open') {
+    return { status: 'one_role_hold', case: existingHold, message: ONE_ROLE_LOCK_MESSAGE };
+  }
+  const conflict = withDeviceConflict(
+    collectRoleAccounts(guards, clients),
+    seed,
+    readDeviceRoleAccount(),
+  );
+  if (conflict) {
+    return {
+      status: 'one_role_violation',
+      draftCase: buildOneRoleCase(conflict),
+      message: ONE_ROLE_LOCK_MESSAGE,
     };
   }
 

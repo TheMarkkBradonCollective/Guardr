@@ -1,10 +1,10 @@
 # Android APK (Guardr)
 
-Guardr ships as a **website** plus three **Capacitor Android apps** (Guard, Customer, Staff). Each role has an APK for sideload and an AAB for Google Play.
+Guardr ships as a **website** plus three **Capacitor Android apps** (Guard, Customer, Staff) and a **Messenger** companion launcher. Each role has an APK for sideload and an AAB for Google Play. Messenger only opens whichever role app is already installed.
 
 ## Download
 
-- **Install page:** [https://guardr.co/download/](https://guardr.co/download/) — Guard, Customer, and Staff
+- **Install page:** [https://guardr.co/download/](https://guardr.co/download/) — Guard, Customer, Staff, and Messenger
 - **All three APKs (GitHub zip):** [https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip)
 - **Release page:** [https://github.com/TheMarkkBradonCollective/Guardr/releases/latest](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest)
 - **Combined APK (existing installs):** [https://www.guardr.co/download/guardr.apk](https://www.guardr.co/download/guardr.apk)
@@ -14,11 +14,14 @@ Guardr ships as a **website** plus three **Capacitor Android apps** (Guard, Cust
 | Guard | `com.signaturesecurity.guardr.guard` | `Guardr-Guard.apk` |
 | Customer | `com.signaturesecurity.guardr.client` | `Guardr-Client.apk` |
 | Staff | `com.signaturesecurity.guardr.staff` | `Guardr-Staff.apk` |
+| Messenger (companion) | `com.signaturesecurity.guardr.messenger` | site `/download/Guardr-Messenger.apk` |
 | Combined (legacy) | `com.signaturesecurity.guardr` | site `/download/guardr.apk` |
 
-The three role APKs can be installed side by side. Each opens its own app (not the marketing website). The all-apps zip is a **GitHub Release** asset (same pattern as MBC All-APKs), not a file on guardr.co.
+The three role APKs can be installed side by side. Each opens its own app (not the marketing website). The all-apps zip is a **GitHub Release** asset (same pattern as MBC All-APKs), not a file on guardr.co. **Messenger is not in that zip** — it is a launcher that deep-links into the one role app already installed. There is no switch-account: sign out, then sign in.
 
-The install page lists **Guard, Customer, and Staff** APKs. There is no PWA / Add to Home Screen product.
+**One person, one role.** Nobody may be a Guard and a Customer, a Customer and Staff, or Staff and a Guard. Signing into a second role on the website or in an app locks both accounts until a manager, director, administrator, or owner reviews the hold and either clears it or blocks both.
+
+The install page lists **Guard, Customer, and Staff** APKs plus Messenger. There is no PWA / Add to Home Screen product.
 
 Share the install page with the Signature Security network.
 
@@ -42,7 +45,7 @@ export ANDROID_HOME="$HOME/Android/Sdk"
 ```bash
 npm install
 npm run android:apk        # combined APK → public/download/guardr.apk
-npm run android:apk:all    # Guard + Customer + Staff APKs + zip
+npm run android:apk:all    # Guard + Customer + Staff APKs + zip, then Messenger
 npm run android:play       # Guard + Customer + Staff AABs → dist/play-store/
 ```
 
@@ -52,8 +55,8 @@ npm run android:play       # Guard + Customer + Staff AABs → dist/play-store/
 2. Run `npm run apk:audit` to catch version drift before building
 3. Build the Vite web bundle with `VITE_APP_URL=https://guardr.co`
 4. Sync assets into `android/`
-5. Assemble three sideload APKs (`-PguardrProductApp=client|guard|staff`) plus the combined APK
-6. Copy binaries to `public/download/` and zip them as `Guardr-All-APKs.zip`
+5. Assemble three sideload APKs (`-PguardrProductApp=client|guard|staff`), the Messenger companion (`-PguardrProductApp=messenger`), plus the combined APK
+6. Copy binaries to `public/download/` and zip the three role APKs as `Guardr-All-APKs.zip` (Messenger is copied beside them, not zipped)
 7. Re-run the parity audit (warnings if the bundled web assets are stale)
 
 `npm run android:play` builds three signed Play bundles:
@@ -134,7 +137,7 @@ The **play** flavor omits sideload-only permissions; **sideload** (`npm run andr
 
 ## CI
 
-GitHub Actions workflow `.github/workflows/android-apk.yml` builds the three role APKs plus `Guardr-All-APKs.zip`, and when a Play upload keystore is configured, the three Play AABs.
+GitHub Actions workflow `.github/workflows/android-apk.yml` builds the three role APKs, Messenger, and `Guardr-All-APKs.zip`, and when a Play upload keystore is configured, the three Play AABs.
 
 **Zip download (GitHub, not the site):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
 

@@ -23,7 +23,7 @@ import {
   downloadScreenTitle,
 } from '../../lib/installSurfaceCopy';
 import { formatAppVersion } from '../../lib/appVersion';
-import { GITHUB_ALL_APKS_ZIP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
+import { GITHUB_ALL_APKS_ZIP, GITHUB_MESSENGER_APP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
 import { productAppHasGreyLauncher, productAppHasLightLauncher } from '../../lib/productApps';
 
 interface AppDownloadScreenProps {
@@ -269,6 +269,9 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
               ))}
               <a href={GITHUB_ALL_APKS_ZIP} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
                 Download all APKs (GitHub zip)
+              </a>
+              <a href={GITHUB_MESSENGER_APP.url} download={GITHUB_MESSENGER_APP.file} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
+                Download Messenger
               </a>
               <div className="install-qr-block">
                 <img

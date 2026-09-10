@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  MESSENGER_LAUNCHER_BACKGROUND,
   STAFF_LAUNCHER_BACKGROUND,
   iconChromeForLabel,
   iconChromeForProductApp,
@@ -41,5 +42,16 @@ describe('Staff launcher chrome', () => {
       statusBarStyle: 'LIGHT',
     });
     assert.equal(nativeChromeForProductApp('client').backgroundColor, '#000000');
+  });
+
+  it('uses a slate unlabeled shield for Messenger', () => {
+    assert.deepEqual(iconChromeForProductApp('messenger'), {
+      background: MESSENGER_LAUNCHER_BACKGROUND,
+      mark: 'white',
+      text: '#FFFFFF',
+    });
+    assert.equal(iconLabelForProductApp('messenger'), null);
+    assert.equal(MESSENGER_LAUNCHER_BACKGROUND, '#111827');
+    assert.equal(nativeChromeForProductApp('messenger').backgroundColor, MESSENGER_LAUNCHER_BACKGROUND);
   });
 });

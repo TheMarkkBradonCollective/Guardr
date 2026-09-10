@@ -490,3 +490,70 @@ html.theme-dark .uber-app-shell .staff-list-filter-tabs.app-inbox-tabs {
   border-top: none;
   padding-inline: 1rem;
 }
+
+.staff-one-role-holds {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--uber-border, rgba(0, 0, 0, 0.12));
+  border-radius: 12px;
+  background: var(--adm-card, var(--brand-bg, #fff));
+}
+
+.staff-one-role-holds-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.staff-one-role-holds-head h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.staff-one-role-holds-head p,
+.staff-one-role-hold-reason,
+.staff-one-role-hold-wait {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--brand-text-muted, #737373);
+}
+
+.staff-one-role-holds > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.staff-one-role-hold {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--uber-border, rgba(0, 0, 0, 0.08));
+}
+
+.staff-one-role-hold-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.staff-one-role-hold-accounts {
+  margin: 0 0 0.45rem;
+  padding-left: 1.1rem;
+  font-size: 0.82rem;
+}
+
+.staff-one-role-hold-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+body[data-surface='desktop'] .sfd-ops-page-body > .staff-one-role-holds {
+  flex: 0 0 auto;
+}

@@ -22,6 +22,7 @@ import {
   run,
 } from './build-android-common.mjs';
 import {
+  ANDROID_COMPANIONS,
   ANDROID_ROLES,
   generateAndroidIcons,
   rolePackage,
@@ -64,6 +65,22 @@ try {
     console.log(`✓ ${role.apk}`);
   }
 
+  for (const companion of ANDROID_COMPANIONS) {
+    console.log(`\n→ Assembling ${companion.id} sideload APK (${rolePackage(companion.id)})…`);
+    await withRoleBuildPatches(companion.id, async () => {
+      run(GRADLE, ['assembleSideloadRelease', `-PguardrProductApp=${companion.id}`], {
+        cwd: path.join(ROOT, 'android'),
+      });
+    });
+    if (!existsSync(SIDELOAD_APK)) {
+      console.error(`✗ Missing Gradle output: ${SIDELOAD_APK}`);
+      process.exit(1);
+    }
+    await copyFile(SIDELOAD_APK, path.join(PUBLIC_DOWNLOAD, companion.sideload));
+    await copyFile(SIDELOAD_APK, path.join(PUBLIC_DOWNLOAD, companion.apk));
+    console.log(`✓ ${companion.apk}`);
+  }
+
   console.log('\n→ Assembling combined sideload APK (com.signaturesecurity.guardr)…');
   await writeNativeProductAppJs('');
   generateAndroidIcons('');
@@ -80,6 +97,7 @@ try {
   run('node', ['scripts/audit-apk-parity.mjs']);
 
   console.log(`\n✓ Role APKs + zip ready:\n  ${apkPaths.join('\n  ')}\n  ${zipPath}\n`);
+  console.log('  Messenger (companion, not in zip): public/download/Guardr-Messenger.apk');
   console.log('  Combined (legacy): public/download/guardr.apk');
   if (nativeFcmConfigured) {
     console.log('✓ Native FCM plugin applied. Add Firebase Android apps for .client / .guard / .staff for push on those packages.');

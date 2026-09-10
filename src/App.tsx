@@ -543,6 +543,20 @@ import {
   type ProductRole,
   type WebsiteShellAccess,
 } from './lib/productApps';
+import {
+  blockOneRoleCase,
+  buildOneRoleCase,
+  canReviewOneRoleHolds,
+  collectRoleAccounts,
+  ignoreOneRoleCase,
+  kindFromSessionRole,
+  openHoldForAccount,
+  withDeviceConflict,
+  writeDeviceRoleAccount,
+  readDeviceRoleAccount,
+  type OneRoleCase,
+} from './lib/oneRolePolicy';
+import { loadOneRoleCases, persistOneRoleCase } from './lib/oneRoleCasesStore';
 import { useProductApp } from './lib/ProductAppProvider';
 import { WebsiteAccountShell } from './components/website/WebsiteAccountShell';
 import { WebsiteAccountHome } from './components/website/WebsiteAccountHome';
@@ -852,6 +866,7 @@ export default function App() {
   const [userNotifications, setUserNotifications] = useState<UserNotification[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [passwordChangePromptOpen, setPasswordChangePromptOpen] = useState(false);
+  const [oneRoleCases, setOneRoleCases] = useState<OneRoleCase[]>([]);
 
   const initialRoute = readAppRouteFromWindow();
   const [websiteAccountView, setWebsiteAccountView] = useState<WebsiteAccountView | null>(
@@ -3287,6 +3302,7 @@ export default function App() {
         setPlatformCitiesCache(loadedCities);
       }
 
+      setOneRoleCases(await loadOneRoleCases());
 
       setIsDbConnected(true);
     } catch (err) {
@@ -4013,12 +4029,75 @@ export default function App() {
 
   // ── Auth ───────────────────────────────────────────────────
   const handleSignIn = (user: SessionUser, options?: { passwordChangeRecommended?: boolean }) => {
+    const kind = kindFromSessionRole(user.role);
+    if (kind) writeDeviceRoleAccount({ kind, id: user.id });
     localStorage.setItem('guardr_current_user', JSON.stringify(user));
     setCurrentUser(user);
     setPasswordChangePromptOpen(!!options?.passwordChangeRecommended);
     setIsAuthView(false);
     void writeAuditLog(user, 'sign_in', 'session', user.id);
   };
+
+  const rememberOneRoleHold = (oneRoleCase: OneRoleCase) => {
+    setOneRoleCases((prev) => {
+      if (prev.some((item) => item.id === oneRoleCase.id)) {
+        return prev.map((item) => (item.id === oneRoleCase.id ? oneRoleCase : item));
+      }
+      return [oneRoleCase, ...prev];
+    });
+    void persistOneRoleCase(oneRoleCase);
+    const involved = oneRoleCase.accounts.some(
+      (account) => account.id === currentUser?.id && kindFromSessionRole(currentUser.role) === account.kind,
+    );
+    if (involved && (oneRoleCase.status === 'open' || oneRoleCase.status === 'blocked')) {
+      localStorage.removeItem('guardr_current_user');
+      setCurrentUser(null);
+      void signOutAuth();
+    }
+  };
+
+  const handleIgnoreOneRoleCase = (caseId: string) => {
+    if (!currentUser || !canReviewOneRoleHolds(currentUser.role)) return;
+    const existing = oneRoleCases.find((item) => item.id === caseId);
+    if (!existing) return;
+    const next = ignoreOneRoleCase(existing, currentUser.id);
+    rememberOneRoleHold(next);
+  };
+
+  const handleBlockOneRoleCase = async (caseId: string) => {
+    if (!currentUser || !canReviewOneRoleHolds(currentUser.role)) return;
+    const existing = oneRoleCases.find((item) => item.id === caseId);
+    if (!existing) return;
+    const next = blockOneRoleCase(existing, currentUser.id);
+    rememberOneRoleHold(next);
+    for (const account of next.accounts) {
+      if (account.kind === 'client') {
+        await supabase.from('clients').update({ approved: false, account_status: 'suspended' }).eq('id', account.id);
+        setClients((prev) =>
+          prev.map((client) =>
+            client.id === account.id ? { ...client, approved: false, accountStatus: 'suspended' } : client,
+          ),
+        );
+      } else {
+        const table = account.kind === 'staff' ? 'staff' : 'guards';
+        await supabase.from(table).update({ user_status: 'blocked' }).eq('id', account.id);
+        setGuards((prev) =>
+          prev.map((guard) => (guard.id === account.id ? { ...guard, userStatus: 'blocked' } : guard)),
+        );
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const kind = kindFromSessionRole(currentUser.role);
+    if (!kind) return;
+    const hold = openHoldForAccount(oneRoleCases, { kind, id: currentUser.id });
+    if (!hold) return;
+    localStorage.removeItem('guardr_current_user');
+    setCurrentUser(null);
+    void signOutAuth();
+  }, [currentUser, oneRoleCases]);
 
   const handleDismissPasswordChange = () => {
     setPasswordChangePromptOpen(false);
@@ -4632,6 +4711,28 @@ export default function App() {
 
     const emailLower = assertEmailAvailable(profile.email);
 
+    const flagSignupIfSecondRole = (created: {
+      kind: 'guard' | 'client' | 'staff';
+      id: string;
+      name: string;
+      email: string;
+      phone?: string;
+    }) => {
+      const seed = {
+        kind: created.kind,
+        id: created.id,
+        name: created.name,
+        email: created.email,
+        phone: created.phone ?? '',
+      };
+      const conflict = withDeviceConflict(
+        [...collectRoleAccounts(guards, clients), seed],
+        seed,
+        readDeviceRoleAccount(),
+      );
+      if (conflict) rememberOneRoleHold(buildOneRoleCase(conflict));
+    };
+
     if (role === 'staff') {
       const staffProfile = profile as SecurityGuard;
       if (!staffProfile.isStaff || !staffProfile.staffRole) {
@@ -4721,6 +4822,13 @@ export default function App() {
           }
         );
       }
+      flagSignupIfSecondRole({
+        kind: 'client',
+        id: client.id,
+        name: client.name,
+        email: emailLower,
+        phone: client.phone,
+      });
       return;
     }
 
@@ -4770,6 +4878,13 @@ export default function App() {
         console.error('Staff DB insert error:', e);
         throw new Error('Could not create staff account. This email may already be registered.');
       }
+      flagSignupIfSecondRole({
+        kind: 'staff',
+        id: guard.id,
+        name: guard.name,
+        email: emailLower,
+        phone: guard.phone,
+      });
       return;
     }
 
@@ -4866,6 +4981,13 @@ export default function App() {
       if (e instanceof Error && e.message.includes('certificate')) throw e;
       throw new Error('Could not create guard account. This email may already be registered.');
     }
+    flagSignupIfSecondRole({
+      kind: 'guard',
+      id: guard.id,
+      name: guard.name,
+      email: emailLower,
+      phone: guard.phone,
+    });
   };
 
   const handleAddExperience = async (guardId: string, exp: Omit<Experience, 'id'>) => {
@@ -13545,6 +13667,8 @@ export default function App() {
             themeMode={themeMode}
             onChangeTheme={changeThemeMode}
             presentation="page"
+            oneRoleCases={oneRoleCases}
+            onOneRoleHold={rememberOneRoleHold}
           />
           <InstallPrompt />
         </>
@@ -13601,6 +13725,8 @@ export default function App() {
               themeMode={themeMode}
               onChangeTheme={changeThemeMode}
               presentation="page"
+              oneRoleCases={oneRoleCases}
+              onOneRoleHold={rememberOneRoleHold}
             />
             <InstallPrompt />
           </>
@@ -14395,6 +14521,9 @@ export default function App() {
           initialStaffMessagesTab={staffMessagesTab}
           guards={verifiedGuards}
           clients={clients}
+          oneRoleCases={oneRoleCases}
+          onIgnoreOneRoleCase={handleIgnoreOneRoleCase}
+          onBlockOneRoleCase={handleBlockOneRoleCase}
           requests={displayRequests}
           supportTickets={supportTickets}
           payments={payments}
