@@ -131,6 +131,19 @@ export const MESSENGER_BUBBLE_PATH = MESSENGER_BUBBLE_OUTER;
 const MESSENGER_BUBBLE_RATIO = 179 / 261;
 
 /**
+ * Max width/height of the landscape bubble that still fits inside a circle.
+ * The launcher masks mipmaps to a circle/squircle, so a wide comment box at
+ * 86% of the tile has its corners cropped.
+ */
+export const MESSENGER_BUBBLE_CIRCLE_FIT =
+  1 / Math.sqrt(1 + MESSENGER_BUBBLE_RATIO * MESSENGER_BUBBLE_RATIO);
+
+/** Scale of the bubble on the icon tile. `safeZone` is the maskable 66% inset. */
+export function messengerIconMarkRatio(safeZone = false) {
+  return MESSENGER_BUBBLE_CIRCLE_FIT * (safeZone ? 0.62 : 0.86);
+}
+
+/**
  * Solid white comment box + black G-shield (logo black) on a transparent canvas.
  */
 export async function renderMessengerBubbleMark(iconMaster, size) {
@@ -177,7 +190,7 @@ export async function renderBrandedIcon(iconMaster, size, {
   const markColor = chrome.mark;
 
   if (productApp === 'messenger') {
-    const markRatio = safeZone ? 0.68 : 0.86;
+    const markRatio = messengerIconMarkRatio(safeZone);
     const markSize = Math.round(size * markRatio);
     const offset = Math.round((size - markSize) / 2);
     layers.push({
