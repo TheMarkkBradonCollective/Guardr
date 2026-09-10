@@ -119,24 +119,32 @@ function parseBackground(background) {
 }
 
 /**
- * Landscape chat bubble — wide rounded message box with a small left pointer
- * (the same silhouette as a comment / SMS icon). ViewBox 0 0 100 100.
+ * Exact comment-box silhouette from the Messenger reference
+ * (landscape rounded rect, 45° tail at the top-left). ViewBox 0 0 261 179.
  */
-export const MESSENGER_BUBBLE_PATH =
-  'M 22 30 L 7 36 L 22 44 L 22 66 C 22 76 32 78 42 78 L 80 78 C 92 78 94 68 94 58 L 94 42 C 94 30 84 26 74 26 L 34 26 C 26 26 22 28 22 30 Z';
+export const MESSENGER_BUBBLE_OUTER =
+  'M 4 0 L 242 0 A 18 18 0 0 1 260 18 L 260 160 A 18 18 0 0 1 242 178 L 59 178 A 18 18 0 0 1 41 160 L 41 52 L 0 6 Z';
+export const MESSENGER_BUBBLE_INNER =
+  'M 25 14 L 241 14 A 6 6 0 0 1 247 20 L 247 158 A 6 6 0 0 1 241 164 L 61 164 A 6 6 0 0 1 55 158 L 55 48 Z';
+export const MESSENGER_BUBBLE_PATH = MESSENGER_BUBBLE_OUTER;
+
+const MESSENGER_BUBBLE_RATIO = 179 / 261;
 
 /**
- * White message box + black Guardr shield (the mark sits where chat lines would).
- * Transparent canvas so launchers can lay it on slate and adaptive icons stay masked.
+ * The reference box exactly: white fill, dark outline, G-shield where the lines were.
  */
 export async function renderMessengerBubbleMark(iconMaster, size) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 100 100">
-  <path fill="#FFFFFF" d="${MESSENGER_BUBBLE_PATH}"/>
+  const bubbleW = size;
+  const bubbleH = Math.max(1, Math.round(size * MESSENGER_BUBBLE_RATIO));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${bubbleW}" height="${bubbleH}" viewBox="0 0 261 179">
+  <path fill="#FFFFFF" d="${MESSENGER_BUBBLE_OUTER}"/>
+  <path fill="#2A2A2A" fill-rule="evenodd" d="${MESSENGER_BUBBLE_OUTER} ${MESSENGER_BUBBLE_INNER}"/>
 </svg>`;
   const bubble = await sharp(Buffer.from(svg)).png().toBuffer();
-  const shieldSize = Math.round(size * 0.38);
-  const left = Math.round(size * 0.33);
-  const top = Math.round(size * 0.29);
+  const top = Math.round((size - bubbleH) / 2);
+  const shieldSize = Math.round(bubbleH * 0.62);
+  const shieldLeft = Math.round(bubbleW * (151 / 261) - shieldSize / 2);
+  const shieldTop = top + Math.round(bubbleH * (89 / 179) - shieldSize / 2);
   return sharp({
     create: {
       width: size,
@@ -146,8 +154,8 @@ export async function renderMessengerBubbleMark(iconMaster, size) {
     },
   })
     .composite([
-      { input: bubble, left: 0, top: 0 },
-      { input: await blackMarkPng(iconMaster, shieldSize), left, top },
+      { input: bubble, left: 0, top },
+      { input: await blackMarkPng(iconMaster, shieldSize), left: shieldLeft, top: shieldTop },
     ])
     .png()
     .toBuffer();
