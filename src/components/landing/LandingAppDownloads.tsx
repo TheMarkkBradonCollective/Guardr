@@ -156,7 +156,7 @@ export function LandingAppDownloads({
               display: 'block',
               borderRadius: 12,
               marginBottom: 12,
-              background: '#111827',
+              background: '#000000',
             }}
           />
           <Block

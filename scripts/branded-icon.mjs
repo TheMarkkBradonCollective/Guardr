@@ -10,8 +10,8 @@ export const PRODUCT_ICON_LABELS = {
 
 /** Staff tile — mid grey so it sits between Customer black and Guard white. */
 export const STAFF_LAUNCHER_BACKGROUND = '#6B6B6B';
-/** Messenger companion — slate so it is not Customer black or Staff grey. */
-export const MESSENGER_LAUNCHER_BACKGROUND = '#111827';
+/** Messenger companion — logo black, same field as Customer. */
+export const MESSENGER_LAUNCHER_BACKGROUND = '#000000';
 
 export function iconLabelForProductApp(productApp) {
   return PRODUCT_ICON_LABELS[productApp] || null;
@@ -29,7 +29,7 @@ export function iconChromeForProductApp(productApp) {
     return { background: '#FFFFFF', mark: 'black', text: '#000000' };
   }
   if (productApp === 'messenger') {
-    return { background: MESSENGER_LAUNCHER_BACKGROUND, mark: 'white', text: '#FFFFFF' };
+    return { background: MESSENGER_LAUNCHER_BACKGROUND, mark: 'black', text: '#000000' };
   }
   return { background: '#000000', mark: 'white', text: '#FFFFFF' };
 }
@@ -131,14 +131,13 @@ export const MESSENGER_BUBBLE_PATH = MESSENGER_BUBBLE_OUTER;
 const MESSENGER_BUBBLE_RATIO = 179 / 261;
 
 /**
- * The reference box exactly: white fill, dark outline, G-shield where the lines were.
+ * Solid white comment box + black G-shield (logo black) on a transparent canvas.
  */
 export async function renderMessengerBubbleMark(iconMaster, size) {
   const bubbleW = size;
   const bubbleH = Math.max(1, Math.round(size * MESSENGER_BUBBLE_RATIO));
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${bubbleW}" height="${bubbleH}" viewBox="0 0 261 179">
   <path fill="#FFFFFF" d="${MESSENGER_BUBBLE_OUTER}"/>
-  <path fill="#2A2A2A" fill-rule="evenodd" d="${MESSENGER_BUBBLE_OUTER} ${MESSENGER_BUBBLE_INNER}"/>
 </svg>`;
   const bubble = await sharp(Buffer.from(svg)).png().toBuffer();
   const top = Math.round((size - bubbleH) / 2);

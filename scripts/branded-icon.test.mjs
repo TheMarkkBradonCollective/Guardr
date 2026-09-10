@@ -97,23 +97,22 @@ describe('Staff launcher chrome', () => {
     assert.equal(nativeChromeForProductApp('client').backgroundColor, '#000000');
   });
 
-  it('uses a slate field for Messenger with no word on the icon', () => {
+  it('uses a black field for Messenger with no word on the icon', () => {
     assert.deepEqual(iconChromeForProductApp('messenger'), {
       background: MESSENGER_LAUNCHER_BACKGROUND,
-      mark: 'white',
-      text: '#FFFFFF',
+      mark: 'black',
+      text: '#000000',
     });
     assert.equal(iconLabelForProductApp('messenger'), null);
-    assert.equal(MESSENGER_LAUNCHER_BACKGROUND, '#111827');
+    assert.equal(MESSENGER_LAUNCHER_BACKGROUND, '#000000');
     assert.equal(nativeChromeForProductApp('messenger').backgroundColor, MESSENGER_LAUNCHER_BACKGROUND);
   });
 
-  it('puts a black G-shield inside a white chat bubble on the Messenger tile', async () => {
+  it('puts a black G-shield inside a solid white chat bubble on a black tile', async () => {
     const iconMaster = await prepareIconMaster();
     const png = await renderBrandedIcon(iconMaster, 96, { productApp: 'messenger' });
     const { data } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-    assert.equal(hasNear(data, 17, 24, 39), true, 'slate field');
+    assert.equal(hasNear(data, 0, 0, 0), true, 'black field and shield');
     assert.equal(hasNear(data, 255, 255, 255), true, 'white bubble');
-    assert.equal(hasNear(data, 0, 0, 0), true, 'black shield');
   });
 });
