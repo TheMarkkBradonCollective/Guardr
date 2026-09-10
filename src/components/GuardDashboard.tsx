@@ -830,7 +830,7 @@ export function GuardDashboard({
     } catch (err) {
       showAppToast('Location required', {
         tone: 'error',
-        body: err instanceof Error ? err.message : 'Enable GPS and try again.',
+        body: userFacingError(err, 'Enable GPS and try again.'),
       });
     }
   };
@@ -909,7 +909,7 @@ export function GuardDashboard({
     } catch (err) {
       showAppToast('Location required', {
         tone: 'error',
-        body: err instanceof Error ? err.message : 'Enable GPS and try again.',
+        body: userFacingError(err, 'Enable GPS and try again.'),
       });
     }
   };
@@ -1034,7 +1034,7 @@ export function GuardDashboard({
       } catch (err) {
         showAppToast('Location required', {
           tone: 'error',
-          body: err instanceof Error ? err.message : 'Enable GPS and try again.',
+          body: userFacingError(err, 'Enable GPS and try again.'),
         });
         return;
       }
@@ -1228,7 +1228,7 @@ export function GuardDashboard({
       setConnectSheetOpen(false);
       window.location.assign(url);
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : 'Failed to start Stripe onboarding';
+      const message = userFacingError(e, 'Failed to start Stripe onboarding');
       if (message.includes('Connect platform setup') || message.includes('signed up for Connect')) {
         setConnectError(
           'Stripe Connect is not fully activated on the Guardr platform yet. Contact Guardr support if this persists.'

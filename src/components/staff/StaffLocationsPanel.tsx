@@ -43,6 +43,7 @@ import { JobLocationCoordsFields } from '../jobs/JobLocationCoordsFields';
 import { MapPin, Plus } from 'lucide-react';
 import { StatusChip, type StatusTone } from '../baseui/StatusChip';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffLocationsPanelProps {
   currentUser: SessionUser;
@@ -195,7 +196,7 @@ export function StaffLocationsPanel({
       setCreating(false);
       setSelectedId(next.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save location.');
+      setError(userFacingError(err, 'Could not save location.'));
     } finally {
       setBusy(false);
     }

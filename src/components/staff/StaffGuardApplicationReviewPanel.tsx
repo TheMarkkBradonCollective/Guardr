@@ -22,6 +22,7 @@ import { StaffApplicationCredentialViewModal } from './StaffApplicationCredentia
 import { GUARD_ICN_SHORT_LABEL } from '../../lib/guardContractorNumber';
 import { GuardArmedStatusPill } from '../guard/GuardArmedStatusPill';
 import { User } from 'lucide-react';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffGuardApplicationReviewPanelProps {
   guard: SecurityGuard;
@@ -57,7 +58,7 @@ export function StaffGuardApplicationReviewPanel({
     try {
       await onApproveGuardAccount(guard.id);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not approve profile.'), { tone: 'error' });
     } finally {
       setActionPending(false);
     }
@@ -71,7 +72,7 @@ export function StaffGuardApplicationReviewPanel({
     try {
       await onRejectGuardApplication(guard.id, reason);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not deny application.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not deny application.'), { tone: 'error' });
     } finally {
       setActionPending(false);
     }
@@ -86,7 +87,7 @@ export function StaffGuardApplicationReviewPanel({
       await onRequestGuardApplicationRevision(guard.id, reason);
       showAppToast('Revision requested — application returned to Pending.');
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not request revision.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not request revision.'), { tone: 'error' });
     } finally {
       setActionPending(false);
     }

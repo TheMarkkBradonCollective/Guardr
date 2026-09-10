@@ -19,7 +19,8 @@ import {
   type StaffTimeEntry,
 } from '../../lib/staffTimeTracking';
 import { loadStaffTimeEntries } from '../../lib/staffTimeTrackingStorage';
-import { AppEmptyState } from '../ui/app/AppPrimitives';
+import { AppEmptyState, AppRequestState } from '../ui/app/AppPrimitives';
+import { userFacingError } from '../../lib/userFacingError';
 import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 
 interface StaffTimesheetsPanelProps {
@@ -113,16 +114,25 @@ export function StaffTimesheetsPanel({
 
   const [timeEntries, setTimeEntries] = useState<StaffTimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     const reload = () => {
-      void loadStaffTimeEntries().then((rows) => {
-        if (active) {
-          setTimeEntries(rows);
-          setLoading(false);
-        }
-      });
+      setError(null);
+      void loadStaffTimeEntries()
+        .then((rows) => {
+          if (active) {
+            setTimeEntries(rows);
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
+          if (active) {
+            setError(userFacingError(err, 'Could not load timesheet.'));
+            setLoading(false);
+          }
+        });
     };
     reload();
     window.addEventListener(STAFF_TIME_ENTRIES_CHANGED_EVENT, reload);
@@ -142,8 +152,31 @@ export function StaffTimesheetsPanel({
   );
   const activeEntry = getActiveStaffTimeEntry(timeEntries, staffId);
 
-  if (loading) {
-    return <p className="text-sm text-brand-text-muted">Loading timesheet…</p>;
+  if (loading || error) {
+    return (
+      <AppRequestState
+        status={loading ? 'loading' : 'error'}
+        title={loading ? 'Loading' : 'Could not load timesheet'}
+        message={error ?? 'This should only take a moment.'}
+        onRetry={
+          error
+            ? () => {
+                setLoading(true);
+                setError(null);
+                void loadStaffTimeEntries()
+                  .then((rows) => {
+                    setTimeEntries(rows);
+                    setLoading(false);
+                  })
+                  .catch((err) => {
+                    setError(userFacingError(err, 'Could not load timesheet.'));
+                    setLoading(false);
+                  });
+              }
+            : undefined
+        }
+      />
+    );
   }
 
   return (

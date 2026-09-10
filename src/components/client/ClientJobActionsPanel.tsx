@@ -86,6 +86,7 @@ import {
   X,
   DollarSign,
 } from 'lucide-react';
+import { userFacingError } from '../../lib/userFacingError';
 
 export interface ClientJobActionsPanelProps {
   request: SecurityRequest;
@@ -266,7 +267,7 @@ export function ClientJobActionsPanel({
       });
       if (url) window.location.href = url;
     } catch (e: unknown) {
-      showAppToast(e instanceof Error ? e.message : 'Unable to start checkout', { tone: 'error' });
+      showAppToast(userFacingError(e, 'Unable to start checkout'), { tone: 'error' });
     } finally {
       setPayingJobId(null);
     }
@@ -284,7 +285,7 @@ export function ClientJobActionsPanel({
       });
       if (url) window.location.href = url;
     } catch (e: unknown) {
-      showAppToast(e instanceof Error ? e.message : 'Unable to start Square checkout', { tone: 'error' });
+      showAppToast(userFacingError(e, 'Unable to start Square checkout'), { tone: 'error' });
     } finally {
       setPayingSquareJobId(null);
     }
@@ -302,7 +303,7 @@ export function ClientJobActionsPanel({
       });
       if (url) window.location.href = url;
     } catch (e: unknown) {
-      showAppToast(e instanceof Error ? e.message : 'Unable to start overtime checkout', { tone: 'error' });
+      showAppToast(userFacingError(e, 'Unable to start overtime checkout'), { tone: 'error' });
     } finally {
       setPayingOvertimeJobId(null);
     }
@@ -320,7 +321,7 @@ export function ClientJobActionsPanel({
       });
       if (url) window.location.href = url;
     } catch (e: unknown) {
-      showAppToast(e instanceof Error ? e.message : 'Unable to start Square overtime checkout', { tone: 'error' });
+      showAppToast(userFacingError(e, 'Unable to start Square overtime checkout'), { tone: 'error' });
     } finally {
       setPayingSquareJobId(null);
     }
@@ -338,7 +339,7 @@ export function ClientJobActionsPanel({
       });
       if (url) window.location.href = url;
     } catch (e: unknown) {
-      showAppToast(e instanceof Error ? e.message : 'Unable to start schedule payment', { tone: 'error' });
+      showAppToast(userFacingError(e, 'Unable to start schedule payment'), { tone: 'error' });
     } finally {
       setPayingScheduleJobId(null);
     }
@@ -1127,7 +1128,7 @@ export function ClientJobActionsPanel({
                   { tone: 'success' }
                 );
               } catch (e: unknown) {
-                showAppToast(e instanceof Error ? e.message : 'Could not submit review', { tone: 'error' });
+                showAppToast(userFacingError(e, 'Could not submit review'), { tone: 'error' });
               } finally {
                 setReviewSubmitting(false);
               }

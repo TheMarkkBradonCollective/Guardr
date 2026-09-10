@@ -20,6 +20,7 @@ import {
 import { guardCanStaffActivateAccount } from '../../lib/guardAccountActivation';
 import { AppButton } from '../ui/AppButton';
 import { StaffAccountAccessSection } from './StaffAccountAccessSection';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffGuardAccountControlsProps {
   guard: SecurityGuard;
@@ -64,7 +65,7 @@ export function StaffGuardAccountControls({
     try {
       await onUpdateUserStatus(guard.id, next);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not update account access.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not update account access.'), { tone: 'error' });
     } finally {
       setActionPending(false);
     }
@@ -88,7 +89,7 @@ export function StaffGuardAccountControls({
     try {
       await onUpdateUserStatus(guard.id, 'active');
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not activate account.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not activate account.'), { tone: 'error' });
     } finally {
       setActionPending(false);
     }
@@ -102,7 +103,7 @@ export function StaffGuardAccountControls({
     try {
       await onRejectGuardApplication(guard.id, reason);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not deny application.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not deny application.'), { tone: 'error' });
     } finally {
       setActionPending(false);
     }

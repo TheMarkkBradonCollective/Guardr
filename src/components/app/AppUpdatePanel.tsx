@@ -7,6 +7,7 @@ import { fetchAppUpdateStatus, installLatestApk } from '../../lib/platform/apkUp
 import { isPlayStoreBuild } from '../../lib/platform/playStoreBuild';
 import { showAppAlert } from '../ui/AppConfirm';
 import { INSTALL_APK_TITLE } from '../../lib/installSurfaceCopy';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface AppUpdatePanelProps {
   onOpenDownload?: () => void;
@@ -30,7 +31,7 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
       setLatestVersion(status.manifest.apkVersion);
       setUpdateAvailable(status.updateAvailable);
     } catch (refreshError) {
-      setError(refreshError instanceof Error ? refreshError.message : 'Could not check for updates.');
+      setError(userFacingError(refreshError, 'Could not check for updates.'));
     } finally {
       setChecking(false);
     }
@@ -47,7 +48,7 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
       await installLatestApk();
     } catch (installError) {
       const message =
-        installError instanceof Error ? installError.message : 'Could not start the update install.';
+        userFacingError(installError, 'Could not start the update install.');
       setError(message);
       void showAppAlert({
         title: 'Update failed',

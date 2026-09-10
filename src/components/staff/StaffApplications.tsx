@@ -19,6 +19,7 @@ import {
   matchesApplicationStatusFilter,
 } from '../../lib/staffListFilters';
 import { AppEmptyState, AppItemCard, AppSubScreenHeader } from '../ui/app/AppPrimitives';
+import { RosterLoadGate } from '../ui/app/RosterLoadGate';
 import { AppBlockedAccessScreen } from '../ui/app/AppBlockedAccess';
 import { clientDisplayName } from '../../lib/clientType';
 import { STAFF_SECTION_ACCESS_MESSAGES } from '../../lib/staffNavAccess';
@@ -642,7 +643,8 @@ export function StaffApplications({
         {oneRoleHolds}
         <WorkbenchSplit
           list={
-            visibleEntries.length === 0 ? (
+            <RosterLoadGate itemCount={visibleEntries.length} title="Could not load applications">
+            {visibleEntries.length === 0 ? (
               <WorkbenchEmpty
                 icon={search ? Search : UserCheck}
                 message={search.trim() ? 'No applications match your search' : 'No applications in this view'}
@@ -657,7 +659,8 @@ export function StaffApplications({
                 caption="Applications"
                 cardLayout={{ title: 'applicant', subtitle: 'submitted', trailing: 'status' }}
               />
-            )
+            )}
+            </RosterLoadGate>
           }
           detail={
             activeEntry ? (
@@ -674,6 +677,7 @@ export function StaffApplications({
   return (
     <StaffOpsPageShell toolbar={toolbar} className="staff-roster-panel" data-tour="staff-applications">
       {oneRoleHolds}
+      <RosterLoadGate itemCount={visibleEntries.length} title="Could not load applications">
       {visibleEntries.length === 0 ? (
         <AppEmptyState dashed icon={<UserCheck className="w-5 h-5" />} title="All clear">
           {search.trim()
@@ -721,6 +725,7 @@ export function StaffApplications({
           renderDetail={(entry, options) => renderApplicationDetail(entry, options)}
         />
       )}
+      </RosterLoadGate>
     </StaffOpsPageShell>
   );
 }

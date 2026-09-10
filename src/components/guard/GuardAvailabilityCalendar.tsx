@@ -18,6 +18,7 @@ import {
 } from '../../lib/guardAvailability';
 import { showAppToast } from '../ui/AppToast';
 import { GuardAvailabilityDatesPanel } from './GuardAvailabilityDatesPanel';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface GuardAvailabilityCalendarProps {
   guardId: string;
@@ -84,7 +85,7 @@ export function GuardAvailabilityCalendar({
       setDirty(false);
       showAppToast('Availability saved', { tone: 'success' });
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not save availability.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not save availability.'), { tone: 'error' });
     } finally {
       setSaving(false);
     }

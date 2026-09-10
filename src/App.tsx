@@ -8518,7 +8518,7 @@ export default function App() {
           }
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Could not link shared job location.';
+        const message = userFacingError(err, 'Could not link shared job location.');
         appToast(message, 'error');
         return;
       }
@@ -9804,7 +9804,7 @@ export default function App() {
           }
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Could not add job location.';
+        const message = userFacingError(err, 'Could not add job location.');
         appToast(message, 'error');
         return;
       }
@@ -12593,7 +12593,7 @@ export default function App() {
         );
       }
     } catch (e: unknown) {
-      appToast(e instanceof Error ? e.message : 'Payout failed', 'error');
+      appToast(userFacingError(e, 'Payout failed'), 'error');
     }
   };
 
@@ -12661,7 +12661,7 @@ export default function App() {
         notifyStaffAttention(currentUser, `Refund processed for "${req.title}".`, { requestId });
       }
     } catch (e: unknown) {
-      appToast(e instanceof Error ? e.message : 'Refund failed', 'error');
+      appToast(userFacingError(e, 'Refund failed'), 'error');
     }
   };
 

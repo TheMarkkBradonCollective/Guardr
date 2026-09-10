@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { ImagePlus, Loader2 } from 'lucide-react';
 import type { CertImageMutationResult } from '../../lib/certImagePolicy';
 import { processDocumentPhotoFile } from '../../lib/documentPhoto';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface CertImageAttachButtonProps {
   onAttach: (imageUrl: string) => Promise<CertImageMutationResult> | CertImageMutationResult;
@@ -27,7 +28,7 @@ export function CertImageAttachButton({ onAttach, compact = false }: CertImageAt
         setError(result.error);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not read image file. Please try again.');
+      setError(userFacingError(err, 'Could not read image file. Please try again.'));
     } finally {
       setUploading(false);
     }

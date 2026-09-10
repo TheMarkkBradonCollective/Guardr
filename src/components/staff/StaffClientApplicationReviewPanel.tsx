@@ -13,6 +13,7 @@ import { confirmApproveClientAccount } from '../../lib/importantActionConfirm';
 import { promptRequestClientApplicationRevisionNote } from '../../lib/staffDocumentReview';
 import { showAppToast } from '../ui/AppToast';
 import { User } from 'lucide-react';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffClientApplicationReviewPanelProps {
   client: Client;
@@ -70,7 +71,7 @@ export function StaffClientApplicationReviewPanel({
       await onRequestClientApplicationRevision(client.id, reason);
       showAppToast('Revision requested — application returned to Pending.');
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not request revision.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not request revision.'), { tone: 'error' });
     } finally {
       setActionPending(false);
     }

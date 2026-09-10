@@ -5,6 +5,7 @@ import { formatCityLabel } from '../../lib/californiaCities';
 import { normalizeManagedCities } from '../../lib/platformCities';
 import type { PlatformCity } from '../../lib/platformCities';
 import { WfSearchBar } from '../ui/wireframe';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface CityStaffAccessPickerProps {
   cityName: string;
@@ -80,7 +81,7 @@ export function CityStaffAccessPicker({
     try {
       await onUpdateStaffCityAccess(member.id, { managedCities: next });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update Service Areas access.');
+      setError(userFacingError(err, 'Could not update Service Areas access.'));
     } finally {
       setBusyId(null);
     }

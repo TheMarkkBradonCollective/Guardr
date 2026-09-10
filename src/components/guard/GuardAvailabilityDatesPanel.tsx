@@ -11,6 +11,7 @@ import {
   type GuardAvailabilitySchedule,
 } from '../../lib/guardAvailability';
 import { showAppToast } from '../ui/AppToast';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface GuardAvailabilityDatesPanelProps {
   guardId: string;
@@ -58,7 +59,7 @@ export function GuardAvailabilityDatesPanel({
       setDirty(false);
       showAppToast('Off days updated', { tone: 'success' });
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not save off days.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not save off days.'), { tone: 'error' });
     } finally {
       setSaving(false);
     }

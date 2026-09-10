@@ -15,6 +15,7 @@ import { showAppToast } from '../ui/AppToast';
 import { CredentialRecordsList } from '../credentials/CredentialRecordsList';
 import { getCoiArchiveHistory } from '../../lib/coiRevisionHistory';
 import { DocumentImagePreview } from '../credentials/DocumentImageLightbox';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface GuardCoiDetailModalProps {
   guard: SecurityGuard;
@@ -333,7 +334,7 @@ export function GuardCoiDetailModal({
                   setSaving(true);
                   void onReview('verified')
                     .catch((err) =>
-                      showAppToast(err instanceof Error ? err.message : 'Could not verify COI.', { tone: 'error' })
+                      showAppToast(userFacingError(err, 'Could not verify COI.'), { tone: 'error' })
                     )
                     .finally(() => setSaving(false));
                 }}
@@ -355,7 +356,7 @@ export function GuardCoiDetailModal({
                   setSaving(true);
                   void onReview('rejected', rejectionReason.trim() || 'Document incomplete or expired')
                     .catch((err) =>
-                      showAppToast(err instanceof Error ? err.message : 'Could not reject COI.', { tone: 'error' })
+                      showAppToast(userFacingError(err, 'Could not reject COI.'), { tone: 'error' })
                     )
                     .finally(() => setSaving(false));
                 }}

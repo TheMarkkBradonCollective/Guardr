@@ -20,6 +20,7 @@ import {
 } from '../../lib/staffBadgeNumber';
 import { PersonNameFields } from '../profile/PersonNameFields';
 import { personNameFromPayload } from '../../lib/personName';
+import { userFacingError } from '../../lib/userFacingError';
 
 export interface StaffAddStaffInput {
   email: string;
@@ -194,7 +195,7 @@ export function StaffAddStaffForm({
       if (staffId) onCreated?.(staffId);
       setOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add staff member.');
+      setError(userFacingError(err, 'Could not add staff member.'));
     } finally {
       setSaving(false);
     }

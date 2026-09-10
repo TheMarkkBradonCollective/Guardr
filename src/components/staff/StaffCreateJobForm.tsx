@@ -33,6 +33,7 @@ import { BREAK_MINUTE_PRESETS } from '../../lib/shiftBreaks';
 import { JobBreakPaidToggle } from '../jobs/JobBreakPaidToggle';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
+import { userFacingError } from '../../lib/userFacingError';
 
 export interface StaffCreateJobInput {
   clientId: string;
@@ -232,7 +233,7 @@ export function StaffCreateJobForm({ clients, guards, requests, feeConfig, feeSc
       if (jobId) onCreated?.(jobId);
       setOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create job.');
+      setError(userFacingError(err, 'Could not create job.'));
     } finally {
       setSaving(false);
     }

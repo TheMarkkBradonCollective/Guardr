@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Loader2, LocateFixed } from 'lucide-react';
 import { locateCurrentJobSite } from '../../lib/deviceLocation';
 import type { GeoCoords } from '../../lib/geo';
+import { userFacingError } from '../../lib/userFacingError';
 
 export interface CurrentLocationResult {
   coords: GeoCoords;
@@ -34,7 +35,7 @@ export function UseCurrentLocationButton({
         stateCode: result.stateCode ?? undefined,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to get your location.');
+      setError(userFacingError(err, 'Unable to get your location.'));
     } finally {
       setLoading(false);
     }

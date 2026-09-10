@@ -19,3 +19,12 @@ export function subscribeDataLoadIssue(listener: Listener): () => void {
     listeners.delete(listener);
   };
 }
+
+export function rosterRequestStatus(
+  itemCount: number,
+  loadIssue: string | null | undefined
+): 'empty' | 'error' | 'ready' {
+  if (loadIssue && itemCount === 0) return 'error';
+  if (itemCount === 0) return 'empty';
+  return 'ready';
+}
