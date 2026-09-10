@@ -5,6 +5,11 @@ const UPDATE_POLL_MS = 5 * 60 * 1000;
 
 let reloadScheduled = false;
 
+/** True when an existing controller was replaced — not the first SW takeover. */
+export function shouldReloadOnControllerChange(hadController: boolean): boolean {
+  return hadController;
+}
+
 function scheduleReload(): void {
   if (reloadScheduled) return;
   reloadScheduled = true;
@@ -92,7 +97,14 @@ export function initPwaAutoUpdate(registration?: ServiceWorkerRegistration | nul
   if (Capacitor.isNativePlatform() || typeof window === 'undefined') return;
   if (!('serviceWorker' in navigator)) return;
 
+  // First SW control (fresh install) fires controllerchange — do not reload that.
+  // Only reload when an *update* takes over an existing controller.
+  let hadController = Boolean(navigator.serviceWorker.controller);
   navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!shouldReloadOnControllerChange(hadController)) {
+      hadController = true;
+      return;
+    }
     notifyAndReload();
   });
 

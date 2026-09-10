@@ -67,6 +67,18 @@ test('remapNotificationUrlForUser maps support tickets to the signed-in role', (
   );
 });
 
+test('resolveNotificationDestination sends messages to Messenger when it is installed', () => {
+  const url = resolveNotificationDestination(
+    {
+      type: 'job_chat_message',
+      requestId: 'job-1',
+    },
+    guardUser,
+    { messengerAvailable: true }
+  );
+  assert.equal(url, '/messenger?jc=job-1&chat=1');
+});
+
 test('remapNotificationUrlForUser preserves chat intent for job messages', () => {
   assert.equal(
     remapNotificationUrlForUser('/staff/messages?mtab=jobs&jc=job-1&chat=1', guardUser),

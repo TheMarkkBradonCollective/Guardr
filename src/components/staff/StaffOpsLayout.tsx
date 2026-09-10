@@ -7,6 +7,8 @@ import type { LegalPageId } from '../../lib/legalContent';
 import type { ThemeMode } from '../../lib/platform/theme';
 import { DesktopStaffAdminShell } from '../layouts/desktop/DesktopStaffAdminShell';
 import { StaffShellCreateProvider } from './StaffShellCreateContext';
+import { useMessengerCompanion } from '../messenger/MessengerCompanionContext';
+import { MessengerCompanionBar } from '../messenger/MessengerCompanionBar';
 import {
   AlertTriangle,
   BarChart3,
@@ -249,6 +251,11 @@ function StaffOpsLayoutInner({
   headerExtension,
   headerOverride,
 }: StaffOpsLayoutInnerProps) {
+  const messenger = useMessengerCompanion();
+  const companionNav = useMemo(
+    () => navItems.filter((item) => item.id === 'messages' || item.id === 'support' || item.id === 'job-chats' || item.id === 'team-chat'),
+    [navItems],
+  );
   return (
     <DesktopStaffAdminShell
       currentUser={currentUser}
@@ -258,8 +265,8 @@ function StaffOpsLayoutInner({
       onChangeTheme={onChangeTheme}
       onSignOut={onSignOut}
       isDbConnected={isDbConnected}
-      navItems={navItems}
-      screenTitle={screenTitle}
+      navItems={messenger.active ? companionNav : navItems}
+      screenTitle={messenger.active ? 'Messenger' : screenTitle}
       navHighlight={navHighlight}
       workspaceLabel={workspaceLabel}
       showFinance={showFinance}
@@ -277,6 +284,13 @@ function StaffOpsLayoutInner({
       headerExtension={headerExtension}
       headerOverride={headerOverride}
     >
+      {messenger.active && messenger.role ? (
+        <MessengerCompanionBar
+          role={messenger.role}
+          onOpenMainApp={messenger.openMainApp}
+          unreadCount={messenger.unreadCount}
+        />
+      ) : null}
       {children}
     </DesktopStaffAdminShell>
   );

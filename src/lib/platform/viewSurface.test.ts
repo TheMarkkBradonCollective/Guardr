@@ -16,9 +16,9 @@ describe('viewSurface', () => {
     assert.equal(resolveViewSurface('native', 'tablet'), 'native-tablet');
   });
 
-  it('detects installed app surfaces', () => {
+  it('detects installed app surfaces including PWA', () => {
     assert.equal(isInstalledAppSurface('browser-mobile'), false);
-    assert.equal(isInstalledAppSurface('pwa-tablet'), false);
+    assert.equal(isInstalledAppSurface('pwa-tablet'), true);
     assert.equal(isInstalledAppSurface('native-mobile'), true);
   });
 

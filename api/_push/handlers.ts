@@ -33,6 +33,7 @@ export async function handlePushSubscribe(
     siteId?: string;
     quietHoursStart?: string;
     quietHoursEnd?: string;
+    appChannel?: 'main' | 'messenger';
   }
 ) {
   const session = await verifySession(db, {
@@ -56,6 +57,7 @@ export async function handlePushSubscribe(
     siteId: body.siteId,
     quietHoursStart: body.quietHoursStart,
     quietHoursEnd: body.quietHoursEnd,
+    appChannel: body.appChannel,
   });
 
   return { status: 200, body: { ok: true } };

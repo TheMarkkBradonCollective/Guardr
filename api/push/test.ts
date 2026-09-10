@@ -226,7 +226,7 @@ function isPushConfigured() {
 // api/_push/dedup.ts
 var DEDUP_TTL_MS = 25 * 60 * 60 * 1e3;
 
-// api/_push/routing.ts
+// lib/push/routing.ts
 function pushRoleToPlatformRole(pushRole) {
   switch (pushRole) {
     case "guard":
@@ -568,7 +568,44 @@ function buildNotificationData(type, options = {}) {
   };
 }
 
-// api/_push/delivery.ts
+// lib/push/channel.ts
+var MESSAGING_TYPES = /* @__PURE__ */ new Set([
+  "support_message",
+  "job_chat_message",
+  "staff_message",
+  "guard_message",
+  "client_message",
+  "team_chat_message",
+  "support_ticket",
+  "support_ticket_status"
+]);
+function isMessagingNotificationType(type) {
+  if (!type) return false;
+  return MESSAGING_TYPES.has(type);
+}
+function notificationChannelForType(type) {
+  return isMessagingNotificationType(type) ? "messenger" : "main";
+}
+function selectSubscriptionsForNotification(subscriptions, type) {
+  if (!subscriptions.length) return subscriptions;
+  const channel = notificationChannelForType(type);
+  if (channel === "messenger") {
+    const messenger = subscriptions.filter((sub) => sub.app_channel === "messenger");
+    if (messenger.length > 0) return messenger;
+    return subscriptions.filter((sub) => sub.app_channel !== "messenger");
+  }
+  return subscriptions.filter((sub) => sub.app_channel !== "messenger");
+}
+function messengerUrlFromAppUrl(url) {
+  try {
+    const parsed = new URL(url, "https://guardr.co");
+    return parsed.search ? `/messenger${parsed.search}` : "/messenger";
+  } catch {
+    return "/messenger";
+  }
+}
+
+// lib/push/delivery.ts
 var PREF_COLUMN = {
   assignment: "assignment",
   guard_checkin: "guard_checkin",
@@ -697,13 +734,13 @@ async function deliverToSubscriptions(db, subscriptions, payload) {
   const fcmReady = isFcmConfigured();
   if (!webPushReady && !fcmReady) return { sent: 0, failed: subscriptions.length };
   const prefCache = /* @__PURE__ */ new Map();
-  const filtered = [];
+  const prefFiltered = [];
   for (const sub of subscriptions) {
     if (payload.excludeUserId && sub.user_id === payload.excludeUserId) {
       continue;
     }
     if (!sub.user_id) {
-      filtered.push(sub);
+      prefFiltered.push(sub);
       continue;
     }
     let enabled = prefCache.get(sub.user_id);
@@ -711,8 +748,9 @@ async function deliverToSubscriptions(db, subscriptions, payload) {
       enabled = await isTypeEnabledForUser(db, sub.user_id, payload.type);
       prefCache.set(sub.user_id, enabled);
     }
-    if (enabled) filtered.push(sub);
+    if (enabled) prefFiltered.push(sub);
   }
+  const filtered = selectSubscriptionsForNotification(prefFiltered, payload.type);
   if (!filtered.length) return { sent: 0, failed: 0 };
   const urlOptions = {
     guardId: payload.guardId,
@@ -736,12 +774,13 @@ async function deliverToSubscriptions(db, subscriptions, payload) {
       priority: payload.priority,
       role: platformRole
     });
+    const url = sub.app_channel === "messenger" ? messengerUrlFromAppUrl(data.url) : data.url;
     const message = {
       title: payload.title,
       body: payload.body,
-      url: data.url,
+      url,
       eventType: payload.type,
-      data,
+      data: { ...data, url },
       tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
       priority: data.priority
     };
@@ -758,18 +797,37 @@ async function deliverToSubscriptions(db, subscriptions, payload) {
   await removeInvalidSubscriptions(db, staleEndpoints);
   return { sent, failed };
 }
+var SUB_SELECT = "endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role, app_channel";
+var SUB_SELECT_LEGACY = "endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role";
+function isMissingAppChannelColumn(message) {
+  return /app_channel/i.test(message);
+}
+async function loadPushSubscriptions(query, fallback) {
+  const result = await query;
+  if (!result.error) return result.data ?? [];
+  if (!isMissingAppChannelColumn(result.error.message)) {
+    throw new Error(result.error.message);
+  }
+  const legacy = await fallback();
+  if (legacy.error) throw new Error(legacy.error.message);
+  return (legacy.data ?? []).map((row) => ({ ...row, app_channel: null }));
+}
 async function sendNotificationToUser(db, userId, payload) {
   const enabled = await isTypeEnabledForUser(db, userId, payload.type);
   if (!enabled) return { sent: 0, failed: 0 };
-  const { data: subscriptions, error } = await db.from("push_subscriptions").select("endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role").eq("user_id", userId);
-  if (error) throw new Error(error.message);
-  return deliverToSubscriptions(db, subscriptions ?? [], payload);
+  const rows = await loadPushSubscriptions(
+    db.from("push_subscriptions").select(SUB_SELECT).eq("user_id", userId),
+    () => db.from("push_subscriptions").select(SUB_SELECT_LEGACY).eq("user_id", userId)
+  );
+  return deliverToSubscriptions(db, rows, payload);
 }
 async function sendNotificationToRole(db, role, payload) {
   const roles = role === "dispatch" ? ["dispatch", "admin"] : [role];
-  const { data: subscriptions, error } = await db.from("push_subscriptions").select("endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role").in("push_role", roles);
-  if (error) throw new Error(error.message);
-  return deliverToSubscriptions(db, subscriptions ?? [], payload);
+  const rows = await loadPushSubscriptions(
+    db.from("push_subscriptions").select(SUB_SELECT).in("push_role", roles),
+    () => db.from("push_subscriptions").select(SUB_SELECT_LEGACY).in("push_role", roles)
+  );
+  return deliverToSubscriptions(db, rows, payload);
 }
 async function dispatchPushNotification(db, payload) {
   if (payload.userId) {
@@ -789,122 +847,7 @@ async function dispatchPushNotification(db, payload) {
   return { sent, failed };
 }
 
-// api/_push/accountSessionAuth.ts
-var STAFF_PLATFORM_ROLES = /* @__PURE__ */ new Set([
-  "owner",
-  "director",
-  "manager",
-  "administrator",
-  "moderator",
-  "support",
-  "staff",
-  "auditor"
-]);
-function resolvePlatformRole(input) {
-  if (input.legacyRole === "client") return "client";
-  if (input.isStaff && input.staffRole) {
-    switch (input.staffRole) {
-      case "Founder":
-      case "Owner":
-        return "owner";
-      case "Director":
-        return "director";
-      case "Manager":
-        return "manager";
-      case "Administrator":
-        return "administrator";
-      case "Moderator":
-        return "moderator";
-      case "Support":
-        return "support";
-    }
-  }
-  if (input.legacyRole === "auditor") return "moderator";
-  if (input.legacyRole === "staff") return "administrator";
-  return "guard";
-}
-async function verifyStaffSession(db, userId, email) {
-  const emailLower = email.trim().toLowerCase();
-  let { data, error } = await db.from("staff").select("id, email, personal_email, staff_role").eq("id", userId).maybeSingle();
-  if (!data && !error) {
-    const byEmail = await db.from("staff").select("id, email, personal_email, staff_role").or(`email.eq.${emailLower},personal_email.eq.${emailLower}`).maybeSingle();
-    data = byEmail.data ?? null;
-    error = byEmail.error ?? null;
-  }
-  if (!data && error?.code === "42P01") return null;
-  const matchesWork = data?.email?.toLowerCase() === emailLower;
-  const matchesPersonal = data?.personal_email?.toLowerCase() === emailLower;
-  if (!data || !matchesWork && !matchesPersonal) return null;
-  const platformRole = resolvePlatformRole({
-    isStaff: true,
-    staffRole: data.staff_role ?? void 0,
-    legacyRole: "staff"
-  });
-  return { userId: data.id, email: emailLower, role: platformRole, platformRole };
-}
-async function verifyFieldGuardSession(db, userId, email, credentialsRole) {
-  let { data, error } = await db.from("guards").select("id, email, is_staff, staff_role, migrated_to_staff_at").eq("id", userId).maybeSingle();
-  if (!data && !error) {
-    const byEmail = await db.from("guards").select("id, email, is_staff, staff_role, migrated_to_staff_at").eq("email", email).maybeSingle();
-    data = byEmail.data ?? null;
-    error = byEmail.error ?? null;
-  }
-  if (!data && error?.code === "42P01") return null;
-  if (!data || data.email?.toLowerCase() !== email) return null;
-  if (data.migrated_to_staff_at) return null;
-  const platformRole = resolvePlatformRole({
-    isStaff: data.is_staff,
-    staffRole: data.staff_role ?? void 0,
-    legacyRole: data.is_staff ? "staff" : "guard"
-  });
-  if (platformRole !== credentialsRole && credentialsRole !== "staff" && credentialsRole !== "auditor") {
-    console.warn(
-      `Session role mismatch for ${email}: client sent ${credentialsRole}, db has ${platformRole}`
-    );
-  }
-  return { userId: data.id, email, role: platformRole, platformRole };
-}
-async function verifyAccountSession(db, credentials) {
-  if (!credentials?.userId || !credentials?.email || !credentials?.role) {
-    return null;
-  }
-  const email = credentials.email.trim().toLowerCase();
-  const { userId, role } = credentials;
-  if (role === "client") {
-    let { data } = await db.from("clients").select("id, email").eq("id", userId).maybeSingle();
-    if (!data) {
-      const byEmail = await db.from("clients").select("id, email").eq("email", email).maybeSingle();
-      data = byEmail.data ?? null;
-    }
-    if (!data || data.email?.toLowerCase() !== email) return null;
-    return { userId: data.id, email, role: "client", platformRole: "client" };
-  }
-  if (STAFF_PLATFORM_ROLES.has(role)) {
-    const staffSession = await verifyStaffSession(db, userId, email);
-    if (staffSession) return staffSession;
-  }
-  return verifyFieldGuardSession(db, userId, email, role);
-}
-
-// api/_push/sessionAuth.ts
-async function verifySession(db, credentials) {
-  return verifyAccountSession(db, credentials);
-}
-
-// lib/push/routing.ts
-function pushRoleToPlatformRole2(pushRole) {
-  switch (pushRole) {
-    case "guard":
-      return "guard";
-    case "client":
-      return "client";
-    case "dispatch":
-    case "admin":
-      return "administrator";
-    default:
-      return "administrator";
-  }
-}
+// api/_push/routing.ts
 function resolveNotificationUrl2(type, options = {}) {
   switch (type) {
     case "missed_checkin":
@@ -1160,201 +1103,106 @@ function buildNotificationData2(type, options = {}) {
   };
 }
 
-// lib/push/delivery.ts
-var PREF_COLUMN2 = {
-  assignment: "assignment",
-  guard_checkin: "guard_checkin",
-  guard_clockout: "guard_clockout",
-  guard_arrived: "guard_arrived",
-  guard_left_site: "guard_left_site",
-  guard_break_start: "guard_break_start",
-  guard_break_end: "guard_break_end",
-  missed_checkin: "missed_checkin",
-  emergency_alert: "emergency_alert",
-  support_message: "support_message",
-  job_chat_message: "job_chat_message",
-  staff_message: "staff_message",
-  guard_message: "guard_message",
-  client_message: "client_message",
-  job_submitted: "job_submitted",
-  job_open_to_guards: "job_open_to_guards",
-  guard_application: "guard_application",
-  guard_pending_approval: "guard_pending_approval",
-  client_pending_approval: "client_pending_approval",
-  credential_pending: "credential_pending",
-  payment_attention: "payment_attention",
-  client_invoice_ready: "client_invoice_ready",
-  client_cash_payment_requested: "payment_attention",
-  guard_cash_payout_requested: "payment_attention",
-  stripe_payment_complete: "payment_attention",
-  support_ticket: "support_ticket",
-  support_ticket_status: "support_ticket_status",
-  dispute_update: "dispute_update",
-  guard_trusted_status: "guard_trusted_status",
-  client_trusted_status: "client_trusted_status",
-  job_relisted: "job_relisted",
-  job_schedule_changed: "job_schedule_changed",
-  team_chat_message: "team_chat_message",
-  standing_crew_invite: "standing_crew_invite",
-  crew_lead_request: "crew_lead_request",
-  pre_shift_briefing: "pre_shift_briefing",
-  guard_en_route: "guard_arrived",
-  account_update: "support_ticket_status",
-  job_status_update: "assignment",
-  payout_ready: "assignment",
-  company_placard_expiry: "company_placard_expiry"
-};
-async function isTypeEnabledForUser2(db, userId, type) {
-  const column = PREF_COLUMN2[type];
-  if (!column) return true;
-  const { data, error } = await db.from("notification_preferences").select(column).eq("user_id", userId).maybeSingle();
-  if (error || !data) return true;
-  return data[column] !== false;
-}
-var MAX_RETRIES2 = 2;
-var RETRY_DELAY_MS2 = 500;
-var vapidConfigured2 = false;
-var webPushModule2 = null;
-async function getWebPush2() {
-  if (!webPushModule2) {
-    const mod = await import("web-push");
-    webPushModule2 = "default" in mod && mod.default ? mod.default : mod;
+// api/_push/accountSessionAuth.ts
+var STAFF_PLATFORM_ROLES = /* @__PURE__ */ new Set([
+  "owner",
+  "director",
+  "manager",
+  "administrator",
+  "moderator",
+  "support",
+  "staff",
+  "auditor"
+]);
+function resolvePlatformRole(input) {
+  if (input.legacyRole === "client") return "client";
+  if (input.isStaff && input.staffRole) {
+    switch (input.staffRole) {
+      case "Founder":
+      case "Owner":
+        return "owner";
+      case "Director":
+        return "director";
+      case "Manager":
+        return "manager";
+      case "Administrator":
+        return "administrator";
+      case "Moderator":
+        return "moderator";
+      case "Support":
+        return "support";
+    }
   }
-  return webPushModule2;
+  if (input.legacyRole === "auditor") return "moderator";
+  if (input.legacyRole === "staff") return "administrator";
+  return "guard";
 }
-async function ensureVapidConfigured2() {
-  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
-  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
-  const subject = process.env.VAPID_SUBJECT?.trim() || "mailto:support@guardr.co";
-  if (!publicKey || !privateKey) return false;
-  if (vapidConfigured2) return true;
-  const webpush = await getWebPush2();
-  webpush.setVapidDetails(subject, publicKey, privateKey);
-  vapidConfigured2 = true;
-  return true;
-}
-function isInQuietHours2(quietStart, quietEnd, now = /* @__PURE__ */ new Date()) {
-  if (!quietStart || !quietEnd) return false;
-  const toMinutes = (time) => {
-    const [h, m] = time.split(":").map(Number);
-    return h * 60 + m;
-  };
-  const current = now.getHours() * 60 + now.getMinutes();
-  const start = toMinutes(quietStart);
-  const end = toMinutes(quietEnd);
-  if (start === end) return false;
-  if (start < end) return current >= start && current < end;
-  return current >= start || current < end;
-}
-async function sleep2(ms) {
-  await new Promise((resolve) => setTimeout(resolve, ms));
-}
-async function sendToSubscription2(subscription, payload, attempt = 0) {
-  if (isFcmNativeEndpoint(subscription.endpoint)) {
-    return sendFcmNativeNotification(subscription.endpoint, payload, attempt);
+async function verifyStaffSession(db, userId, email) {
+  const emailLower = email.trim().toLowerCase();
+  let { data, error } = await db.from("staff").select("id, email, personal_email, staff_role").eq("id", userId).maybeSingle();
+  if (!data && !error) {
+    const byEmail = await db.from("staff").select("id, email, personal_email, staff_role").or(`email.eq.${emailLower},personal_email.eq.${emailLower}`).maybeSingle();
+    data = byEmail.data ?? null;
+    error = byEmail.error ?? null;
   }
-  if (!await ensureVapidConfigured2()) {
-    return { ok: false, endpoint: subscription.endpoint };
+  if (!data && error?.code === "42P01") return null;
+  const matchesWork = data?.email?.toLowerCase() === emailLower;
+  const matchesPersonal = data?.personal_email?.toLowerCase() === emailLower;
+  if (!data || !matchesWork && !matchesPersonal) return null;
+  const platformRole = resolvePlatformRole({
+    isStaff: true,
+    staffRole: data.staff_role ?? void 0,
+    legacyRole: "staff"
+  });
+  return { userId: data.id, email: emailLower, role: platformRole, platformRole };
+}
+async function verifyFieldGuardSession(db, userId, email, credentialsRole) {
+  let { data, error } = await db.from("guards").select("id, email, is_staff, staff_role, migrated_to_staff_at").eq("id", userId).maybeSingle();
+  if (!data && !error) {
+    const byEmail = await db.from("guards").select("id, email, is_staff, staff_role, migrated_to_staff_at").eq("email", email).maybeSingle();
+    data = byEmail.data ?? null;
+    error = byEmail.error ?? null;
   }
-  try {
-    const webpush = await getWebPush2();
-    await webpush.sendNotification(
-      {
-        endpoint: subscription.endpoint,
-        keys: { p256dh: subscription.p256dh, auth: subscription.auth }
-      },
-      JSON.stringify(payload),
-      {
-        TTL: 60 * 60,
-        urgency: payload.priority === "high" ? "high" : "normal"
-      }
+  if (!data && error?.code === "42P01") return null;
+  if (!data || data.email?.toLowerCase() !== email) return null;
+  if (data.migrated_to_staff_at) return null;
+  const platformRole = resolvePlatformRole({
+    isStaff: data.is_staff,
+    staffRole: data.staff_role ?? void 0,
+    legacyRole: data.is_staff ? "staff" : "guard"
+  });
+  if (platformRole !== credentialsRole && credentialsRole !== "staff" && credentialsRole !== "auditor") {
+    console.warn(
+      `Session role mismatch for ${email}: client sent ${credentialsRole}, db has ${platformRole}`
     );
-    return { ok: true };
-  } catch (err) {
-    const statusCode = err && typeof err === "object" && "statusCode" in err ? Number(err.statusCode) : void 0;
-    if (attempt < MAX_RETRIES2 && statusCode !== 404 && statusCode !== 410) {
-      await sleep2(RETRY_DELAY_MS2 * (attempt + 1));
-      return sendToSubscription2(subscription, payload, attempt + 1);
-    }
-    return { ok: false, statusCode, endpoint: subscription.endpoint };
   }
+  return { userId: data.id, email, role: platformRole, platformRole };
 }
-async function removeInvalidSubscriptions2(db, endpoints) {
-  if (!endpoints.length) return;
-  await db.from("push_subscriptions").delete().in("endpoint", endpoints);
-}
-async function deliverToSubscriptions2(db, subscriptions, payload) {
-  if (!subscriptions.length) return { sent: 0, failed: 0 };
-  const webPushReady = await ensureVapidConfigured2();
-  const fcmReady = isFcmConfigured();
-  if (!webPushReady && !fcmReady) return { sent: 0, failed: subscriptions.length };
-  const prefCache = /* @__PURE__ */ new Map();
-  const filtered = [];
-  for (const sub of subscriptions) {
-    if (payload.excludeUserId && sub.user_id === payload.excludeUserId) {
-      continue;
-    }
-    if (!sub.user_id) {
-      filtered.push(sub);
-      continue;
-    }
-    let enabled = prefCache.get(sub.user_id);
-    if (enabled === void 0) {
-      enabled = await isTypeEnabledForUser2(db, sub.user_id, payload.type);
-      prefCache.set(sub.user_id, enabled);
-    }
-    if (enabled) filtered.push(sub);
+async function verifyAccountSession(db, credentials) {
+  if (!credentials?.userId || !credentials?.email || !credentials?.role) {
+    return null;
   }
-  if (!filtered.length) return { sent: 0, failed: 0 };
-  const urlOptions = {
-    guardId: payload.guardId,
-    requestId: payload.requestId,
-    ticketId: payload.ticketId
-  };
-  let sent = 0;
-  let failed = 0;
-  const staleEndpoints = [];
-  for (const sub of filtered) {
-    if (payload.type !== "emergency_alert" && payload.priority !== "high" && isInQuietHours2(sub.quiet_hours_start, sub.quiet_hours_end)) {
-      continue;
+  const email = credentials.email.trim().toLowerCase();
+  const { userId, role } = credentials;
+  if (role === "client") {
+    let { data } = await db.from("clients").select("id, email").eq("id", userId).maybeSingle();
+    if (!data) {
+      const byEmail = await db.from("clients").select("id, email").eq("email", email).maybeSingle();
+      data = byEmail.data ?? null;
     }
-    const platformRole = pushRoleToPlatformRole2(sub.push_role);
-    const data = buildNotificationData2(payload.type, {
-      url: payload.url ?? resolveNotificationUrlForRole2(payload.type, platformRole, urlOptions),
-      siteId: payload.siteId,
-      guardId: payload.guardId,
-      requestId: payload.requestId,
-      ticketId: payload.ticketId,
-      priority: payload.priority,
-      role: platformRole
-    });
-    const message = {
-      title: payload.title,
-      body: payload.body,
-      url: data.url,
-      eventType: payload.type,
-      data,
-      tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
-      priority: data.priority
-    };
-    const result = await sendToSubscription2(sub, message);
-    if (result.ok) {
-      sent += 1;
-    } else {
-      failed += 1;
-      if (result.statusCode === 404 || result.statusCode === 410) {
-        staleEndpoints.push(result.endpoint);
-      }
-    }
+    if (!data || data.email?.toLowerCase() !== email) return null;
+    return { userId: data.id, email, role: "client", platformRole: "client" };
   }
-  await removeInvalidSubscriptions2(db, staleEndpoints);
-  return { sent, failed };
+  if (STAFF_PLATFORM_ROLES.has(role)) {
+    const staffSession = await verifyStaffSession(db, userId, email);
+    if (staffSession) return staffSession;
+  }
+  return verifyFieldGuardSession(db, userId, email, role);
 }
-async function sendNotificationToRole2(db, role, payload) {
-  const roles = role === "dispatch" ? ["dispatch", "admin"] : [role];
-  const { data: subscriptions, error } = await db.from("push_subscriptions").select("endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role").in("push_role", roles);
-  if (error) throw new Error(error.message);
-  return deliverToSubscriptions2(db, subscriptions ?? [], payload);
+
+// api/_push/sessionAuth.ts
+async function verifySession(db, credentials) {
+  return verifyAccountSession(db, credentials);
 }
 
 // lib/push/broadcast.ts
@@ -1406,7 +1254,7 @@ async function sendPlatformBroadcast(db, input) {
   let sent = 0;
   let failed = 0;
   for (const role of BROADCAST_ROLES) {
-    const result = await sendNotificationToRole2(db, role, payload);
+    const result = await sendNotificationToRole(db, role, payload);
     sent += result.sent;
     failed += result.failed;
   }
@@ -1439,7 +1287,7 @@ async function handlePushTest(db, body) {
     const result2 = await sendPlatformBroadcast(db, { title, body: message });
     return { status: 200, body: { ok: true, ...result2 } };
   }
-  const data = buildNotificationData("test", { siteId: body.siteId });
+  const data = buildNotificationData2("test", { siteId: body.siteId });
   const result = await dispatchPushNotification(db, {
     userId: session.userId,
     title: "Guardr test alert",

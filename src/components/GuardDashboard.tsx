@@ -52,6 +52,7 @@ import { GuardActivityLogModal } from './guard/GuardActivityLogModal';
 import { GuardIncidentReportModal } from './guard/GuardIncidentReportModal';
 import { LateClockOutPrompt } from './guard/LateClockOutPrompt';
 import { showAppToast } from './ui/AppToast';
+import { userFacingError } from '../lib/userFacingError';
 import { showAppConfirm } from './ui/AppConfirm';
 import { AppOverlaySheet } from './ui/motion/AppMotion';
 import { PaymentsPage } from './payments/PaymentsPage';
@@ -1248,7 +1249,7 @@ export function GuardDashboard({
     } catch (error) {
       showAppToast('Stripe payout request failed', {
         tone: 'error',
-        body: error instanceof Error ? error.message : 'Try again or contact Guardr support.',
+        body: userFacingError(error, 'Try again or contact Guardr support.'),
       });
     } finally {
       setStripeRequestPending(false);

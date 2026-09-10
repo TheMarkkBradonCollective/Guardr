@@ -66,6 +66,7 @@ import {
   verifyAccountPassword,
 } from '../lib/accountPasswords';
 import { signInWithCredentials } from '../lib/auth/authService';
+import { userFacingError } from '../lib/userFacingError';
 import {
   ONE_ROLE_LOCK_MESSAGE,
   type OneRoleCase,
@@ -278,6 +279,7 @@ export function AuthPage({
     initialRole === 'guard' || initialRole === 'staff' ? initialRole : 'client'
   );
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
   const switchToStaffSignup = () => {
     setRole('staff');
     onAuthRoleChange?.('staff');
@@ -370,7 +372,10 @@ export function AuthPage({
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     setErrorMsg('');
+    try {
 
     if (!email) {
       setErrorMsg('Email address is required.');
@@ -464,7 +469,7 @@ export function AuthPage({
         try {
           await onSignUp(staffProfile, 'staff', password);
         } catch (err) {
-          setErrorMsg(err instanceof Error ? err.message : 'Could not create account.');
+          setErrorMsg(userFacingError(err, 'Could not create account.'));
           return;
         }
         setIsSignUp(false);
@@ -603,7 +608,7 @@ export function AuthPage({
         try {
           await onSignUp(clientProfile, 'client', password);
         } catch (err) {
-          setErrorMsg(err instanceof Error ? err.message : 'Could not create account.');
+          setErrorMsg(userFacingError(err, 'Could not create account.'));
           return;
         }
         onSignIn(
@@ -660,7 +665,7 @@ export function AuthPage({
       try {
         await onSignUp(newGuardProfile, 'guard', password);
       } catch (err) {
-        setErrorMsg(err instanceof Error ? err.message : 'Could not create account.');
+        setErrorMsg(userFacingError(err, 'Could not create account.'));
         return;
       }
       onSignIn(
@@ -833,6 +838,9 @@ export function AuthPage({
       return;
     }
     setErrorMsg('Account not found. Please sign up or check your email address.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const [, theme] = useStyletron();
@@ -1733,8 +1741,14 @@ export function AuthPage({
                 </LegalAcceptanceCheckbox>
               )}
 
-              <AppButton type="submit" fullWidth className={isSheet ? 'auth-sheet-submit mt-3' : 'mt-3'}>
-                {isSignUp ? 'Create account' : 'Sign in'}
+              <AppButton type="submit" fullWidth disabled={submitting} className={isSheet ? 'auth-sheet-submit mt-3' : 'mt-3'}>
+                {submitting
+                  ? isSignUp
+                    ? 'Creating…'
+                    : 'Signing in…'
+                  : isSignUp
+                    ? 'Create account'
+                    : 'Sign in'}
                 <ArrowRight className="w-4 h-4" />
               </AppButton>
             </form>

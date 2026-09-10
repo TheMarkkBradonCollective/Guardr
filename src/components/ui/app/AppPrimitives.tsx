@@ -890,6 +890,50 @@ export function AppErrorBanner({ children }: { children: React.ReactNode }) {
   );
 }
 
+export function AppRequestState({
+  status,
+  title,
+  message,
+  onRetry,
+  children,
+}: {
+  status: 'loading' | 'empty' | 'error' | 'ready';
+  title?: string;
+  message?: React.ReactNode;
+  onRetry?: () => void;
+  children?: React.ReactNode;
+}) {
+  if (status === 'ready') return <>{children}</>;
+  if (status === 'loading') {
+    return (
+      <AppEmptyState
+        title={title ?? 'Loading'}
+        message={message ?? 'This should only take a moment.'}
+      />
+    );
+  }
+  if (status === 'empty') {
+    return (
+      <AppEmptyState
+        title={title ?? 'Nothing here yet'}
+        message={message ?? 'When there is something to show, it will appear here.'}
+      />
+    );
+  }
+  return (
+    <div className="app-request-state app-request-state--error">
+      <AppErrorBanner>{message ?? title ?? 'Something went wrong. Please try again.'}</AppErrorBanner>
+      {onRetry ? (
+        <div className="app-request-state-retry">
+          <AppButton variant="outline" size="sm" onClick={onRetry}>
+            Try again
+          </AppButton>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function AppFlowSurface({
   children,
   className = '',

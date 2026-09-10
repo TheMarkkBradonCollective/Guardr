@@ -10,14 +10,20 @@ interface GuardActivityLogModalProps {
 
 export function GuardActivityLogModal({ open, onClose, onSubmit }: GuardActivityLogModalProps) {
   const [entry, setEntry] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = entry.trim();
-    if (!trimmed) return;
-    onSubmit(trimmed);
-    setEntry('');
-    onClose();
+    if (!trimmed || saving) return;
+    setSaving(true);
+    try {
+      onSubmit(trimmed);
+      setEntry('');
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -38,8 +44,8 @@ export function GuardActivityLogModal({ open, onClose, onSubmit }: GuardActivity
           <GuardrButton kind="secondary" type="button" onClick={onClose}>
             Cancel
           </GuardrButton>
-          <GuardrButton kind="primary" type="submit" disabled={!entry.trim()}>
-            Save entry
+          <GuardrButton kind="primary" type="submit" disabled={!entry.trim() || saving}>
+            {saving ? 'Saving…' : 'Save entry'}
           </GuardrButton>
         </div>
       </form>

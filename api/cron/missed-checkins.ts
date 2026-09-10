@@ -433,7 +433,7 @@ async function buildEventDispatchPayloads(db, event) {
   return [payload];
 }
 
-// api/_push/routing.ts
+// lib/push/routing.ts
 function pushRoleToPlatformRole(pushRole) {
   switch (pushRole) {
     case "guard":
@@ -775,6 +775,43 @@ function buildNotificationData(type, options = {}) {
   };
 }
 
+// lib/push/channel.ts
+var MESSAGING_TYPES = /* @__PURE__ */ new Set([
+  "support_message",
+  "job_chat_message",
+  "staff_message",
+  "guard_message",
+  "client_message",
+  "team_chat_message",
+  "support_ticket",
+  "support_ticket_status"
+]);
+function isMessagingNotificationType(type) {
+  if (!type) return false;
+  return MESSAGING_TYPES.has(type);
+}
+function notificationChannelForType(type) {
+  return isMessagingNotificationType(type) ? "messenger" : "main";
+}
+function selectSubscriptionsForNotification(subscriptions, type) {
+  if (!subscriptions.length) return subscriptions;
+  const channel = notificationChannelForType(type);
+  if (channel === "messenger") {
+    const messenger = subscriptions.filter((sub) => sub.app_channel === "messenger");
+    if (messenger.length > 0) return messenger;
+    return subscriptions.filter((sub) => sub.app_channel !== "messenger");
+  }
+  return subscriptions.filter((sub) => sub.app_channel !== "messenger");
+}
+function messengerUrlFromAppUrl(url) {
+  try {
+    const parsed = new URL(url, "https://guardr.co");
+    return parsed.search ? `/messenger${parsed.search}` : "/messenger";
+  } catch {
+    return "/messenger";
+  }
+}
+
 // lib/push/fcm.ts
 import { createSign } from "node:crypto";
 var FCM_NATIVE_ENDPOINT_PREFIX = "fcm-native:";
@@ -969,7 +1006,7 @@ async function sendFcmNativeNotification(endpoint, payload, attempt = 0) {
   return sendFcmLegacyNotification(endpoint, token, payload, serverKey, attempt);
 }
 
-// api/_push/delivery.ts
+// lib/push/delivery.ts
 var PREF_COLUMN = {
   assignment: "assignment",
   guard_checkin: "guard_checkin",
@@ -1098,13 +1135,13 @@ async function deliverToSubscriptions(db, subscriptions, payload) {
   const fcmReady = isFcmConfigured();
   if (!webPushReady && !fcmReady) return { sent: 0, failed: subscriptions.length };
   const prefCache = /* @__PURE__ */ new Map();
-  const filtered = [];
+  const prefFiltered = [];
   for (const sub of subscriptions) {
     if (payload.excludeUserId && sub.user_id === payload.excludeUserId) {
       continue;
     }
     if (!sub.user_id) {
-      filtered.push(sub);
+      prefFiltered.push(sub);
       continue;
     }
     let enabled = prefCache.get(sub.user_id);
@@ -1112,8 +1149,9 @@ async function deliverToSubscriptions(db, subscriptions, payload) {
       enabled = await isTypeEnabledForUser(db, sub.user_id, payload.type);
       prefCache.set(sub.user_id, enabled);
     }
-    if (enabled) filtered.push(sub);
+    if (enabled) prefFiltered.push(sub);
   }
+  const filtered = selectSubscriptionsForNotification(prefFiltered, payload.type);
   if (!filtered.length) return { sent: 0, failed: 0 };
   const urlOptions = {
     guardId: payload.guardId,
@@ -1137,12 +1175,13 @@ async function deliverToSubscriptions(db, subscriptions, payload) {
       priority: payload.priority,
       role: platformRole
     });
+    const url = sub.app_channel === "messenger" ? messengerUrlFromAppUrl(data.url) : data.url;
     const message = {
       title: payload.title,
       body: payload.body,
-      url: data.url,
+      url,
       eventType: payload.type,
-      data,
+      data: { ...data, url },
       tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
       priority: data.priority
     };
@@ -1159,18 +1198,37 @@ async function deliverToSubscriptions(db, subscriptions, payload) {
   await removeInvalidSubscriptions(db, staleEndpoints);
   return { sent, failed };
 }
+var SUB_SELECT = "endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role, app_channel";
+var SUB_SELECT_LEGACY = "endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role";
+function isMissingAppChannelColumn(message) {
+  return /app_channel/i.test(message);
+}
+async function loadPushSubscriptions(query, fallback) {
+  const result = await query;
+  if (!result.error) return result.data ?? [];
+  if (!isMissingAppChannelColumn(result.error.message)) {
+    throw new Error(result.error.message);
+  }
+  const legacy = await fallback();
+  if (legacy.error) throw new Error(legacy.error.message);
+  return (legacy.data ?? []).map((row) => ({ ...row, app_channel: null }));
+}
 async function sendNotificationToUser(db, userId, payload) {
   const enabled = await isTypeEnabledForUser(db, userId, payload.type);
   if (!enabled) return { sent: 0, failed: 0 };
-  const { data: subscriptions, error } = await db.from("push_subscriptions").select("endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role").eq("user_id", userId);
-  if (error) throw new Error(error.message);
-  return deliverToSubscriptions(db, subscriptions ?? [], payload);
+  const rows = await loadPushSubscriptions(
+    db.from("push_subscriptions").select(SUB_SELECT).eq("user_id", userId),
+    () => db.from("push_subscriptions").select(SUB_SELECT_LEGACY).eq("user_id", userId)
+  );
+  return deliverToSubscriptions(db, rows, payload);
 }
 async function sendNotificationToRole(db, role, payload) {
   const roles = role === "dispatch" ? ["dispatch", "admin"] : [role];
-  const { data: subscriptions, error } = await db.from("push_subscriptions").select("endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role").in("push_role", roles);
-  if (error) throw new Error(error.message);
-  return deliverToSubscriptions(db, subscriptions ?? [], payload);
+  const rows = await loadPushSubscriptions(
+    db.from("push_subscriptions").select(SUB_SELECT).in("push_role", roles),
+    () => db.from("push_subscriptions").select(SUB_SELECT_LEGACY).in("push_role", roles)
+  );
+  return deliverToSubscriptions(db, rows, payload);
 }
 async function dispatchPushNotification(db, payload) {
   if (payload.userId) {

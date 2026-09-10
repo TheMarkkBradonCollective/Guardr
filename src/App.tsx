@@ -274,11 +274,31 @@ import {
   removeGuardFromCompanyRoster,
 } from './lib/securityCompanyRoster';
 import {
-  markAllNotificationsRead,
+  countUnreadForMainApp,
+  countUnreadForMessenger,
+  markMatchingNotificationsRead,
   markNotificationClicked,
+  notificationsForMainApp,
+  notificationsForMessenger,
   upsertNotification,
 } from './lib/notificationInbox';
 import { resolveNotificationDestination, remapNotificationUrlForUser } from './lib/notificationRouting';
+import {
+  constrainClientViewToMessenger,
+  constrainGuardTabToMessenger,
+  constrainRouteToMessenger,
+  constrainStaffSectionToMessenger,
+  defaultMessengerRoute,
+  isMessengerCompanionRuntime,
+  isMessengerInstalledLocally,
+  isMessengerPath,
+  markMessengerInstalled,
+  openMainAppFromMessenger,
+} from './lib/messengerCompanion';
+import { userFacingError } from './lib/userFacingError';
+import { shouldDropStaleSession } from './lib/sessionPersistence';
+import { setDataLoadIssue } from './lib/dataLoadStatus';
+import { MessengerCompanionProvider } from './components/messenger/MessengerCompanionContext';
 import { registerInboxPersistHandler } from './lib/inboxPersistBridge';
 import {
   appendInboxNotification,
@@ -544,13 +564,6 @@ import {
   type ProductRole,
   type WebsiteShellAccess,
 } from './lib/productApps';
-import {
-  constrainClientViewToMessenger,
-  constrainGuardTabToMessenger,
-  constrainRouteToMessenger,
-  constrainStaffSectionToMessenger,
-  defaultMessengerRoute,
-} from './lib/messengerCompanion';
 import {
   blockOneRoleCase,
   buildOneRoleCase,
@@ -870,6 +883,7 @@ export default function App() {
     return defaults;
   });
   const [isDbConnected, setIsDbConnected] = useState(false);
+  const [rostersHydrated, setRostersHydrated] = useState(false);
   const [clientLocations, setClientLocations] = useState<ClientLocation[]>([]);
   const [jobLocations, setJobLocations] = useState<JobLocation[]>([]);
   const [userNotifications, setUserNotifications] = useState<UserNotification[]>([]);
@@ -880,6 +894,12 @@ export default function App() {
   const initialRoute = readAppRouteFromWindow();
   const [websiteAccountView, setWebsiteAccountView] = useState<WebsiteAccountView | null>(
     () => (initialRoute?.websiteAccount ? initialRoute.accountView ?? 'home' : null)
+  );
+  const [messengerCompanion, setMessengerCompanion] = useState(
+    () =>
+      Boolean(initialRoute?.messengerCompanion) ||
+      isMessengerExperience() ||
+      (typeof window !== 'undefined' && isMessengerPath(window.location.href)),
   );
   const [clientView, setClientViewState] = useState<ClientView>(
     () => (initialRoute?.role === 'client' ? initialRoute.clientView : undefined) ?? 'home'
@@ -1029,6 +1049,7 @@ export default function App() {
           : undefined,
       authView: !currentUser && isAuthView ? initialAuthMode : undefined,
       authRole: !currentUser && isAuthView ? initialAuthRole : undefined,
+      messengerCompanion: messengerCompanion || undefined,
     };
     return { ...base, ...overrides };
   };
@@ -1117,6 +1138,22 @@ export default function App() {
       setClientRequestsSelectedIdState(selected);
     } else if (route.clientView) {
       setClientRequestsSelectedIdState(null);
+    }
+    if (route.messengerCompanion) {
+      setMessengerCompanion(true);
+      markMessengerInstalled();
+      if (route.role === 'guard' && !route.guardTab) {
+        setGuardTabState('messages');
+      }
+      if (route.role === 'client' && !route.clientView) {
+        setClientViewState('messages');
+      }
+    } else if (route.websiteAccount || route.authView) {
+      setMessengerCompanion(false);
+    } else if (route.guardTab && route.guardTab !== 'messages' && route.guardTab !== 'support') {
+      setMessengerCompanion(false);
+    } else if (route.clientView && route.clientView !== 'messages' && route.clientView !== 'support' && route.clientView !== 'support-compose' && route.clientView !== 'support-report') {
+      setMessengerCompanion(false);
     }
     if (route.authView) {
       setIsAuthView(true);
@@ -2073,6 +2110,11 @@ export default function App() {
         return websiteAccountRoute(role, parseWebsiteAccountView(path) ?? 'home');
       }
     }
+    if (isMessengerExperience() || messengerCompanion) {
+      if (role === 'guard') return { role: 'guard', guardTab: 'messages', messengerCompanion: true };
+      if (role === 'staff') return { role: 'staff', staffSection: 'messages', messengerCompanion: true };
+      return { role: 'client', clientView: 'messages', messengerCompanion: true };
+    }
     if (role === 'guard') {
       return defaultRouteForRole(role, findGuardProfileForUser(user, guardsRef.current));
     }
@@ -2408,11 +2450,15 @@ export default function App() {
   useEffect(() => {
     if (!currentUser) return;
     const unsubscribe = listenForPushSubscriptionChange(() => {
-      void syncPushSubscriptionWithServer(currentUser).catch((err) => {
+      void syncPushSubscriptionWithServer(currentUser, {
+        appChannel: messengerCompanion || isMessengerCompanionRuntime() ? 'messenger' : 'main',
+      }).catch((err) => {
         console.warn('Push subscription sync failed:', err);
       });
     });
-    void syncPushSubscriptionWithServer(currentUser).catch(() => {
+    void syncPushSubscriptionWithServer(currentUser, {
+      appChannel: messengerCompanion || isMessengerCompanionRuntime() ? 'messenger' : 'main',
+    }).catch(() => {
       /* not enabled or not configured */
     });
     return unsubscribe;
@@ -2558,10 +2604,8 @@ export default function App() {
         ]);
       } catch (e) {
         console.error('Supabase init error:', e);
-        setGuards([]);
-        setClients([]);
-        setRequests([]);
         setIsDbConnected(false);
+        setDataLoadIssue(userFacingError(e, 'Could not load Guardr. Check your connection and try again.'));
       } finally {
         setLoading(false);
       }
@@ -2714,10 +2758,8 @@ export default function App() {
       }
       if (guardsErr && clientsErr) {
         console.error('Supabase load errors:', { guardsErr, clientsErr });
-        setGuards([]);
-        setClients([]);
-        setRequests([]);
         setIsDbConnected(false);
+        setDataLoadIssue(userFacingError(guardsErr, 'Could not load Guardr. Check your connection and try again.'));
         return;
       }
       if (guardsErr) console.warn('Guards table load:', guardsErr);
@@ -3351,12 +3393,12 @@ export default function App() {
       setOneRoleCases(await loadOneRoleCases());
 
       setIsDbConnected(true);
+      setRostersHydrated(true);
+      setDataLoadIssue(null);
     } catch (err) {
       console.error('Supabase load error:', err);
-      setGuards([]);
-      setClients([]);
-      setRequests([]);
       setIsDbConnected(false);
+      setDataLoadIssue(userFacingError(err, 'Could not load Guardr. Check your connection and try again.'));
     }
   };
 
@@ -3540,19 +3582,26 @@ export default function App() {
   const refreshStaffMessagesRef = useRef(refreshStaffMessages);
   refreshStaffMessagesRef.current = refreshStaffMessages;
 
-  // Drop stale session if user no longer exists in DB
+  // Drop stale session if user no longer exists in DB — never after a failed load.
   useEffect(() => {
-    if (!currentUser || loading) return;
+    if (!currentUser) return;
     const emailLower = currentUser.email.toLowerCase();
     const exists =
       currentUser.role === 'client'
         ? clients.some((c) => c.email.toLowerCase() === emailLower)
         : guards.some((g) => g.email.toLowerCase() === emailLower);
-    if (!exists) {
+    if (
+      shouldDropStaleSession({
+        loading,
+        isDbConnected,
+        rostersHydrated,
+        userExistsInRosters: exists,
+      })
+    ) {
       localStorage.removeItem('guardr_current_user');
       setCurrentUser(null);
     }
-  }, [currentUser, guards, clients, loading]);
+  }, [currentUser, guards, clients, loading, isDbConnected, rostersHydrated]);
 
   // Live sync — any DB change propagates to all open sessions without a manual refresh
   const loadRef = useRef(loadFromSupabase);
@@ -4078,7 +4127,11 @@ export default function App() {
     const kind = kindFromSessionRole(user.role);
     if (kind) {
       writeDeviceRoleAccount({ kind, id: user.id });
-      if (isMessengerExperience()) setProductApp(kind);
+      if (isMessengerExperience() || isMessengerCompanionRuntime()) {
+        setProductApp(kind);
+        setMessengerCompanion(true);
+        markMessengerInstalled();
+      }
     }
     localStorage.setItem('guardr_current_user', JSON.stringify(user));
     setCurrentUser(user);
@@ -6100,7 +6153,7 @@ export default function App() {
         const message =
           error.code === 'PGRST204' || error.message?.includes('column')
             ? 'Profile could not be saved. Run the latest database migrations, then try again.'
-            : error.message || 'Could not save profile. Please try again.';
+            : userFacingError(error, 'Could not save profile. Please try again.');
         throw new Error(message);
       }
     }
@@ -6675,7 +6728,7 @@ export default function App() {
         .eq('id', staffId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === staffId ? member : g)));
-        throw new Error(error.message || 'Could not approve staff account.');
+        throw new Error(userFacingError(error, 'Could not approve staff account.'));
       }
     }
     if (member.email && member.password) {
@@ -6715,7 +6768,7 @@ export default function App() {
       const { error } = await supabase.from('staff').delete().eq('id', staffId);
       if (error) {
         setGuards((prev) => [...prev, member]);
-        throw new Error(error.message || 'Could not reject staff account.');
+        throw new Error(userFacingError(error, 'Could not reject staff account.'));
       }
     }
     void writeAuditLog(currentUser, 'staff_rejected', 'staff', staffId, {
@@ -6935,7 +6988,7 @@ export default function App() {
           setPlatformCitiesCache(next);
           return next;
         });
-        throw new Error(error.message || 'Could not update Service Areas.');
+        throw new Error(userFacingError(error, 'Could not update Service Areas.'));
       }
     }
 
@@ -6994,7 +7047,7 @@ export default function App() {
         .eq('id', staffId);
       if (error) {
         setGuards((prev) => prev.map((g) => (g.id === staffId ? member : g)));
-        throw new Error(error.message || 'Could not update Service Areas access.');
+        throw new Error(userFacingError(error, 'Could not update Service Areas access.'));
       }
     }
 
@@ -7124,7 +7177,7 @@ export default function App() {
           setPlatformCities(previousCities);
           setPlatformCitiesCache(previousCities);
           setGuards(previousGuards);
-          throw new Error(error.message || 'Could not update manager city access.');
+          throw new Error(userFacingError(error, 'Could not update manager city access.'));
         }
       }
     }
@@ -7607,7 +7660,7 @@ export default function App() {
         showAppToast('Could not save location. Run complete_schema_setup.sql if the table is missing.', {
           tone: 'error',
         });
-        throw new Error(error.message || 'Could not save location.');
+        throw new Error(userFacingError(error, 'Could not save location.'));
       }
     }
   };
@@ -9924,8 +9977,8 @@ export default function App() {
         .eq('id', requestId);
       if (error) {
         console.error('Schedule change apply error:', error);
-        appToast(`Could not apply schedule change: ${error.message}`, 'error');
-        throw new Error(error.message);
+        appToast(`Could not apply schedule change: ${userFacingError(error, 'Please try again.')}`, 'error');
+        throw new Error(userFacingError(error, 'Could not apply schedule change.'));
       }
     }
 
@@ -9967,8 +10020,8 @@ export default function App() {
         .eq('id', requestId);
       if (error) {
         console.error('Job listing update error:', error);
-        appToast(`Could not save job changes: ${error.message}`, 'error');
-        throw new Error(error.message);
+        appToast(`Could not save job changes: ${userFacingError(error, 'Please try again.')}`, 'error');
+        throw new Error(userFacingError(error, 'Could not save job changes.'));
       }
     }
 
@@ -10040,8 +10093,8 @@ export default function App() {
         .update(scheduleChangePendingDbColumns(pendingJob))
         .eq('id', requestId);
       if (error) {
-        appToast(`Could not submit schedule change: ${error.message}`, 'error');
-        throw new Error(error.message);
+        appToast(`Could not submit schedule change: ${userFacingError(error, 'Please try again.')}`, 'error');
+        throw new Error(userFacingError(error, 'Could not submit schedule change.'));
       }
     }
     setRequests((prev) => prev.map((r) => (r.id === requestId ? pendingJob : r)));
@@ -10079,8 +10132,8 @@ export default function App() {
         .update(scheduleChangePendingDbColumns(nextJob))
         .eq('id', requestId);
       if (error) {
-        appToast(`Could not update schedule change: ${error.message}`, 'error');
-        throw new Error(error.message);
+        appToast(`Could not update schedule change: ${userFacingError(error, 'Please try again.')}`, 'error');
+        throw new Error(userFacingError(error, 'Could not update schedule change.'));
       }
     }
     setRequests((prev) => prev.map((r) => (r.id === requestId ? nextJob : r)));
@@ -10629,22 +10682,35 @@ export default function App() {
     const next = markNotificationClicked(userNotifications, notification.id);
     setUserNotifications(next);
     await persistUserNotifications(next, currentUser.id, isDbConnected);
-    const destination = resolveNotificationDestination(notification, currentUser);
+    const destination = resolveNotificationDestination(notification, currentUser, {
+      messengerAvailable: isMessengerInstalledLocally() || messengerCompanion,
+    });
     if (destination) {
       navigateFromLocation(destination, { source: 'deeplink' });
     }
   };
 
+  const messengerAvailable = isMessengerInstalledLocally() || messengerCompanion;
+  const inboxNotifications = messengerCompanion || isMessengerExperience()
+    ? notificationsForMessenger(userNotifications)
+    : notificationsForMainApp(userNotifications, messengerAvailable);
+  const messengerUnreadCount = countUnreadForMessenger(userNotifications);
+
   const handleMarkAllNotificationsRead = async () => {
     if (!currentUser) return;
-    const next = markAllNotificationsRead(userNotifications);
+    const messengerInbox = messengerCompanion || isMessengerExperience();
+    const next = markMatchingNotificationsRead(userNotifications, (n) =>
+      messengerInbox
+        ? notificationsForMessenger([n]).length > 0
+        : notificationsForMainApp([n], messengerAvailable).length > 0,
+    );
     setUserNotifications(next);
     await persistUserNotifications(next, currentUser.id, isDbConnected);
   };
 
   const accountNotificationMenuProps: AccountMenuNotificationProps = currentUser
     ? {
-        notifications: userNotifications,
+        notifications: inboxNotifications,
         onNotificationClick: handleNotificationClick,
         onMarkAllNotificationsRead: handleMarkAllNotificationsRead,
       }
@@ -13629,8 +13695,32 @@ export default function App() {
       }
     : {};
 
+  const wrapMessengerCompanion = (node: React.ReactNode) => (
+    <MessengerCompanionProvider
+      active={messengerCompanion || isMessengerExperience()}
+      role={currentUser ? appRoleForUser(currentUser) : null}
+      unreadCount={messengerUnreadCount}
+      onOpenMainApp={() => {
+        const role = currentUser ? appRoleForUser(currentUser) : null;
+        setMessengerCompanion(false);
+        if (!role) return;
+        openMainAppFromMessenger(role);
+      }}
+    >
+      {node}
+    </MessengerCompanionProvider>
+  );
+
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <LoadingScreen
+        onRetry={() => {
+          setLoading(true);
+          setDataLoadIssue(null);
+          window.location.reload();
+        }}
+      />
+    );
   }
 
   if (downloadPageOpen && isAppExperience()) {
@@ -13859,7 +13949,7 @@ export default function App() {
 
   if (websiteAccountView) {
     const clientRecord = clients.find((c) => c.id === currentUser.id);
-    const unreadCount = userNotifications.filter((n) => !n.readAt).length;
+    const unreadCount = countUnreadForMainApp(userNotifications, messengerAvailable);
     const accountStatusLabel =
       currentUser.role === 'client'
         ? clientRecord?.accountStatus === 'active' || clientRecord?.approved
@@ -14114,7 +14204,7 @@ export default function App() {
     const guardJobs = getGuardVisibleJobs(activeGuard, displayRequests);
     const guardPayouts = getGuardPayoutHistory(activeGuard.id, requests, payments);
 
-    return (
+    return wrapMessengerCompanion(
       <>
         {marketplaceLegalGate}
         <GuardDashboard
@@ -14362,7 +14452,7 @@ export default function App() {
         </div>
       ) : null;
 
-    return (
+    return wrapMessengerCompanion(
       <>
         {marketplaceLegalGate}
         <ClientCapabilitiesProvider clientType={clientRecord?.clientType}>
@@ -14572,7 +14662,7 @@ export default function App() {
         </>
       );
     }
-    return (
+    return wrapMessengerCompanion(
       <>
         {marketplaceLegalGate}
         <StaffDashboard

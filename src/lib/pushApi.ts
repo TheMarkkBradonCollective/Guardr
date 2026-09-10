@@ -78,7 +78,7 @@ async function fetchWithRetry(
 export async function subscribePush(
   user: SessionUser,
   subscription: PushSubscriptionDto,
-  options?: { siteId?: string; quietHoursStart?: string; quietHoursEnd?: string }
+  options?: { siteId?: string; quietHoursStart?: string; quietHoursEnd?: string; appChannel?: 'main' | 'messenger' }
 ): Promise<void> {
   const res = await fetchWithRetry(apiUrl('/api/push/subscribe'), {
     method: 'POST',

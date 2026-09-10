@@ -153,7 +153,9 @@ export function isOperationalAppPath(url: string): boolean {
     pathname === '/staff' ||
     pathname.startsWith('/staff/') ||
     pathname === '/dispatch' ||
-    pathname.startsWith('/app/')
+    pathname.startsWith('/app/') ||
+    pathname === '/messenger' ||
+    pathname.startsWith('/messenger/')
   );
 }
 
@@ -174,6 +176,9 @@ export function buildWebsiteAccountPath(view: WebsiteAccountView = 'home'): stri
 export function productAppFromPath(url: string): ProductApp {
   const pathname = parsePathname(url);
   if (pathname === '/account' || pathname.startsWith('/account/')) return 'website';
+  if (pathname === '/messenger' || pathname.startsWith('/messenger/')) {
+    return readStoredProductApp() ?? 'website';
+  }
   if (pathname === '/client' || pathname.startsWith('/client/') || pathname.startsWith('/app/client')) {
     return 'client';
   }
@@ -435,6 +440,9 @@ export function pathFromDeepLink(url: string): string | null {
     if (scheme === 'guardr-staff') {
       const rest = `${parsed.host}${parsed.pathname}`.replace(/^\/+/, '');
       return rest ? `/staff/${rest}` : '/staff/overview';
+    }
+    if (scheme === 'guardr-messenger') {
+      return parsed.search ? `/messenger${parsed.search}` : '/messenger';
     }
     if (scheme === 'guardr' || scheme === 'com.signaturesecurity.guardr') {
       const rest = `${parsed.host}${parsed.pathname}`.replace(/^\/+/, '');

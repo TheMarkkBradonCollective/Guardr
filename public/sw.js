@@ -1,9 +1,11 @@
 // Guardr PWA service worker — push notifications + offline shell (SacramentoBuyNothing-aligned lifecycle)
-const CACHE_NAME = 'guardr-cache-v1-0-131-beta';
+const CACHE_NAME = 'guardr-cache-v1-0-131-beta-pwa3';
 const WALKIE_CHIRP_SOUND = '/sounds/walkie-chirp.wav';
+const OFFLINE_PAGE = '/offline.html';
 const OFFLINE_URLS = [
   '/',
   '/index.html',
+  OFFLINE_PAGE,
   '/logo.png',
   '/logo-64.png',
   '/logo-128.png',
@@ -24,6 +26,10 @@ const OFFLINE_URLS = [
   '/icons/icon-dark-192.png',
   '/badge-72.png',
   '/manifest.json',
+  '/manifests/client.webmanifest',
+  '/manifests/guard.webmanifest',
+  '/manifests/staff.webmanifest',
+  '/manifests/messenger.webmanifest',
   // Type system — precached so the installed app never falls back to Arial
   // on a cold offline start.
   '/fonts/inter-latin-wght-normal.woff2',
@@ -76,6 +82,10 @@ async function networkFirst(request, fallbackUrl = '/index.html') {
   } catch {
     const cached = (await caches.match(request)) || (await caches.match(fallbackUrl));
     if (cached) return cached;
+    if (isNavigationRequest(request)) {
+      const offline = await caches.match(OFFLINE_PAGE);
+      if (offline) return offline;
+    }
     throw new Error('Offline and no cached fallback');
   }
 }
@@ -102,8 +112,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname === '/manifest.json') {
-    event.respondWith(networkFirst(event.request, '/manifest.json'));
+  if (url.pathname === '/manifest.json' || url.pathname.startsWith('/manifests/')) {
+    event.respondWith(networkFirst(event.request, url.pathname));
     return;
   }
 
@@ -182,6 +192,19 @@ function resolveNotificationUrl(rawUrl) {
   }
 }
 
+function clientsShareAppScope(clientUrl, targetUrl) {
+  try {
+    const clientPath = new URL(clientUrl, self.location.origin).pathname;
+    const targetPath = new URL(targetUrl, self.location.origin).pathname;
+    const scopes = ['/messenger', '/client/', '/guard/', '/staff/'];
+    const clientScope = scopes.find((scope) => clientPath === scope.replace(/\/$/, '') || clientPath.startsWith(scope)) ?? '/';
+    const targetScope = scopes.find((scope) => targetPath === scope.replace(/\/$/, '') || targetPath.startsWith(scope)) ?? '/';
+    return clientScope === targetScope;
+  } catch {
+    return true;
+  }
+}
+
 function notifyClientsSubscriptionChanged() {
   return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
     for (const client of clients) {
@@ -245,14 +268,14 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if ('focus' in client) {
-          client.postMessage({ type: 'NOTIFICATION_CLICK', url: targetUrl });
-          if ('navigate' in client && typeof client.navigate === 'function') {
-            return client.navigate(targetUrl).then(() => client.focus());
-          }
-          return client.focus();
+      const matching = clientList.find((client) => clientsShareAppScope(client.url, targetUrl));
+      const focusClient = matching || clientList[0];
+      if (focusClient && 'focus' in focusClient) {
+        focusClient.postMessage({ type: 'NOTIFICATION_CLICK', url: targetUrl });
+        if ('navigate' in focusClient && typeof focusClient.navigate === 'function') {
+          return focusClient.navigate(targetUrl).then(() => focusClient.focus());
         }
+        return focusClient.focus();
       }
 
       if (self.clients.openWindow) {

@@ -7,6 +7,7 @@ import {
   INCIDENT_PRIORITY_OPTIONS,
   IncidentReportFormInput,
 } from '../../lib/incidentReports';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface GuardIncidentReportModalProps {
   open: boolean;
@@ -39,7 +40,7 @@ export function GuardIncidentReportModal({
       setForm(emptyIncidentFormInput());
       onClose();
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Could not file this incident report. Try again.');
+      setSubmitError(userFacingError(error, 'Could not file this incident report. Try again.'));
     } finally {
       setSubmitting(false);
     }

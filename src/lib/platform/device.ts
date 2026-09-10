@@ -46,13 +46,7 @@ export function isWideFormFactor(formFactor: FormFactor): boolean {
   return formFactor === 'tablet' || formFactor === 'desktop';
 }
 
-export function isStandaloneDisplay(): boolean {
-  if (typeof window === 'undefined') return false;
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
-  );
-}
+export { isStandaloneDisplay } from './displayMode';
 
 export function isIOS(): boolean {
   if (typeof navigator === 'undefined') return false;

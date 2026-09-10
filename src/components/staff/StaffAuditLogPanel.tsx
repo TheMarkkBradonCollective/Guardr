@@ -6,7 +6,8 @@ import { useLayoutFormFactor } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { GuardrDataTable, type GuardrTableColumn } from '../baseui/GuardrDataTable';
 import { WorkbenchToolbar } from '../baseui/layout/WorkbenchLayout';
-import { AppEmptyState, AppItemCard, AppItemCardStack } from '../ui/app/AppPrimitives';
+import { AppItemCard, AppItemCardStack, AppRequestState } from '../ui/app/AppPrimitives';
+import { userFacingError } from '../../lib/userFacingError';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 
 function formatAuditTime(iso: string): string {
@@ -48,12 +49,19 @@ export function StaffAuditLogPanel() {
   const formFactor = useLayoutFormFactor();
   const [entries, setEntries] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const data = await loadAuditLog(200);
-    setEntries(data);
-    setLoading(false);
+    setError(null);
+    try {
+      const data = await loadAuditLog(200);
+      setEntries(data);
+    } catch (err) {
+      setError(userFacingError(err, 'Could not load the audit log.'));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -126,21 +134,24 @@ export function StaffAuditLogPanel() {
         caption="Audit log"
         density="compact"
         layout="table"
-        emptyMessage={loading ? 'Loading…' : 'No audit entries yet.'}
+        emptyMessage={loading ? 'Loading…' : error ? error : 'No audit entries yet.'}
       />
     </div>
   );
 
-  const mobileList = loading ? (
-    <AppEmptyState title="Loading…" />
-  ) : entries.length === 0 ? (
-    <AppEmptyState title="No audit entries yet." />
-  ) : (
-    <AppItemCardStack>
-      {entries.map((entry) => (
-        <AuditLogCard key={entry.id} entry={entry} />
-      ))}
-    </AppItemCardStack>
+  const mobileList = (
+    <AppRequestState
+      status={loading ? 'loading' : error ? 'error' : entries.length === 0 ? 'empty' : 'ready'}
+      title={loading ? 'Loading' : error ? 'Could not load audit log' : 'No audit entries yet'}
+      message={error ?? (loading ? 'This should only take a moment.' : 'When staff take an action, it will show up here.')}
+      onRetry={error ? () => void refresh() : undefined}
+    >
+      <AppItemCardStack>
+        {entries.map((entry) => (
+          <AuditLogCard key={entry.id} entry={entry} />
+        ))}
+      </AppItemCardStack>
+    </AppRequestState>
   );
 
   if (formFactor === 'desktop') {
@@ -180,17 +191,18 @@ export function StaffAuditLogPanel() {
             Showing the 200 most recent entries. Older activity is still retained but not shown here.
           </p>
         )}
-        {loading ? (
-          <AppEmptyState title="Loading…" />
-        ) : entries.length === 0 ? (
-          <AppEmptyState title="No audit entries yet." />
-        ) : (
+        <AppRequestState
+          status={loading ? 'loading' : error ? 'error' : entries.length === 0 ? 'empty' : 'ready'}
+          title={loading ? 'Loading' : error ? 'Could not load audit log' : 'No audit entries yet'}
+          message={error ?? (loading ? 'This should only take a moment.' : 'When staff take an action, it will show up here.')}
+          onRetry={error ? () => void refresh() : undefined}
+        >
           <div className="staff-audit-tablet-grid">
             {entries.map((entry) => (
               <AuditLogCard key={entry.id} entry={entry} />
             ))}
           </div>
-        )}
+        </AppRequestState>
       </StaffOpsPageShell>
     );
   }

@@ -64,7 +64,7 @@ export function resolveSurfaceKind(input: SurfaceResolutionInput): SurfaceKind {
   if (input.override && isSurfaceKind(input.override)) return input.override;
 
   const width = Number.isFinite(input.viewportWidth) ? input.viewportWidth : 0;
-  const installed = input.shellKind === 'native';
+  const installed = input.shellKind === 'native' || input.shellKind === 'pwa';
 
   if (width < SURFACE_BOUNDS.tabletMin) return 'mobile';
   if (width < SURFACE_BOUNDS.desktopMin) return 'tablet';

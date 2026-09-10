@@ -3,6 +3,7 @@ import type { PushNotificationType } from '../../lib/push/types';
 import type { SessionUser, UserNotification } from '../types';
 import { isStaffRole } from './permissions';
 import type { AppRole } from './appNavigation';
+import { shouldOpenInMessenger, toMessengerDeepLink } from './messengerCompanion';
 
 function platformRoleForUser(user: SessionUser): string {
   if (user.role === 'client' || user.role === 'guard') return user.role;
@@ -18,7 +19,8 @@ function appRoleForUser(user: SessionUser): AppRole | null {
 
 function parsePath(url: string): { pathname: string; searchParams: URLSearchParams } {
   try {
-    const parsed = new URL(url, window.location.origin);
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const parsed = new URL(url, base);
     return {
       pathname: parsed.pathname.replace(/\/$/, '') || '/',
       searchParams: parsed.searchParams,
@@ -31,7 +33,8 @@ function parsePath(url: string): { pathname: string; searchParams: URLSearchPara
 /** Resolve the in-app destination for a notification row or push payload. */
 export function resolveNotificationDestination(
   notification: Pick<UserNotification, 'type' | 'url' | 'requestId' | 'guardId' | 'ticketId' | 'metadata'>,
-  user: SessionUser
+  user: SessionUser,
+  options: { messengerAvailable?: boolean } = {},
 ): string | null {
   const role = appRoleForUser(user);
   if (!role) return null;
@@ -44,15 +47,19 @@ export function resolveNotificationDestination(
   }
 
   const trimmedUrl = notification.url?.trim();
-  if (trimmedUrl) {
-    return remapNotificationUrlForUser(trimmedUrl, user) ?? trimmedUrl;
+  const resolved =
+    (trimmedUrl ? remapNotificationUrlForUser(trimmedUrl, user) ?? trimmedUrl : null) ??
+    resolveNotificationUrlForRole(notification.type as PushNotificationType, platformRoleForUser(user), {
+      requestId: notification.requestId,
+      guardId: notification.guardId,
+      ticketId: notification.ticketId,
+    });
+
+  if (resolved && shouldOpenInMessenger(notification.type, options.messengerAvailable === true)) {
+    return toMessengerDeepLink(resolved);
   }
 
-  return resolveNotificationUrlForRole(notification.type as PushNotificationType, platformRoleForUser(user), {
-    requestId: notification.requestId,
-    guardId: notification.guardId,
-    ticketId: notification.ticketId,
-  });
+  return resolved;
 }
 
 /**

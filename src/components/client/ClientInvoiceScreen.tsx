@@ -22,6 +22,7 @@ import { clientPaymentStatusLabel } from '../../lib/paymentDisplay';
 import { createCheckoutSession } from '../../lib/stripeApi';
 import { createSquareCheckoutSession } from '../../lib/paymentProcessorApi';
 import { showAppToast } from '../ui/AppToast';
+import { userFacingError } from '../../lib/userFacingError';
 import { useClientCapabilities } from './ClientCapabilitiesContext';
 import {
   AppEmptyState,
@@ -105,7 +106,7 @@ export function ClientInvoiceScreen({
       });
       if (url) window.location.href = url;
     } catch (error: unknown) {
-      showAppToast(error instanceof Error ? error.message : 'Unable to start checkout', { tone: 'error' });
+      showAppToast(userFacingError(error, 'Unable to start checkout'), { tone: 'error' });
     } finally {
       setPayingJobId(null);
     }
@@ -123,7 +124,7 @@ export function ClientInvoiceScreen({
       });
       if (url) window.location.href = url;
     } catch (error: unknown) {
-      showAppToast(error instanceof Error ? error.message : 'Unable to start Square checkout', { tone: 'error' });
+      showAppToast(userFacingError(error, 'Unable to start Square checkout'), { tone: 'error' });
     } finally {
       setPayingSquareJobId(null);
     }

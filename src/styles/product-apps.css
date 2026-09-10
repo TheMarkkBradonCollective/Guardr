@@ -4,28 +4,13 @@
    Each product app gets its own chrome, density, and navigation language.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-body[data-product-app='website'] {
+body[data-product-app='website'],
+body[data-product-app='client'],
+body[data-product-app='guard'],
+body[data-product-app='staff'] {
   --product-chrome: var(--uber-bg, #f6f6f6);
   --product-ink: var(--uber-text, #000);
   --product-accent: var(--uber-text, #000);
-}
-
-body[data-product-app='client'] {
-  --product-chrome: #f3f4f6;
-  --product-ink: #111827;
-  --product-accent: #111827;
-}
-
-body[data-product-app='guard'] {
-  --product-chrome: #0f0f0f;
-  --product-ink: #fafafa;
-  --product-accent: #fafafa;
-}
-
-body[data-product-app='staff'] {
-  --product-chrome: #111111;
-  --product-ink: #f5f5f5;
-  --product-accent: #000;
 }
 
 /* ── Install banner (operational apps in a browser tab) ── */
@@ -432,8 +417,8 @@ body[data-product-app='staff'] .sf-shell {
     display: flex;
     position: sticky;
     bottom: 0;
-    background: #fff;
-    border-top: 1px solid #e8e8e8;
+    background: var(--uber-bg, #fff);
+    border-top: 1px solid var(--uber-border, #e8e8e8);
     padding-bottom: env(safe-area-inset-bottom);
     z-index: 20;
   }
@@ -448,11 +433,11 @@ body[data-product-app='staff'] .sf-shell {
     gap: 2px;
     font-size: 11px;
     font-weight: 600;
-    color: #6b6b6b;
+    color: var(--uber-text-muted, #6b6b6b);
   }
 
   .website-account-mobile-nav button.is-active {
-    color: #111;
+    color: var(--uber-text, #111);
   }
 
   .app-install-banner {
@@ -465,4 +450,117 @@ body[data-product-app='staff'] .sf-shell {
   .website-account-card {
     transition: none;
   }
+}
+
+.messenger-companion-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  background: var(--uber-bg, #fff);
+  border-bottom: 1px solid var(--uber-border, #e8e8e8);
+  z-index: 30;
+}
+
+.messenger-companion-bar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.messenger-companion-bar-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.messenger-companion-bar-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--uber-text-muted, #6b6b6b);
+}
+
+.messenger-companion-bar-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.messenger-companion-bar-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e11900;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+}
+
+.pwa-install-prompt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  background: var(--uber-text, #000);
+  color: var(--uber-bg, #fff);
+  z-index: 50;
+}
+
+.pwa-install-prompt-copy {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.pwa-install-prompt-copy strong {
+  font-weight: 800;
+}
+
+.pwa-install-prompt-dismiss {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+.offline-banner-retry {
+  appearance: none;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+}
+
+.app-request-state-retry {
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px 20px;
 }
