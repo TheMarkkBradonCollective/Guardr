@@ -173,7 +173,7 @@ export function LandingAppDownloads({
             {GITHUB_MESSENGER_APP.label}
           </Block>
           <Block as="p" margin={0} $style={{ fontSize: '13px', lineHeight: 1.45, color: theme.colors.contentSecondary }}>
-            {GITHUB_MESSENGER_APP.tagline} One person, one role — there is no switch account.
+            {GITHUB_MESSENGER_APP.tagline}. One person, one role — there is no switch account.
           </Block>
         </Block>
         <GuardrButton
