@@ -30,6 +30,7 @@ import type { CompanyPublicDocument } from '../../../lib/companyPlacard';
 import type { FormFactor } from '../../../lib/platform/device';
 import type { AuthViewRole } from '../../../lib/appNavigation';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
+import { resolveStakeholderDownloadPageUrl } from '../../../lib/stakeholderDocuments';
 import {
   CLIENT_FEATURES,
   COVERAGE_TYPES,
@@ -579,6 +580,18 @@ export function LandingFooter({
               } as Record<string, unknown>)}
             >
               Manuals (PDF)
+            </AppButton>
+            <AppButton
+              variant="ghost"
+              size="sm"
+              {...({
+                $as: 'a',
+                href: resolveStakeholderDownloadPageUrl(),
+                target: '_blank',
+                rel: 'noopener noreferrer',
+              } as Record<string, unknown>)}
+            >
+              Company package
             </AppButton>
           </Block>
           <LegalFooterLinks onOpenLegal={onOpenLegal} />

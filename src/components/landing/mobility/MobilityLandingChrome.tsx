@@ -5,6 +5,7 @@ import { useStyletron } from 'baseui';
 import { ChevronDown, MapPin, Menu, Navigation, Shield, X } from 'lucide-react';
 import type { ThemeMode } from '../../../lib/platform/theme';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
+import { resolveStakeholderDownloadPageUrl } from '../../../lib/stakeholderDocuments';
 import { Logo } from '../../Logo';
 import { GuardrButton } from '../../baseui/GuardrButton';
 import { FONT_DISPLAY } from '../../../theme/typography';
@@ -98,6 +99,14 @@ export function MobilityLandingNav({
               >
                 Manuals
               </a>
+              <a
+                className="uber-landing-nav-link"
+                href={resolveStakeholderDownloadPageUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Company package
+              </a>
             </Block>
           ) : null}
         </Block>
@@ -166,6 +175,15 @@ export function MobilityLandingNav({
             onClick={() => setMenuOpen(false)}
           >
             Manuals (PDF)
+          </a>
+          <a
+            className="uber-landing-mobile-menu-item"
+            href={resolveStakeholderDownloadPageUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMenuOpen(false)}
+          >
+            Company package
           </a>
         </Block>
       ) : null}

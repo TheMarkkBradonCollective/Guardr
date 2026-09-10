@@ -167,7 +167,7 @@ export function StaffOverviewDesktop({
   const quickLinkSections = useMemo(
     () =>
       config.quickLinkSections.filter((section) => {
-        if (section === 'management' || section === 'business-plan') {
+        if (section === 'management' || section === 'business-plan' || section === 'company-package') {
           return canViewManagementRoster({ role: staffRole });
         }
         return true;
