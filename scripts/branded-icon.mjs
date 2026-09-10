@@ -119,11 +119,11 @@ function parseBackground(background) {
 }
 
 /**
- * Geometric chat bubble for Messenger — left pointer like a message box,
- * chunky corners like the G-shield. ViewBox 0 0 100 100.
+ * Landscape chat bubble — wide rounded message box with a small left pointer
+ * (the same silhouette as a comment / SMS icon). ViewBox 0 0 100 100.
  */
 export const MESSENGER_BUBBLE_PATH =
-  'M 24 14 L 6 26 L 24 38 L 24 72 C 24 80 32 86 42 86 L 76 86 C 86 86 90 78 90 68 L 90 26 C 90 16 82 14 72 14 Z';
+  'M 22 30 L 7 36 L 22 44 L 22 66 C 22 76 32 78 42 78 L 80 78 C 92 78 94 68 94 58 L 94 42 C 94 30 84 26 74 26 L 34 26 C 26 26 22 28 22 30 Z';
 
 /**
  * White message box + black Guardr shield (the mark sits where chat lines would).
@@ -134,9 +134,9 @@ export async function renderMessengerBubbleMark(iconMaster, size) {
   <path fill="#FFFFFF" d="${MESSENGER_BUBBLE_PATH}"/>
 </svg>`;
   const bubble = await sharp(Buffer.from(svg)).png().toBuffer();
-  const shieldSize = Math.round(size * 0.52);
-  const left = Math.round(size * 0.30);
-  const top = Math.round(size * 0.22);
+  const shieldSize = Math.round(size * 0.38);
+  const left = Math.round(size * 0.33);
+  const top = Math.round(size * 0.29);
   return sharp({
     create: {
       width: size,
@@ -170,7 +170,7 @@ export async function renderBrandedIcon(iconMaster, size, {
   const markColor = chrome.mark;
 
   if (productApp === 'messenger') {
-    const markRatio = safeZone ? 0.64 : 0.8;
+    const markRatio = safeZone ? 0.68 : 0.86;
     const markSize = Math.round(size * markRatio);
     const offset = Math.round((size - markSize) / 2);
     layers.push({
