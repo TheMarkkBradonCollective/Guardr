@@ -37,6 +37,7 @@ import type { MessagesChrome } from '../lib/messagesChrome';
 import { SecurityCompanyRosterScreen } from './client/SecurityCompanyRosterScreen';
 import { SecurityCompanyOperationsScreen } from './client/SecurityCompanyOperationsScreen';
 import { useClientCapabilities } from './client/ClientCapabilitiesContext';
+import { constrainClientViewToMessenger } from '../lib/messengerCompanion';
 
 export type ClientView =
   | 'map'
@@ -161,6 +162,7 @@ interface ClientDashboardProps {
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
+  messagesOnly?: boolean;
 }
 
 export function ClientDashboard({
@@ -252,6 +254,7 @@ export function ClientDashboard({
   tutorialCompleted,
   tutorialActive,
   onStartTutorial,
+  messagesOnly = false,
 }: ClientDashboardProps) {
   const [view, setView] = useState<ClientView>(activeView ?? 'home');
   const [flowPreset, setFlowPreset] = useState<RequestFlowPreset>('default');
@@ -292,12 +295,18 @@ export function ClientDashboard({
   }, [activeView]);
 
   useEffect(() => {
+    if (messagesOnly) {
+      const next = constrainClientViewToMessenger(view);
+      if (next !== view) navigate(next);
+      return;
+    }
     if (!caps.allowsView(view)) {
       navigate('home');
     }
-  }, [view, caps]);
+  }, [view, caps, messagesOnly]);
 
   useEffect(() => {
+    if (messagesOnly) return;
     if (view !== 'direct-request' || requestTargetGuard) return;
     if (!effectiveDirectGuardId) {
       navigate('guards');
@@ -306,7 +315,7 @@ export function ClientDashboard({
     if (guards.length === 0) return;
     const found = guards.some((g) => g.id === effectiveDirectGuardId);
     if (!found) navigate('guards');
-  }, [view, requestTargetGuard, effectiveDirectGuardId, guards]);
+  }, [view, requestTargetGuard, effectiveDirectGuardId, guards, messagesOnly]);
 
   const navigate = (next: ClientView) => {
     setView(next);
@@ -416,7 +425,18 @@ export function ClientDashboard({
     </AppPageTransition>
   );
 
-  if (accountPending && view !== 'profile' && view !== 'settings' && view !== 'messages' && view !== 'home' && view !== 'guide' && view !== 'invoices') {
+  if (
+    accountPending &&
+    view !== 'profile' &&
+    view !== 'settings' &&
+    view !== 'messages' &&
+    view !== 'home' &&
+    view !== 'guide' &&
+    view !== 'invoices' &&
+    view !== 'support' &&
+    view !== 'support-compose' &&
+    view !== 'support-report'
+  ) {
     return page(
       'pending',
       <AccountPendingScreen

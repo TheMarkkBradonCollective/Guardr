@@ -7,7 +7,7 @@ async function waitForAppReady(page: Page) {
   await loading.waitFor({ state: 'detached', timeout: 30_000 }).catch(() => {});
 }
 
-async function emulateInstalledApp(page: Page, app: 'client' | 'guard' | 'staff') {
+async function emulateInstalledApp(page: Page, app: 'client' | 'guard' | 'staff' | 'messenger') {
   await page.route('**/native-product-app.js', async (route) => {
     await route.fulfill({
       contentType: 'application/javascript',
@@ -17,7 +17,9 @@ async function emulateInstalledApp(page: Page, app: 'client' | 'guard' | 'staff'
   await page.addInitScript((productApp) => {
     window.__GUARDR_NATIVE_PRODUCT_APP__ = productApp;
     try {
-      localStorage.setItem('guardr_product_app', productApp);
+      if (productApp !== 'messenger') {
+        localStorage.setItem('guardr_product_app', productApp);
+      }
     } catch {
       /* ignore */
     }
@@ -68,5 +70,26 @@ test.describe('installed Guard / Customer / Staff apps', () => {
 
     await page.getByRole('button', { name: /^Personal/i }).click();
     await expect(page.getByRole('heading', { name: /Personal sign in/i })).toBeVisible();
+  });
+});
+
+test.describe('installed Messenger companion', () => {
+  test.use({ viewport: { width: 390, height: 727 } });
+
+  test('welcome is messages and support, then a role pick for the right chats', async ({ page }) => {
+    await emulateInstalledApp(page, 'messenger');
+    await page.goto('/');
+    await waitForAppReady(page);
+
+    await expect(page.locator('.app-welcome-headline')).toHaveText(/Messages and support/);
+    await expect(page.locator('.app-welcome-sub')).toContainText(/field work stays in the role app/i);
+    await expect(page.getByText('Messenger', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+    await expect(page.getByRole('heading', { name: /Sign in for messages/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Log in as guard/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Log in as customer/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Log in as staff/i })).toBeVisible();
+    await expect(page.getByText(/Job chats and Guardr support/i)).toBeVisible();
   });
 });

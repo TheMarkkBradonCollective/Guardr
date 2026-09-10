@@ -46,6 +46,27 @@ const SIGN_IN_OPTIONS: ChoiceOption[] = [
   },
 ];
 
+const MESSENGER_SIGN_IN_OPTIONS: ChoiceOption[] = [
+  {
+    id: 'guard',
+    icon: Shield,
+    title: 'Log in as guard',
+    description: 'Job chats and Guardr support for your guard account.',
+  },
+  {
+    id: 'client',
+    icon: User,
+    title: 'Log in as customer',
+    description: 'Job chats and support for the account that hires coverage.',
+  },
+  {
+    id: 'staff',
+    icon: Briefcase,
+    title: 'Log in as staff',
+    description: 'Team messages and the support inbox.',
+  },
+];
+
 const SIGNUP_PATH_OPTIONS: ChoiceOption[] = [
   {
     id: 'client',
@@ -278,9 +299,9 @@ export function AuthRoleChoicePage({
     isMessengerExperience() && copyKey === 'sign-in'
       ? {
           ...baseCopy,
-          heading: 'Select your role',
+          heading: 'Sign in for messages',
           subheading:
-            'Guard, Customer, or Staff. One person, one role — signing into a second role locks both accounts.',
+            'Pick Guard, Customer, or Staff so we open the right chats and support inbox. One person, one role.',
         }
       : baseCopy;
   const backLabel = showingClientKinds || (mode === 'sign-up' && signupStep !== 'path') ? 'Back' : 'Home';
@@ -305,7 +326,9 @@ export function AuthRoleChoicePage({
   const options = showingClientKinds
     ? SIGNUP_CLIENT_KIND_OPTIONS
     : mode === 'sign-in'
-      ? SIGN_IN_OPTIONS
+      ? isMessengerExperience()
+        ? MESSENGER_SIGN_IN_OPTIONS
+        : SIGN_IN_OPTIONS
       : signupStep === 'work'
         ? SIGNUP_WORK_OPTIONS
         : SIGNUP_PATH_OPTIONS;

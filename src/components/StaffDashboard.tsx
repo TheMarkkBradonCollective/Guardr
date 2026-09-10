@@ -67,6 +67,7 @@ import {
   StaffSection,
 } from '../lib/staffOps';
 import { buildIncidentReportViews } from '../lib/incidentReports';
+import { constrainStaffSectionToMessenger } from '../lib/messengerCompanion';
 import { StaffOpsLayout } from './staff/StaffOpsLayout';
 import type { AccountMenuNotificationProps } from './layouts/AccountMenu';
 import { AppPageTransition } from './ui/motion/AppMotion';
@@ -369,6 +370,7 @@ interface StaffDashboardProps {
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
   onStartTutorial?: () => void;
+  messagesOnly?: boolean;
 }
 
 export function StaffDashboard({
@@ -510,6 +512,7 @@ export function StaffDashboard({
   tutorialCompleted,
   tutorialActive,
   onStartTutorial,
+  messagesOnly = false,
 }: StaffDashboardProps) {
   const isControlled = controlledSection !== undefined;
   const [internalSection, setInternalSection] = useState<StaffSection>(controlledSection ?? initialSection);
@@ -596,6 +599,7 @@ export function StaffDashboard({
   );
 
   const navigateSection = (next: StaffSection, selection: StaffSectionSelection = {}) => {
+    if (messagesOnly) next = constrainStaffSectionToMessenger(next);
     if (!isControlled) setInternalSection(next);
     const nextGuardId = next === 'guards' || next === 'applications'
       ? selection.guardId !== undefined ? selection.guardId : selectedGuardId
@@ -1442,6 +1446,7 @@ export function StaffDashboard({
       fullBleed={isStaffOpsMapSection(section)}
       onOpenLegal={onOpenLegal}
       onOpenDownload={onOpenDownload}
+      messagesOnly={messagesOnly}
       accountNotifications={staffAccountNotifications}
       headerExtension={messagesChromeActive ? staffMessagesChrome.extension : undefined}
       headerOverride={messagesChromeActive ? staffMessagesChrome.override : undefined}

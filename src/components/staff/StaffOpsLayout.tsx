@@ -53,6 +53,7 @@ interface StaffOpsLayoutProps {
   fullBleed?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   onOpenDownload?: () => void;
+  messagesOnly?: boolean;
   hideHeader?: boolean;
   accountNotifications?: AccountMenuNotificationProps;
   headerExtension?: React.ReactNode;
@@ -112,6 +113,7 @@ export function StaffOpsLayout({
   accountNotifications,
   headerExtension,
   headerOverride,
+  messagesOnly = false,
 }: StaffOpsLayoutProps) {
   const showFinance = canAccessFinancialControls(currentUser);
   const showPayments = showFinance;
@@ -122,7 +124,8 @@ export function StaffOpsLayout({
   const financeDeskOnly = isFinanceDeskOnly(currentUser);
 
   const navItems: StaffNavItem[] = useMemo(
-    () => [
+    () => {
+      const items: StaffNavItem[] = [
       { id: 'overview', label: 'Overview', icon: LayoutDashboard },
       { id: 'map', label: 'Map', icon: Map },
       { id: 'jobs', label: 'Jobs', icon: Briefcase },
@@ -153,8 +156,11 @@ export function StaffOpsLayout({
       { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
       { id: 'business-plan', label: 'Business plan', icon: LineChart, managementOnly: true },
       { id: 'company-package', label: 'Company package', icon: FolderOpen, managementOnly: true },
-    ],
-    [],
+    ];
+      if (!messagesOnly) return items;
+      return items.filter((item) => item.id === 'messages' || item.id === 'support');
+    },
+    [messagesOnly],
   );
 
   const navHighlight = isStaffMessagesHubSection(activeSection)
@@ -177,6 +183,7 @@ export function StaffOpsLayout({
         navItems={navItems}
         screenTitle={screenTitle}
         navHighlight={navHighlight}
+        workspaceLabel={messagesOnly ? 'Messenger' : 'Staff'}
         showFinance={showFinance}
         showPayments={showPayments}
         showSettings={true}
@@ -203,6 +210,7 @@ interface StaffOpsLayoutInnerProps
   navItems: StaffNavItem[];
   screenTitle: string;
   navHighlight: StaffSection;
+  workspaceLabel?: string;
   showFinance: boolean;
   showPayments: boolean;
   showSettings: boolean;
@@ -225,6 +233,7 @@ function StaffOpsLayoutInner({
   navItems,
   screenTitle,
   navHighlight,
+  workspaceLabel = 'Staff',
   showFinance,
   showPayments,
   showSettings,
@@ -252,6 +261,7 @@ function StaffOpsLayoutInner({
       navItems={navItems}
       screenTitle={screenTitle}
       navHighlight={navHighlight}
+      workspaceLabel={workspaceLabel}
       showFinance={showFinance}
       showPayments={showPayments}
       showSettings={showSettings}

@@ -262,6 +262,8 @@ interface GuardDashboardProps {
   onBrowseTabChange?: (tab: GuardJobsBrowseTab) => void;
   onOpenLegal?: (page: import('../lib/legalContent').LegalPageId) => void;
   onOpenDownload?: () => void;
+  /** Messenger APK — messages and support only. */
+  messagesOnly?: boolean;
   tutorialAvailable?: boolean;
   tutorialCompleted?: boolean;
   tutorialActive?: boolean;
@@ -411,6 +413,7 @@ export function GuardDashboard({
   onBrowseTabChange,
   onOpenLegal,
   onOpenDownload,
+  messagesOnly = false,
   tutorialAvailable,
   tutorialCompleted,
   tutorialActive,
@@ -1258,7 +1261,9 @@ export function GuardDashboard({
   const approvedAwaitingActivation = isGuardAccountApproved(guard) && accountNeedsActivation;
   const activationAllowedTabs = guardActivationAllowedTabs(guard);
   const showPendingGate =
-    accountNeedsActivation && !activationAllowedTabs.includes(tab);
+    !messagesOnly &&
+    accountNeedsActivation &&
+    !activationAllowedTabs.includes(tab);
   const accountPreActive = isGuardAccountPreActive(guard);
   const revisionOpen = Boolean(guard.applicationRevisionRequestedAt);
   if (userStatus === 'suspended' || userStatus === 'blocked') {
@@ -1297,9 +1302,9 @@ export function GuardDashboard({
 
   // Guardr-style trip lock: stay on the job map (messages allowed for client chat).
   useEffect(() => {
-    if (!showShiftOverlay) return;
+    if (messagesOnly || !showShiftOverlay) return;
     if (tab !== 'map' && tab !== 'messages') setTab('map');
-  }, [showShiftOverlay, tab, setTab]);
+  }, [messagesOnly, showShiftOverlay, tab, setTab]);
 
   const workBlockedMessage = guardWorkBlockedMessage(guard);
 
@@ -2004,15 +2009,15 @@ export function GuardDashboard({
       headerExtension={shellHeaderExtension}
       headerOverride={shellHeaderOverride}
       accountMenu={accountMenu}
-      navItems={accountNeedsActivation ? [] : GUARD_PRIMARY_NAV}
-      messagesNavItems={accountNeedsActivation ? [] : GUARD_MESSAGES_NAV}
-      overflowNavItems={accountNeedsActivation ? [] : GUARD_MANAGEMENT_NAV}
+      navItems={messagesOnly || accountNeedsActivation ? [] : GUARD_PRIMARY_NAV}
+      messagesNavItems={messagesOnly || !accountNeedsActivation ? GUARD_MESSAGES_NAV : []}
+      overflowNavItems={messagesOnly || accountNeedsActivation ? [] : GUARD_MANAGEMENT_NAV}
       activeNavId={GUARD_SIDE_NAV_TABS.has(tab) ? tab : ''}
       onNavigate={(id) => setTab(id as GuardTab)}
       fullBleed={shellFullBleed}
       hideBottomNav={showShiftOverlay}
       variant={shellVariant}
-      workspaceLabel="Guard"
+      workspaceLabel={messagesOnly ? 'Messenger' : 'Guard'}
       productApp="guard"
       mobilePrimaryNav="tabs"
       mobileTabRanks={{ map: 1, myJobs: 2, messages: 3 }}

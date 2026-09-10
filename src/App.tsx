@@ -545,6 +545,13 @@ import {
   type WebsiteShellAccess,
 } from './lib/productApps';
 import {
+  constrainClientViewToMessenger,
+  constrainGuardTabToMessenger,
+  constrainRouteToMessenger,
+  constrainStaffSectionToMessenger,
+  defaultMessengerRoute,
+} from './lib/messengerCompanion';
+import {
   blockOneRoleCase,
   buildOneRoleCase,
   canReviewOneRoleHolds,
@@ -1027,6 +1034,9 @@ export default function App() {
   };
 
   const applyAppRoute = (route: AppRoute) => {
+    if (isMessengerExperience() && !route.authView) {
+      route = constrainRouteToMessenger(route);
+    }
     if (route.websiteAccount) {
       const view = route.accountView ?? 'home';
       setWebsiteAccountView(view);
@@ -1044,14 +1054,18 @@ export default function App() {
         currentUser?.role === 'client'
           ? clients.find((c) => c.id === currentUser.id)?.clientType
           : undefined;
-      setClientViewState(resolveAllowedClientView(route.clientView, currentClientType) as ClientView);
+      const allowed = resolveAllowedClientView(route.clientView, currentClientType) as ClientView;
+      setClientViewState(isMessengerExperience() ? constrainClientViewToMessenger(allowed) : allowed);
     }
     if (route.guardTab) {
       const tab = route.guardTab === 'guardChat' ? 'messages' : route.guardTab;
       const user = currentUserRef.current;
       const guard =
         user?.role === 'guard' ? findGuardProfileForUser(user, guardsRef.current) : undefined;
-      setGuardTabState(normalizeGuardTabForAccount(tab, guard));
+      const resolvedTab = normalizeGuardTabForAccount(tab, guard);
+      setGuardTabState(
+        isMessengerExperience() ? constrainGuardTabToMessenger(resolvedTab) : resolvedTab,
+      );
     }
     if (route.staffSection || route.staffApprovalQueue) {
       const section = resolveStaffRouteSection(
@@ -1059,7 +1073,9 @@ export default function App() {
         route.staffApprovalQueue,
         route.staffMessageTab
       );
-      setStaffSectionState(section);
+      setStaffSectionState(
+        isMessengerExperience() ? constrainStaffSectionToMessenger(section) : section,
+      );
     }
     setStaffGuardIdState(route.staffGuardId ?? null);
     setStaffClientIdState(route.staffClientId ?? null);
@@ -1116,7 +1132,10 @@ export default function App() {
       currentUser?.role === 'client'
         ? clients.find((c) => c.id === currentUser.id)?.clientType
         : undefined;
-    const resolvedView = resolveAllowedClientView(view, currentClientType) as ClientView;
+    const allowedView = resolveAllowedClientView(view, currentClientType) as ClientView;
+    const resolvedView = isMessengerExperience()
+      ? constrainClientViewToMessenger(allowedView)
+      : allowedView;
     setClientViewState(resolvedView);
     const nextGuardId = resolvedView === 'guards' ? clientGuardId ?? undefined : undefined;
     const nextDirectId = resolvedView === 'direct-request' ? clientDirectGuardId ?? undefined : undefined;
@@ -1238,7 +1257,10 @@ export default function App() {
   const setGuardTab = (tab: GuardTab) => {
     const guard =
       currentUser?.role === 'guard' ? findGuardProfileForUser(currentUser, guards) : undefined;
-    const normalizedTab = normalizeGuardTabForAccount(tab, guard);
+    const accountTab = normalizeGuardTabForAccount(tab, guard);
+    const normalizedTab = isMessengerExperience()
+      ? constrainGuardTabToMessenger(accountTab)
+      : accountTab;
     setGuardTabState(normalizedTab);
     const keepsMessages = normalizedTab === 'messages';
     const keepsSupport = normalizedTab === 'support';
@@ -1607,8 +1629,11 @@ export default function App() {
   };
 
   const setStaffSection = (section: StaffSection, selection: StaffSectionSelection = {}) => {
-    const normalizedSection =
+    const mappedSection =
       section === 'team-chat' || section === 'job-chats' ? 'messages' : section;
+    const normalizedSection = isMessengerExperience()
+      ? constrainStaffSectionToMessenger(mappedSection)
+      : mappedSection;
     if (currentUser && isStaffRole(currentUser.role)) {
       emitStaffTravelAction({ section: normalizedSection });
     }
@@ -2021,12 +2046,19 @@ export default function App() {
     const pendingPath = consumePostAuthPath();
     if (pendingPath) {
       const pending = parseAppRoute(pendingPath);
+      if (isMessengerExperience()) {
+        if (pending) return constrainRouteToMessenger({ ...pending, role });
+        return defaultMessengerRoute(role);
+      }
       if (pending?.websiteAccount) {
         return websiteAccountRoute(role, pending.accountView ?? 'home');
       }
       if (pending && roleCanOpenProductApp(role, productAppFromPath(pendingPath)) && access !== 'account') {
         return { ...pending, role };
       }
+    }
+    if (isMessengerExperience()) {
+      return defaultMessengerRoute(role);
     }
     if (!isAppExperience()) {
       if (access === 'account') {
@@ -14089,6 +14121,7 @@ export default function App() {
           guard={activeGuard}
           tab={resolvedGuardTab}
           onTabChange={setGuardTab}
+          messagesOnly={isMessengerExperience()}
           selectedJobId={guardSelectedJobId}
           onSelectedJobIdChange={setGuardSelectedJobId}
           browseTab={guardBrowseTab}
@@ -14249,6 +14282,7 @@ export default function App() {
     const handleClientNavigate = (view: ClientView) => {
       const allowedView = resolveAllowedClientView(view, clientRecord?.clientType) as ClientView;
       if (
+        !isMessengerExperience() &&
         clientAccountPending &&
         allowedView !== 'home' &&
         allowedView !== 'profile' &&
@@ -14340,6 +14374,7 @@ export default function App() {
               : currentUser.clientName || currentUser.name || 'Your company'
           }
           onSignOut={handleSignOut}
+          messagesOnly={isMessengerExperience()}
           activeView={clientView}
           requestsJobTab={clientRequestsJobTab}
           onRequestsJobTabChange={setClientRequestsJobTab}
@@ -14395,6 +14430,7 @@ export default function App() {
                   ? clientWorkspaceLabel(clientRecord)
                   : currentUser.clientName || currentUser.name || 'Your Company'
               }
+              messagesOnly={isMessengerExperience()}
               clientId={currentUser.id}
               accountStatus={clientRecord?.accountStatus}
               approved={clientRecord?.approved}
@@ -14542,6 +14578,7 @@ export default function App() {
         <StaffDashboard
           section={staffSection}
           onSectionChange={setStaffSection}
+          messagesOnly={isMessengerExperience()}
           accountNotifications={accountNotificationMenuProps}
           selectedGuardId={staffGuardId}
           onSelectedGuardIdChange={setStaffGuardId}
