@@ -10,6 +10,7 @@ import { DirectTopHeader } from '../baseui/layout/DirectTopHeader';
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
 import { AuthMobileTopBar } from './AuthFormChrome';
 import { FONT_DISPLAY } from '../../theme/typography';
+import { isMessengerExperience } from '../../lib/platform/appExperience';
 
 const HEADING_FONT = FONT_DISPLAY;
 
@@ -270,9 +271,18 @@ export function AuthRoleChoicePage({
   const isMobile = factor === 'mobile';
   const showingClientKinds = signupStep === 'client';
   const copyKey = showingClientKinds ? 'client' : mode === 'sign-in' ? 'sign-in' : signupStep;
-  const copy = showingClientKinds && mode === 'sign-in'
+  const baseCopy = showingClientKinds && mode === 'sign-in'
     ? { ...COPY.client, kicker: 'Sign in' }
     : COPY[copyKey];
+  const copy =
+    isMessengerExperience() && copyKey === 'sign-in'
+      ? {
+          ...baseCopy,
+          heading: 'Select your role',
+          subheading:
+            'Guard, Customer, or Staff. One person, one role — signing into a second role locks both accounts.',
+        }
+      : baseCopy;
   const backLabel = showingClientKinds || (mode === 'sign-up' && signupStep !== 'path') ? 'Back' : 'Home';
   const showHero = !isMobile && !showingClientKinds && signupStep !== 'work' && (mode === 'sign-in' || signupStep === 'path');
 

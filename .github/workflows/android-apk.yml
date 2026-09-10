@@ -102,7 +102,7 @@ jobs:
             public/download/Guardr-Staff.apk
             public/download/Guardr-Messenger.apk
           body: |
-            Guard, Customer, and Staff Android APKs, plus the Messenger companion launcher.
+            Guard, Customer, and Staff Android APKs, plus Messenger.
 
             **All three role APKs (zip):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
 

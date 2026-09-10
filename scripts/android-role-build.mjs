@@ -10,7 +10,7 @@ export const ANDROID_ROLES = [
   { id: 'staff', apk: 'Guardr-Staff.apk', aab: 'Guardr-Staff.aab', sideload: 'guardr-staff.apk' },
 ];
 
-/** Companion launcher — links into the one role app already installed. */
+/** Messenger APK — sign in, pick one role, then run that role in this app. */
 export const ANDROID_COMPANIONS = [
   { id: 'messenger', apk: 'Guardr-Messenger.apk', aab: 'Guardr-Messenger.aab', sideload: 'guardr-messenger.apk' },
 ];

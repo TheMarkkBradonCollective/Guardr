@@ -300,7 +300,7 @@ import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient }
 import { isInactiveGuardSession } from './lib/guardActivationSync';
 import { holdJobPayment, releasePayout, refundPayment, createTipCheckoutSession } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, loadTheme, normalizeThemeMode, saveTheme } from './lib/platform/theme';
-import { isAppExperience } from './lib/platform/appExperience';
+import { isAppExperience, isMessengerExperience } from './lib/platform/appExperience';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { UserSettingsScreen } from './components/profile/UserSettingsScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
@@ -526,6 +526,7 @@ import {
 } from './lib/appNavigation';
 import {
   applyProductAppToDocument,
+  clearStoredProductApp,
   consumePostAuthPath,
   installPathForApp,
   installedAuthEntry,
@@ -733,7 +734,7 @@ function canOpenOperationalRoute(
 }
 
 export default function App() {
-  const { productApp } = useProductApp();
+  const { productApp, setProductApp } = useProductApp();
   const installedAuthRole = productRoleForApp(productApp);
   // ── Session ────────────────────────────────────────────────
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(() => {
@@ -4030,7 +4031,10 @@ export default function App() {
   // ── Auth ───────────────────────────────────────────────────
   const handleSignIn = (user: SessionUser, options?: { passwordChangeRecommended?: boolean }) => {
     const kind = kindFromSessionRole(user.role);
-    if (kind) writeDeviceRoleAccount({ kind, id: user.id });
+    if (kind) {
+      writeDeviceRoleAccount({ kind, id: user.id });
+      if (isMessengerExperience()) setProductApp(kind);
+    }
     localStorage.setItem('guardr_current_user', JSON.stringify(user));
     setCurrentUser(user);
     setPasswordChangePromptOpen(!!options?.passwordChangeRecommended);
@@ -4209,6 +4213,10 @@ export default function App() {
     void signOutAuth();
     localStorage.removeItem('guardr_current_user');
     clearPersistedAppRoute();
+    if (isMessengerExperience()) {
+      clearStoredProductApp();
+      setProductApp('website');
+    }
     setCurrentUser(null);
     setIsAuthView(false);
     setLegalPageState(null);

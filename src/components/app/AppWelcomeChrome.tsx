@@ -9,6 +9,7 @@ import { LegalFooterLinks } from '../legal/LegalFooterLinks';
 import { EqualOpportunityNotice } from '../legal/EqualOpportunityNotice';
 import type { LegalPageId } from '../../lib/legalContent';
 import type { ProductApp } from '../../lib/productApps';
+import { isMessengerExperience } from '../../lib/platform/appExperience';
 
 /** Soft full-bleed wash — no grid, icons, or glow blobs. */
 export function AppWelcomeBackdrop() {
@@ -74,6 +75,12 @@ function resolveWelcomeCopy(
   experienceTier?: ExperienceTier,
   productApp?: ProductApp,
 ) {
+  if (isMessengerExperience()) {
+    return {
+      headline: 'Sign in. Pick your role.',
+      sub: 'Guard, Customer, or Staff — one person, one role. Signing into a second role locks both accounts.',
+    };
+  }
   if (productApp && productApp !== 'website' && PRODUCT_APP_HERO_COPY[productApp]) {
     return PRODUCT_APP_HERO_COPY[productApp]!;
   }
@@ -163,6 +170,9 @@ export function AppWelcomeShellBadge({
 }) {
   if (shellKind === 'native') {
     const premium = experienceTier?.shell === 'native' && experienceTier.mode === 'premium';
+    if (isMessengerExperience()) {
+      return <span className="app-welcome-shell-status">Messenger</span>;
+    }
     return <span className="app-welcome-shell-status">{premium ? 'Premium' : 'App'}</span>;
   }
   if (shellKind === 'pwa') {
