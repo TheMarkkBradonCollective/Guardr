@@ -119,7 +119,43 @@ function parseBackground(background) {
 }
 
 /**
+ * Geometric chat bubble for Messenger — left pointer like a message box,
+ * chunky corners like the G-shield. ViewBox 0 0 100 100.
+ */
+export const MESSENGER_BUBBLE_PATH =
+  'M 24 14 L 6 26 L 24 38 L 24 72 C 24 80 32 86 42 86 L 76 86 C 86 86 90 78 90 68 L 90 26 C 90 16 82 14 72 14 Z';
+
+/**
+ * White message box + black Guardr shield (the mark sits where chat lines would).
+ * Transparent canvas so launchers can lay it on slate and adaptive icons stay masked.
+ */
+export async function renderMessengerBubbleMark(iconMaster, size) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 100 100">
+  <path fill="#FFFFFF" d="${MESSENGER_BUBBLE_PATH}"/>
+</svg>`;
+  const bubble = await sharp(Buffer.from(svg)).png().toBuffer();
+  const shieldSize = Math.round(size * 0.52);
+  const left = Math.round(size * 0.30);
+  const top = Math.round(size * 0.22);
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([
+      { input: bubble, left: 0, top: 0 },
+      { input: await blackMarkPng(iconMaster, shieldSize), left, top },
+    ])
+    .png()
+    .toBuffer();
+}
+
+/**
  * Role icon: unlabeled shield on the role field (black / white / grey).
+ * Messenger is a white chat bubble with the black G-shield inside.
  * `safeZone` keeps the mark inside an Android/maskable crop.
  */
 export async function renderBrandedIcon(iconMaster, size, {
@@ -133,7 +169,16 @@ export async function renderBrandedIcon(iconMaster, size, {
   const layers = [];
   const markColor = chrome.mark;
 
-  if (resolvedLabel) {
+  if (productApp === 'messenger') {
+    const markRatio = safeZone ? 0.64 : 0.8;
+    const markSize = Math.round(size * markRatio);
+    const offset = Math.round((size - markSize) / 2);
+    layers.push({
+      input: await renderMessengerBubbleMark(iconMaster, markSize),
+      left: offset,
+      top: offset,
+    });
+  } else if (resolvedLabel) {
     const logoRatio = safeZone ? 0.42 : 0.5;
     const logoSize = Math.round(size * logoRatio);
     const logoTop = Math.round(size * (safeZone ? 0.2 : 0.12));

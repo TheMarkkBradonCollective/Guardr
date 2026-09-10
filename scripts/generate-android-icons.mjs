@@ -1,7 +1,14 @@
 import sharp from 'sharp';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { blackMarkPng, iconChromeForProductApp, iconLabelForProductApp, renderBrandedIcon, whiteMarkPng } from './branded-icon.mjs';
+import {
+  blackMarkPng,
+  iconChromeForProductApp,
+  iconLabelForProductApp,
+  renderBrandedIcon,
+  renderMessengerBubbleMark,
+  whiteMarkPng,
+} from './branded-icon.mjs';
 
 const ROOT = process.cwd();
 const ICON_SOURCE = path.join(ROOT, 'assets', 'logos', 'icon-source.png');
@@ -101,16 +108,18 @@ async function renderForegroundIcon(iconMaster, size, productApp) {
   });
 }
 
-/** APK splash — Guard white + black shield; Staff grey + white shield; Customer black + white. */
+/** APK splash — Guard white + black shield; Staff grey + white shield; Customer black + white; Messenger bubble. */
 async function renderSplash(iconMaster, width, height, productApp) {
   const chrome = iconChromeForProductApp(productApp);
-  const logoSize = Math.round(Math.min(width, height) * 0.34);
+  const logoSize = Math.round(Math.min(width, height) * (productApp === 'messenger' ? 0.42 : 0.34));
   const offsetX = Math.round((width - logoSize) / 2);
   const offsetY = Math.round((height - logoSize) / 2);
   const logo =
-    chrome.mark === 'black'
-      ? await blackMarkPng(iconMaster, logoSize)
-      : await whiteMarkPng(iconMaster, logoSize);
+    productApp === 'messenger'
+      ? await renderMessengerBubbleMark(iconMaster, logoSize)
+      : chrome.mark === 'black'
+        ? await blackMarkPng(iconMaster, logoSize)
+        : await whiteMarkPng(iconMaster, logoSize);
   return sharp({
     create: { width, height, channels: 4, background: chrome.background },
   })
@@ -154,7 +163,9 @@ async function main() {
   console.log(
     label
       ? `Launcher icon: ${chrome.background} field + ${chrome.mark} shield + "${label}" under the logo`
-      : `Launcher icon: ${chrome.background} field + ${chrome.mark} shield (no role label); splash: ${chrome.background}`,
+      : productApp === 'messenger'
+        ? `Launcher icon: ${chrome.background} field + white chat bubble + black shield; splash: ${chrome.background}`
+        : `Launcher icon: ${chrome.background} field + ${chrome.mark} shield (no role label); splash: ${chrome.background}`,
   );
 }
 
