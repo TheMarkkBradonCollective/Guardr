@@ -12,6 +12,7 @@ export const GITHUB_ALL_APKS_ZIP = ASSET('Guardr-All-APKs.zip');
 export const GITHUB_CLIENT_APK = ASSET('Guardr-Client.apk');
 export const GITHUB_GUARD_APK = ASSET('Guardr-Guard.apk');
 export const GITHUB_STAFF_APK = ASSET('Guardr-Staff.apk');
+export const GITHUB_MESSENGER_APK = ASSET('Guardr-Messenger.apk');
 
 export const GITHUB_ROLE_APKS = [
   {
@@ -36,3 +37,11 @@ export const GITHUB_ROLE_APKS = [
     url: GITHUB_STAFF_APK,
   },
 ];
+
+export const GITHUB_MESSENGER_APP = {
+  id: 'messenger' as const,
+  label: 'Messenger',
+  tagline: 'Opens the Guard, Customer, or Staff app you already installed',
+  file: 'Guardr-Messenger.apk',
+  url: '/download/Guardr-Messenger.apk',
+};

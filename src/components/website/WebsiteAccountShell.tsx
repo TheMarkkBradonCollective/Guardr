@@ -22,6 +22,7 @@ import {
 } from '../../lib/productApps';
 import { OpenAppCta } from '../apps/OpenAppCta';
 import type { ThemeMode } from '../../lib/platform/theme';
+import { ONE_ROLE_SIGN_OUT_ONLY_COPY } from '../../lib/oneRolePolicy';
 
 const VIEW_ICONS: Record<WebsiteAccountView, LucideIcon> = {
   home: Shield,
@@ -114,7 +115,12 @@ export function WebsiteAccountShell({
               );
             })}
           </nav>
-          <button type="button" className="website-account-nav-item website-account-signout" onClick={onSignOut}>
+          <button
+            type="button"
+            className="website-account-nav-item website-account-signout"
+            onClick={onSignOut}
+            title={ONE_ROLE_SIGN_OUT_ONLY_COPY}
+          >
             <LogOut size={18} strokeWidth={2} aria-hidden />
             Sign out
           </button>

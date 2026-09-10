@@ -126,6 +126,7 @@ import { StaffLegalCompliancePanel } from './staff/StaffLegalCompliancePanel';
 import { AppGuidePage } from './docs/AppGuidePage';
 import { AppBlockedAccessScreen } from './ui/app/AppBlockedAccess';
 import { STAFF_SECTION_ACCESS_MESSAGES, isStaffNavSectionAccessible } from '../lib/staffNavAccess';
+import type { OneRoleCase } from '../lib/oneRolePolicy';
 import { DevNotesPage } from './docs/DevNotesPage';
 import { BusinessPlanPage } from './docs/BusinessPlanPage';
 import { StaffOpsMapScreen } from './staff/StaffOpsMapScreen';
@@ -145,6 +146,9 @@ export interface StaffSectionSelection {
 interface StaffDashboardProps {
   guards: SecurityGuard[];
   clients: Client[];
+  oneRoleCases?: OneRoleCase[];
+  onIgnoreOneRoleCase?: (caseId: string) => void;
+  onBlockOneRoleCase?: (caseId: string) => void;
   requests: SecurityRequest[];
   supportTickets?: SupportTicket[];
   jobChatThreads?: JobChatThread[];
@@ -369,6 +373,9 @@ interface StaffDashboardProps {
 export function StaffDashboard({
   guards,
   clients,
+  oneRoleCases = [],
+  onIgnoreOneRoleCase,
+  onBlockOneRoleCase,
   requests,
   supportTickets = [],
   jobChatThreads = [],
@@ -887,6 +894,9 @@ export function StaffDashboard({
             currentUser={currentUser}
             guards={guards}
             clients={clients}
+            oneRoleCases={oneRoleCases}
+            onIgnoreOneRoleCase={onIgnoreOneRoleCase}
+            onBlockOneRoleCase={onBlockOneRoleCase}
             canApproveGuardAccounts={canApproveGuardAccounts}
             canManageGuardAccounts={canManageGuardAccounts}
             canManageClientAccounts={canManageClientAccounts}

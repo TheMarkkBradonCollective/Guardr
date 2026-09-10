@@ -66,6 +66,10 @@ import {
   verifyAccountPassword,
 } from '../lib/accountPasswords';
 import { signInWithCredentials } from '../lib/auth/authService';
+import {
+  ONE_ROLE_LOCK_MESSAGE,
+  type OneRoleCase,
+} from '../lib/oneRolePolicy';
 import type { ThemeMode } from '../lib/platform/theme';
 import { useDevice } from '../lib/platform';
 import { useProductApp } from '../lib/ProductAppProvider';
@@ -219,6 +223,8 @@ interface AuthPageProps {
   onChangeTheme?: (mode: ThemeMode) => void;
   isDbConnected?: boolean;
   isAppLoading?: boolean;
+  oneRoleCases?: OneRoleCase[];
+  onOneRoleHold?: (oneRoleCase: OneRoleCase) => void;
   /** Full-page auth (browser) or bottom sheet over app home (PWA/APK). */
   presentation?: 'page' | 'sheet';
   /** Sheet visibility — only used when presentation is sheet. */
@@ -255,6 +261,8 @@ export function AuthPage({
   onChangeTheme,
   isDbConnected = false,
   isAppLoading = false,
+  oneRoleCases = [],
+  onOneRoleHold,
   presentation = 'page',
   open = true,
 }: AuthPageProps) {
@@ -773,7 +781,14 @@ export function AuthPage({
       return;
     }
 
-    const signInAttempt = await signInWithCredentials(email, password, guardsList, clientsList, role);
+    const signInAttempt = await signInWithCredentials(
+      email,
+      password,
+      guardsList,
+      clientsList,
+      role,
+      oneRoleCases,
+    );
     if (signInAttempt.status === 'ok') {
       onSignIn(signInAttempt.result.sessionUser, {
         passwordChangeRecommended: signInAttempt.result.passwordChangeRecommended,
@@ -786,6 +801,13 @@ export function AuthPage({
     }
     if (signInAttempt.status === 'blocked') {
       setErrorMsg('Account blocked. Contact administration.');
+      return;
+    }
+    if (signInAttempt.status === 'one_role_hold' || signInAttempt.status === 'one_role_violation') {
+      const held =
+        signInAttempt.status === 'one_role_hold' ? signInAttempt.case : signInAttempt.draftCase;
+      onOneRoleHold?.(held);
+      setErrorMsg(signInAttempt.message || ONE_ROLE_LOCK_MESSAGE);
       return;
     }
     if (signInAttempt.status === 'pending_approval') {

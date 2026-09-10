@@ -5,7 +5,7 @@ import { Download, QrCode } from 'lucide-react';
 import { GuardrButton } from '../baseui/GuardrButton';
 import type { FormFactor } from '../../lib/platform/device';
 import { FONT_DISPLAY } from '../../theme/typography';
-import { GITHUB_ALL_APKS_ZIP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
+import { GITHUB_ALL_APKS_ZIP, GITHUB_MESSENGER_APP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
 import { productAppHasGreyLauncher, productAppHasLightLauncher } from '../../lib/productApps';
 import { Capacitor } from '@capacitor/core';
 
@@ -143,6 +143,47 @@ export function LandingAppDownloads({
             </GuardrButton>
           </Block>
         ))}
+      </Block>
+
+      <Block $style={panelStyle}>
+        <Block>
+          <img
+            src="/icons/messenger-192.png"
+            width={48}
+            height={48}
+            alt=""
+            style={{
+              display: 'block',
+              borderRadius: 12,
+              marginBottom: 12,
+              background: '#111827',
+            }}
+          />
+          <Block
+            as="h3"
+            margin="0 0 6px"
+            $style={{
+              fontFamily: HEADING_FONT,
+              fontWeight: 700,
+              fontSize: '18px',
+              letterSpacing: '-0.015em',
+              color: theme.colors.contentPrimary,
+            }}
+          >
+            {GITHUB_MESSENGER_APP.label}
+          </Block>
+          <Block as="p" margin={0} $style={{ fontSize: '13px', lineHeight: 1.45, color: theme.colors.contentSecondary }}>
+            {GITHUB_MESSENGER_APP.tagline}. One person, one role — there is no switch account.
+          </Block>
+        </Block>
+        <GuardrButton
+          kind="secondary"
+          {...({ $as: 'a', href: GITHUB_MESSENGER_APP.url, download: GITHUB_MESSENGER_APP.file } as Record<string, unknown>)}
+          startEnhancer={<Download className="w-4 h-4" />}
+          overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
+        >
+          Download Messenger
+        </GuardrButton>
       </Block>
 
       <Block

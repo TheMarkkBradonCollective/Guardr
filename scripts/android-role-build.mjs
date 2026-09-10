@@ -10,6 +10,11 @@ export const ANDROID_ROLES = [
   { id: 'staff', apk: 'Guardr-Staff.apk', aab: 'Guardr-Staff.aab', sideload: 'guardr-staff.apk' },
 ];
 
+/** Companion launcher — links into the one role app already installed. */
+export const ANDROID_COMPANIONS = [
+  { id: 'messenger', apk: 'Guardr-Messenger.apk', aab: 'Guardr-Messenger.aab', sideload: 'guardr-messenger.apk' },
+];
+
 const SERVICES_PATH = path.join(ROOT, 'android/app/google-services.json');
 const ASSETS_PUBLIC = path.join(ROOT, 'android/app/src/main/assets/public');
 const CAPACITOR_CONFIG_PATH = path.join(ROOT, 'android/app/src/main/assets/capacitor.config.json');

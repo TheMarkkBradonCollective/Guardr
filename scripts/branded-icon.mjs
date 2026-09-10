@@ -5,10 +5,13 @@ export const PRODUCT_ICON_LABELS = {
   client: null,
   guard: null,
   staff: null,
+  messenger: null,
 };
 
 /** Staff tile — mid grey so it sits between Customer black and Guard white. */
 export const STAFF_LAUNCHER_BACKGROUND = '#6B6B6B';
+/** Messenger companion — slate so it is not Customer black or Staff grey. */
+export const MESSENGER_LAUNCHER_BACKGROUND = '#111827';
 
 export function iconLabelForProductApp(productApp) {
   return PRODUCT_ICON_LABELS[productApp] || null;
@@ -24,6 +27,9 @@ export function iconChromeForProductApp(productApp) {
   }
   if (productApp === 'guard') {
     return { background: '#FFFFFF', mark: 'black', text: '#000000' };
+  }
+  if (productApp === 'messenger') {
+    return { background: MESSENGER_LAUNCHER_BACKGROUND, mark: 'white', text: '#FFFFFF' };
   }
   return { background: '#000000', mark: 'white', text: '#FFFFFF' };
 }
@@ -41,6 +47,9 @@ export function nativeChromeForProductApp(productApp) {
   }
   if (productApp === 'guard') {
     return { backgroundColor: '#FFFFFF', statusBarStyle: 'LIGHT' };
+  }
+  if (productApp === 'messenger') {
+    return { backgroundColor: MESSENGER_LAUNCHER_BACKGROUND, statusBarStyle: 'DARK' };
   }
   return { backgroundColor: '#000000', statusBarStyle: 'DARK' };
 }

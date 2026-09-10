@@ -5,6 +5,7 @@ import {
   GITHUB_CLIENT_APK,
   GITHUB_GUARD_APK,
   GITHUB_STAFF_APK,
+  GITHUB_MESSENGER_APP,
   GITHUB_ROLE_APKS,
 } from './githubApkRelease.ts';
 
@@ -19,5 +20,12 @@ describe('GitHub APK release URLs', () => {
     assert.equal(GITHUB_CLIENT_APK.endsWith('Guardr-Client.apk'), true);
     assert.equal(GITHUB_GUARD_APK.endsWith('Guardr-Guard.apk'), true);
     assert.equal(GITHUB_STAFF_APK.endsWith('Guardr-Staff.apk'), true);
+  });
+
+  it('offers Messenger as a website companion download, not in the three-app zip', () => {
+    assert.equal(GITHUB_MESSENGER_APP.file, 'Guardr-Messenger.apk');
+    assert.equal(GITHUB_MESSENGER_APP.url, '/download/Guardr-Messenger.apk');
+    assert.equal(GITHUB_ROLE_APKS.length, 3);
+    assert.ok(!GITHUB_ROLE_APKS.map((app) => app.label).includes('Messenger'));
   });
 });

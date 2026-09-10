@@ -78,7 +78,7 @@ async function prepareIconMaster() {
 function parseProductAppArg() {
   const arg = process.argv.find((item) => item.startsWith('--productApp='));
   const value = (arg?.slice('--productApp='.length) || process.env.GUARDR_PRODUCT_APP || '').trim();
-  if (value === 'client' || value === 'guard' || value === 'staff') return value;
+  if (value === 'client' || value === 'guard' || value === 'staff' || value === 'messenger') return value;
   return null;
 }
 
