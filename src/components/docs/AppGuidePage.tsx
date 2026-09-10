@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { MarkdownDoc } from './MarkdownDoc';
 import { UserManualDownloads } from './UserManualDownloads';
+import { StakeholderDocumentDownloads } from './StakeholderDocumentDownloads';
 import { StaffRolesReference } from '../staff/RolePermissionsGuide';
 import { parseGuide, type GuideSection, type GuideSubsection } from '../../lib/guideParser';
 import { AppScreen, AppScreenTitle, AppSubScreenHeader } from '../ui/app/AppPrimitives';
@@ -433,6 +434,9 @@ function GuideHub({
     </div>
   );
 
+  const stakeholderPanel = (
+    <StakeholderDocumentDownloads distribution="public" variant={variant} />
+  );
   const manualsPanel = <UserManualDownloads audienceFilter={audience} variant={variant} />;
 
   const sectionList = (
@@ -459,6 +463,7 @@ function GuideHub({
           tutorialActive={tutorialActive}
           onStartTutorial={onStartTutorial}
         />
+        {stakeholderPanel}
         {manualsPanel}
         {filterTabs}
         {sectionList}
@@ -481,6 +486,7 @@ function GuideHub({
         onStartTutorial={onStartTutorial}
       />
 
+      {stakeholderPanel}
       {manualsPanel}
       {filterTabs}
       {sectionList}

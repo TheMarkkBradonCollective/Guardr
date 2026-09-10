@@ -36,6 +36,7 @@ import {
   Plug,
   KeyRound,
   LineChart,
+  FolderOpen,
 } from 'lucide-react';
 
 import type { AccountMenuNotificationProps } from '../layouts/AccountMenu';
@@ -90,6 +91,7 @@ const SECTION_TITLES: Record<StaffSection, string> = {
   guide: 'Guide',
   'dev-updates': 'Dev notes',
   'business-plan': 'Business plan',
+  'company-package': 'Company package',
   profile: 'Profile',
   preferences: 'Settings',
 };
@@ -150,6 +152,7 @@ export function StaffOpsLayout({
       { id: 'guide', label: 'Guide', icon: BookOpen },
       { id: 'dev-updates', label: 'Dev notes', icon: ClipboardList, financeOnly: true },
       { id: 'business-plan', label: 'Business plan', icon: LineChart, managementOnly: true },
+      { id: 'company-package', label: 'Company package', icon: FolderOpen, managementOnly: true },
     ],
     [],
   );

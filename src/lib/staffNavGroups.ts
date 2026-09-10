@@ -12,5 +12,5 @@ export const STAFF_NAV_GROUPS: { title: string; ids: StaffSection[] }[] = [
   { title: 'Insights', ids: ['stats', 'analytics'] },
   { title: 'Finance', ids: ['payments', 'platform-fees', 'staff-compensation', 'agreements', 'audit-log'] },
   { title: 'Platform', ids: ['cities', 'permissions', 'settings', 'integrations'] },
-  { title: 'Resources', ids: ['guide', 'dev-updates', 'business-plan'] },
+  { title: 'Resources', ids: ['guide', 'dev-updates', 'business-plan', 'company-package'] },
 ];

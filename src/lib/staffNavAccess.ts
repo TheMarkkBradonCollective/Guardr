@@ -30,7 +30,7 @@ const PAYMENTS_SECTIONS = new Set<StaffSection>(['payments']);
 const PERMISSIONS_SECTIONS = new Set<StaffSection>(['permissions']);
 const CITIES_SECTIONS = new Set<StaffSection>(['cities']);
 const DISPUTES_SECTIONS = new Set<StaffSection>(['disputes']);
-const MANAGEMENT_SECTIONS = new Set<StaffSection>(['management', 'business-plan']);
+const MANAGEMENT_SECTIONS = new Set<StaffSection>(['management', 'business-plan', 'company-package']);
 
 /** Sections a finance-only (null ladder) seat may open */
 export const FINANCE_DESK_ALLOWED_SECTIONS = new Set<StaffSection>([
@@ -197,6 +197,11 @@ export const STAFF_SECTION_ACCESS_MESSAGES: Partial<Record<StaffSection, StaffNa
     title: 'Business plan',
     message:
       'The business plan is limited to Manager roles and above. Ask your Director if you need access.',
+  },
+  'company-package': {
+    title: 'Company package',
+    message:
+      'Stakeholder documents are limited to Manager roles and above. Ask your Director if you need access.',
   },
   messages: {
     title: 'Messages unavailable',
