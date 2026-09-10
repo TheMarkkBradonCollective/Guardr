@@ -446,7 +446,7 @@ export async function goToAuthSignup(page, role) {
     );
     await waitReady(page);
     await page.waitForTimeout(400);
-    const kind = await clickFirstMatching(page, [/^Business$/i, /^Personal$/i], 4000);
+    const kind = await clickFirstMatching(page, [/^Business/i, /^Personal/i], 4000);
     await waitReady(page);
     await page.waitForTimeout(400);
     return;
@@ -466,7 +466,7 @@ export async function goToAuthSignup(page, role) {
 
 export async function assertSignupRoleVisible(page, role) {
   const markers = {
-    client: /Create your client account|Primary city of operations/i,
+    client: /Business account|Personal account|Business name|Create your client account|Primary city of operations/i,
     guard: /Guard marketplace application|Primary service area/i,
     staff: /Apply to work at Guardr|New staff start as Support/i,
   };
@@ -489,9 +489,9 @@ export async function signUpClient(
   await fillIfVisible(page, /^Last name$/i, lastName);
   await page.locator('input[type="email"]').first().fill(email);
   await page.locator('input[type="password"]').first().fill(password);
-  await fillIfVisible(page, /Acme Corp/i, company);
+  await fillIfVisible(page, /Acme Corp|ABC Nightclub|Acme Patrol Services/i, company);
   await fillIfVisible(page, /\+1 \(555\)/i, '(555) 010-1001');
-  await selectOpenCityForSignup(page, /Primary city of operations/i);
+  await selectOpenCityForSignup(page, /Primary city of operations|^City$/i);
   await acceptTerms(page);
   await page.getByRole('button', { name: /create account|sign up/i }).first().click({ force: true });
   await page.waitForTimeout(4000);
