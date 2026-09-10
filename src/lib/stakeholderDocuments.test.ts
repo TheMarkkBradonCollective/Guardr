@@ -2,6 +2,8 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   STAKEHOLDER_DOCUMENTS,
+  STAKEHOLDER_DOWNLOAD_PAGE_PATH,
+  resolveStakeholderDownloadPageUrl,
   resolveStakeholderPdfUrl,
 } from './stakeholderDocuments';
 
@@ -16,5 +18,10 @@ describe('stakeholderDocuments', () => {
       resolveStakeholderPdfUrl('/stakeholder/Guardr-Executive-Summary.pdf'),
       '/stakeholder/Guardr-Executive-Summary.pdf',
     );
+  });
+
+  it('exposes public download page path', () => {
+    assert.equal(STAKEHOLDER_DOWNLOAD_PAGE_PATH, '/stakeholder/');
+    assert.equal(resolveStakeholderDownloadPageUrl(), '/stakeholder/');
   });
 });

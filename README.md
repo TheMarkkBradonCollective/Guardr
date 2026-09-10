@@ -48,6 +48,8 @@ Head-to-toe company briefing for legal counsel, advisors, investors, and partner
 | [Company package](docs/company-information-package.md) | `Guardr-Company-Information-Package.pdf` |
 | [Legal counsel intake form](docs/counsel-intake-form.html) | `Guardr-Counsel-Intake-Form.pdf` |
 
+Public download page: **[guardr.co/stakeholder/](https://guardr.co/stakeholder/)** (also linked from the website footer and Guide).
+
 Manager+ staff: open **Company package** in the staff app to view, download, or print.
 
 User manuals (PDF files): **[/manuals/Guardr-User-Manuals-Combined.pdf](https://www.guardr.co/manuals/Guardr-User-Manuals-Combined.pdf)** — website nav **Manuals**, in-app **Guide / Settings / pending screens → Download PDF manuals**

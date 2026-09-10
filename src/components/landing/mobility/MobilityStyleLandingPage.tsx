@@ -16,6 +16,7 @@ import { MobilityExploreGrid, MobilityLoginBand } from './MobilityExploreGrid';
 import { MobilityLandingHeroVisual, MobilityLandingLoginVisual } from './MobilityLandingVisuals';
 import type { LandingSectionsProps } from '../shared/LandingSections';
 import { resolveManualPdfUrl, USER_MANUALS_COMBINED_HREF } from '../../../lib/userManuals';
+import { resolveStakeholderDownloadPageUrl } from '../../../lib/stakeholderDocuments';
 import { resolveAppDownloadPageUrl } from '../../../lib/siteConfig';
 
 type MobilityFormFactor = 'mobile' | 'tablet' | 'desktop';
@@ -184,6 +185,15 @@ export function MobilityStyleLandingPage({
               style={{ color: 'inherit' }}
             >
               Manuals
+            </a>
+            <a
+              className="uber-landing-nav-link"
+              href={resolveStakeholderDownloadPageUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'inherit' }}
+            >
+              Company package
             </a>
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
           </Block>

@@ -3,6 +3,7 @@ import { apiUrl } from './siteConfig';
 /** Management+ printable stakeholder documents — counsel, advisors, investors. */
 
 export const STAKEHOLDER_DOCS_BASE_PATH = '/stakeholder';
+export const STAKEHOLDER_DOWNLOAD_PAGE_PATH = '/stakeholder/';
 
 export type StakeholderDocumentId =
   | 'executive-summary'
@@ -53,4 +54,9 @@ export function resolveStakeholderPdfUrl(hrefOrFileName: string): string {
     ? hrefOrFileName
     : `${STAKEHOLDER_DOCS_BASE_PATH}/${hrefOrFileName.replace(/^\/+/, '')}`;
   return apiUrl(path);
+}
+
+/** Public website download hub — /stakeholder/ */
+export function resolveStakeholderDownloadPageUrl(): string {
+  return apiUrl(STAKEHOLDER_DOWNLOAD_PAGE_PATH);
 }

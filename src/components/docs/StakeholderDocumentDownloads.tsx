@@ -8,6 +8,8 @@ import {
 
 interface StakeholderDocumentDownloadsProps {
   variant?: 'mobile' | 'desktop' | 'embedded';
+  /** Staff app (Manager+) vs public website copy */
+  distribution?: 'staff' | 'public';
   onViewMarkdown?: (source: 'executive-summary' | 'company-package') => void;
 }
 
@@ -109,10 +111,12 @@ function DocumentRow({
 /** Printable stakeholder PDFs — Manager+ staff only (counsel, advisors, investors). */
 export function StakeholderDocumentDownloads({
   variant = 'mobile',
+  distribution = 'staff',
   onViewMarkdown,
 }: StakeholderDocumentDownloadsProps) {
   const isDesktop = variant === 'desktop';
   const isEmbedded = variant === 'embedded';
+  const isPublic = distribution === 'public';
 
   const list = (
     <div className={isDesktop ? 'adm-guide-manual-list space-y-2' : 'space-y-2'}>
@@ -130,10 +134,12 @@ export function StakeholderDocumentDownloads({
   const header = (
     <div>
       <p className="text-xs font-bold uppercase tracking-wider text-brand-primary">
-        Printable stakeholder documents
+        {isPublic ? 'Company package downloads' : 'Printable stakeholder documents'}
       </p>
       <p className="text-xs text-brand-text-muted leading-relaxed mt-1.5">
-        Manager+ only. Download or print for legal counsel, advisors, and investors.
+        {isPublic
+          ? 'Download or print for legal counsel, advisors, investors, and partners.'
+          : 'Manager+ only. Download or print for legal counsel, advisors, and investors.'}
       </p>
     </div>
   );
