@@ -38,6 +38,10 @@ Built on the [Base Web design system](https://baseweb.design) — see **[docs/de
 
 User-facing overview of Guardr: **[docs/guardr.md](docs/guardr.md)** (what it is, how it works, getting started)
 
+## Stakeholder information package
+
+Head-to-toe company briefing for legal counsel, advisors, investors, and partners: **[docs/company-information-package.md](docs/company-information-package.md)**
+
 User manuals (PDF files): **[/manuals/Guardr-User-Manuals-Combined.pdf](https://www.guardr.co/manuals/Guardr-User-Manuals-Combined.pdf)** — website nav **Manuals**, in-app **Guide / Settings / pending screens → Download PDF manuals**
 
 ## Deploy to guardr.co
