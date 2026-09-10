@@ -109,7 +109,7 @@ jobs:
             - [Guardr-Guard.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk) — Guard
             - [Guardr-Client.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk) — Customer
             - [Guardr-Staff.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk) — Staff
-            - [Guardr-Messenger.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Messenger.apk) — Messenger (opens the one role app already installed; not in the zip)
+            - [Guardr-Messenger.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Messenger.apk) — Messenger (messages and support; not in the zip)
 
       - name: Write Play upload keystore
         run: node scripts/write-keystore.mjs
