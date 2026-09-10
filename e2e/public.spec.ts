@@ -142,6 +142,36 @@ test.describe('four product environments', () => {
     await expect(page.locator('body')).toContainText('Download Guard and Customer');
   });
 
+  test('APK buttons download from the website, not GitHub', async ({ page }) => {
+    await page.goto('/');
+    await waitForAppReady(page);
+
+    const guard = page.getByRole('link', { name: 'Download Guard' });
+    await expect(guard).toHaveAttribute('href', '/download/Guardr-Guard.apk');
+    await expect(guard).toHaveAttribute('download', 'Guardr-Guard.apk');
+    await expect(page.getByRole('link', { name: 'Download Customer' })).toHaveAttribute(
+      'href',
+      '/download/Guardr-Client.apk',
+    );
+    await expect(page.getByRole('link', { name: 'Download Staff' })).toHaveAttribute(
+      'href',
+      '/download/Guardr-Staff.apk',
+    );
+    await expect(page.getByRole('link', { name: 'Download all three APKs' })).toHaveAttribute(
+      'href',
+      '/download/Guardr-All-APKs.zip',
+    );
+  });
+
+  test('download page APK links stay on the website', async ({ page }) => {
+    await page.goto('/download/');
+    await expect(page.locator('#guard-apk-btn')).toHaveAttribute('href', /\/download\/Guardr-Guard\.apk/);
+    await expect(page.locator('#client-apk-btn')).toHaveAttribute('href', /\/download\/Guardr-Client\.apk/);
+    await expect(page.locator('#staff-apk-btn')).toHaveAttribute('href', /\/download\/Guardr-Staff\.apk/);
+    await expect(page.locator('#apps-zip-btn')).toHaveAttribute('href', /\/download\/Guardr-All-APKs\.zip/);
+    await expect(page.locator('#guard-apk-btn')).not.toHaveAttribute('href', /github\.com/);
+  });
+
   test('account and app URLs send signed-out visitors to sign-in', async ({ page }) => {
     await page.goto('/account');
     await waitForAppReady(page);

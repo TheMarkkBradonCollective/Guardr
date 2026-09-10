@@ -102,11 +102,12 @@ jobs:
           body: |
             Guard, Customer, and Staff Android APKs.
 
-            **All three (zip):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
+            **Download from the website** (instant, no GitHub sign-in): https://www.guardr.co/download/
 
-            - [Guardr-Guard.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk) — Guard
-            - [Guardr-Client.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk) — Customer
-            - [Guardr-Staff.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk) — Staff
+            - [Guard](https://www.guardr.co/download/Guardr-Guard.apk) — Guardr-Guard.apk
+            - [Customer](https://www.guardr.co/download/Guardr-Client.apk) — Guardr-Client.apk
+            - [Staff](https://www.guardr.co/download/Guardr-Staff.apk) — Guardr-Staff.apk
+            - [All three (zip)](https://www.guardr.co/download/Guardr-All-APKs.zip)
 
       - name: Write Play upload keystore
         run: node scripts/write-keystore.mjs

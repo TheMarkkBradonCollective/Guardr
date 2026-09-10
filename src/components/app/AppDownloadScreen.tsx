@@ -23,7 +23,7 @@ import {
   downloadScreenTitle,
 } from '../../lib/installSurfaceCopy';
 import { formatAppVersion } from '../../lib/appVersion';
-import { GITHUB_ALL_APKS_ZIP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
+import { SITE_ALL_APKS_ZIP, SITE_ROLE_APKS } from '../../lib/githubApkRelease';
 import { productAppHasGreyLauncher, productAppHasLightLauncher } from '../../lib/productApps';
 
 interface AppDownloadScreenProps {
@@ -230,7 +230,7 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
             </article>
           ) : (
             <>
-              {GITHUB_ROLE_APKS.map((app) => (
+              {SITE_ROLE_APKS.map((app) => (
                 <article key={app.id} className="install-product-card install-product-card--full">
                   <div className="install-product-card-top">
                     <img
@@ -255,7 +255,12 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
                     </div>
                   </div>
                   <div className="install-product-card-actions">
-                    <a href={app.url} className="install-cta install-cta--primary" style={{ textDecoration: 'none' }}>
+                    <a
+                      href={app.url}
+                      download={app.file}
+                      className="install-cta install-cta--primary"
+                      style={{ textDecoration: 'none' }}
+                    >
                       <span className="install-cta-icon" aria-hidden>
                         <Download className="w-4 h-4" />
                       </span>
@@ -267,8 +272,13 @@ export function AppDownloadScreen({ onBack, headerRight }: AppDownloadScreenProp
                   </div>
                 </article>
               ))}
-              <a href={GITHUB_ALL_APKS_ZIP} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
-                Download all APKs (GitHub zip)
+              <a
+                href={SITE_ALL_APKS_ZIP}
+                download="Guardr-All-APKs.zip"
+                className="install-cta install-cta--ghost"
+                style={{ textDecoration: 'none' }}
+              >
+                Download all three APKs
               </a>
               <div className="install-qr-block">
                 <img

@@ -56,6 +56,10 @@
     }
   ],
   "rewrites": [
+    { "source": "/download/guardr-client.apk", "destination": "/download/Guardr-Client.apk" },
+    { "source": "/download/guardr-guard.apk", "destination": "/download/Guardr-Guard.apk" },
+    { "source": "/download/guardr-staff.apk", "destination": "/download/Guardr-Staff.apk" },
+    { "source": "/download/guardr-apps.zip", "destination": "/download/Guardr-All-APKs.zip" },
     { "source": "/((?!api/|marketing/|download/|manuals/|guardr\\.apk|version\\.json).*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -63,7 +67,8 @@
       "source": "/guardr.apk",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-        { "key": "Content-Type", "value": "application/vnd.android.package-archive" }
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"guardr.apk\"" }
       ]
     },
     {
@@ -75,14 +80,49 @@
     {
       "source": "/download/guardr.apk",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"guardr.apk\"" }
+      ]
+    },
+    {
+      "source": "/download/Guardr-All-APKs.zip",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/zip" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"Guardr-All-APKs.zip\"" }
       ]
     },
     {
       "source": "/download/guardr-apps.zip",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-        { "key": "Content-Type", "value": "application/zip" }
+        { "key": "Content-Type", "value": "application/zip" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"Guardr-All-APKs.zip\"" }
+      ]
+    },
+    {
+      "source": "/download/Guardr-Client.apk",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"Guardr-Client.apk\"" }
+      ]
+    },
+    {
+      "source": "/download/Guardr-Guard.apk",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"Guardr-Guard.apk\"" }
+      ]
+    },
+    {
+      "source": "/download/Guardr-Staff.apk",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"Guardr-Staff.apk\"" }
       ]
     },
     {

@@ -359,26 +359,22 @@
             <img class="app-card-icon" src="/icons/guard-192.png" width="56" height="56" alt="Guard app icon" />
             <h3>Guard</h3>
             <p>Shifts, check-in, and field work.</p>
-            <a class="btn" id="guard-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk">Download Guard</a>
+            <a class="btn" id="guard-apk-btn" href="/download/Guardr-Guard.apk" download="Guardr-Guard.apk">Download Guard</a>
           </article>
           <article class="app-card">
             <img class="app-card-icon" src="/icons/client-192.png" width="56" height="56" alt="Customer app icon" />
             <h3>Customer</h3>
             <p>Coverage, activity, and reports.</p>
-            <a class="btn" id="client-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk">Download Customer</a>
+            <a class="btn" id="client-apk-btn" href="/download/Guardr-Client.apk" download="Guardr-Client.apk">Download Customer</a>
           </article>
           <article class="app-card">
             <img class="app-card-icon staff" src="/icons/staff-192.png" width="56" height="56" alt="Staff app icon" />
             <h3>Staff</h3>
             <p>Operations, people, and administration.</p>
-            <a class="btn" id="staff-apk-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk">Download Staff</a>
+            <a class="btn" id="staff-apk-btn" href="/download/Guardr-Staff.apk" download="Guardr-Staff.apk">Download Staff</a>
           </article>
         </div>
-        <a class="btn secondary" id="apps-zip-btn" href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip">Download all APKs (GitHub zip)</a>
-        <p class="qr-caption" style="margin-top:12px">
-          Zip is hosted on GitHub Releases, not the website —
-          <a href="https://github.com/TheMarkkBradonCollective/Guardr/releases/latest">open the release</a>.
-        </p>
+        <a class="btn secondary" id="apps-zip-btn" href="/download/Guardr-All-APKs.zip" download="Guardr-All-APKs.zip">Download all three APKs</a>
       </div>
 
       <div class="panel" id="apk-download-card">
@@ -576,15 +572,27 @@
           }
           if (latest.appsZipUrl) {
             var zipBtn = document.getElementById('apps-zip-btn');
-            if (zipBtn) zipBtn.href = latest.appsZipUrl;
+            if (zipBtn) {
+              zipBtn.href = latest.appsZipUrl;
+              zipBtn.setAttribute('download', 'Guardr-All-APKs.zip');
+            }
           }
           if (latest.apkApps) {
             var clientBtn = document.getElementById('client-apk-btn');
             var guardBtn = document.getElementById('guard-apk-btn');
             var staffBtn = document.getElementById('staff-apk-btn');
-            if (clientBtn && latest.apkApps.client) clientBtn.href = latest.apkApps.client;
-            if (guardBtn && latest.apkApps.guard) guardBtn.href = latest.apkApps.guard;
-            if (staffBtn && latest.apkApps.staff) staffBtn.href = latest.apkApps.staff;
+            if (clientBtn && latest.apkApps.client) {
+              clientBtn.href = latest.apkApps.client;
+              clientBtn.setAttribute('download', 'Guardr-Client.apk');
+            }
+            if (guardBtn && latest.apkApps.guard) {
+              guardBtn.href = latest.apkApps.guard;
+              guardBtn.setAttribute('download', 'Guardr-Guard.apk');
+            }
+            if (staffBtn && latest.apkApps.staff) {
+              staffBtn.href = latest.apkApps.staff;
+              staffBtn.setAttribute('download', 'Guardr-Staff.apk');
+            }
           }
 
           if (live === 'apk') {

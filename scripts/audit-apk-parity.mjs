@@ -188,6 +188,29 @@ if (!(await fileExists(apkPath))) {
   }
 }
 
+const roleApks = [
+  ['client', 'public/download/Guardr-Client.apk'],
+  ['guard', 'public/download/Guardr-Guard.apk'],
+  ['staff', 'public/download/Guardr-Staff.apk'],
+];
+for (const [role, rolePath] of roleApks) {
+  if (!(await fileExists(rolePath))) {
+    warn(`${rolePath} is missing — website Download ${role} will 404`);
+  }
+}
+if (!(await fileExists('public/download/Guardr-All-APKs.zip'))) {
+  warn('public/download/Guardr-All-APKs.zip is missing — website zip download will 404');
+}
+
+if (String(versionManifest?.appsZipUrl || '').includes('github.com')) {
+  fail('appsZipUrl still points at GitHub — use /download/Guardr-All-APKs.zip');
+}
+for (const [role, url] of Object.entries(versionManifest?.apkApps || {})) {
+  if (String(url).includes('github.com')) {
+    fail(`apkApps.${role} still points at GitHub — use /download/Guardr-*.apk`);
+  }
+}
+
 console.log(`APK parity audit — target v${webVersion}`);
 for (const message of warnings) {
   console.warn(`⚠ ${message}`);

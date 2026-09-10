@@ -5,7 +5,7 @@ import { Download, QrCode } from 'lucide-react';
 import { GuardrButton } from '../baseui/GuardrButton';
 import type { FormFactor } from '../../lib/platform/device';
 import { FONT_DISPLAY } from '../../theme/typography';
-import { GITHUB_ALL_APKS_ZIP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
+import { SITE_ALL_APKS_ZIP, SITE_ROLE_APKS } from '../../lib/githubApkRelease';
 import { productAppHasGreyLauncher, productAppHasLightLauncher } from '../../lib/productApps';
 import { Capacitor } from '@capacitor/core';
 
@@ -94,7 +94,7 @@ export function LandingAppDownloads({
         gridGap="scale500"
         $style={{ gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr' }}
       >
-        {GITHUB_ROLE_APKS.map((app) => (
+        {SITE_ROLE_APKS.map((app) => (
           <Block key={app.id} $style={panelStyle}>
             <Block>
               <img
@@ -135,7 +135,7 @@ export function LandingAppDownloads({
             </Block>
             <GuardrButton
               kind="primary"
-              {...({ $as: 'a', href: app.url } as Record<string, unknown>)}
+              {...({ $as: 'a', href: app.url, download: app.file } as Record<string, unknown>)}
               startEnhancer={<Download className="w-4 h-4" />}
               overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
             >
@@ -154,7 +154,8 @@ export function LandingAppDownloads({
       >
         <Block
           as="a"
-          href={GITHUB_ALL_APKS_ZIP}
+          href={SITE_ALL_APKS_ZIP}
+          download="Guardr-All-APKs.zip"
           $style={{
             fontSize: '13px',
             fontWeight: 600,
@@ -162,7 +163,7 @@ export function LandingAppDownloads({
             textDecoration: 'underline',
           }}
         >
-          Download all APKs from GitHub
+          Download all three APKs
         </Block>
         {showScan ? (
           <Block display="flex" alignItems="center" gridGap="scale300">

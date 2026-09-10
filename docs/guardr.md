@@ -91,7 +91,7 @@ Guardr works in any browser. For field work, install the Android app for your ro
 | Option | Best for | How |
 |--------|----------|-----|
 | **Website** | Account, billing, desktop | Open [guardr.co](https://guardr.co) |
-| **Guard / Customer / Staff APK** | Android phones | Download at [guardr.co/download](https://www.guardr.co/download) or GitHub Releases |
+| **Guard / Customer / Staff APK** | Android phones | Download at [guardr.co/download](https://www.guardr.co/download) |
 
 Each role is its own Android app. Reinstall from the download page when an update is available. Google Play listings use a separate AAB per app.
 

@@ -6,7 +6,7 @@
  *   public/download/Guardr-Client.apk
  *   public/download/Guardr-Guard.apk
  *   public/download/Guardr-Staff.apk
- *   public/download/Guardr-All-APKs.zip   (GitHub Release asset)
+ *   public/download/Guardr-All-APKs.zip   (website zip download)
  *   public/download/guardr.apk            (combined package, existing installers)
  *
  * Each role APK uses a distinct applicationId so all three can be installed
@@ -73,7 +73,7 @@ try {
   await copyFile(SIDELOAD_APK, path.join(PUBLIC_DOWNLOAD, 'guardr.apk'));
 
   const zipPath = path.join(PUBLIC_DOWNLOAD, 'Guardr-All-APKs.zip');
-  console.log('\n→ Zipping Guard, Customer, and Staff APKs for GitHub Releases…');
+  console.log('\n→ Zipping Guard, Customer, and Staff APKs for the website download…');
   run('zip', ['-j', '-q', zipPath, ...apkPaths]);
 
   console.log('→ Post-build parity audit…');
@@ -86,7 +86,7 @@ try {
   } else {
     console.warn('⚠ Native FCM disabled in this APK build.');
   }
-  console.log('Share zip: https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip');
+  console.log('Download: https://www.guardr.co/download/');
 } catch (error) {
   console.error(error);
   process.exit(1);

@@ -1,1 +1,8 @@
 *.apk filter=lfs diff=lfs merge=lfs -text
+# Role sideload APKs and the all-apps zip are regular git files so the
+# website can serve them without using the Git LFS quota (already used by
+# the combined guardr.apk).
+public/download/Guardr-Client.apk -filter -diff -merge
+public/download/Guardr-Guard.apk -filter -diff -merge
+public/download/Guardr-Staff.apk -filter -diff -merge
+public/download/Guardr-All-APKs.zip -filter -diff -merge
