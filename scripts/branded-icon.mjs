@@ -10,8 +10,8 @@ export const PRODUCT_ICON_LABELS = {
 
 /** Staff tile — mid grey so it sits between Customer black and Guard white. */
 export const STAFF_LAUNCHER_BACKGROUND = '#6B6B6B';
-/** Messenger companion — slate so it is not Customer black or Staff grey. */
-export const MESSENGER_LAUNCHER_BACKGROUND = '#111827';
+/** Messenger companion — logo black, same field as Customer. */
+export const MESSENGER_LAUNCHER_BACKGROUND = '#000000';
 
 export function iconLabelForProductApp(productApp) {
   return PRODUCT_ICON_LABELS[productApp] || null;
@@ -29,7 +29,7 @@ export function iconChromeForProductApp(productApp) {
     return { background: '#FFFFFF', mark: 'black', text: '#000000' };
   }
   if (productApp === 'messenger') {
-    return { background: MESSENGER_LAUNCHER_BACKGROUND, mark: 'white', text: '#FFFFFF' };
+    return { background: MESSENGER_LAUNCHER_BACKGROUND, mark: 'black', text: '#000000' };
   }
   return { background: '#000000', mark: 'white', text: '#FFFFFF' };
 }
@@ -119,7 +119,50 @@ function parseBackground(background) {
 }
 
 /**
+ * Exact comment-box silhouette from the Messenger reference
+ * (landscape rounded rect, 45° tail at the top-left). ViewBox 0 0 261 179.
+ */
+export const MESSENGER_BUBBLE_OUTER =
+  'M 4 0 L 242 0 A 18 18 0 0 1 260 18 L 260 160 A 18 18 0 0 1 242 178 L 59 178 A 18 18 0 0 1 41 160 L 41 52 L 0 6 Z';
+export const MESSENGER_BUBBLE_INNER =
+  'M 25 14 L 241 14 A 6 6 0 0 1 247 20 L 247 158 A 6 6 0 0 1 241 164 L 61 164 A 6 6 0 0 1 55 158 L 55 48 Z';
+export const MESSENGER_BUBBLE_PATH = MESSENGER_BUBBLE_OUTER;
+
+const MESSENGER_BUBBLE_RATIO = 179 / 261;
+
+/**
+ * Solid white comment box + black G-shield (logo black) on a transparent canvas.
+ */
+export async function renderMessengerBubbleMark(iconMaster, size) {
+  const bubbleW = size;
+  const bubbleH = Math.max(1, Math.round(size * MESSENGER_BUBBLE_RATIO));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${bubbleW}" height="${bubbleH}" viewBox="0 0 261 179">
+  <path fill="#FFFFFF" d="${MESSENGER_BUBBLE_OUTER}"/>
+</svg>`;
+  const bubble = await sharp(Buffer.from(svg)).png().toBuffer();
+  const top = Math.round((size - bubbleH) / 2);
+  const shieldSize = Math.round(bubbleH * 0.62);
+  const shieldLeft = Math.round(bubbleW * (151 / 261) - shieldSize / 2);
+  const shieldTop = top + Math.round(bubbleH * (89 / 179) - shieldSize / 2);
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([
+      { input: bubble, left: 0, top },
+      { input: await blackMarkPng(iconMaster, shieldSize), left: shieldLeft, top: shieldTop },
+    ])
+    .png()
+    .toBuffer();
+}
+
+/**
  * Role icon: unlabeled shield on the role field (black / white / grey).
+ * Messenger is a white chat bubble with the black G-shield inside.
  * `safeZone` keeps the mark inside an Android/maskable crop.
  */
 export async function renderBrandedIcon(iconMaster, size, {
@@ -133,7 +176,16 @@ export async function renderBrandedIcon(iconMaster, size, {
   const layers = [];
   const markColor = chrome.mark;
 
-  if (resolvedLabel) {
+  if (productApp === 'messenger') {
+    const markRatio = safeZone ? 0.68 : 0.86;
+    const markSize = Math.round(size * markRatio);
+    const offset = Math.round((size - markSize) / 2);
+    layers.push({
+      input: await renderMessengerBubbleMark(iconMaster, markSize),
+      left: offset,
+      top: offset,
+    });
+  } else if (resolvedLabel) {
     const logoRatio = safeZone ? 0.42 : 0.5;
     const logoSize = Math.round(size * logoRatio);
     const logoTop = Math.round(size * (safeZone ? 0.2 : 0.12));

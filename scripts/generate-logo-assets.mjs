@@ -262,7 +262,7 @@ async function main() {
   console.log(`  icon: ${path.relative(ROOT, ICON_SOURCE)}`);
   console.log(`  wordmark: ${path.relative(ROOT, WORDMARK_SOURCE)}`);
   console.log('Website icons: black (#000000) + white shield');
-  console.log('Role icons: Guard unlabeled white+black, Staff unlabeled grey+white, Customer unlabeled black, Messenger unlabeled slate, in /icons/{client,guard,staff,messenger}-*.png');
+  console.log('Role icons: Guard unlabeled white+black, Staff unlabeled grey+white, Customer unlabeled black, Messenger black + solid white bubble + black shield, in /icons/{client,guard,staff,messenger}-*.png');
 }
 
 main().catch((err) => {

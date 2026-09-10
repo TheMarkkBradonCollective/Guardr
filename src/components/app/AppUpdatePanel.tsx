@@ -153,8 +153,8 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
             Website
           </p>
           <p className="text-sm text-brand-text-muted leading-relaxed">
-            Sign up and complete activation on this website. After that, customers and guards
-            need Guard or Customer to use the platform. Staff can run the full system in the browser.
+            Android APKs are in Downloads on your website account after activation. Sign up and
+            finish activation here first.
           </p>
           {onOpenDownload ? (
             <button
@@ -163,7 +163,7 @@ export function AppUpdatePanel({ onOpenDownload }: AppUpdatePanelProps) {
               className="app-button-primary app-btn-md w-full sm:w-auto inline-flex items-center justify-center gap-2 !bg-emerald-600 hover:!bg-emerald-500"
             >
               <Download className="w-4 h-4" aria-hidden />
-              Download Android apps
+              Open Downloads
             </button>
           ) : null}
         </div>

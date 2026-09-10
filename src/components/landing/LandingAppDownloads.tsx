@@ -1,28 +1,27 @@
 import React from 'react';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
-import { Download, QrCode } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 import { GuardrButton } from '../baseui/GuardrButton';
 import type { FormFactor } from '../../lib/platform/device';
 import { FONT_DISPLAY } from '../../theme/typography';
-import { GITHUB_ALL_APKS_ZIP, GITHUB_MESSENGER_APP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
-import { productAppHasGreyLauncher, productAppHasLightLauncher } from '../../lib/productApps';
 import { Capacitor } from '@capacitor/core';
+import type { AuthViewRole } from '../../lib/appNavigation';
 
-const APK_QR_URL = '/download/apk-qr.png';
-const DOWNLOAD_PAGE_URL = '/download';
 const HEADING_FONT = FONT_DISPLAY;
 
 interface LandingAppDownloadsProps {
   formFactor: FormFactor;
   variant?: 'hero' | 'cta';
   id?: string;
+  onNavigateToAuth: (role?: AuthViewRole, mode?: 'sign-in' | 'sign-up') => void;
 }
 
 export function LandingAppDownloads({
   formFactor,
   variant = 'hero',
   id,
+  onNavigateToAuth,
 }: LandingAppDownloadsProps) {
   const [, theme] = useStyletron();
 
@@ -32,19 +31,6 @@ export function LandingAppDownloads({
 
   const isMobile = formFactor === 'mobile';
   const centered = variant === 'cta';
-  const showScan = !isMobile;
-
-  const panelStyle = {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    justifyContent: 'space-between',
-    gap: '16px',
-    padding: isMobile ? '20px' : '24px',
-    borderRadius: '16px',
-    border: `1px solid ${theme.colors.borderOpaque}`,
-    background: theme.colors.backgroundPrimary,
-    textAlign: 'left' as const,
-  };
 
   return (
     <Block
@@ -69,7 +55,7 @@ export function LandingAppDownloads({
             color: theme.colors.contentPrimary,
           }}
         >
-          It&apos;s easier in the app
+          Sign up on this website
         </Block>
         <Block
           as="p"
@@ -82,161 +68,35 @@ export function LandingAppDownloads({
             marginInline: centered ? 'auto' : undefined,
           }}
         >
-          Download Guard and Customer for Android. Sign up and complete activation on this website.
-          After that, customers and guards need the app to use the platform. Staff can run the
-          full system here in the browser.
+          Android APKs are private until your account is active. Sign up and finish activation here.
+          After that, Downloads is a tab on your desktop account. Customers and guards need the app
+          to use the platform. Staff can run the full system in the browser.
         </Block>
-      </Block>
-
-      <Block
-        display="grid"
-        width="100%"
-        gridGap="scale500"
-        $style={{ gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr' }}
-      >
-        {GITHUB_ROLE_APKS.map((app) => (
-          <Block key={app.id} $style={panelStyle}>
-            <Block>
-              <img
-                src={`/icons/${app.id}-192.png`}
-                width={48}
-                height={48}
-                alt=""
-                style={{
-                  display: 'block',
-                  borderRadius: 12,
-                  marginBottom: 12,
-                  background: productAppHasGreyLauncher(app.id)
-                    ? '#6B6B6B'
-                    : productAppHasLightLauncher(app.id)
-                      ? '#ffffff'
-                      : '#000000',
-                  border: productAppHasLightLauncher(app.id)
-                    ? `1px solid ${theme.colors.borderOpaque}`
-                    : undefined,
-                }}
-              />
-              <Block
-                as="h3"
-                margin="0 0 6px"
-                $style={{
-                  fontFamily: HEADING_FONT,
-                  fontWeight: 700,
-                  fontSize: '18px',
-                  letterSpacing: '-0.015em',
-                  color: theme.colors.contentPrimary,
-                }}
-              >
-                {app.label}
-              </Block>
-              <Block as="p" margin={0} $style={{ fontSize: '13px', lineHeight: 1.45, color: theme.colors.contentSecondary }}>
-                {app.tagline}
-              </Block>
-            </Block>
-            <GuardrButton
-              kind="primary"
-              {...({ $as: 'a', href: app.url } as Record<string, unknown>)}
-              startEnhancer={<Download className="w-4 h-4" />}
-              overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
-            >
-              Download {app.label}
-            </GuardrButton>
-          </Block>
-        ))}
-      </Block>
-
-      <Block $style={panelStyle}>
-        <Block>
-          <img
-            src="/icons/messenger-192.png"
-            width={48}
-            height={48}
-            alt=""
-            style={{
-              display: 'block',
-              borderRadius: 12,
-              marginBottom: 12,
-              background: '#111827',
-            }}
-          />
-          <Block
-            as="h3"
-            margin="0 0 6px"
-            $style={{
-              fontFamily: HEADING_FONT,
-              fontWeight: 700,
-              fontSize: '18px',
-              letterSpacing: '-0.015em',
-              color: theme.colors.contentPrimary,
-            }}
-          >
-            {GITHUB_MESSENGER_APP.label}
-          </Block>
-          <Block as="p" margin={0} $style={{ fontSize: '13px', lineHeight: 1.45, color: theme.colors.contentSecondary }}>
-            {GITHUB_MESSENGER_APP.tagline}. One person, one role — there is no switch account.
-          </Block>
-        </Block>
-        <GuardrButton
-          kind="secondary"
-          {...({ $as: 'a', href: GITHUB_MESSENGER_APP.url, download: GITHUB_MESSENGER_APP.file } as Record<string, unknown>)}
-          startEnhancer={<Download className="w-4 h-4" />}
-          overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
-        >
-          Download Messenger
-        </GuardrButton>
       </Block>
 
       <Block
         display="flex"
         flexDirection={isMobile ? 'column' : 'row'}
         alignItems={isMobile ? 'stretch' : 'center'}
-        justifyContent="space-between"
-        gridGap="scale500"
+        justifyContent={centered ? 'center' : 'flex-start'}
+        gridGap="scale400"
       >
-        <Block
-          as="a"
-          href={GITHUB_ALL_APKS_ZIP}
-          $style={{
-            fontSize: '13px',
-            fontWeight: 600,
-            color: theme.colors.contentSecondary,
-            textDecoration: 'underline',
-          }}
+        <GuardrButton
+          kind="primary"
+          onClick={() => onNavigateToAuth(undefined, 'sign-up')}
+          startEnhancer={<UserPlus className="w-4 h-4" />}
+          overrides={{ BaseButton: { style: { borderRadius: '10px' } } }}
         >
-          Download all APKs from GitHub
-        </Block>
-        {showScan ? (
-          <Block display="flex" alignItems="center" gridGap="scale300">
-            <img
-              src={APK_QR_URL}
-              width={72}
-              height={72}
-              alt="Scan to open the Guardr download page"
-              style={{
-                display: 'block',
-                width: 72,
-                height: 72,
-                borderRadius: 8,
-                background: '#ffffff',
-                padding: 4,
-              }}
-            />
-            <Block as="span" $style={{ fontSize: '12px', fontWeight: 600, color: theme.colors.contentSecondary }}>
-              <QrCode className="w-3 h-3" style={{ display: 'inline', marginRight: 4 }} />
-              <a href={DOWNLOAD_PAGE_URL} style={{ color: 'inherit' }}>
-                Downloads page
-              </a>
-            </Block>
-          </Block>
-        ) : (
-          <GuardrButton
-            kind="secondary"
-            {...({ $as: 'a', href: DOWNLOAD_PAGE_URL } as Record<string, unknown>)}
-            overrides={{ BaseButton: { style: { width: '100%', borderRadius: '10px', textDecoration: 'none' } } }}
-          >
-            Open downloads page
-          </GuardrButton>
-        )}
+          Sign up
+        </GuardrButton>
+        <GuardrButton
+          kind="secondary"
+          onClick={() => onNavigateToAuth(undefined, 'sign-in')}
+          startEnhancer={<LogIn className="w-4 h-4" />}
+          overrides={{ BaseButton: { style: { borderRadius: '10px' } } }}
+        >
+          Log in
+        </GuardrButton>
       </Block>
     </Block>
   );

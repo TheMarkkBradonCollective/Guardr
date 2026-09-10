@@ -139,7 +139,7 @@ test.describe('four product environments', () => {
     await page.goto('/');
     await waitForAppReady(page);
     await expect(page.locator('body')).toHaveAttribute('data-product-app', 'website');
-    await expect(page.locator('body')).toContainText('Download Guard and Customer');
+    await expect(page.locator('body')).toContainText('Android APKs are private');
   });
 
   test('account and app URLs send signed-out visitors to sign-in', async ({ page }) => {

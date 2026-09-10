@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  accountCanDownloadApks,
   getGuardUserStatus,
   isStaffAccountApproved,
   isStaffAccountPending,
@@ -70,4 +71,58 @@ test('getPendingStaffAccountReviews returns only pending staff', () => {
     { id: 'g1', isStaff: false, userStatus: 'pending' as const },
   ];
   assert.equal(getPendingStaffAccountReviews(guards as never).length, 1);
+});
+
+test('Android APK downloads stay private until the account is active', () => {
+  assert.equal(
+    accountCanDownloadApks({
+      role: 'client',
+      client: { accountStatus: 'active', approved: true },
+    }),
+    true,
+  );
+  assert.equal(
+    accountCanDownloadApks({
+      role: 'client',
+      client: { accountStatus: 'pending', approved: false },
+    }),
+    false,
+  );
+  assert.equal(
+    accountCanDownloadApks({
+      role: 'client',
+      client: { accountStatus: 'suspended', approved: false },
+    }),
+    false,
+  );
+  assert.equal(
+    accountCanDownloadApks({
+      role: 'guard',
+      guard: { userStatus: 'active', isStaff: false },
+    }),
+    true,
+  );
+  assert.equal(
+    accountCanDownloadApks({
+      role: 'guard',
+      guard: { userStatus: 'approved', isStaff: false },
+    }),
+    false,
+  );
+  assert.equal(
+    accountCanDownloadApks({
+      role: 'staff',
+      guard: { userStatus: 'active', isStaff: true },
+    }),
+    true,
+  );
+  assert.equal(
+    accountCanDownloadApks({
+      role: 'staff',
+      guard: { userStatus: 'pending', isStaff: true },
+    }),
+    false,
+  );
+  assert.equal(accountCanDownloadApks({ role: 'client' }), false);
+  assert.equal(accountCanDownloadApks({}), false);
 });
