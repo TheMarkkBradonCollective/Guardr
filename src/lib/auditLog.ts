@@ -117,11 +117,14 @@ export async function writeAuditLog(
 
 export async function loadAuditLog(limit = 100): Promise<AuditLogEntry[]> {
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('audit_log')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(limit);
+    if (error && error.code !== '42P01') {
+      console.warn('Audit log load:', error.message);
+    }
     if (data?.length) {
       return data.map((row) => ({
         id: row.id,
@@ -135,8 +138,8 @@ export async function loadAuditLog(limit = 100): Promise<AuditLogEntry[]> {
         createdAt: row.created_at,
       }));
     }
-  } catch {
-    /* fallback */
+  } catch (error) {
+    console.warn('Audit log load:', error);
   }
   return loadLocal().slice(-limit).reverse();
 }

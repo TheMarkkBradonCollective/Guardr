@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PushRole, PushSubscriptionPayload } from './types';
+import { parsePushAppChannel, type PushAppChannel } from './channel';
 
 function subscriptionId(userId: string, endpoint: string): string {
   let hash = 0;
@@ -19,23 +20,29 @@ export async function upsertPushSubscription(
     siteId?: string;
     quietHoursStart?: string;
     quietHoursEnd?: string;
+    appChannel?: PushAppChannel;
   }
 ): Promise<void> {
-  const { error } = await db.from('push_subscriptions').upsert(
-    {
-      id: subscriptionId(params.userId, params.subscription.endpoint),
-      user_id: params.userId,
-      push_role: params.pushRole,
-      endpoint: params.subscription.endpoint,
-      p256dh: params.subscription.keys.p256dh,
-      auth: params.subscription.keys.auth,
-      site_id: params.siteId ?? null,
-      quiet_hours_start: params.quietHoursStart ?? null,
-      quiet_hours_end: params.quietHoursEnd ?? null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'endpoint' }
-  );
+  const appChannel = parsePushAppChannel(params.appChannel);
+  const row: Record<string, unknown> = {
+    id: subscriptionId(params.userId, params.subscription.endpoint),
+    user_id: params.userId,
+    push_role: params.pushRole,
+    endpoint: params.subscription.endpoint,
+    p256dh: params.subscription.keys.p256dh,
+    auth: params.subscription.keys.auth,
+    site_id: params.siteId ?? null,
+    quiet_hours_start: params.quietHoursStart ?? null,
+    quiet_hours_end: params.quietHoursEnd ?? null,
+    app_channel: appChannel,
+    updated_at: new Date().toISOString(),
+  };
+
+  let { error } = await db.from('push_subscriptions').upsert(row, { onConflict: 'endpoint' });
+  if (error && /app_channel/i.test(error.message)) {
+    delete row.app_channel;
+    ({ error } = await db.from('push_subscriptions').upsert(row, { onConflict: 'endpoint' }));
+  }
 
   if (error) {
     if (error.message.includes('push_subscriptions') || error.code === '42P01') {

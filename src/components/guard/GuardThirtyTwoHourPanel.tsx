@@ -78,6 +78,7 @@ export function GuardThirtyTwoHourPanel({
   const [number, setNumber] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const listedCerts = useMemo(() => allContinuingEducationCerts(guard), [guard]);
   const ceSlots = useMemo(
@@ -135,6 +136,7 @@ export function GuardThirtyTwoHourPanel({
 
   const submitCert = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
     setFormError('');
     if (!onAddCertification || !addingCatalogId || !issuer.trim() || !number.trim()) return;
     const entry = getCertCatalogEntry(addingCatalogId);
@@ -146,20 +148,25 @@ export function GuardThirtyTwoHourPanel({
       return;
     }
 
-    const result = await onAddCertification({
-      catalogId: entry.id,
-      category: entry.category,
-      name: entry.name,
-      issuer: issuer.trim(),
-      number: number.trim(),
-      status: 'pending',
-      imageUrl,
-    });
-    if (result.ok === false) {
-      setFormError(result.error);
-      return;
+    setSaving(true);
+    try {
+      const result = await onAddCertification({
+        catalogId: entry.id,
+        category: entry.category,
+        name: entry.name,
+        issuer: issuer.trim(),
+        number: number.trim(),
+        status: 'pending',
+        imageUrl,
+      });
+      if (result.ok === false) {
+        setFormError(result.error);
+        return;
+      }
+      resetForm();
+    } finally {
+      setSaving(false);
     }
-    resetForm();
   };
 
   const handleDelete = async (certId: string) => {
@@ -287,10 +294,10 @@ export function GuardThirtyTwoHourPanel({
         </button>
         <button
           type="submit"
-          disabled={!imageUrl?.trim()}
+          disabled={!imageUrl?.trim() || saving}
           className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
         >
-          Add
+          {saving ? 'Saving…' : 'Add'}
         </button>
       </div>
     </form>

@@ -45,6 +45,7 @@ describe('product app path resolution', () => {
     assert.equal(productAppFromPath('/staff/overview'), 'staff');
     assert.equal(productAppFromPath('/dispatch'), 'staff');
     assert.equal(isOperationalAppPath('/guard/my-jobs'), true);
+    assert.equal(isOperationalAppPath('/messenger'), true);
     assert.equal(isWebsiteAccountPath('/client/home'), false);
   });
 
@@ -152,6 +153,7 @@ describe('deep links and CTAs', () => {
     assert.equal(pathFromDeepLink('guardr-client://home'), '/client/home');
     assert.equal(pathFromDeepLink('guardr-guard://my-jobs'), '/guard/my-jobs');
     assert.equal(pathFromDeepLink('guardr-staff://jobs'), '/staff/jobs');
+    assert.equal(pathFromDeepLink('guardr-messenger://inbox?st=t1'), '/messenger?st=t1');
     assert.equal(pathFromDeepLink('https://www.guardr.co/client/requests'), '/client/requests');
   });
 

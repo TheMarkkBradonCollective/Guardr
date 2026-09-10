@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { activateWaitingServiceWorker } from './pwaAutoUpdate';
+import { activateWaitingServiceWorker, shouldReloadOnControllerChange } from './pwaAutoUpdate';
 
 describe('pwaAutoUpdate', () => {
   it('activateWaitingServiceWorker posts SKIP_WAITING to waiting worker', () => {
@@ -19,5 +19,10 @@ describe('pwaAutoUpdate', () => {
     assert.doesNotThrow(() =>
       activateWaitingServiceWorker({ waiting: null } as unknown as ServiceWorkerRegistration)
     );
+  });
+
+  it('does not reload on the first service worker takeover', () => {
+    assert.equal(shouldReloadOnControllerChange(false), false);
+    assert.equal(shouldReloadOnControllerChange(true), true);
   });
 });

@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { isStandaloneDisplay } from './displayMode';
 
 function bakedNativeProductApp(): string {
   if (typeof window === 'undefined') return '';
@@ -6,23 +7,32 @@ function bakedNativeProductApp(): string {
   return typeof baked === 'string' ? baked.trim() : '';
 }
 
-/** Messenger APK — sign in, pick Guard / Customer / Staff, then run that role. */
+/** Messenger APK — sign in, then run the messaging companion. */
 export function isMessengerExperience(): boolean {
   return bakedNativeProductApp() === 'messenger';
 }
 
 /**
  * True in a Guard / Customer / Staff / Messenger Android shell (Capacitor APK
- * or AAB), not the public website in a browser tab.
+ * or AAB), a Playwright baked-app hook, or an installed PWA.
  *
  * Role APKs also bake `window.__GUARDR_NATIVE_PRODUCT_APP__`. That is the
  * Playwright hook for installed-app tests — not display-mode standalone.
- * Messenger is an installed shell with a role picker (it does not bake a
- * single Guard / Customer / Staff product app).
+ * Messenger is a companion messaging shell (not a full role-app picker).
+ *
+ * Installed PWAs are operational shells — the same data and routes as the APK,
+ * delivered as a lightweight home-screen app.
  */
 export function isAppExperience(): boolean {
   if (typeof window === 'undefined') return false;
-  if (Capacitor.isNativePlatform()) return true;
+  try {
+    if (Capacitor.isNativePlatform()) return true;
+  } catch {
+    /* ignore */
+  }
   const baked = bakedNativeProductApp();
-  return baked === 'client' || baked === 'guard' || baked === 'staff' || baked === 'messenger';
+  if (baked === 'client' || baked === 'guard' || baked === 'staff' || baked === 'messenger') {
+    return true;
+  }
+  return isStandaloneDisplay();
 }

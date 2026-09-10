@@ -58,11 +58,16 @@ describe('resolveSurfaceKind', () => {
     assert.equal(resolveSurfaceKind({ viewportWidth: 740, shellKind: 'native' }), 'mobile');
   });
 
-  it('never loads the desktop UI inside an installed Android shell', () => {
+  it('never loads the desktop UI inside an installed Android or PWA shell', () => {
     assert.equal(
       resolveSurfaceKind({ viewportWidth: 1600, shellKind: 'native' }),
       'tablet',
       'native at 1600px should stay on the touch tablet app',
+    );
+    assert.equal(
+      resolveSurfaceKind({ viewportWidth: 1600, shellKind: 'pwa' }),
+      'tablet',
+      'installed PWA at 1600px should stay on the touch tablet app',
     );
     assert.equal(resolveSurfaceKind({ viewportWidth: 1600, shellKind: 'browser' }), 'desktop');
   });

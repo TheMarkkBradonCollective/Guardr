@@ -213,6 +213,10 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
             siteId: siteId.trim() || undefined,
             quietHoursStart: useQuietHours ? quietStart : undefined,
             quietHoursEnd: useQuietHours ? quietEnd : undefined,
+            appChannel:
+              typeof window !== 'undefined' && window.location.pathname.startsWith('/messenger')
+                ? 'messenger'
+                : 'main',
           });
         } catch (err) {
           try {

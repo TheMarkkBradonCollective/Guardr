@@ -113,6 +113,8 @@ export interface AppRoute {
    */
   websiteAccount?: boolean;
   accountView?: WebsiteAccountView;
+  /** Dedicated Messenger companion — conversations only. */
+  messengerCompanion?: boolean;
 }
 
 const GUARD_TAB_FROM_SLUG: Record<string, GuardTab> = {
@@ -392,6 +394,22 @@ export function parseAppRoute(url: string): AppRoute | null {
     return { role: 'staff', staffSection: 'jobs', ...nested };
   }
 
+  if (pathname === '/messenger' || pathname.startsWith('/messenger/')) {
+    const companionRole = searchParams.get('role');
+    const role: AppRole =
+      companionRole === 'guard' || companionRole === 'staff' || companionRole === 'client'
+        ? companionRole
+        : 'client';
+    if (role === 'guard') {
+      return { role, guardTab: 'messages', messengerCompanion: true, ...nested };
+    }
+    if (role === 'staff') {
+      const section = staffSectionFromMessageTab(nested.staffMessageTab ?? null);
+      return { role, staffSection: section, messengerCompanion: true, ...nested, staffMessageTab: undefined };
+    }
+    return { role: 'client', clientView: 'messages', messengerCompanion: true, ...nested };
+  }
+
   if (pathname === '/staff/messages') {
     const section = staffSectionFromMessageTab(nested.staffMessageTab ?? null);
     return { role: 'staff', staffSection: section, ...nested, staffMessageTab: undefined };
@@ -513,6 +531,13 @@ export function buildAppPath(route: AppRoute): string {
   if (route.websiteAccount) {
     const view = isWebsiteAccountView(route.accountView) ? route.accountView : 'home';
     return buildWebsiteAccountPath(view);
+  }
+
+  if (route.messengerCompanion) {
+    const params = buildNestedQuery(route);
+    if (route.role && route.role !== 'client') params.set('role', route.role);
+    const qs = params.toString();
+    return qs ? `/messenger?${qs}` : '/messenger';
   }
 
   let base: string;

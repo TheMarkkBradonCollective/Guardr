@@ -2,31 +2,21 @@
   "id": "https://guardr.co/",
   "name": "Guardr",
   "short_name": "Guardr",
-  "description": "Map-first independent security marketplace. Clients post coverage; licensed guards apply, track shifts, and get paid — all in one platform.",
+  "description": "Account, billing, and the Guardr security marketplace.",
   "start_url": "/",
   "scope": "/",
-  "display": "browser",
-  "orientation": "portrait",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
   "background_color": "#000000",
   "theme_color": "#000000",
   "lang": "en-US",
   "dir": "ltr",
   "categories": ["business", "utilities", "productivity"],
-  "prefer_related_applications": true,
-  "related_applications": [
-    {
-      "platform": "play",
-      "id": "com.signaturesecurity.guardr.client"
-    },
-    {
-      "platform": "play",
-      "id": "com.signaturesecurity.guardr.guard"
-    },
-    {
-      "platform": "play",
-      "id": "com.signaturesecurity.guardr.staff"
-    }
-  ],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "icons": [
     {
       "src": "/icon-192.png",

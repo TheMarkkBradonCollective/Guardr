@@ -5,12 +5,19 @@
  * Clean black/white — matches Base Web app launch screen aesthetic.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { formatAppVersion } from '../lib/appVersion';
 import { Logo } from './Logo';
 
-export function LoadingScreen() {
+export function LoadingScreen({ onRetry }: { onRetry?: () => void }) {
+  const [slow, setSlow] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSlow(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     void (async () => {
@@ -36,14 +43,13 @@ export function LoadingScreen() {
         alignItems: 'center',
         justifyContent: 'center',
         background: 'var(--uber-bg, #ffffff)',
-        gap: '32px',
+        gap: '24px',
         zIndex: 9999,
+        padding: '24px',
       }}
     >
-      {/* Logo */}
       <Logo size={64} className="guardr-loading-logo" />
 
-      {/* Base Web-style spinner ring */}
       <div
         aria-hidden
         style={{
@@ -56,7 +62,40 @@ export function LoadingScreen() {
         }}
       />
 
-      {/* Version — safe-area aware so it never clips on notched phones or APK */}
+      {slow ? (
+        <div style={{ textAlign: 'center', maxWidth: 280 }}>
+          <p
+            style={{
+              margin: '0 0 12px',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: 'var(--uber-text, #000)',
+            }}
+          >
+            This is taking longer than usual.
+          </p>
+          {onRetry ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              style={{
+                appearance: 'none',
+                border: 0,
+                background: 'var(--uber-text, #000)',
+                color: 'var(--uber-bg, #fff)',
+                fontWeight: 700,
+                fontSize: '14px',
+                minHeight: 44,
+                padding: '0 18px',
+                borderRadius: 12,
+              }}
+            >
+              Try again
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       <p
         style={{
           position: 'absolute',

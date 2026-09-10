@@ -7,6 +7,7 @@ import {
   isNotificationUnread,
   sortNotificationsNewestFirst,
 } from '../../lib/notificationInbox';
+import { AppEmptyState } from '../ui/app/AppPrimitives';
 import { useFloatingPanelPosition } from '../../lib/ui/useFloatingPanelPosition';
 
 interface NotificationBellMenuProps {
@@ -82,7 +83,10 @@ export function NotificationBellMenu({
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
         {sorted.length === 0 ? (
-          <p className="px-4 py-8 text-sm text-brand-text-muted text-center">No notifications yet.</p>
+          <AppEmptyState
+            title="No notifications yet"
+            message="Account alerts and updates will show up here."
+          />
         ) : (
           <ul className="divide-y divide-brand-border">
             {sorted.map((n) => {

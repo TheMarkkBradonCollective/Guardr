@@ -9,6 +9,8 @@ import { ProfileAvatar } from '../profile/ProfileAvatar';
 import type { SidebarPrimaryAction } from '../baseui/layout/GuardrDrawerShell';
 import { PRODUCT_APP_ICON_LABELS, type ProductApp } from '../../lib/productApps';
 import { AppInstallBanner } from '../apps/AppInstallBanner';
+import { useMessengerCompanion } from '../messenger/MessengerCompanionContext';
+import { MessengerCompanionBar } from '../messenger/MessengerCompanionBar';
 
 /**
  * A destination a role can reach.
@@ -89,6 +91,7 @@ export function RoleAppShell({
   mobileTabRanks,
 }: RoleAppShellProps) {
   const { surface } = useSurface();
+  const messenger = useMessengerCompanion();
   const isMapMode = variant === 'dark';
   const bleed = fullBleed || isMapMode;
 
@@ -102,23 +105,29 @@ export function RoleAppShell({
         id: item.id,
         label: item.label,
         icon: item.icon,
-        badge: item.badge,
+        badge: item.badge ?? (item.id === 'messages' ? messenger.unreadCount || undefined : undefined),
         section,
         tabletQuick: options.quick,
         mobileRank: mobileTabRanks?.[item.id],
       }));
+
+    if (messenger.active) {
+      return build(messagesNavItems.length ? messagesNavItems : navItems.filter((item) => item.id === 'messages'), 'Messages', {
+        quick: true,
+      });
+    }
 
     return [
       ...build(navItems, productApp === 'guard' ? 'Field' : 'Work', { quick: true }),
       ...build(messagesNavItems, 'Messages'),
       ...build(overflowNavItems, productApp === 'guard' ? 'Account' : 'Manage'),
     ];
-  }, [navItems, messagesNavItems, overflowNavItems, productApp, mobileTabRanks]);
+  }, [navItems, messagesNavItems, overflowNavItems, productApp, mobileTabRanks, messenger.active, messenger.unreadCount]);
 
   return (
     <SurfaceAppShell
-      title={title}
-      workspaceLabel={workspaceLabel ?? PRODUCT_APP_ICON_LABELS[productApp]}
+      title={messenger.active ? 'Messenger' : title}
+      workspaceLabel={messenger.active ? 'Messenger' : workspaceLabel ?? PRODUCT_APP_ICON_LABELS[productApp]}
       destinations={destinations}
       activeId={activeNavId}
       onNavigate={onNavigate}
@@ -144,10 +153,18 @@ export function RoleAppShell({
       pageActions={headerContext}
       primaryAction={sidebarPrimaryAction}
       hideChrome={hideHeader}
-      hidePrimaryNav={hideBottomNav}
+      hidePrimaryNav={hideBottomNav || messenger.active}
       bleed={bleed}
     >
-      <AppInstallBanner productApp={productApp} />
+      {messenger.active && messenger.role ? (
+        <MessengerCompanionBar
+          role={messenger.role}
+          onOpenMainApp={messenger.openMainApp}
+          unreadCount={messenger.unreadCount}
+        />
+      ) : (
+        <AppInstallBanner productApp={productApp} />
+      )}
       {children}
     </SurfaceAppShell>
   );

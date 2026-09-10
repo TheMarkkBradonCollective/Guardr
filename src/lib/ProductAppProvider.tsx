@@ -9,6 +9,7 @@ import {
   resolveProductApp,
   type ProductApp,
 } from './productApps';
+import { applyPwaManifestForLocation } from './pwaManifests';
 
 interface ProductAppContextValue {
   productApp: ProductApp;
@@ -19,6 +20,13 @@ const ProductAppContext = createContext<ProductAppContextValue>({
   productApp: 'website',
   setProductApp: () => {},
 });
+
+function applyChrome(app: ProductApp): void {
+  applyProductAppToDocument(app);
+  if (typeof window !== 'undefined') {
+    applyPwaManifestForLocation(window.location.pathname + window.location.search, app);
+  }
+}
 
 function readCurrentProductApp(): ProductApp {
   if (typeof window === 'undefined') return 'website';
@@ -36,18 +44,19 @@ function readCurrentProductApp(): ProductApp {
 export function ProductAppProvider({ children }: { children: React.ReactNode }) {
   const [productApp, setProductAppState] = useState<ProductApp>(() => {
     const initial = readCurrentProductApp();
-    applyProductAppToDocument(initial);
+    applyChrome(initial);
     return initial;
   });
 
   useEffect(() => {
-    applyProductAppToDocument(productApp);
+    applyChrome(productApp);
   }, [productApp]);
 
   useEffect(() => {
     const sync = () => {
       const next = readCurrentProductApp();
       setProductAppState((current) => (current === next ? current : next));
+      applyChrome(next);
     };
     window.addEventListener('popstate', sync);
     return () => window.removeEventListener('popstate', sync);
@@ -58,7 +67,7 @@ export function ProductAppProvider({ children }: { children: React.ReactNode }) 
       productApp,
       setProductApp: (app) => {
         persistProductApp(app);
-        applyProductAppToDocument(app);
+        applyChrome(app);
         setProductAppState(app);
       },
     }),
@@ -76,6 +85,6 @@ export function syncProductAppFromLocation(): ProductApp {
   const app = productAppFromPath(
     typeof window !== 'undefined' ? window.location.pathname : '/',
   );
-  applyProductAppToDocument(app);
+  applyChrome(app);
   return app;
 }

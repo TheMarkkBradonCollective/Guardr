@@ -46,8 +46,13 @@ function isValidPushSubscriptionPayload(subscription) {
 // api/_push/dedup.ts
 var DEDUP_TTL_MS = 25 * 60 * 60 * 1e3;
 
+// lib/push/channel.ts
+function parsePushAppChannel(value) {
+  return value === "messenger" ? "messenger" : "main";
+}
+
 // api/_push/routing.ts
-function platformRoleToPushRole(role) {
+function platformRoleToPushRole2(role) {
   switch (role) {
     case "guard":
       return "guard";
@@ -167,7 +172,7 @@ async function verifySession(db, credentials) {
   return verifyAccountSession(db, credentials);
 }
 
-// api/_push/subscriptions.ts
+// lib/push/subscriptions.ts
 function subscriptionId(userId, endpoint) {
   let hash = 0;
   for (let i = 0; i < endpoint.length; i += 1) {
@@ -177,21 +182,25 @@ function subscriptionId(userId, endpoint) {
   return `push-${userId}-${Math.abs(hash)}`;
 }
 async function upsertPushSubscription(db, params) {
-  const { error } = await db.from("push_subscriptions").upsert(
-    {
-      id: subscriptionId(params.userId, params.subscription.endpoint),
-      user_id: params.userId,
-      push_role: params.pushRole,
-      endpoint: params.subscription.endpoint,
-      p256dh: params.subscription.keys.p256dh,
-      auth: params.subscription.keys.auth,
-      site_id: params.siteId ?? null,
-      quiet_hours_start: params.quietHoursStart ?? null,
-      quiet_hours_end: params.quietHoursEnd ?? null,
-      updated_at: (/* @__PURE__ */ new Date()).toISOString()
-    },
-    { onConflict: "endpoint" }
-  );
+  const appChannel = parsePushAppChannel(params.appChannel);
+  const row = {
+    id: subscriptionId(params.userId, params.subscription.endpoint),
+    user_id: params.userId,
+    push_role: params.pushRole,
+    endpoint: params.subscription.endpoint,
+    p256dh: params.subscription.keys.p256dh,
+    auth: params.subscription.keys.auth,
+    site_id: params.siteId ?? null,
+    quiet_hours_start: params.quietHoursStart ?? null,
+    quiet_hours_end: params.quietHoursEnd ?? null,
+    app_channel: appChannel,
+    updated_at: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  let { error } = await db.from("push_subscriptions").upsert(row, { onConflict: "endpoint" });
+  if (error && /app_channel/i.test(error.message)) {
+    delete row.app_channel;
+    ({ error } = await db.from("push_subscriptions").upsert(row, { onConflict: "endpoint" }));
+  }
   if (error) {
     if (error.message.includes("push_subscriptions") || error.code === "42P01") {
       throw new Error(
@@ -217,11 +226,12 @@ async function handlePushSubscribe(db, body) {
   }
   await upsertPushSubscription(db, {
     userId: session.userId,
-    pushRole: platformRoleToPushRole(session.platformRole),
+    pushRole: platformRoleToPushRole2(session.platformRole),
     subscription: body.subscription,
     siteId: body.siteId,
     quietHoursStart: body.quietHoursStart,
-    quietHoursEnd: body.quietHoursEnd
+    quietHoursEnd: body.quietHoursEnd,
+    appChannel: body.appChannel
   });
   return { status: 200, body: { ok: true } };
 }

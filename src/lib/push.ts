@@ -271,7 +271,7 @@ export function listenForPushSubscriptionChange(onChanged: () => void): () => vo
 /** Re-sync browser subscription with server after SW rotation (SBN pattern). */
 export async function syncPushSubscriptionWithServer(
   user: SessionUser,
-  options?: { siteId?: string; quietHoursStart?: string; quietHoursEnd?: string }
+  options?: { siteId?: string; quietHoursStart?: string; quietHoursEnd?: string; appChannel?: 'main' | 'messenger' }
 ): Promise<boolean> {
   if (!isPushEnabledLocally()) return false;
 

@@ -128,7 +128,7 @@ async function verifySession(db, credentials) {
   return verifyAccountSession(db, credentials);
 }
 
-// api/_push/subscriptions.ts
+// lib/push/subscriptions.ts
 async function removePushSubscription(db, userId, endpoint) {
   let query = db.from("push_subscriptions").delete().eq("user_id", userId);
   if (endpoint) query = query.eq("endpoint", endpoint);

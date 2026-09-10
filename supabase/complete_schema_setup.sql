@@ -737,9 +737,13 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   site_id TEXT,
   quiet_hours_start TIME,
   quiet_hours_end TIME,
+  app_channel TEXT NOT NULL DEFAULT 'main' CHECK (app_channel IN ('main', 'messenger')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS app_channel TEXT DEFAULT 'main';
+UPDATE push_subscriptions SET app_channel = 'main' WHERE app_channel IS NULL;
 
 -- ── PUSH NOTIFICATION DEDUP (server-side duplicate prevention) ───────────────
 CREATE TABLE IF NOT EXISTS push_notification_dedup (

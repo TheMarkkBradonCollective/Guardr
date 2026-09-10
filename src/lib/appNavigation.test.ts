@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import type { SecurityGuard } from '../types';
 import {
+  buildAppPath,
   buildAuthChoicePath,
   normalizeGuardTabForAccount,
   parseAppRoute,
@@ -321,6 +322,15 @@ describe('unified payments routes', () => {
       staffGuardTab: 'timesheet',
       staffMessageTab: undefined,
     });
+  });
+
+  it('parses the Messenger companion and round-trips the path', () => {
+    const parsed = parseAppRoute('/messenger?st=t1&role=guard');
+    assert.equal(parsed?.messengerCompanion, true);
+    assert.equal(parsed?.role, 'guard');
+    assert.equal(parsed?.guardTab, 'messages');
+    assert.equal(parsed?.supportTicketId, 't1');
+    assert.equal(buildAppPath(parsed!), '/messenger?st=t1&role=guard');
   });
 });
 

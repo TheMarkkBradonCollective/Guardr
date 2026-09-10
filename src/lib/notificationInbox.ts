@@ -1,4 +1,5 @@
 import type { UserNotification } from '../types';
+import { isMessagingNotificationType } from './notificationChannel';
 
 export function isNotificationUnread(notification: UserNotification): boolean {
   return !notification.readAt;
@@ -42,8 +43,19 @@ export function markAllNotificationsRead(
   notifications: UserNotification[],
   now = new Date()
 ): UserNotification[] {
+  return markMatchingNotificationsRead(notifications, () => true, now);
+}
+
+/** Mark only the rows that match — used so Messenger cannot clear Main App alerts. */
+export function markMatchingNotificationsRead(
+  notifications: UserNotification[],
+  match: (notification: UserNotification) => boolean,
+  now = new Date()
+): UserNotification[] {
   const stamp = now.toISOString();
-  return notifications.map((n) => ({ ...n, readAt: n.readAt ?? stamp }));
+  return notifications.map((n) =>
+    match(n) && !n.readAt ? { ...n, readAt: stamp } : n
+  );
 }
 
 export function upsertNotification(
@@ -120,4 +132,29 @@ export function createUserNotification(input: {
     metadata: input.metadata,
     createdAt: now.toISOString(),
   };
+}
+
+/** Main-app inbox: hide conversation alerts when Messenger can take them. */
+export function notificationsForMainApp(
+  notifications: UserNotification[],
+  messengerAvailable: boolean,
+): UserNotification[] {
+  if (!messengerAvailable) return notifications;
+  return notifications.filter((n) => !isMessagingNotificationType(n.type));
+}
+
+/** Messenger inbox: conversation alerts only. */
+export function notificationsForMessenger(notifications: UserNotification[]): UserNotification[] {
+  return notifications.filter((n) => isMessagingNotificationType(n.type));
+}
+
+export function countUnreadForMainApp(
+  notifications: UserNotification[],
+  messengerAvailable: boolean,
+): number {
+  return countUnreadNotifications(notificationsForMainApp(notifications, messengerAvailable));
+}
+
+export function countUnreadForMessenger(notifications: UserNotification[]): number {
+  return countUnreadNotifications(notificationsForMessenger(notifications));
 }

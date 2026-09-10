@@ -7,6 +7,7 @@ import {
   resolveNotificationUrlForRole,
 } from './routing';
 import { removePushSubscription } from './subscriptions';
+import { messengerUrlFromAppUrl, selectSubscriptionsForNotification } from './channel';
 import type { PushNotificationType, PushRole, PushSendPayload } from './types';
 
 const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
@@ -191,6 +192,7 @@ async function deliverToSubscriptions(
     quiet_hours_end?: string | null;
     user_id?: string;
     push_role?: string | null;
+    app_channel?: string | null;
   }>,
   payload: PushSendPayload
 ): Promise<{ sent: number; failed: number }> {
@@ -200,14 +202,14 @@ async function deliverToSubscriptions(
   if (!webPushReady && !fcmReady) return { sent: 0, failed: subscriptions.length };
 
   const prefCache = new Map<string, boolean>();
-  const filtered: typeof subscriptions = [];
+  const prefFiltered: typeof subscriptions = [];
 
   for (const sub of subscriptions) {
     if (payload.excludeUserId && sub.user_id === payload.excludeUserId) {
       continue;
     }
     if (!sub.user_id) {
-      filtered.push(sub);
+      prefFiltered.push(sub);
       continue;
     }
     let enabled = prefCache.get(sub.user_id);
@@ -215,8 +217,10 @@ async function deliverToSubscriptions(
       enabled = await isTypeEnabledForUser(db, sub.user_id, payload.type);
       prefCache.set(sub.user_id, enabled);
     }
-    if (enabled) filtered.push(sub);
+    if (enabled) prefFiltered.push(sub);
   }
+
+  const filtered = selectSubscriptionsForNotification(prefFiltered, payload.type);
 
   if (!filtered.length) return { sent: 0, failed: 0 };
 
@@ -252,12 +256,13 @@ async function deliverToSubscriptions(
       role: platformRole,
     });
 
+    const url = sub.app_channel === 'messenger' ? messengerUrlFromAppUrl(data.url) : data.url;
     const message = {
       title: payload.title,
       body: payload.body,
-      url: data.url,
+      url,
       eventType: payload.type,
-      data,
+      data: { ...data, url },
       tag: payload.siteId ? `${payload.type}-${payload.siteId}` : payload.type,
       priority: data.priority,
     };
@@ -277,6 +282,40 @@ async function deliverToSubscriptions(
   return { sent, failed };
 }
 
+const SUB_SELECT =
+  'endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role, app_channel';
+const SUB_SELECT_LEGACY =
+  'endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role';
+
+function isMissingAppChannelColumn(message: string): boolean {
+  return /app_channel/i.test(message);
+}
+
+type PushSubRow = {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  quiet_hours_start?: string | null;
+  quiet_hours_end?: string | null;
+  user_id?: string;
+  push_role?: string | null;
+  app_channel?: string | null;
+};
+
+async function loadPushSubscriptions(
+  query: PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>,
+  fallback: () => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>,
+): Promise<PushSubRow[]> {
+  const result = await query;
+  if (!result.error) return (result.data ?? []) as PushSubRow[];
+  if (!isMissingAppChannelColumn(result.error.message)) {
+    throw new Error(result.error.message);
+  }
+  const legacy = await fallback();
+  if (legacy.error) throw new Error(legacy.error.message);
+  return ((legacy.data ?? []) as PushSubRow[]).map((row) => ({ ...row, app_channel: null }));
+}
+
 export async function sendNotificationToUser(
   db: SupabaseClient,
   userId: string,
@@ -285,13 +324,11 @@ export async function sendNotificationToUser(
   const enabled = await isTypeEnabledForUser(db, userId, payload.type);
   if (!enabled) return { sent: 0, failed: 0 };
 
-  const { data: subscriptions, error } = await db
-    .from('push_subscriptions')
-    .select('endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role')
-    .eq('user_id', userId);
-
-  if (error) throw new Error(error.message);
-  return deliverToSubscriptions(db, subscriptions ?? [], payload);
+  const rows = await loadPushSubscriptions(
+    db.from('push_subscriptions').select(SUB_SELECT).eq('user_id', userId),
+    () => db.from('push_subscriptions').select(SUB_SELECT_LEGACY).eq('user_id', userId),
+  );
+  return deliverToSubscriptions(db, rows, payload);
 }
 
 export async function sendNotificationToRole(
@@ -301,13 +338,11 @@ export async function sendNotificationToRole(
 ): Promise<{ sent: number; failed: number }> {
   const roles = role === 'dispatch' ? ['dispatch', 'admin'] : [role];
 
-  const { data: subscriptions, error } = await db
-    .from('push_subscriptions')
-    .select('endpoint, p256dh, auth, quiet_hours_start, quiet_hours_end, user_id, push_role')
-    .in('push_role', roles);
-
-  if (error) throw new Error(error.message);
-  return deliverToSubscriptions(db, subscriptions ?? [], payload);
+  const rows = await loadPushSubscriptions(
+    db.from('push_subscriptions').select(SUB_SELECT).in('push_role', roles),
+    () => db.from('push_subscriptions').select(SUB_SELECT_LEGACY).in('push_role', roles),
+  );
+  return deliverToSubscriptions(db, rows, payload);
 }
 
 export async function dispatchPushNotification(

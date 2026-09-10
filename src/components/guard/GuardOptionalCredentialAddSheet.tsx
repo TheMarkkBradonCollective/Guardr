@@ -44,6 +44,7 @@ export function GuardOptionalCredentialAddSheet({
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [customCertName, setCustomCertName] = useState('');
   const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const selectedMeta = selectedSection
     ? sections.find((section) => section.id === selectedSection)
@@ -91,6 +92,7 @@ export function GuardOptionalCredentialAddSheet({
 
   const submitCert = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
     setFormError('');
     if (!onAddCertification || !selectedCatalogId || !issuer.trim() || !number.trim()) return;
     const entry = getCertCatalogEntry(selectedCatalogId);
@@ -109,22 +111,27 @@ export function GuardOptionalCredentialAddSheet({
       return;
     }
 
-    const result = await onAddCertification({
-      catalogId: entry.id,
-      category: entry.category,
-      name: isOther ? customCertName.trim() : entry.name,
-      issuer: issuer.trim(),
-      number: number.trim(),
-      state: entry.requiresState ? state.toUpperCase() : undefined,
-      expiryDate: credentialRequiresExpiry(entry.id) ? expiryDate.trim() : undefined,
-      status: 'pending',
-      imageUrl,
-    });
-    if (result.ok === false) {
-      setFormError(result.error);
-      return;
+    setSaving(true);
+    try {
+      const result = await onAddCertification({
+        catalogId: entry.id,
+        category: entry.category,
+        name: isOther ? customCertName.trim() : entry.name,
+        issuer: issuer.trim(),
+        number: number.trim(),
+        state: entry.requiresState ? state.toUpperCase() : undefined,
+        expiryDate: credentialRequiresExpiry(entry.id) ? expiryDate.trim() : undefined,
+        status: 'pending',
+        imageUrl,
+      });
+      if (result.ok === false) {
+        setFormError(result.error);
+        return;
+      }
+      resetForm();
+    } finally {
+      setSaving(false);
     }
-    resetForm();
   };
 
   const showCatalogSelect =
@@ -246,10 +253,10 @@ export function GuardOptionalCredentialAddSheet({
             </button>
             <button
               type="submit"
-              disabled={!imageUrl?.trim()}
+              disabled={!imageUrl?.trim() || saving}
               className="flex-1 app-button-primary !h-11 !text-sm disabled:opacity-50"
             >
-              Upload credential
+              {saving ? 'Uploading…' : 'Upload credential'}
             </button>
           </div>
         </form>
