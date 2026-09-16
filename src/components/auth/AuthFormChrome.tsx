@@ -38,6 +38,36 @@ export function AuthMobileTopBar({
   );
 }
 
+/** Tablet-only auth chrome: paper bar with 44px targets — not a phone nav, not a desktop header. */
+export function AuthTabletTopBar({
+  onBack,
+  backAriaLabel,
+  trailing,
+}: {
+  onBack: () => void;
+  backAriaLabel: string;
+  trailing?: React.ReactNode;
+}) {
+  return (
+    <header className="sft-auth-nav">
+      <button
+        type="button"
+        className="sft-auth-nav-back"
+        onClick={() => {
+          void triggerHaptic('light');
+          onBack();
+        }}
+        aria-label={backAriaLabel}
+      >
+        <ArrowLeft className="w-5 h-5" aria-hidden />
+        <span>Back</span>
+      </button>
+      <p className="sft-auth-nav-wordmark">Guardr</p>
+      <div className="sft-auth-nav-actions">{trailing}</div>
+    </header>
+  );
+}
+
 export function AuthFormHeader({
   role,
   isSignUp,

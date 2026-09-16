@@ -144,7 +144,7 @@ export function RoleAppShell({
       accountMenu={
         <AccountMenu
           {...accountMenu}
-          triggerVariant={surface === 'desktop' ? 'uber-direct' : 'default'}
+          triggerVariant={surface === 'desktop' ? 'uber-direct' : surface === 'tablet' ? 'tablet' : 'default'}
         />
       }
       navFooter={sidebarFooter}

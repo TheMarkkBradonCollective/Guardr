@@ -48,7 +48,7 @@ export interface AccountMenuProps {
   themeMode?: ThemeMode;
   onChangeTheme?: (mode: ThemeMode) => void;
   /** Guardr Direct desktop — black circle avatar only, no chevron. */
-  triggerVariant?: 'default' | 'uber-direct';
+  triggerVariant?: 'default' | 'uber-direct' | 'tablet';
   /**
    * How the menu is presented. `sheet` renders the panel inline (no trigger,
    * no floating portal) so the mobile shell can host it in a bottom sheet.
@@ -452,19 +452,27 @@ export function AccountMenu({
   ) : null;
 
   const isUberDirectTrigger = triggerVariant === 'uber-direct';
+  const isTabletTrigger = triggerVariant === 'tablet';
 
   return (
     <div className="account-menu relative shrink-0">
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          if (isTabletTrigger) void triggerHaptic('light');
+          setOpen((prev) => !prev);
+        }}
         className={
           isUberDirectTrigger
             ? 'uber-direct-avatar-trigger'
-            : `account-menu-trigger app-header-account-trigger inline-flex items-center gap-1 rounded-full pl-0.5 pr-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-                active ? 'bg-brand-primary/10 ring-1 ring-brand-primary/30' : 'hover:bg-brand-border/20'
-              }`
+            : isTabletTrigger
+              ? `account-menu-trigger account-menu-trigger--tablet sft-icon-btn${
+                  active ? ' account-menu-trigger--active' : ''
+                }`
+              : `account-menu-trigger app-header-account-trigger inline-flex items-center gap-1 rounded-full pl-0.5 pr-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                  active ? 'bg-brand-primary/10 ring-1 ring-brand-primary/30' : 'hover:bg-brand-border/20'
+                }`
         }
         aria-expanded={open}
         aria-haspopup="menu"
@@ -486,7 +494,7 @@ export function AccountMenu({
             </span>
           )}
         </span>
-        {!isUberDirectTrigger ? (
+        {!isUberDirectTrigger && !isTabletTrigger ? (
           <ChevronDown
             className={`w-3.5 h-3.5 text-brand-text-muted transition-transform ${open ? 'rotate-180' : ''}`}
             strokeWidth={2}

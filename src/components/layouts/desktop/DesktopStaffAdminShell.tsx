@@ -155,7 +155,7 @@ export function DesktopStaffAdminShell({
       active={activeSection === 'profile' || activeSection === 'preferences'}
       themeMode={themeMode}
       onChangeTheme={onChangeTheme}
-      triggerVariant={surface === 'desktop' ? 'uber-direct' : 'default'}
+      triggerVariant={surface === 'desktop' ? 'uber-direct' : surface === 'tablet' ? 'tablet' : 'default'}
       {...accountNotifications}
     />
   );

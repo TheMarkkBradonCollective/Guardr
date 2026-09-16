@@ -8,7 +8,7 @@ import type { AuthSignupPick, AuthViewRole } from '../../lib/appNavigation';
 import type { ClientType } from '../../types';
 import { DirectTopHeader } from '../baseui/layout/DirectTopHeader';
 import { AppSubScreenHeader } from '../ui/app/AppPrimitives';
-import { AuthMobileTopBar } from './AuthFormChrome';
+import { AuthMobileTopBar, AuthTabletTopBar } from './AuthFormChrome';
 import { FONT_DISPLAY } from '../../theme/typography';
 import { isMessengerExperience } from '../../lib/platform/appExperience';
 
@@ -348,6 +348,13 @@ export function AuthRoleChoicePage({
       {isMobile ? (
         onBack ? (
           <AuthMobileTopBar
+            onBack={onBack}
+            backAriaLabel={backLabel === 'Back' ? 'Back' : 'Back to Home'}
+          />
+        ) : null
+      ) : factor === 'tablet' ? (
+        onBack ? (
+          <AuthTabletTopBar
             onBack={onBack}
             backAriaLabel={backLabel === 'Back' ? 'Back' : 'Back to Home'}
           />

@@ -6,7 +6,6 @@ import {
   getSignupCityNames,
   getSignupCityNamesForRole,
 } from '../lib/platformCities';
-import { Logo } from './Logo';
 import {
   Shield,
   Mail,
@@ -31,10 +30,10 @@ import {
 } from 'lucide-react';
 import { PersonNameFields } from './profile/PersonNameFields';
 import { ThemeToggle } from './ui/ThemeToggle';
-import { AppErrorBanner, AppSubScreenHeader, formatBackToLabel } from './ui/app/AppPrimitives';
+import { AppErrorBanner, formatBackToLabel } from './ui/app/AppPrimitives';
 import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
-import { AuthFormHeader, AuthMobileTopBar } from './auth/AuthFormChrome';
+import { AuthFormHeader, AuthMobileTopBar, AuthTabletTopBar } from './auth/AuthFormChrome';
 import { StaffSignupNotice } from './auth/StaffSignupNotice';
 import { ClientSignupIntake } from './auth/clientSignup/ClientSignupIntake';
 import type { ReferralPerson } from './auth/clientSignup/types';
@@ -846,9 +845,10 @@ export function AuthPage({
   const [, theme] = useStyletron();
 
   const testimonial = AUTH_TESTIMONIAL[role];
-  const isMobilePageAuth = !isSheet && !isDesktopAuth;
+  const hero = AUTH_HERO_CONTENT[role];
+  const isMobilePageAuth = !isSheet && surface === 'mobile';
   const useRoleChoiceAuthLayout = isMobilePageAuth;
-  const useFocusedAuthHeader = isDesktopAuth || isMobilePageAuth || (isSheet && !isSignUp);
+  const useFocusedAuthHeader = isDesktopAuth || isTabletAuth || isMobilePageAuth || (isSheet && !isSignUp);
   const handleAuthBack = onBackToRoleChoice ?? onBackToHome;
   const authBackLabel = onBackToRoleChoice ? 'role selection' : 'Home';
 
@@ -859,14 +859,14 @@ export function AuthPage({
           value={themeMode}
           onChange={onChangeTheme}
           size="sm"
-          variant={surface === 'mobile' ? 'icon' : 'segmented'}
+          variant={surface === 'desktop' ? 'segmented' : 'icon'}
         />
       ) : null}
       {onOpenGuide ? (
         <button
           type="button"
           onClick={onOpenGuide}
-          className="auth-form-page-guide"
+          className={isTabletAuth ? 'sft-auth-nav-icon' : 'auth-form-page-guide'}
           aria-label="Open guide"
         >
           <BookOpen className="w-4 h-4" />
@@ -895,7 +895,7 @@ export function AuthPage({
 
   const authFormFields = (
     <>
-        <div className={!isDesktopAuth ? 'auth-sheet-fields' : 'space-y-5'}>
+        <div className={isDesktopAuth ? 'space-y-5' : isTabletAuth ? 'sft-auth-fields' : 'auth-sheet-fields'}>
           {errorMsg && <AppErrorBanner>{errorMsg}</AppErrorBanner>}
 
           <form onSubmit={handleAuthSubmit} className={isSheet ? 'space-y-4' : 'space-y-4'}>
@@ -1755,7 +1755,7 @@ export function AuthPage({
         </div>
 
         {onOpenLegal && !isDesktopAuth && !isSignUp && (
-          <div className={isSheet ? 'auth-sheet-legal' : `flex justify-center ${isSheet ? 'mt-6' : 'mt-8'}`}>
+          <div className={isSheet ? 'auth-sheet-legal' : isTabletAuth ? 'sft-auth-legal' : `flex justify-center ${isSheet ? 'mt-6' : 'mt-8'}`}>
             <LegalFooterLinks onOpenLegal={onOpenLegal} />
           </div>
         )}
@@ -1764,7 +1764,7 @@ export function AuthPage({
 
   const authFormBody = (
     <>
-      <div className={!isDesktopAuth ? 'auth-sheet-form' : undefined}>
+      <div className={isDesktopAuth ? undefined : isTabletAuth ? 'sft-auth-form' : 'auth-sheet-form'}>
         {!useRoleChoiceAuthLayout ? authFormHeader : null}
         {authFormFields}
       </div>
@@ -1850,25 +1850,54 @@ export function AuthPage({
           </section>
         </div>
         </>
+      ) : isTabletAuth ? (
+        <div className="sft-auth">
+          <AuthTabletTopBar
+            onBack={handleAuthBack}
+            backAriaLabel={formatBackToLabel(authBackLabel)}
+            trailing={authTopbarActions}
+          />
+          <div className="sft-auth-split">
+            <aside className="sft-auth-editorial">
+              <p className="sft-auth-kicker">{hero.trustLine}</p>
+              <h1 className="sft-auth-headline">{hero.headline}</h1>
+              <p className="sft-auth-sub">{hero.sub}</p>
+              <ul className="sft-auth-features">
+                {hero.features.map((feature) => {
+                  const Icon = feature.icon;
+                  return (
+                    <li key={feature.text} className="sft-auth-feature">
+                      <span className="sft-auth-feature-icon" aria-hidden>
+                        <Icon size={18} strokeWidth={2} />
+                      </span>
+                      <span>{feature.text}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <blockquote className="sft-auth-quote">
+                <p className="sft-auth-quote-text">&ldquo;{testimonial.quote}&rdquo;</p>
+                <footer className="sft-auth-quote-author">
+                  {testimonial.author}
+                  <span className="sft-auth-quote-role"> · {testimonial.role}</span>
+                </footer>
+              </blockquote>
+            </aside>
+            <section
+              className={`sft-auth-form-panel${isSignUp ? ' sft-auth-form-panel--wide' : ''}`}
+              aria-label={isSignUp ? 'Create account' : 'Sign in'}
+            >
+              <div className="sft-auth-form-card animate-fade-in">{authFormBody}</div>
+            </section>
+          </div>
+        </div>
       ) : (
         <div className="auth-role-choice-page auth-form-page">
-          {surface === 'mobile' ? (
-            <AuthMobileTopBar
-              onBack={handleAuthBack}
-              backAriaLabel={formatBackToLabel(authBackLabel)}
-              trailing={authTopbarActions}
-            />
-          ) : (
-            <>
-              <DirectTopHeader onBrandClick={onBackToHome} trailing={authTopbarActions} />
-              <AppSubScreenHeader
-                title=""
-                hideTitle
-                onBack={handleAuthBack}
-                backLabel={authBackLabel}
-              />
-            </>
-          )}
+          <AuthMobileTopBar
+            onBack={handleAuthBack}
+            backAriaLabel={formatBackToLabel(authBackLabel)}
+            trailing={authTopbarActions}
+          />
           <main className="auth-role-choice-main">
             <section
               className="auth-role-choice-hero auth-form-page-hero"

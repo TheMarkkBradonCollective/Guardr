@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { AppOverlaySheet } from '../motion/AppMotion';
-import { prefersMobileGestureUi, useDevice } from '../../../lib/platform';
+import { useSurfaceKind } from '../../../surfaces';
 
 interface AppFormSheetProps {
   open: boolean;
@@ -21,8 +21,8 @@ export function AppFormSheet({
   children,
   ariaLabel,
 }: AppFormSheetProps) {
-  const { viewSurface } = useDevice();
-  const gestureUi = prefersMobileGestureUi(viewSurface);
+  const surface = useSurfaceKind();
+  const showHandle = surface === 'mobile';
 
   return (
     <AppOverlaySheet
@@ -32,7 +32,7 @@ export function AppFormSheet({
       panelClassName="app-form-sheet-panel"
     >
       <div className="app-form-sheet-shell">
-        {gestureUi ? <div className="app-form-sheet-handle" aria-hidden /> : null}
+        {showHandle ? <div className="app-form-sheet-handle" aria-hidden /> : null}
 
         <header className="app-form-sheet-header">
           <div className="min-w-0 flex-1">
