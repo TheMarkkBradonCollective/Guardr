@@ -109,16 +109,21 @@ export const VIEWPORT_SWEEP_PATHS = {
   public: ['/'],
   staff: [
     '/staff/overview',
+    '/staff/map',
     '/staff/jobs',
     '/staff/applications',
+    '/staff/credentials',
+    '/staff/clients',
+    '/staff/management',
+    '/staff/guards',
     '/staff/violations',
     '/staff/disputes',
     '/staff/incidents',
     '/staff/payments',
     '/staff/team',
   ],
-  client: ['/client/home', '/client/jobs', '/client/payments'],
-  guard: ['/guard/map', '/guard/activation', '/guard/my-jobs', '/guard/payments'],
+  client: ['/client/home', '/client/map', '/client/jobs', '/client/payments'],
+  guard: ['/guard/map', '/guard/activation', '/guard/my-jobs', '/guard/payments', '/guard/messages'],
 };
 
 export async function checkLayout(page, label, findings) {
@@ -304,7 +309,7 @@ export async function login(page, role, email, password) {
   await dismissOverlays(page);
   const body = await page.locator('body').innerText();
   const stillOnSignIn =
-    /staff sign in|guard sign in|client sign in|enter your email and password/i.test(body) &&
+    /staff sign in|guard sign in|client sign in|customer sign in|enter your email and password/i.test(body) &&
     (await page.locator('input[type="email"]').count()) > 0;
   const failed =
     stillOnSignIn ||

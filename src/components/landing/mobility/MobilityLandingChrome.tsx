@@ -26,6 +26,7 @@ export function MobilityLandingNav({
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = formFactor === 'mobile';
   const isTablet = formFactor === 'tablet';
+  const useCompactNav = isMobile || isTablet;
 
   const navLinks = [
     { label: 'For clients',  onClick: () => onNavigateToAuth('client', 'sign-up') },
@@ -79,7 +80,7 @@ export function MobilityLandingNav({
             </Block>
           </Block>
 
-          {!isMobile ? (
+          {!useCompactNav ? (
             <Block as="nav" display="flex" alignItems="center" gridGap={isTablet ? 'scale400' : 'scale500'} aria-label="Main">
               {navLinks.map((link) => (
                 <button key={link.label} type="button" className="uber-landing-nav-link" onClick={link.onClick}>
@@ -119,7 +120,7 @@ export function MobilityLandingNav({
           <button type="button" className="uber-landing-signup-pill" onClick={() => onNavigateToAuth(undefined, 'sign-up')}>
             Sign up
           </button>
-          {isMobile ? (
+          {useCompactNav ? (
             <button
               type="button"
               className="uber-landing-menu-btn"
@@ -137,7 +138,7 @@ export function MobilityLandingNav({
       </Block>
 
       {/* Mobile menu */}
-      {isMobile && menuOpen ? (
+      {useCompactNav && menuOpen ? (
         <Block
           as="nav"
           aria-label="Mobile menu"

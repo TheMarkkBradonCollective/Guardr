@@ -985,6 +985,24 @@ body.sf-tablet .staff-compensation-tablet-payouts[data-full-width='true'] {
   grid-column: 1 / -1;
 }
 
+body.sf-tablet .staff-list-filter-tabs.app-inbox-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  max-width: 100%;
+}
+
+body.sf-tablet .staff-list-filter-tabs.app-inbox-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+body.sf-tablet .staff-list-filter-tabs .app-inbox-tab {
+  flex: 0 0 auto;
+}
+
 body.sf-tablet .staff-permissions-tablet-body {
   display: flex;
   flex-direction: column;

@@ -61,6 +61,28 @@ Do not proceed to release steps with open PRs that should ship in this release.
 4. Wire missing Supabase realtime subscriptions
 5. Bundle or update push handlers if needed
 
+### 4b — Viewport audit (mobile, tablet, desktop)
+
+Run a full layout pass on **all three surfaces** before shipping. Guardr is three independent apps (not one responsive layout) — audit each explicitly.
+
+```bash
+npm run viewport:audit
+```
+
+**What it checks (per role × viewport):**
+- Every staff section, guard path, client path, and public page loads
+- Horizontal overflow and vertical scroll work
+- Primary buttons are not clipped off-screen
+- Sign-in works for demo accounts on each surface
+
+**Viewports:** mobile 390×844, tablet 768×1024, desktop 1440×900
+
+**Demo accounts** (`supabase/investor_demo_accounts.sql`): `tests@test.com`, `testc@test.com`, `testg@test.com` — password `#Qwerty12345`
+
+**Report:** `/opt/cursor/artifacts/viewport-audit/viewport-audit-report.md`
+
+Fix any layout/button findings before merge. For deeper flows (signup, payments, shift), also run `npm run fieldtest`.
+
 ## Phase 5 — Docs, activity cloud, deploy
 
 This phase is **mandatory on every `/update`**, including when the product change feels "docs-only" or the version bump is the headline. Skipping it leaves Staff → Dev notes stale and the activity heatmap blank for the release day.
@@ -121,6 +143,7 @@ After merging what belongs on `main`:
 - SQL to run in Supabase (if any)
 - APK download link and AAB artifact path
 - Auth, notification, and sync verification results
+- Viewport audit: `npm run viewport:audit` — findings count and fixes applied
 - Docs: Last updated date, Guide sections filled, Dev notes Time table (activity cloud), manuals/PDF if regenerated
 - What to do next
 
