@@ -178,7 +178,7 @@ export function DesktopStaffAdminShell({
           src={currentUser.avatar}
           name={currentUser.name}
           size="sm"
-          className="sfm-shell-avatar"
+          className={surface === 'desktop' ? 'sfd-topbar-avatar' : 'sfm-shell-avatar'}
         />
       }
       accountMenu={accountMenu}
