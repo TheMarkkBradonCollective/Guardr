@@ -705,7 +705,7 @@ export function StaffTeamDetailPanel({
               >
                 {managerOptions.map((manager) => (
                   <option key={manager.id} value={manager.id}>
-                    {manager.badgeNumber || manager.name}
+                    {getStaffDisplayName(manager)}
                   </option>
                 ))}
               </select>

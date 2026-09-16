@@ -9,6 +9,7 @@ import { getAssignableCityNamesForStaffAccess } from '../../lib/platformCities';
 import { isExecutiveStaffRole, staffRequiresCityAssignment } from '../../lib/staffCityAccess';
 import { StaffOperationsAccessPicker } from './StaffOperationsAccessPicker';
 import { canAssignStaffSideRole } from '../../lib/permissions';
+import { getStaffDisplayName } from '../../lib/staffProfile';
 
 import {
   nextFinanceDeskBadgeNumber,
@@ -379,7 +380,7 @@ export function StaffAddStaffForm({
               >
                 {managerOptions.map((manager) => (
                   <option key={manager.id} value={manager.id}>
-                    {manager.badgeNumber || manager.name}
+                    {getStaffDisplayName(manager)}
                   </option>
                 ))}
               </select>

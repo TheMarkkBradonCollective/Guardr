@@ -64,7 +64,7 @@ export function CityManagerPicker({
           <option value="">No city manager assigned</option>
           {managerOptions.map((manager) => (
             <option key={manager.id} value={manager.id}>
-              {manager.badgeNumber || getStaffDisplayName(manager as SecurityGuard)}
+              {getStaffDisplayName(manager as SecurityGuard)}
             </option>
           ))}
         </select>

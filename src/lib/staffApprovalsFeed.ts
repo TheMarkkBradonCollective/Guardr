@@ -29,6 +29,7 @@ import {
 import { getClientAccountStatus, isClientAccountPending, isGuardAccountApproved, isGuardAccountPending, getGuardUserStatus } from './accountStatus';
 import { staffHasApplicationIntake } from './staffAccountActivation';
 import { isManagementStaffMember } from './permissions';
+import { getStaffDisplayName } from './staffProfile';
 import { guardActivationSummaryLabel } from './guardAccountActivation';
 import { isGuardCredentialExpiryRestricted } from './guardCredentialExpiryEnforcement';
 import {
@@ -602,7 +603,7 @@ function staffAccountItems(guards: SecurityGuard[], auditLog: AuditLogEntry[]): 
       return {
         id: member.id,
         queue: 'staff-accounts',
-        title: member.badgeNumber || member.name,
+        title: getStaffDisplayName(member),
         subtitle: `${member.staffRole ?? 'Staff'} · ${member.email}`,
         status,
         statusLabel: pending

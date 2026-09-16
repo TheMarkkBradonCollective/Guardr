@@ -89,6 +89,26 @@ describe('buildApplicationFeed', () => {
     assert.equal(item?.status, 'approved');
     assert.equal(item?.statusLabel, APPLICATION_FEED_STATUS_LABELS.approved);
     assert.equal(item?.queue, 'applications');
+    assert.equal(item?.title, 'Jordan Ops');
+  });
+
+  it('lists staff applications by person name, not staff ID', () => {
+    const staffMember = {
+      id: 's-named',
+      name: 'ADM-00001',
+      firstName: 'Riley',
+      lastName: 'Brown',
+      email: 'r.brown@guardr.test',
+      badgeNumber: 'ADM-00001',
+      isStaff: true,
+      staffRole: 'Administrator',
+      userStatus: 'pending',
+      certifications: [],
+    } as SecurityGuard;
+    const feed = buildApplicationFeed([staffMember], []);
+    const item = feed.find((entry) => entry.id === 's-named');
+    assert.equal(item?.title, 'Riley Brown');
+    assert.equal(item?.title.includes('ADM-00001'), false);
   });
 
   it('omits blank management staff applications from the feed', () => {

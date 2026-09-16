@@ -14,6 +14,7 @@ import {
   confirmApproveStaffAccount,
   confirmRejectStaffAccount,
 } from '../../lib/importantActionConfirm';
+import { getStaffDisplayName } from '../../lib/staffProfile';
 import { User } from 'lucide-react';
 
 interface StaffStaffApplicationReviewPanelProps {
@@ -36,7 +37,7 @@ export function StaffStaffApplicationReviewPanel({
   const [actionPending, setActionPending] = useState(false);
   const accountStatus = getGuardUserStatus(member);
   const isPending = accountStatus === 'pending';
-  const displayName = member.name || member.badgeNumber;
+  const displayName = getStaffDisplayName(member);
   const staffRole = member.staffRole || 'Support';
   const statusTone =
     isPending
