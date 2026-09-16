@@ -115,4 +115,31 @@ describe('Staff launcher chrome', () => {
     assert.equal(hasNear(data, 0, 0, 0), true, 'black field and shield');
     assert.equal(hasNear(data, 255, 255, 255), true, 'white bubble');
   });
+
+  it('keeps the comment box inside a circular launcher crop', async () => {
+    const iconMaster = await prepareIconMaster();
+    const size = 96;
+    const png = await renderBrandedIcon(iconMaster, size, { productApp: 'messenger' });
+    const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const at = (x, y) => {
+      const i = (y * info.width + x) * 4;
+      return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+    };
+    const isWhite = ([r, g, b, a]) => a > 200 && r > 230 && g > 230 && b > 230;
+    for (const [x, y] of [
+      [1, 1],
+      [size - 2, 1],
+      [1, size - 2],
+      [size - 2, size - 2],
+    ]) {
+      assert.equal(isWhite(at(x, y)), false, `corner ${x},${y} must stay the black field`);
+    }
+    const cx = (size - 1) / 2;
+    const rim = size / 2 - 2;
+    for (const angle of [Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4, (7 * Math.PI) / 4]) {
+      const x = Math.round(cx + rim * Math.cos(angle));
+      const y = Math.round(cx + rim * Math.sin(angle));
+      assert.equal(isWhite(at(x, y)), false, `circle rim ${x},${y} must not clip the bubble`);
+    }
+  });
 });
