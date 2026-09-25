@@ -321,6 +321,7 @@ import { isInactiveGuardSession } from './lib/guardActivationSync';
 import { holdJobPayment, releasePayout, refundPayment, createTipCheckoutSession } from './lib/stripeApi';
 import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, loadTheme, normalizeThemeMode, saveTheme } from './lib/platform/theme';
 import { isAppExperience, isMessengerExperience } from './lib/platform/appExperience';
+import { shouldUseSiteMessageApiFallback } from './lib/platform/nativeSiteIndependence';
 import { ProfileSavePayload, UserProfileScreen } from './components/profile/UserProfileScreen';
 import { UserSettingsScreen } from './components/profile/UserSettingsScreen';
 import { personNameFromPayload, resolvePersonNameParts } from './lib/personName';
@@ -3483,11 +3484,13 @@ export default function App() {
       }
     }
 
-    try {
-      const remote = await fetchGuardMessagesFromApi(currentUser);
-      applyRemote(remote);
-    } catch (err) {
-      console.warn('Guard messages API refresh:', err);
+    if (shouldUseSiteMessageApiFallback(isDbConnected)) {
+      try {
+        const remote = await fetchGuardMessagesFromApi(currentUser);
+        applyRemote(remote);
+      } catch (err) {
+        console.warn('Guard messages API refresh:', err);
+      }
     }
   }, [currentUser, isDbConnected]);
 
@@ -3527,11 +3530,13 @@ export default function App() {
       }
     }
 
-    try {
-      const remote = await fetchClientMessagesFromApi(currentUser);
-      applyRemote(remote);
-    } catch (err) {
-      console.warn('Client messages API refresh:', err);
+    if (shouldUseSiteMessageApiFallback(isDbConnected)) {
+      try {
+        const remote = await fetchClientMessagesFromApi(currentUser);
+        applyRemote(remote);
+      } catch (err) {
+        console.warn('Client messages API refresh:', err);
+      }
     }
   }, [currentUser, isDbConnected]);
 
@@ -3571,11 +3576,13 @@ export default function App() {
       }
     }
 
-    try {
-      const remote = await fetchStaffMessagesFromApi(currentUser);
-      applyRemote(remote);
-    } catch (err) {
-      console.warn('Staff messages API refresh:', err);
+    if (shouldUseSiteMessageApiFallback(isDbConnected)) {
+      try {
+        const remote = await fetchStaffMessagesFromApi(currentUser);
+        applyRemote(remote);
+      } catch (err) {
+        console.warn('Staff messages API refresh:', err);
+      }
     }
   }, [currentUser, isDbConnected]);
 
@@ -8518,7 +8525,7 @@ export default function App() {
           }
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Could not link shared job location.';
+        const message = userFacingError(err, 'Could not link shared job location.');
         appToast(message, 'error');
         return;
       }
@@ -9804,7 +9811,7 @@ export default function App() {
           }
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Could not add job location.';
+        const message = userFacingError(err, 'Could not add job location.');
         appToast(message, 'error');
         return;
       }
@@ -12593,7 +12600,7 @@ export default function App() {
         );
       }
     } catch (e: unknown) {
-      appToast(e instanceof Error ? e.message : 'Payout failed', 'error');
+      appToast(userFacingError(e, 'Payout failed'), 'error');
     }
   };
 
@@ -12661,7 +12668,7 @@ export default function App() {
         notifyStaffAttention(currentUser, `Refund processed for "${req.title}".`, { requestId });
       }
     } catch (e: unknown) {
-      appToast(e instanceof Error ? e.message : 'Refund failed', 'error');
+      appToast(userFacingError(e, 'Refund failed'), 'error');
     }
   };
 
@@ -12965,7 +12972,12 @@ export default function App() {
         console.warn('Staff message DB sync:', e);
       }
     }
-    if (!persisted && currentUser && isStaffRole(currentUser.role)) {
+    if (
+      !persisted &&
+      shouldUseSiteMessageApiFallback(isDbConnected) &&
+      currentUser &&
+      isStaffRole(currentUser.role)
+    ) {
       try {
         await postStaffMessageToApi(currentUser, message);
       } catch (e) {
@@ -13000,7 +13012,12 @@ export default function App() {
         console.warn('Guard message DB sync:', e);
       }
     }
-    if (!persisted && currentUser && canPostToGuardChat(currentUser, guardRecordForUser(currentUser))) {
+    if (
+      !persisted &&
+      shouldUseSiteMessageApiFallback(isDbConnected) &&
+      currentUser &&
+      canPostToGuardChat(currentUser, guardRecordForUser(currentUser))
+    ) {
       try {
         await postGuardMessageToApi(currentUser, message);
       } catch (e) {
@@ -13048,7 +13065,12 @@ export default function App() {
         console.warn('Client message DB sync:', e);
       }
     }
-    if (!persisted && currentUser && canPostToClientChat(currentUser, clientRecordForUser(currentUser))) {
+    if (
+      !persisted &&
+      shouldUseSiteMessageApiFallback(isDbConnected) &&
+      currentUser &&
+      canPostToClientChat(currentUser, clientRecordForUser(currentUser))
+    ) {
       try {
         await postClientMessageToApi(currentUser, message);
       } catch (e) {

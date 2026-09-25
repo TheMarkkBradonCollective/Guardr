@@ -49,6 +49,7 @@ import { StaffListFilterTabs } from './StaffListFilterTabs';
 import { StaffTimesheetsPanel } from './StaffTimesheetsPanel';
 import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
 import { StaffAccountAccessSection } from './StaffAccountAccessSection';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffTeamDetailPanelProps {
   member: SecurityGuard;
@@ -248,7 +249,7 @@ export function StaffTeamDetailPanel({
       setProfileMsg('Profile updated.');
       setEditingProfile(false);
     } catch (err) {
-      setProfileError(err instanceof Error ? err.message : 'Could not update profile.');
+      setProfileError(userFacingError(err, 'Could not update profile.'));
     } finally {
       setProfileSaving(false);
     }
@@ -266,7 +267,7 @@ export function StaffTeamDetailPanel({
       });
       setCityMsg('Service Areas access updated.');
     } catch (err) {
-      setCityError(err instanceof Error ? err.message : 'Could not update Service Areas access.');
+      setCityError(userFacingError(err, 'Could not update Service Areas access.'));
     } finally {
       setSavingCities(false);
     }
@@ -301,7 +302,7 @@ export function StaffTeamDetailPanel({
           : `Role updated to ${roleLabel}.`
       );
     } catch (err) {
-      setRoleError(err instanceof Error ? err.message : 'Could not update role.');
+      setRoleError(userFacingError(err, 'Could not update role.'));
     } finally {
       setSavingRole(false);
     }
@@ -328,7 +329,7 @@ export function StaffTeamDetailPanel({
     try {
       await onApproveStaffAccount(member.id);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not approve staff account.', {
+      showAppToast(userFacingError(err, 'Could not approve staff account.'), {
         tone: 'error',
       });
     } finally {
@@ -343,7 +344,7 @@ export function StaffTeamDetailPanel({
     try {
       await onRejectStaffAccount(member.id);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not reject staff account.', {
+      showAppToast(userFacingError(err, 'Could not reject staff account.'), {
         tone: 'error',
       });
     } finally {

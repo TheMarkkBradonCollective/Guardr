@@ -16,6 +16,7 @@ import { DocumentPhotoUploadField } from '../credentials/DocumentPhotoUploadFiel
 import { AppFormSection } from '../ui/app/AppPrimitives';
 import { AppSwitch } from '../ui/AppSwitch';
 import { showAppToast } from '../ui/AppToast';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffCompanyPlacardPanelProps {
   currentUser: SessionUser;
@@ -180,7 +181,7 @@ export function StaffCompanyPlacardPanel({
                       showAppToast('Company credential saved.', { tone: 'success' });
                     } catch (err) {
                       showAppToast(
-                        err instanceof Error ? err.message : 'Could not save credential.',
+                        userFacingError(err, 'Could not save credential.'),
                         { tone: 'error' }
                       );
                     } finally {

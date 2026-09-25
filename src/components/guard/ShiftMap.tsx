@@ -7,7 +7,12 @@ import { jobCoords, METRO_CENTER } from '../../lib/geo';
 import type { GeoCoords } from '../../lib/geo';
 import { hasJobCoordinates } from '../../lib/jobLocation';
 import { useUserLocation } from '../../lib/useUserLocation';
-import { mapTileUrl, mapUserLocationColors } from '../../lib/mapTiles';
+import {
+  MAP_TILE_ATTRIBUTION,
+  MAP_TILE_MAX_ZOOM,
+  mapTileUrl,
+  mapUserLocationColors,
+} from '../../lib/mapTiles';
 import { useThemeMode } from '../../lib/platform/useThemeMode';
 import { MapRouteLayer } from '../map/MapRouteLayer';
 import { MapUserInteractionTracker } from '../map/MapUserInteractionTracker';
@@ -339,7 +344,12 @@ export function ShiftMap({
           recenterRef={recenterRef}
           suppressPinFlyTo={drawRoute && !!routeFrom && !!selectedPin}
         />
-        <TileLayer key={themeMode} url={mapTileUrl(themeMode)} />
+        <TileLayer
+          key={themeMode}
+          url={mapTileUrl(themeMode)}
+          attribution={MAP_TILE_ATTRIBUTION}
+          maxZoom={MAP_TILE_MAX_ZOOM}
+        />
 
         {userLocation && (
           <>

@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { ChevronRight, FileImage, ImagePlus, Loader2 } from 'lucide-react';
 import { processDocumentPhotoFile } from '../../lib/documentPhoto';
+import { userFacingError } from '../../lib/userFacingError';
 
 export function CertPhotoRow({
   label,
@@ -26,7 +27,7 @@ export function CertPhotoRow({
       const dataUrl = await processDocumentPhotoFile(file);
       onSelect(dataUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not process image.');
+      setError(userFacingError(err, 'Could not process image.'));
     } finally {
       setLoading(false);
     }

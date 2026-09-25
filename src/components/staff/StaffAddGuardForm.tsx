@@ -6,6 +6,7 @@ import { personNameFromPayload } from '../../lib/personName';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
 import { GUARD_ICN_LABEL } from '../../lib/guardContractorNumber';
+import { userFacingError } from '../../lib/userFacingError';
 
 export interface StaffAddGuardInput {
   firstName: string;
@@ -84,7 +85,7 @@ export function StaffAddGuardForm({
       if (guardId) onCreated?.(guardId);
       setOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add guard.');
+      setError(userFacingError(err, 'Could not add guard.'));
     } finally {
       setSaving(false);
     }

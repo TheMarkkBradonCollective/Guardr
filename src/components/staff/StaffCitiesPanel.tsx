@@ -44,6 +44,7 @@ import {
   staffCityCapSnapshot,
   type StaffMarketplaceCapConfig,
 } from '../../lib/staffMarketplaceCap';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffCitiesPanelProps {
   currentUser: SessionUser;
@@ -370,7 +371,7 @@ export function StaffCitiesPanel({
     try {
       await onUpdateCity(city.id, patch);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update city.');
+      setError(userFacingError(err, 'Could not update city.'));
     } finally {
       setSavingId(null);
     }

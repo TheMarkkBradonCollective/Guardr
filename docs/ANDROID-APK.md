@@ -25,6 +25,20 @@ The install page lists **Guard, Customer, and Staff** APKs plus Messenger. There
 
 Share the install page with the Signature Security network.
 
+## Runtime: website vs APK
+
+The APK **UI is bundled** — opening the app does not load HTML/JS from guardr.co.
+
+| Need | guardr.co down, Supabase up |
+|------|-----------------------------|
+| Sign-in, jobs, roster, chat (group channels) | Works (Supabase direct) |
+| Push **registration** (FCM token saved) | Works (writes `push_subscriptions` in Supabase) |
+| Map basemap | Works (Esri public tiles, not the site) |
+| APK version / sideload update check | Works (falls back to baked version + GitHub Release URLs) |
+| Push **delivery** to other people, Stripe checkout, Connect | Needs `VITE_API_BASE_URL` / www.guardr.co `/api/*` |
+
+Optional env: `VITE_API_BASE_URL` if the API host is split from the marketing site later.
+
 ## Build locally
 
 ### Prerequisites

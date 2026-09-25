@@ -60,6 +60,7 @@ import {
   WorkbenchEmpty,
   WorkbenchSplit,
 } from '../baseui/layout/WorkbenchLayout';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffCredentialsProps {
   guards: SecurityGuard[];
@@ -287,7 +288,7 @@ export function StaffCredentials({
       try {
         await onRequestCertUpdate(guard.id, cert.id, note);
       } catch (err) {
-        showAppToast(err instanceof Error ? err.message : 'Could not request credential update.', {
+        showAppToast(userFacingError(err, 'Could not request credential update.'), {
           tone: 'error',
         });
       }
@@ -322,7 +323,7 @@ export function StaffCredentials({
                   try {
                     await onApproveCert(guard.id, cert.id);
                   } catch (err) {
-                    showAppToast(err instanceof Error ? err.message : 'Could not verify credential update.', {
+                    showAppToast(userFacingError(err, 'Could not verify credential update.'), {
                       tone: 'error',
                     });
                   }
@@ -374,7 +375,7 @@ export function StaffCredentials({
                   try {
                     await onApproveCert(guard.id, cert.id);
                   } catch (err) {
-                    showAppToast(err instanceof Error ? err.message : 'Could not verify credential.', {
+                    showAppToast(userFacingError(err, 'Could not verify credential.'), {
                       tone: 'error',
                     });
                   }
@@ -482,7 +483,7 @@ export function StaffCredentials({
             try {
               await onRequestCoiUpdate(guard.id, note);
             } catch (err) {
-              showAppToast(err instanceof Error ? err.message : 'Could not request COI update.', {
+              showAppToast(userFacingError(err, 'Could not request COI update.'), {
                 tone: 'error',
               });
             }

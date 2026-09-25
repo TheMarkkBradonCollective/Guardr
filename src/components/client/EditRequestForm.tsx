@@ -16,6 +16,7 @@ import { JobOperationalDetails } from '../../types';
 import { Loader2 } from 'lucide-react';
 import { useClientCapabilities } from './ClientCapabilitiesContext';
 import { clampClientGuardsNeeded } from '../../lib/clientCapabilities';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface EditRequestFormProps {
   request: SecurityRequest;
@@ -157,7 +158,7 @@ export function EditRequestForm({
       onCancel();
     } catch (err) {
       console.error('Failed to save job edit:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save changes. Please try again.');
+      setError(userFacingError(err, 'Failed to save changes. Please try again.'));
     } finally {
       setSaving(false);
     }

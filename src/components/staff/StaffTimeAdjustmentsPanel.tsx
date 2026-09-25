@@ -18,6 +18,7 @@ import {
   persistStaffTimeEntries,
 } from '../../lib/staffTimeTrackingStorage';
 import { GuardrButton } from '../baseui/GuardrButton';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffTimeAdjustmentsPanelProps {
   currentUser: SessionUser;
@@ -166,7 +167,7 @@ export function StaffTimeAdjustmentsPanel({
       notifyStaffTimeEntriesChanged();
       cancelEdit();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save time entry.');
+      setError(userFacingError(err, 'Could not save time entry.'));
     } finally {
       setBusy(false);
     }

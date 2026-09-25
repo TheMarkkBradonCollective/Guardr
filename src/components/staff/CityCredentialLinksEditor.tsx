@@ -14,6 +14,7 @@ import {
   type CredentialLinkKey,
   type CredentialResourceLink,
 } from '../../lib/cityCredentialLinks';
+import { userFacingError } from '../../lib/userFacingError';
 
 function linkKeyLabel(key: CredentialLinkKey): string {
   if ((CREDENTIAL_ACTIVATION_LINK_KEYS as string[]).includes(key)) {
@@ -169,7 +170,7 @@ export function CityCredentialLinksEditor({
     try {
       await onSave(toSave);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save credential links.');
+      setError(userFacingError(err, 'Could not save credential links.'));
     } finally {
       setSaving(false);
     }
@@ -183,7 +184,7 @@ export function CityCredentialLinksEditor({
     try {
       await onSave(undefined);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not clear credential links.');
+      setError(userFacingError(err, 'Could not clear credential links.'));
     } finally {
       setSaving(false);
     }

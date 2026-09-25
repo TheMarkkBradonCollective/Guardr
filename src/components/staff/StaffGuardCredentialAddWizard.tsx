@@ -19,6 +19,7 @@ import { CredentialStatusBadges } from '../guard/CredentialStatusBadge';
 import { ProfileAvatar } from '../profile/ProfileAvatar';
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { showAppToast } from '../ui/AppToast';
+import { userFacingError } from '../../lib/userFacingError';
 
 type WizardStep = 'type' | 'details' | 'upload' | 'preview';
 
@@ -318,7 +319,7 @@ function StaffGuardCredentialAddWizardFlow({
       onAdded?.();
       handleClose();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Could not add credential.');
+      setFormError(userFacingError(err, 'Could not add credential.'));
     } finally {
       setSaving(false);
     }

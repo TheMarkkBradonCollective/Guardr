@@ -45,6 +45,7 @@ import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 import { normalizeClientType } from '../../lib/clientType';
 import { ClientAuthorizedContactsSection } from '../client/ClientAuthorizedContactsSection';
 import { ClientCredentialsSection } from '../client/ClientCredentialsSection';
+import { userFacingError } from '../../lib/userFacingError';
 
 export interface ProfileSavePayload extends Partial<GuardResumeSavePayload> {
   name: string;
@@ -267,7 +268,7 @@ export function UserProfileScreen({
       setAvatar(dataUrl);
       await onSave(buildPayload(dataUrl));
     } catch (err) {
-      setPhotoError(err instanceof Error ? err.message : 'Could not upload photo.');
+      setPhotoError(userFacingError(err, 'Could not upload photo.'));
     } finally {
       setPhotoSaving(false);
     }

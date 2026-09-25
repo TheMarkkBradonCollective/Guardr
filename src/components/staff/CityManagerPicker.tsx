@@ -3,6 +3,7 @@ import type { SecurityGuard } from '../../types';
 import { getStaffDisplayName } from '../../lib/staffProfile';
 import { managerStaffForCityAssignment } from '../../lib/staffCityAccess';
 import type { PlatformCity } from '../../lib/platformCities';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface CityManagerPickerProps {
   city: PlatformCity;
@@ -37,7 +38,7 @@ export function CityManagerPicker({
     try {
       await onAssignCityManager(city.id, normalized || null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update city manager.');
+      setError(userFacingError(err, 'Could not update city manager.'));
     } finally {
       setSaving(false);
     }

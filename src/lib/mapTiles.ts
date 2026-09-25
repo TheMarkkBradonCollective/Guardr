@@ -1,15 +1,27 @@
 import type { PathOptions } from 'leaflet';
 import { ThemeMode } from './platform/theme';
 
-/** Carto basemap tiles matched to Guardr theme modes */
-export function mapTileUrl(theme: ThemeMode): string {
-  switch (theme) {
-    case 'dark':
-      return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-    case 'light':
-    default:
-      return 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-  }
+/**
+ * Public Esri World Street Map tiles — no API key.
+ *
+ * CARTO raster basemaps (`basemaps.cartocdn.com`) now stamp every unauthenticated
+ * request with an "API KEY REQUIRED" watermark. Esri's public tiled services do
+ * not. Dark vs light is applied in CSS on `.leaflet-tile-pane` (invert + grade)
+ * so both themes share one labeled street layer at full zoom.
+ *
+ * Note the Esri XYZ order is `{z}/{y}/{x}`.
+ */
+export const ESRI_WORLD_STREET_TILE_URL =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+
+export const MAP_TILE_ATTRIBUTION =
+  'Tiles &copy; Esri &mdash; Source: Esri, OpenStreetMap';
+
+export const MAP_TILE_MAX_ZOOM = 19;
+
+/** Basemap tiles. Theme is applied in CSS; the URL is the same in both modes. */
+export function mapTileUrl(_theme: ThemeMode): string {
+  return ESRI_WORLD_STREET_TILE_URL;
 }
 
 export function mapUserLocationColors(theme: ThemeMode): {

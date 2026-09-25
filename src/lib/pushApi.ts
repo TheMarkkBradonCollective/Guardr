@@ -2,6 +2,11 @@ import { apiUrl } from './siteConfig';
 import type { SessionUser } from '../types';
 import type { PushSubscriptionDto } from './push';
 import { inboxPayloadFromPushEvent, persistInboxNotification } from './inboxPersistBridge';
+import { prefersDirectSupabaseBackend } from './platform/nativeSiteIndependence';
+import {
+  removePushSubscriptionDirect,
+  upsertPushSubscriptionDirect,
+} from './pushSubscriptionsClient';
 
 export async function parseApiResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -80,6 +85,16 @@ export async function subscribePush(
   subscription: PushSubscriptionDto,
   options?: { siteId?: string; quietHoursStart?: string; quietHoursEnd?: string; appChannel?: 'main' | 'messenger' }
 ): Promise<void> {
+  try {
+    await upsertPushSubscriptionDirect(user, subscription, options);
+    return;
+  } catch (directErr) {
+    if (prefersDirectSupabaseBackend()) {
+      throw directErr instanceof Error ? directErr : new Error('Failed to subscribe to push notifications');
+    }
+    console.warn('Push subscribe via Supabase failed, falling back to API:', directErr);
+  }
+
   const res = await fetchWithRetry(apiUrl('/api/push/subscribe'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -91,6 +106,16 @@ export async function subscribePush(
 }
 
 export async function unsubscribePush(user: SessionUser, endpoint?: string): Promise<void> {
+  try {
+    await removePushSubscriptionDirect(user, endpoint);
+    return;
+  } catch (directErr) {
+    if (prefersDirectSupabaseBackend()) {
+      throw directErr instanceof Error ? directErr : new Error('Failed to unsubscribe from push notifications');
+    }
+    console.warn('Push unsubscribe via Supabase failed, falling back to API:', directErr);
+  }
+
   const res = await fetchWithRetry(apiUrl('/api/push/unsubscribe'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
