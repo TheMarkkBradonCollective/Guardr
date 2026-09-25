@@ -44,3 +44,10 @@ Source material in this folder:
 
 ## Later (nice-to-have)
 iOS app, duplicate or repost a job, extend a shift, analytics export, captcha on sign-up, an accessibility review, removing about 30 unused components, labels on the payments tiles.
+
+## Staff Control Center (planned, added Sep 25, 2026)
+Full plan: `STAFF-CONTROL-CENTER-PLAN.md` in this folder. It turns the website's existing `/staff/*` workspace into the main operations HQ. Every business action moves into one shared server layer (`lib/services/*`, through `api/hq` and `api/app` catch-all routes) that the website and the apps both call. That layer adds granular role permissions, an immutable before/after audit log, and a built-in spreadsheet area (live views plus imported datasets).
+- **Prerequisite:** Wave 1 Task 1 (server auth + RLS + money lockdown) must land first. Real permissions can't be enforced while the server trusts browser-supplied identity and the public key can write to the database. Wave 1 Task 2's payout logic should be the shared payments service.
+- **Phases (one PR each, after Wave 1):** HQ-1 server foundation + audit writer · HQ-2 RBAC tables and enforcement · HQ-3 jobs/assignment service (+HQ-3b app handlers call it, no UI change) · HQ-4 record pages + context action bar · HQ-5 customers/guards/staff actions · HQ-6 accounts (reset, sign-out, holds, cascade delete) · HQ-7 jobs section · HQ-8 schedules + server-side availability · HQ-9 messages/support · HQ-10 files (Supabase Storage) · HQ-11 financials · HQ-12 reports + incidents · HQ-13 audit review UI · HQ-14 data sheets (live views) · HQ-15 data sheets (datasets) · HQ-16 settings + city cap.
+- **Overlap with the waves above:** A4 → HQ-11, A5 (staff side) → HQ-5, A7 (staff control) → HQ-3, A10/A12 → HQ-6, A13 → HQ-16, B1/B3 → HQ-8, B4 → HQ-11, B5/C3 → HQ-12, B13 → HQ-3, B18 → HQ-9. Build each item once, the service-layer way.
+- **Open decisions for Markeith:** section 8 of the plan (role mapping, staff dispatch, sheet write-back, Vercel plan, formulas, file storage, and more).
