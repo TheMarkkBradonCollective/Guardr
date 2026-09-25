@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { ImagePlus, Loader2 } from 'lucide-react';
 import { CERT_DOCUMENT_PHOTO_LABEL } from '../../lib/certImagePolicy';
 import { processDocumentPhotoFile } from '../../lib/documentPhoto';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface DocumentPhotoUploadFieldProps {
   imageUrl?: string;
@@ -32,7 +33,7 @@ export function DocumentPhotoUploadField({
     try {
       onImageUrlChange(await processDocumentPhotoFile(file));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not process image.');
+      setError(userFacingError(err, 'Could not process image.'));
     } finally {
       setLoading(false);
     }

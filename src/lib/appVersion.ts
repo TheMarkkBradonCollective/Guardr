@@ -1,5 +1,8 @@
 /** App version injected at build time from package.json. */
-export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '—';
+export const APP_VERSION =
+  (typeof import.meta !== 'undefined' &&
+    (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_APP_VERSION) ||
+  '—';
 
 /** Numeric version without prerelease suffix (e.g. "1.0.89"). */
 export function baseAppVersion(version = APP_VERSION): string {

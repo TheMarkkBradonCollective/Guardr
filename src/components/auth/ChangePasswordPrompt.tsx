@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { KeyRound, X } from 'lucide-react';
 import { AppModal } from '../ui/motion/AppMotion';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface ChangePasswordPromptProps {
   open: boolean;
@@ -49,7 +50,7 @@ export function ChangePasswordPrompt({
       await onChangePassword(newPassword);
       resetForm();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update password.');
+      setError(userFacingError(err, 'Could not update password.'));
     } finally {
       setBusy(false);
     }

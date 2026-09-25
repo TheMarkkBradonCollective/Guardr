@@ -43,6 +43,7 @@ import {
   AppSettingsSection,
   AppSettingsToggleRow,
 } from '../ui/app/AppPrimitives';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface PushNotificationsPanelProps {
   currentUser: SessionUser;
@@ -227,7 +228,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
           setPushEnabledLocally(false);
           setEnabled(false);
           setServerSynced(false);
-          const msg = err instanceof Error ? err.message : 'Could not sync with server';
+          const msg = userFacingError(err, 'Could not sync with server');
           setMessage(msg);
           return;
         }
@@ -243,7 +244,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         }
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Push setup failed';
+      const msg = userFacingError(err, 'Push setup failed');
       setMessage(msg);
       await refreshPushState();
     } finally {
@@ -263,7 +264,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
         setMessage('Test notification sent.');
       }
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Test notification failed');
+      setMessage(userFacingError(err, 'Test notification failed'));
     } finally {
       setBusy(false);
     }
@@ -278,7 +279,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
       setSoundPref(next);
       setMessage(`Notification sound set to ${next.label}.`);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Could not update notification sound');
+      setMessage(userFacingError(err, 'Could not update notification sound'));
     } finally {
       setSoundBusy(false);
     }
@@ -293,7 +294,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
       setSoundPref(next);
       setMessage(`Notification sound set to ${next.label}.`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Could not pick notification sound';
+      const msg = userFacingError(err, 'Could not pick notification sound');
       if (!msg.toLowerCase().includes('cancel')) {
         setMessage(msg);
       }
@@ -308,7 +309,7 @@ export function PushNotificationsPanel({ currentUser, isDbConnected = false }: P
     try {
       await previewNotificationSound(soundPref ?? undefined);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Could not preview notification sound');
+      setMessage(userFacingError(err, 'Could not preview notification sound'));
     } finally {
       setSoundBusy(false);
     }

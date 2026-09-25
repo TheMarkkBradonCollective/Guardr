@@ -19,6 +19,7 @@ import {
   AppScreen,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
+import { RosterLoadGate } from '../ui/app/RosterLoadGate';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { Clock, CheckCircle2, Map, AlertTriangle } from 'lucide-react';
 import { useLayoutFormFactor } from '../../surfaces';
@@ -349,6 +350,7 @@ export function GuardMyJobsPanel({
             }))}
           />
         </div>
+        <RosterLoadGate itemCount={activeJobs.length} title="Could not load jobs">
         {activeJobs.length === 0 ? (
           <div className="uber-jobs-empty">
             <div className="uber-jobs-empty-icon">{emptyIcon}</div>
@@ -404,6 +406,7 @@ export function GuardMyJobsPanel({
             )}
           />
         )}
+        </RosterLoadGate>
       </AppScreen>
     );
   }
@@ -450,6 +453,7 @@ export function GuardMyJobsPanel({
 
       {/* Job list — job-selection style */}
       <div className="uber-jobs-list">
+        <RosterLoadGate itemCount={activeJobs.length} title="Could not load jobs">
         {activeJobs.length === 0 ? (
           <div className="uber-jobs-empty">
             <div className="uber-jobs-empty-icon">{emptyIcon}</div>
@@ -474,6 +478,7 @@ export function GuardMyJobsPanel({
             ))}
           </>
         )}
+        </RosterLoadGate>
       </div>
     </AppScreen>
   );

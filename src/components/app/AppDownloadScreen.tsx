@@ -25,6 +25,7 @@ import {
 import { formatAppVersion } from '../../lib/appVersion';
 import { GITHUB_ALL_APKS_ZIP, GITHUB_MESSENGER_APP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
 import { productAppHasGreyLauncher, productAppHasLightLauncher } from '../../lib/productApps';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface AppDownloadScreenProps {
   onBack?: () => void;
@@ -86,7 +87,7 @@ export function AppDownloadScreen({ onBack, headerRight, embedded = false }: App
         void showAppAlert({
           title: isNativeView ? 'Update failed' : 'Install failed',
           message:
-            installError instanceof Error ? installError.message : 'Could not start the APK install.',
+            userFacingError(installError, 'Could not start the APK install.'),
           tone: 'warning',
         });
       } finally {

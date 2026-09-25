@@ -19,6 +19,7 @@ import {
 } from '../../lib/staffDocumentReview';
 import { AppButton } from '../ui/AppButton';
 import type { GuardIdentityVerificationPayload, IdentityVerificationSubmitResult } from '../profile/GuardIdentityVerificationPanel';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffIdReviewSectionProps {
   guard: SecurityGuard;
@@ -126,7 +127,7 @@ export function StaffIdReviewSection({
       }
       showAppToast('Document type saved. You can approve the ID now.', { tone: 'success' });
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not save document type.', {
+      showAppToast(userFacingError(err, 'Could not save document type.'), {
         tone: 'error',
       });
     } finally {
@@ -234,7 +235,7 @@ export function StaffIdReviewSection({
                 try {
                   await onApprove(guard.id);
                 } catch (err) {
-                  showAppToast(err instanceof Error ? err.message : 'Could not approve ID.', { tone: 'error' });
+                  showAppToast(userFacingError(err, 'Could not approve ID.'), { tone: 'error' });
                 } finally {
                   setActionPending(false);
                 }

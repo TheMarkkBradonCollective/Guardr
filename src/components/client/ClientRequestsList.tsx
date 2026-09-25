@@ -12,6 +12,7 @@ import {
   AppScreen,
   AppSubScreenHeader,
 } from '../ui/app/AppPrimitives';
+import { RosterLoadGate } from '../ui/app/RosterLoadGate';
 import { ListFilterTabs } from '../ui/ListFilterTabs';
 import { ClipboardList, Clock, CheckCircle2, Plus, AlertTriangle } from 'lucide-react';
 import { useLayoutFormFactor } from '../../surfaces';
@@ -427,6 +428,7 @@ export function ClientRequestsList({
             </button>
           ) : null}
         </div>
+        <RosterLoadGate itemCount={tabJobs.length} title="Could not load jobs">
         {tabJobs.length === 0 ? (
           <AppEmptyState
             icon={<ClipboardList className="w-5 h-5" />}
@@ -483,6 +485,7 @@ export function ClientRequestsList({
             )}
           />
         )}
+        </RosterLoadGate>
         <EditRequestSheet
           open={!!editingRequest}
           request={editingRequest}
@@ -546,6 +549,7 @@ export function ClientRequestsList({
 
       <div className="guard-tiered-screen-scroll">
         <div className="guard-rating-body">
+      <RosterLoadGate itemCount={openJobs.length + scheduledJobs.length + completedJobs.length + missedJobs.length} title="Could not load jobs">
       {activeTab === 'open' && (
         <div className="app-section-body pt-2">
           {openJobs.length === 0 ? (
@@ -641,6 +645,7 @@ export function ClientRequestsList({
           )}
         </div>
       )}
+      </RosterLoadGate>
         </div>
       </div>
 

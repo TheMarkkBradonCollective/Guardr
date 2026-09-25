@@ -6,6 +6,7 @@ import {
   processIdentitySelfieFile,
 } from '../../lib/idVerificationPhoto';
 import { IdVerificationImageModal } from './IdVerificationImageModal';
+import { userFacingError } from '../../lib/userFacingError';
 
 export function GuardIdPhotoRow({
   label,
@@ -36,7 +37,7 @@ export function GuardIdPhotoRow({
     try {
       onSelect(await processor(file));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not process image.');
+      setError(userFacingError(err, 'Could not process image.'));
     } finally {
       setLoading(false);
     }

@@ -15,6 +15,7 @@ import { GuardStripeConnectSheet } from '../guard/GuardStripeConnectSheet';
 import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../../lib/stripeApi';
 import { WfBadge } from '../ui/wireframe';
 import { UserManualDownloads } from '../docs/UserManualDownloads';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffActivationUploadChecklistProps {
   member: SecurityGuard;
@@ -73,7 +74,7 @@ export function StaffActivationUploadChecklist({
       setConnectSheetOpen(false);
       window.location.assign(url);
     } catch (e: unknown) {
-      setConnectError(e instanceof Error ? e.message : 'Failed to start Stripe onboarding');
+      setConnectError(userFacingError(e, 'Failed to start Stripe onboarding'));
     } finally {
       setConnectPending(false);
     }

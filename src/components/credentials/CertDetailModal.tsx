@@ -14,6 +14,7 @@ import { CredentialRecordsList } from './CredentialRecordsList';
 
 import { CredentialQuickViewLinks } from './CredentialQuickViewLinks';
 import { DocumentImagePreview } from './DocumentImageLightbox';
+import { userFacingError } from '../../lib/userFacingError';
 
 export interface CertUpdatePayload {
   issuer: string;
@@ -168,7 +169,7 @@ export function CertDetailModal({
         onClose();
       }
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Could not save credential.');
+      setSubmitError(userFacingError(err, 'Could not save credential.'));
     } finally {
       setSaving(false);
     }

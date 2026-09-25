@@ -17,6 +17,7 @@ import {
   WorkbenchSplit,
   WorkbenchToolbar,
 } from '../baseui/layout/WorkbenchLayout';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffDisputesPanelProps {
   disputes: OpsDispute[];
@@ -204,7 +205,7 @@ export function StaffDisputesPanel({
       onItemHandled?.(dispute.id);
       setStatusTab('closed');
     } catch (e) {
-      showAppToast(e instanceof Error ? e.message : 'Unable to resolve dispute', { tone: 'error' });
+      showAppToast(userFacingError(e, 'Unable to resolve dispute'), { tone: 'error' });
     } finally {
       setResolvingId(null);
     }

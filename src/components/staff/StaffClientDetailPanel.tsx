@@ -21,6 +21,7 @@ import { StaffClientApplicationSummary } from './StaffClientApplicationSummary';
 import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
 import { StaffAccountAccessSection } from './StaffAccountAccessSection';
 import { clientTypeLabel, clientDisplayName } from '../../lib/clientType';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffClientDetailPanelProps {
   client: Client;
@@ -77,7 +78,7 @@ export function StaffClientDetailPanel({
     try {
       await onDeleteClient(client.id);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not delete customer.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not delete customer.'), { tone: 'error' });
     } finally {
       setDeleting(false);
     }

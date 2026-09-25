@@ -24,6 +24,7 @@ import type {
   GuardIdentityVerificationPayload,
   IdentityVerificationSubmitResult,
 } from './GuardIdentityVerificationPanel';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface GuardIdDetailModalProps {
   guard: SecurityGuard;
@@ -171,7 +172,7 @@ export function GuardIdDetailModal({
         onClose();
       }
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Could not save ID verification.');
+      setSubmitError(userFacingError(err, 'Could not save ID verification.'));
     } finally {
       setSaving(false);
     }

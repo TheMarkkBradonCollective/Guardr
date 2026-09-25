@@ -7,6 +7,7 @@ import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { useStaffCreateFormOpen } from './useStaffCreateFormOpen';
 import type { ClientType } from '../../types';
 import { CLIENT_TYPES, clientTypeLabel, isOrganizationClientType } from '../../lib/clientType';
+import { userFacingError } from '../../lib/userFacingError';
 
 export interface StaffAddClientInput {
   firstName: string;
@@ -90,7 +91,7 @@ export function StaffAddClientForm({
       if (clientId) onCreated?.(clientId);
       setOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not add client.');
+      setError(userFacingError(err, 'Could not add client.'));
     } finally {
       setSaving(false);
     }

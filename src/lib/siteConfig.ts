@@ -4,6 +4,10 @@ export const SITE_DOMAIN = 'guardr.co';
 export const SITE_URL =
   ((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_APP_URL)?.replace(/\/$/, '') ||
   'https://www.guardr.co';
+/** Serverless API host (Stripe, push fan-out). Defaults to the public site; override with VITE_API_BASE_URL. */
+export const API_BASE_URL =
+  ((import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_API_BASE_URL)?.replace(/\/$/, '') ||
+  SITE_URL;
 export const SITE_NAME = 'Guardr';
 
 /** Public install / APK download page */
@@ -19,7 +23,7 @@ export function apiUrl(path: string): string {
   if (typeof window === 'undefined') return normalized;
   const capacitor = (window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
   if (capacitor?.isNativePlatform?.()) {
-    return `${SITE_URL}${normalized}`;
+    return `${API_BASE_URL}${normalized}`;
   }
   return normalized;
 }

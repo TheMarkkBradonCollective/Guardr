@@ -72,12 +72,21 @@ export async function registerNativeInstall(): Promise<void> {
       registeredAt: Date.now(),
     };
 
-    await registerInstallCookie('apk', record.version, record.versionCode);
+    writeInstallSurface('apk', record);
 
-    if (window.location.hostname === 'guardr.co') {
-      writeInstallSurface('apk', record);
-    } else {
+    // Best-effort analytics for the website download page only — not required for the APK to run.
+    try {
+      await registerInstallCookie('apk', record.version, record.versionCode);
+    } catch {
+      /* ignore */
+    }
+    if (typeof window !== 'undefined' && window.location.hostname.includes('guardr.co')) {
+      return;
+    }
+    try {
       registerViaIframe('apk', record.version, record.versionCode);
+    } catch {
+      /* ignore */
     }
   } catch (error) {
     console.warn('[install] native registration failed:', error);

@@ -16,6 +16,7 @@ import {
 } from '../../lib/importantActionConfirm';
 import { getStaffDisplayName } from '../../lib/staffProfile';
 import { User } from 'lucide-react';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffStaffApplicationReviewPanelProps {
   member: SecurityGuard;
@@ -59,7 +60,7 @@ export function StaffStaffApplicationReviewPanel({
     try {
       await onApproveStaffAccount(member.id);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not approve staff account.', {
+      showAppToast(userFacingError(err, 'Could not approve staff account.'), {
         tone: 'error',
       });
     } finally {
@@ -74,7 +75,7 @@ export function StaffStaffApplicationReviewPanel({
     try {
       await onRejectStaffAccount(member.id);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not reject staff account.', {
+      showAppToast(userFacingError(err, 'Could not reject staff account.'), {
         tone: 'error',
       });
     } finally {

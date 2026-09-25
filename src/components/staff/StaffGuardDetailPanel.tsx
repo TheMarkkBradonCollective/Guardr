@@ -59,6 +59,7 @@ import { GuardRosterStatusBadges } from './GuardRosterStatusBadges';
 import { govIdApprovalItemId } from '../../lib/guardCredentialSections';
 import { GuardTimesheetPanel } from '../guard/GuardTimesheetPanel';
 import type { CertOverlayNavigation } from '../credentials/credentialOverlayNavigation';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffGuardDetailPanelProps {
   guard: SecurityGuard;
@@ -282,7 +283,7 @@ export function StaffGuardDetailPanel({
       await onUpdateProfile(buildPayload());
       setEditing(false);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Could not save profile.');
+      setSaveError(userFacingError(err, 'Could not save profile.'));
     } finally {
       setSaving(false);
     }
@@ -302,7 +303,7 @@ export function StaffGuardDetailPanel({
     try {
       await onDeleteGuard(guard.id);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not delete guard account.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not delete guard account.'), { tone: 'error' });
     } finally {
       setDeleting(false);
     }
@@ -456,7 +457,7 @@ export function StaffGuardDetailPanel({
     try {
       await onApproveGuardAccount(guard.id);
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Could not approve profile.', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Could not approve profile.'), { tone: 'error' });
     }
   };
 
@@ -512,7 +513,7 @@ export function StaffGuardDetailPanel({
       setAvatar(dataUrl);
       await onUpdateProfile(buildPayload(dataUrl));
     } catch (err) {
-      setPhotoError(err instanceof Error ? err.message : 'Could not upload photo.');
+      setPhotoError(userFacingError(err, 'Could not upload photo.'));
     } finally {
       setPhotoSaving(false);
     }
@@ -573,7 +574,7 @@ export function StaffGuardDetailPanel({
                 try {
                   await onApproveCert(guard.id, cert.id);
                 } catch (err) {
-                  showAppToast(err instanceof Error ? err.message : 'Could not verify credential.', { tone: 'error' });
+                  showAppToast(userFacingError(err, 'Could not verify credential.'), { tone: 'error' });
                 }
               })();
             }}

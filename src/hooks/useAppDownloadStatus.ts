@@ -11,6 +11,7 @@ import { getInstalledAppVersion } from '../lib/platform/apkUpdate';
 import { readInstallState, type InstallState, writeInstallState } from '../lib/platform/installRegistry';
 import { resolveDownloadLiveContext } from '../lib/resolveDownloadLiveContext';
 import type { DownloadLiveContext } from '../lib/installSurfaceCopy';
+import { userFacingError } from '../lib/userFacingError';
 
 export type { DownloadLiveContext };
 
@@ -67,7 +68,7 @@ export function useAppDownloadStatus(): AppDownloadStatus {
         live === 'apk' ? nativeInfo?.versionCode ?? state.apk?.versionCode : undefined
       );
     } catch (refreshError) {
-      setError(refreshError instanceof Error ? refreshError.message : 'Could not check app version.');
+      setError(userFacingError(refreshError, 'Could not check app version.'));
     } finally {
       setLoading(false);
     }

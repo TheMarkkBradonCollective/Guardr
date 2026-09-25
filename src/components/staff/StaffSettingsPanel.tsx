@@ -12,6 +12,7 @@ import { StaffMgmtSection } from './StaffMgmtSection';
 import { StaffOpsPageShell } from './StaffOpsPageShell';
 import { showAppToast } from '../ui/AppToast';
 import type { CompanyPublicDocument } from '../../lib/companyPlacard';
+import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffSettingsPanelProps {
   currentUser: SessionUser;
@@ -75,7 +76,7 @@ export function StaffSettingsPanel({
       );
       setBroadcastBody('');
     } catch (err) {
-      showAppToast(err instanceof Error ? err.message : 'Broadcast failed', { tone: 'error' });
+      showAppToast(userFacingError(err, 'Broadcast failed'), { tone: 'error' });
     } finally {
       setBroadcastBusy(false);
     }
