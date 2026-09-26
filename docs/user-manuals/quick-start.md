@@ -24,7 +24,7 @@ After you are **active**, run day-to-day coverage from the **Customer** or **Gua
 
 **Device rules:** one Guardr **role app** per phone (Guard, Customer, or Staff — pick one). **Messenger** can still be installed. One **account** per device for role apps; signing out does not reset the device.
 
-Current release: **v1.0.133** (Android build **233**).
+Current release: **v1.0.134** (Android build **234**).
 
 ---
 

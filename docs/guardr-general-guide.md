@@ -44,7 +44,7 @@ There is **one** installable PWA (`/manifest.json`, scope `/`) — not separate 
 
 **Device policy:** one Guardr **role app** per phone and one **account** per device for those apps. Signing out does **not** clear the device binding.
 
-**Release:** **v1.0.133-beta** (Android build **233**).
+**Release:** **v1.0.134-beta** (Android build **234**).
 
 ### User-facing labels (August 2026)
 
@@ -1513,7 +1513,7 @@ Available from the **Support** sidebar tab for clients and guards. Use for safet
 
 ### Install the app
 
-Guardr ships as the **website** plus **four Android apps** (currently **v1.0.133-beta**, build **233**):
+Guardr ships as the **website** plus **four Android apps** (currently **v1.0.134-beta**, build **234**):
 
 | Product | Who | Install |
 |---------|-----|---------|

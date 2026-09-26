@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.133-beta",
+  "webVersion": "1.0.134-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.133",
-    "versionCode": 233,
+    "version": "1.0.134",
+    "versionCode": 234,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.133.apk",
+    "downloadName": "guardr-v1.0.134.apk",
     "fileSize": 134,
     "sha256": "153ac5e2c5ef4a9453995c983c4cd1c29f71d7e7ac519639d3968871c240938e",
-    "releaseNotes": "Device policy: one device id, one Guardr account, one role app (Messenger exempt); block cross-role APK downloads. Full Supabase schema sync (guard suggestions, Finance side_role, crew coordination removed). PWA cache bust and aligned web/APK version metadata."
+    "releaseNotes": "Audit hardening (account shell gate, device role blocks on sign-in). User manuals and Guide for app-first + deployment checklist. Single Guardr PWA (/manifest.json) — no per-role home-screen manifests. PWA cache bust; web/APK versionCode 234."
   },
-  "updatedAt": "2026-09-26T01:12:56.304Z"
+  "updatedAt": "2026-09-26T01:37:23.363Z"
 }
