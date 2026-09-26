@@ -28,6 +28,7 @@ The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | Wha
 - **Staff applications** show Finance-desk requested roles correctly; applicants pick intended ladder role at sign-up
 - PWA cache: `guardr-cache-v1-0-132-beta`
 - CI workflows: `permissions: contents: read`
+- **GitHub:** closed audit #1043, HR partial #1046, and role review #1047–#1057 for this batch; **#1044** stays open for Waves 1–2
 
 **Download**
 - https://www.guardr.co/download/guardr.apk?v=232
