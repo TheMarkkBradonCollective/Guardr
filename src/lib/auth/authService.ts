@@ -15,6 +15,7 @@ import { getGuardUserStatus } from '../accountStatus';
 import { staffLoginEmailMatches, staffLoginEmailOrFilter, staffWorkLoginEmail } from '../staffEmail';
 import { normalizeGuardIndependentContractorNumber } from '../guardContractorNumber';
 import {
+  ONE_ROLE_DEVICE_ACCOUNT_MESSAGE,
   ONE_ROLE_LOCK_MESSAGE,
   buildOneRoleCase,
   collectRoleAccounts,
@@ -25,6 +26,8 @@ import {
   type OneRoleAccountRef,
   type OneRoleCase,
 } from '../oneRolePolicy';
+import { resolveDeviceId } from '../deviceIdentity';
+import { deviceBindingBlocksAccount, fetchDeviceAccountBinding } from '../deviceBindingStore';
 
 export type AuthRole = 'guard' | 'client' | 'staff';
 
@@ -56,7 +59,8 @@ export type SignInAttemptResult =
   | { status: 'pending_approval' }
   | { status: 'role_mismatch'; expectedPath: AuthRole; actualPath: AuthRole }
   | { status: 'one_role_hold'; case: OneRoleCase; message: string }
-  | { status: 'one_role_violation'; draftCase: OneRoleCase; message: string };
+  | { status: 'one_role_violation'; draftCase: OneRoleCase; message: string }
+  | { status: 'device_account_blocked'; message: string };
 
 async function verifyStoredPassword(
   stored: string | null | undefined,
@@ -365,16 +369,23 @@ export async function signInWithCredentials(
   if (existingHold?.status === 'open') {
     return { status: 'one_role_hold', case: existingHold, message: ONE_ROLE_LOCK_MESSAGE };
   }
+  const deviceId = await resolveDeviceId();
+  const remoteBinding = await fetchDeviceAccountBinding(deviceId);
+  if (deviceBindingBlocksAccount(remoteBinding, seed)) {
+    return { status: 'device_account_blocked', message: ONE_ROLE_DEVICE_ACCOUNT_MESSAGE };
+  }
   const conflict = withDeviceConflict(
     collectRoleAccounts(guards, clients),
     seed,
     readDeviceRoleAccount(),
   );
   if (conflict) {
+    const message =
+      conflict.matchKind === 'device' ? ONE_ROLE_DEVICE_ACCOUNT_MESSAGE : ONE_ROLE_LOCK_MESSAGE;
     return {
       status: 'one_role_violation',
       draftCase: buildOneRoleCase(conflict),
-      message: ONE_ROLE_LOCK_MESSAGE,
+      message,
     };
   }
 

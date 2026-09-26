@@ -811,6 +811,10 @@ export function AuthPage({
       setErrorMsg('Account blocked. Contact administration.');
       return;
     }
+    if (signInAttempt.status === 'device_account_blocked') {
+      setErrorMsg(signInAttempt.message);
+      return;
+    }
     if (signInAttempt.status === 'one_role_hold' || signInAttempt.status === 'one_role_violation') {
       const held =
         signInAttempt.status === 'one_role_hold' ? signInAttempt.case : signInAttempt.draftCase;
