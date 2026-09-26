@@ -14262,7 +14262,6 @@ export default function App() {
           onSaveVehicle={(profile) => handleSaveGuardVehicle(profile)}
           onSubmitVehicle={(profile) => handleSubmitGuardVehicle(profile)}
           onAcceptJob={handleApplyToJob}
-          onApplyAsTeamLead={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
           onInviteTeamGuard={handleInviteTeamGuard}
           onSuggestTeamGuard={handleSuggestTeamGuard}

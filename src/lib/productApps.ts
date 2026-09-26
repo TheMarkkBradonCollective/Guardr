@@ -274,9 +274,9 @@ export function resolveProductApp(input: {
   return baked ?? 'website';
 }
 
-/** Active marketplace roles can use the full app in a browser tab (not only APK/PWA). */
+/** Staff can run operations in a browser tab. Guard and Customer cannot. */
 export function canUseOperationalAppInBrowser(role: ProductRole): boolean {
-  return role === 'staff' || role === 'client' || role === 'guard';
+  return role === 'staff';
 }
 
 /**
@@ -298,11 +298,11 @@ export function websiteShellAccess(input: {
   if (input.role === 'staff') return 'operations';
   if (input.role === 'guard') {
     const status = (input.guardStatus ?? '').trim().toLowerCase();
-    if (status === 'active' || status === 'suspended' || status === 'blocked') return 'operations';
+    if (status === 'active' || status === 'suspended' || status === 'blocked') return 'account';
     return 'activation';
   }
   const status = (input.clientStatus ?? '').trim().toLowerCase();
-  if (status === 'active' || status === 'suspended') return 'operations';
+  if (status === 'active' || status === 'suspended') return 'account';
   return 'activation';
 }
 
@@ -339,10 +339,10 @@ export function defaultPathForSignedInUser(
 
 export function websiteNeedsAppMessage(role: ProductRole): string {
   if (role === 'client') {
-    return 'Use the Customer workspace in this browser, or install the app for mobile.';
+    return 'You need the Customer app to use the platform.';
   }
   if (role === 'guard') {
-    return 'Use the Guard workspace in this browser, or install the app for field work.';
+    return 'You need the Guard app to use the platform.';
   }
   return '';
 }

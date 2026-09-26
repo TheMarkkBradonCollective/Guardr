@@ -7,13 +7,7 @@ import {
   Smartphone,
 } from 'lucide-react';
 import type { SessionUser } from '../../types';
-import {
-  PRODUCT_APP_ICON_LABELS,
-  PRODUCT_APP_TAGLINES,
-  canUseOperationalAppInBrowser,
-  productAppForRole,
-  type ProductRole,
-} from '../../lib/productApps';
+import { PRODUCT_APP_ICON_LABELS, PRODUCT_APP_TAGLINES, productAppForRole, type ProductRole } from '../../lib/productApps';
 import { AppButton } from '../ui/AppButton';
 
 interface WebsiteAccountHomeProps {
@@ -43,12 +37,9 @@ export function WebsiteAccountHome({
 }: WebsiteAccountHomeProps) {
   const app = productAppForRole(role);
   const appLabel = PRODUCT_APP_ICON_LABELS[app];
-  const browserOps = canUseOperationalAppInBrowser(role) && !onboardingOpen;
   const hireWorkLead = onboardingOpen
-    ? `Finish signup and activation here so you can see the current Guardr requirements. After activation you can open the ${appLabel} workspace in this browser or install the mobile app.`
-    : browserOps
-      ? `Open the ${appLabel} workspace in this browser for jobs, messages, and day-to-day work. Profile, billing, and support stay on this account page.`
-      : `Manage profile, billing, messages, and support here until your account is active.`;
+    ? `Finish signup and activation here so you can see the current Guardr requirements. After activation you need the ${appLabel} to use the platform. This website stays for profile, billing, messages, and support.`
+    : `Manage profile, billing, messages, and support here. After activation you need the ${appLabel} to use the platform.`;
 
   return (
     <div className="website-account-home">
@@ -62,13 +53,7 @@ export function WebsiteAccountHome({
         </p>
         <div className="website-account-hero-actions">
           <AppButton variant="primary" size="lg" onClick={onOpenApp}>
-            {role === 'staff'
-              ? 'Open operations'
-              : onboardingOpen
-                ? 'Continue application'
-                : browserOps
-                  ? `Open ${appLabel}`
-                  : `Get ${appLabel}`}
+            {role === 'staff' ? 'Open operations' : onboardingOpen ? 'Continue application' : `Get ${appLabel}`}
             <ArrowRight size={18} strokeWidth={2.25} aria-hidden />
           </AppButton>
           <AppButton variant="outline" size="lg" onClick={onOpenProfile}>
