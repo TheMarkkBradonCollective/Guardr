@@ -18,8 +18,9 @@ export function getOrCreateBrowserDeviceId(): string {
 }
 
 /**
- * One Guardr device key across website, PWA, and native shells.
- * Native uses Capacitor Device id when available; web uses persisted UUID.
+ * Device id for server bindings.
+ * - Native role APKs: Capacitor Device identifier (same across Guard/Customer/Staff when same signing key).
+ * - Website + installed PWA (same origin): shared localStorage UUID.
  */
 export async function resolveDeviceId(): Promise<string> {
   if (typeof window === 'undefined') return 'unknown';
@@ -28,10 +29,10 @@ export async function resolveDeviceId(): Promise<string> {
     if (Capacitor.isNativePlatform()) {
       const { Device } = await import('@capacitor/device');
       const { identifier } = await Device.getId();
-      if (identifier) return `cap:${identifier}`;
+      if (identifier) return `gid:${identifier}`;
     }
   } catch {
     /* web or plugin unavailable */
   }
-  return `web:${getOrCreateBrowserDeviceId()}`;
+  return `wid:${getOrCreateBrowserDeviceId()}`;
 }

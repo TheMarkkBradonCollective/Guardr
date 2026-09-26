@@ -27,7 +27,16 @@ import {
   type OneRoleCase,
 } from '../oneRolePolicy';
 import { resolveDeviceId } from '../deviceIdentity';
-import { deviceBindingBlocksAccount, fetchDeviceAccountBinding } from '../deviceBindingStore';
+import {
+  deviceBindingBlocksAccount,
+  fetchDeviceAccountBinding,
+  remoteRoleAppClaimBlocks,
+} from '../deviceBindingStore';
+import {
+  canInstallRoleProductApp,
+  DEVICE_OTHER_ROLE_APP_MESSAGE,
+  type DeviceRoleAppClaim,
+} from '../deviceRoleClaim';
 
 export type AuthRole = 'guard' | 'client' | 'staff';
 
@@ -371,6 +380,14 @@ export async function signInWithCredentials(
   }
   const deviceId = await resolveDeviceId();
   const remoteBinding = await fetchDeviceAccountBinding(deviceId);
+  const roleApp: DeviceRoleAppClaim =
+    seed.kind === 'client' ? 'client' : seed.kind === 'guard' ? 'guard' : 'staff';
+  if (remoteRoleAppClaimBlocks(roleApp, remoteBinding)) {
+    return { status: 'device_account_blocked', message: DEVICE_OTHER_ROLE_APP_MESSAGE };
+  }
+  if (!canInstallRoleProductApp(roleApp)) {
+    return { status: 'device_account_blocked', message: DEVICE_OTHER_ROLE_APP_MESSAGE };
+  }
   if (deviceBindingBlocksAccount(remoteBinding, seed)) {
     return { status: 'device_account_blocked', message: ONE_ROLE_DEVICE_ACCOUNT_MESSAGE };
   }
