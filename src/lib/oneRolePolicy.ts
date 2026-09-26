@@ -1,3 +1,5 @@
+import { resolveOneRoleDeviceSurface, type OneRoleDeviceSurface } from './oneRoleDeviceSurface';
+
 /** One person, one Guardr role. Nobody may be Guard and Customer, Customer and Staff, or Staff and Guard. */
 
 export type OneRoleKind = 'guard' | 'client' | 'staff';
@@ -39,7 +41,12 @@ export interface OneRoleDeviceAccount {
   id: string;
 }
 
+/** @deprecated Legacy single-slot key; cleared on read. Use per-surface keys instead. */
 export const ONE_ROLE_DEVICE_STORAGE_KEY = 'guardr_device_role_account_v1';
+
+export function oneRoleDeviceStorageKey(surface: OneRoleDeviceSurface): string {
+  return `${ONE_ROLE_DEVICE_STORAGE_KEY}:${surface}`;
+}
 
 export function normalizeEmail(email: string | null | undefined): string {
   return (email ?? '').trim().toLowerCase();
@@ -254,11 +261,9 @@ export function blockOneRoleCase(
   };
 }
 
-export function readDeviceRoleAccount(): OneRoleDeviceAccount | null {
-  if (typeof window === 'undefined') return null;
+function parseDeviceRoleAccount(raw: string | null): OneRoleDeviceAccount | null {
+  if (!raw) return null;
   try {
-    const raw = window.localStorage.getItem(ONE_ROLE_DEVICE_STORAGE_KEY);
-    if (!raw) return null;
     const parsed = JSON.parse(raw) as OneRoleDeviceAccount;
     if (parsed?.kind && parsed?.id) return parsed;
   } catch {
@@ -267,10 +272,47 @@ export function readDeviceRoleAccount(): OneRoleDeviceAccount | null {
   return null;
 }
 
-export function writeDeviceRoleAccount(account: OneRoleDeviceAccount): void {
+/** Drop the old global device slot so PWA + website tabs stop cross-blocking. */
+export function clearLegacyGlobalDeviceRoleAccount(): void {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(ONE_ROLE_DEVICE_STORAGE_KEY, JSON.stringify(account));
+    window.localStorage.removeItem(ONE_ROLE_DEVICE_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function readDeviceRoleAccount(
+  surface: OneRoleDeviceSurface = resolveOneRoleDeviceSurface(),
+): OneRoleDeviceAccount | null {
+  if (typeof window === 'undefined') return null;
+  clearLegacyGlobalDeviceRoleAccount();
+  try {
+    return parseDeviceRoleAccount(window.localStorage.getItem(oneRoleDeviceStorageKey(surface)));
+  } catch {
+    return null;
+  }
+}
+
+export function writeDeviceRoleAccount(
+  account: OneRoleDeviceAccount,
+  surface: OneRoleDeviceSurface = resolveOneRoleDeviceSurface(),
+): void {
+  if (typeof window === 'undefined') return;
+  clearLegacyGlobalDeviceRoleAccount();
+  try {
+    window.localStorage.setItem(oneRoleDeviceStorageKey(surface), JSON.stringify(account));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearDeviceRoleAccount(
+  surface: OneRoleDeviceSurface = resolveOneRoleDeviceSurface(),
+): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(oneRoleDeviceStorageKey(surface));
   } catch {
     /* ignore */
   }

@@ -68,6 +68,18 @@ describe('one-role policy', () => {
     assert.equal(result!.matchKind, 'email');
   });
 
+  it('does not use device markers from another surface (passed explicitly as null)', () => {
+    const otherClient = {
+      kind: 'client' as const,
+      id: 'c9',
+      name: 'Other',
+      email: 'other-client@example.com',
+      phone: '1112223333',
+    };
+    const result = withDeviceConflict([guard, otherClient], otherClient, null);
+    assert.equal(result, null);
+  });
+
   it('flags a device conflict when email and phone do not match', () => {
     const otherClient = {
       kind: 'client' as const,
