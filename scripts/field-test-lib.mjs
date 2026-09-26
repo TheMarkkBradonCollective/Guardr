@@ -13,7 +13,14 @@ export const STAFF_EMAIL = process.env.FIELD_TEST_STAFF_EMAIL || 'staff@guardr.c
 export const STAFF_PASSWORD = process.env.FIELD_TEST_STAFF_PASSWORD || '#FieldTestStaff2026';
 /** Password assigned when staff@guardr.co provisions accounts in the UI */
 export const PROVISIONED_PASSWORD = '#Qwerty12345';
-export const STAFF_LADDER_ROLES = ['Support', 'Moderator', 'Administrator', 'Manager', 'Director'];
+export const STAFF_LADDER_ROLES = [
+  'Support',
+  'Moderator',
+  'Administrator',
+  'Manager',
+  'Director',
+  'Founder',
+];
 /** Open market used for guard/client signups and field-test job site. */
 export const FIELD_TEST_MARKET_CITY = 'Sacramento';
 export const AD = {

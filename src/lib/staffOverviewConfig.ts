@@ -79,6 +79,9 @@ const EXECUTIVE_QUICK_LINKS: StaffSection[] = [
 
 const SUPPORT_METRICS = ['Active jobs', 'On site now', 'Active guards'];
 
+/** Shared label for ops ladder roles (#1044 Staff Control Center). */
+export const STAFF_CONTROL_CENTER_KICKER = 'Staff control center';
+
 const STAFF_OVERVIEW_CONFIG: Record<
   Extract<
     PlatformRole,
@@ -106,7 +109,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
   },
   moderator: {
     roleLabel: ROLE_LABELS.moderator,
-    workspaceKicker: 'Moderator workspace',
+    workspaceKicker: STAFF_CONTROL_CENTER_KICKER,
     focusLine: 'Credential review and incident follow-up — platform trust only, not shift command.',
     layout: 'compact',
     metricLabels: [...MODERATOR_METRICS],
@@ -124,7 +127,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
   },
   administrator: {
     roleLabel: ROLE_LABELS.administrator,
-    workspaceKicker: 'Administrator workspace',
+    workspaceKicker: STAFF_CONTROL_CENTER_KICKER,
     focusLine: 'Daily platform operations — users, analytics, and job pipeline. No financial controls.',
     layout: 'standard',
     metricLabels: [...ADMIN_METRICS],
@@ -142,9 +145,9 @@ const STAFF_OVERVIEW_CONFIG: Record<
   },
   manager: {
     roleLabel: ROLE_LABELS.manager,
-    workspaceKicker: 'Manager workspace',
+    workspaceKicker: STAFF_CONTROL_CENTER_KICKER,
     focusLine:
-      'Executive operations — same command center as Director for payouts, jobs, financials, and live coverage. City actions follow your assigned markets.',
+      'Executive operations — same staff control center as Director for payouts, jobs, financials, and live coverage. City actions follow your assigned markets.',
     ...EXECUTIVE_OVERVIEW_FIELDS,
     emptyAttentionCopy:
       'Nothing urgent in the queue. Review payouts, live coverage, or Service Areas in your assigned cities.',
@@ -152,9 +155,9 @@ const STAFF_OVERVIEW_CONFIG: Record<
   },
   director: {
     roleLabel: ROLE_LABELS.director,
-    workspaceKicker: 'Director workspace',
+    workspaceKicker: STAFF_CONTROL_CENTER_KICKER,
     focusLine:
-      'Executive operations with global city markets and governance-adjacent controls shared with Founder.',
+      'Executive operations and Chief-of-Staff-style coordination — global city markets and governance-adjacent controls shared with Founder.',
     ...EXECUTIVE_OVERVIEW_FIELDS,
     emptyAttentionCopy:
       'Nothing urgent in the queue. Review financials, city markets, team activity, or live jobs on the map.',
@@ -162,7 +165,7 @@ const STAFF_OVERVIEW_CONFIG: Record<
   },
   owner: {
     roleLabel: ROLE_LABELS.owner,
-    workspaceKicker: 'Founder workspace',
+    workspaceKicker: STAFF_CONTROL_CENTER_KICKER,
     focusLine: 'Platform governance — full visibility, staff management, and company health.',
     layout: 'executive',
     metricLabels: 'all',

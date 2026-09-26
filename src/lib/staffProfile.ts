@@ -1,4 +1,4 @@
-import type { SecurityGuard, StaffRole } from '../types';
+import type { SecurityGuard, StaffRole, StaffSideRole } from '../types';
 import { ROLE_LABELS, staffRoleToPlatformRole } from './permissions';
 import { formatPersonName, resolvePersonNameParts } from './personName';
 import { looksLikeStaffBadge } from './staffBadgeNumber';
@@ -31,6 +31,27 @@ export function defaultStaffHeadline(staffRole?: StaffRole | null, sideRole?: st
   if (!staffRole) return 'Platform operations';
   const platformRole = staffRoleToPlatformRole(staffRole);
   return `${staffRole} — ${ROLE_LABELS[platformRole]}`;
+}
+
+/** Human-readable requested role for applications and review badges (Finance desk aware). */
+export function getStaffRequestedRoleLabel(
+  member: Pick<SecurityGuard, 'staffRole' | 'sideRole'>,
+): string {
+  const sideRole = member.sideRole as StaffSideRole | null | undefined;
+  const isFinanceDesk = !member.staffRole && sideRole === 'Finance';
+  const staffRole = member.staffRole || (isFinanceDesk ? null : 'Support');
+  if (isFinanceDesk) {
+    return `Finance desk — ${ROLE_LABELS.finance}`;
+  }
+  if (!staffRole) {
+    return ROLE_LABELS.finance;
+  }
+  const platformRole = staffRoleToPlatformRole(staffRole);
+  const roleTitle = ROLE_LABELS[platformRole];
+  if (sideRole === 'Finance') {
+    return `${staffRole} + Finance — ${roleTitle}`;
+  }
+  return roleTitle === staffRole ? staffRole : `${staffRole} — ${roleTitle}`;
 }
 
 export function getStaffDisplayName(

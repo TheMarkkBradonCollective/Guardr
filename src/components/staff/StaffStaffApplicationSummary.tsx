@@ -3,6 +3,7 @@ import type { SecurityGuard } from '../../types';
 import { ROLE_DESCRIPTIONS, ROLE_LABELS, staffRoleToPlatformRole } from '../../lib/permissions';
 import { getGuardIdVerificationStatus } from '../../lib/guardIdentityVerification';
 import { getStaffActivationChecklist, staffHasApplicationIntake } from '../../lib/staffAccountActivation';
+import { getStaffRequestedRoleLabel } from '../../lib/staffProfile';
 import { AppNoticeChip } from '../ui/app/AppBlockedAccess';
 import { WfSectionHeader } from '../ui/wireframe';
 
@@ -27,14 +28,7 @@ export function StaffStaffApplicationSummary({ member }: StaffStaffApplicationSu
   const platformRole = staffRole ? staffRoleToPlatformRole(staffRole) : 'finance';
   const cities = (member.managedCities ?? []).filter(Boolean);
   const hasIntake = staffHasApplicationIntake(member);
-  const roleTitle = ROLE_LABELS[platformRole];
-  const requestedRoleLabel = isFinanceDesk
-    ? `Finance desk — ${ROLE_LABELS.finance}`
-    : member.sideRole === 'Finance' && staffRole
-      ? `${staffRole} + Finance — ${roleTitle}`
-      : roleTitle === staffRole
-        ? `${staffRole}`
-        : `${staffRole} — ${roleTitle}`;
+  const requestedRoleLabel = getStaffRequestedRoleLabel(member);
 
   return (
     <section className="staff-detail-section space-y-4">

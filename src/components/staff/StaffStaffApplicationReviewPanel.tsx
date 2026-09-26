@@ -5,7 +5,6 @@ import { WfBadge, WfSectionHeader } from '../ui/wireframe';
 import { AppButton } from '../ui/AppButton';
 import { getGuardUserStatus } from '../../lib/accountStatus';
 import { getStaffRosterStatusLabel } from '../../lib/staffAccountActivation';
-import { ROLE_LABELS, staffRoleToPlatformRole } from '../../lib/permissions';
 import { StaffStaffApplicationSummary } from './StaffStaffApplicationSummary';
 import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
 import { StaffAccountAccessSection } from './StaffAccountAccessSection';
@@ -14,7 +13,7 @@ import {
   confirmApproveStaffAccount,
   confirmRejectStaffAccount,
 } from '../../lib/importantActionConfirm';
-import { getStaffDisplayName } from '../../lib/staffProfile';
+import { getStaffDisplayName, getStaffRequestedRoleLabel } from '../../lib/staffProfile';
 import { User } from 'lucide-react';
 import { userFacingError } from '../../lib/userFacingError';
 
@@ -39,7 +38,6 @@ export function StaffStaffApplicationReviewPanel({
   const accountStatus = getGuardUserStatus(member);
   const isPending = accountStatus === 'pending';
   const displayName = getStaffDisplayName(member);
-  const staffRole = member.staffRole || 'Support';
   const statusTone =
     isPending
       ? 'warning'
@@ -50,8 +48,7 @@ export function StaffStaffApplicationReviewPanel({
           : 'default';
   const statusLabel = getStaffRosterStatusLabel(member);
   const memberManagedCities = (member.managedCities ?? []).filter(Boolean);
-  const roleLabel = ROLE_LABELS[staffRoleToPlatformRole(staffRole)];
-  const roleBadge = roleLabel === staffRole ? staffRole : `${staffRole} — ${roleLabel}`;
+  const roleBadge = getStaffRequestedRoleLabel(member);
 
   const handleApprove = async () => {
     if (!onApproveStaffAccount) return;
