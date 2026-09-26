@@ -3,35 +3,26 @@ import { describe, it } from 'node:test';
 import { PWA_MANIFESTS, pwaIconSet, pwaInstallCopy, pwaManifestIdFromLocation } from './pwaManifests.ts';
 
 describe('pwaManifestIdFromLocation', () => {
-  it('uses Messenger on the companion route regardless of stored product app', () => {
-    assert.equal(pwaManifestIdFromLocation('/messenger', 'guard'), 'messenger');
-    assert.equal(pwaManifestIdFromLocation('/messenger?st=1', 'client'), 'messenger');
-  });
-
-  it('uses the operational app on its own prefix', () => {
-    assert.equal(pwaManifestIdFromLocation('/guard/map', 'guard'), 'guard');
-    assert.equal(pwaManifestIdFromLocation('/client/home', 'client'), 'client');
-    assert.equal(pwaManifestIdFromLocation('/staff/overview', 'staff'), 'staff');
-  });
-
-  it('falls back to the website on marketing and account URLs', () => {
+  it('always uses the single website manifest regardless of route or product app', () => {
+    assert.equal(pwaManifestIdFromLocation('/messenger', 'guard'), 'website');
+    assert.equal(pwaManifestIdFromLocation('/guard/map', 'guard'), 'website');
+    assert.equal(pwaManifestIdFromLocation('/client/home', 'client'), 'website');
+    assert.equal(pwaManifestIdFromLocation('/staff/overview', 'staff'), 'website');
     assert.equal(pwaManifestIdFromLocation('/', 'website'), 'website');
     assert.equal(pwaManifestIdFromLocation('/account', 'website'), 'website');
   });
 });
 
 describe('PWA_MANIFESTS', () => {
-  it('gives each app a unique start URL, scope, and href', () => {
-    const hrefs = Object.values(PWA_MANIFESTS).map((item) => item.href);
-    assert.equal(new Set(hrefs).size, hrefs.length);
-    assert.equal(PWA_MANIFESTS.guard.startUrl, '/guard/map');
-    assert.equal(PWA_MANIFESTS.messenger.scope, '/messenger');
-    assert.equal(PWA_MANIFESTS.client.scope, '/client/');
+  it('uses one public install manifest for the website shell', () => {
+    assert.equal(PWA_MANIFESTS.website.href, '/manifest.json');
+    assert.equal(PWA_MANIFESTS.website.scope, '/');
+    assert.equal(PWA_MANIFESTS.website.startUrl, '/');
   });
 
-  it('returns install copy for each app', () => {
-    assert.match(pwaInstallCopy('guard').title, /Guard/);
-    assert.match(pwaInstallCopy('messenger').title, /Messenger/);
+  it('returns unified install copy', () => {
+    assert.match(pwaInstallCopy('website').title, /Install Guardr/);
+    assert.match(pwaInstallCopy('guard').body, /sign in/i);
   });
 
   it('uses distinct homescreen icons per app', () => {

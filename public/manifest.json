@@ -2,7 +2,7 @@
   "id": "https://guardr.co/",
   "name": "Guardr",
   "short_name": "Guardr",
-  "description": "Account, billing, and the Guardr security marketplace.",
+  "description": "Guardr — one app: sign in as Customer, Guard, or Staff. Account, billing, marketplace, and field tools when installed.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

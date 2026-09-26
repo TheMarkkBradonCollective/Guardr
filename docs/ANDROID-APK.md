@@ -21,7 +21,7 @@ The three role APKs can be installed side by side. Each opens its own app (not t
 
 **One person, one role.** Nobody may be a Guard and a Customer, a Customer and Staff, or Staff and a Guard. Signing into a second role on the website or in an app locks both accounts until a manager, director, administrator, or owner reviews the hold and either clears it or blocks both.
 
-The install page lists **Guard, Customer, and Staff** APKs plus Messenger. There is no PWA / Add to Home Screen product.
+The install page lists **Guard, Customer, and Staff** APKs plus Messenger. **PWA:** one **Guardr** home-screen app (`/manifest.json`, full site scope) — sign in as Customer, Guard, or Staff; not separate PWAs per role. Role APKs remain separate native packages.
 
 Share the install page with the Signature Security network.
 

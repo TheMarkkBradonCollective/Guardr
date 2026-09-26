@@ -29,12 +29,14 @@ Do **not** use guard or client signup if you are applying for a staff job — us
 
 Guardr is **app-first** for marketplace field work:
 
-| Who | guardr.co in a **browser tab** | **Android role app** |
-|-----|--------------------------------|----------------------|
-| **Customer (active)** | Account shell — profile, billing, downloads, support, documents, Guide | **Customer app** — Map, Home, Jobs, Guards, Messages, live coverage |
-| **Guard (active)** | Account shell — profile, payout history, downloads, support, Guide | **Guard app** — Map, Jobs, Pay, Messages, shifts, performance |
-| **Guard / Customer (pending / activating)** | Activation checklist + credential uploads + support | Install role app from **Downloads** when ready; ops unlock after **active** |
-| **Staff (active)** | Full **operations** workspace (desktop command center) | Optional **Staff APK** for mobile ops |
+| Who | guardr.co in a **browser tab** | **One Guardr PWA** (Add to Home Screen / Install) | **Android role APK** |
+|-----|--------------------------------|-----------------------------------------------------|----------------------|
+| **Customer (active)** | Account shell only | Full **Customer** ops (same as APK) — one app, sign in as Customer | **Customer APK** — recommended on Android for FCM/GPS |
+| **Guard (active)** | Account shell only | Full **Guard** ops when installed | **Guard APK** — recommended in the field |
+| **Guard / Customer (pending / activating)** | Activation + credentials | Same activation flow when installed | Install from **Downloads** when ready |
+| **Staff (active)** | Full **operations** in browser | Full **Staff** ops when installed | Optional **Staff APK** |
+
+There is **one** installable PWA (`/manifest.json`, scope `/`) — not separate home-screen apps per role. Pick your role at sign-in.
 
 **Messenger** is a separate companion app (messages and support for whichever role you sign into). It does **not** replace the Customer or Guard app.
 
@@ -1515,7 +1517,8 @@ Guardr ships as the **website** plus **four Android apps** (currently **v1.0.133
 
 | Product | Who | Install |
 |---------|-----|---------|
-| **Website** | Everyone — marketing, sign-up, staff ops, customer/guard **account shell** | [guardr.co](https://www.guardr.co) |
+| **Website** | Everyone — marketing, sign-up; customer/guard **account shell** in a normal browser tab | [guardr.co](https://www.guardr.co) |
+| **Guardr PWA (one app)** | Customer, Guard, or Staff — full role experience when **installed** to home screen | Browser **Install** / iOS **Add to Home Screen** — single manifest, not per-role PWAs |
 | **Customer APK** | Personal and business clients (field ops) | [guardr.co/download](https://www.guardr.co/download) or account **Downloads** |
 | **Guard APK** | Independent contractor guards | Same |
 | **Staff APK** | Platform employees (optional mobile ops) | Same |
@@ -1523,7 +1526,7 @@ Guardr ships as the **website** plus **four Android apps** (currently **v1.0.133
 
 Role APKs do **not** auto-update silently. When a new build ships, use **Settings → App update** in the app or download again from [guardr.co/download](https://www.guardr.co/download).
 
-The **Guard** and **Customer** apps are required for map, jobs, and live shifts once you are **active** — the marketing website is not a substitute.
+For map, jobs, and live shifts once you are **active**, use the **installed Guardr PWA** or the **Customer / Guard APK** — a plain browser tab (not installed) stays on the account shell only.
 
 #### APK updates (important)
 

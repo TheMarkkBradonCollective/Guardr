@@ -4,7 +4,6 @@ import { usePwaInstallPrompt } from '../hooks/usePwaInstallPrompt';
 import { PwaInstallGuide } from './landing/PwaInstallGuide';
 import { useProductApp } from '../lib/ProductAppProvider';
 import { applyPwaManifestForLocation, pwaInstallCopy } from '../lib/pwaManifests';
-import { isMessengerPath } from '../lib/messengerCompanion';
 import { AppButton } from './ui/AppButton';
 
 /**
@@ -30,10 +29,7 @@ export function InstallPrompt() {
 
   if (hideAppDownloads || dismissed) return null;
 
-  const manifestId = isMessengerPath(typeof window !== 'undefined' ? window.location.href : '/')
-    ? 'messenger'
-    : productApp;
-  const copy = pwaInstallCopy(manifestId);
+  const copy = pwaInstallCopy('website');
 
   return (
     <>
