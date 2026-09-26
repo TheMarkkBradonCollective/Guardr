@@ -23,6 +23,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.132':
+    'Issue backlog fixes: staff control center labels, staff signup requested-role picker, Founder staff cap editor, /client/sites routing, role-filtered APK downloads, SLA approval metric, guard card expiry collection, client credential verify fix — Customer/Guard stay app-first in browser.',
   '1.0.131':
     'Staff platform and auth now say Customer(s) everywhere; sidebar create buttons removed with add actions restored on Management and Credentials pages.',
   '1.0.130':

@@ -1,15 +1,36 @@
 # Guardr Dev Notes
 
 **Started:** Saturday, June 6, 2026  
-**Last updated:** Wednesday, August 19, 2026  
+**Last updated:** Friday, September 26, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.131**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.132**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
 The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | What shipped |` tables under dated `## Weekday, Month D, YYYY` headings (and from `**Activity:**` / `### Title (h:mm AM)` lines). Every `/update` must add those Time rows from git commit times, bump **Last updated**, fill Guide gaps for what shipped, and refresh **Quick reference by date**. Changelog-only entries without times do not light up the cloud.
+
+---
+
+## Friday, September 26, 2026 — /update → v1.0.132
+
+| Time | What shipped |
+|------|----------------|
+| 12:03 AM | Staff control center labels, HR workforce helpers, Finance-desk application role labels |
+| 12:16 AM | Staff signup requested-role picker, Founder staff cap editor, SLA approval fix, guard card expiry, `/client/sites`, role-filtered downloads |
+| 12:38 AM | Revert browser full Customer/Guard workspace — app-first (PWA/APK); remove team-lead apply wiring |
+| 12:40 AM | Merge PR #1058; release v1.0.132-beta, PWA cache bust, download version |
+
+**Shipped**
+- **v1.0.132** (build **232**) — open GitHub issue fixes while keeping **Customer/Guard platform use in the app**, not plain browser ops
+- Staff **Service Areas** minimum slot editor for Founder; default **6** slots per open city
+- **Staff applications** show Finance-desk requested roles correctly; applicants pick intended ladder role at sign-up
+- PWA cache: `guardr-cache-v1-0-132-beta`
+- CI workflows: `permissions: contents: read`
+
+**Download**
+- https://www.guardr.co/download/guardr.apk?v=232
 
 ---
 
