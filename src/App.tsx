@@ -349,9 +349,14 @@ import {
   deviceBindingBlocksAccount,
   fetchDeviceAccountBinding,
   registerDeviceRoleAppClaim,
+  remoteRoleAppClaimBlocks,
   upsertDeviceAccountBinding,
 } from './lib/deviceBindingStore';
-import { writeDeviceRoleAppClaim } from './lib/deviceRoleClaim';
+import {
+  canInstallRoleProductApp,
+  DEVICE_OTHER_ROLE_APP_MESSAGE,
+  writeDeviceRoleAppClaim,
+} from './lib/deviceRoleClaim';
 import { getTourForRole, migrateLegacyTourCompletion } from './lib/onboardingTours';
 import { TutorialExperience } from './components/onboarding/OnboardingTour';
 import {
@@ -4851,6 +4856,13 @@ export default function App() {
 
     const deviceId = await resolveDeviceId();
     const remoteDevice = await fetchDeviceAccountBinding(deviceId);
+    const roleApp = role === 'client' ? 'client' : role === 'guard' ? 'guard' : 'staff';
+    if (remoteRoleAppClaimBlocks(roleApp, remoteDevice)) {
+      throw new Error(DEVICE_OTHER_ROLE_APP_MESSAGE);
+    }
+    if (!canInstallRoleProductApp(roleApp)) {
+      throw new Error(DEVICE_OTHER_ROLE_APP_MESSAGE);
+    }
     if (deviceBindingBlocksAccount(remoteDevice, { kind: role, id: profile.id })) {
       throw new Error(ONE_ROLE_DEVICE_ACCOUNT_MESSAGE);
     }
@@ -14007,7 +14019,15 @@ export default function App() {
     syncAppRoute(route);
   };
 
-  if (websiteAccountView) {
+  const signedInWebsiteAccess = resolveWebsiteAccess(currentUser);
+  const browserAccountShellOnly =
+    !isAppExperience() &&
+    signedInRole !== 'staff' &&
+    signedInWebsiteAccess === 'account';
+  const accountShellView: WebsiteAccountView | null =
+    websiteAccountView ?? (browserAccountShellOnly ? 'home' : null);
+
+  if (accountShellView) {
     const clientRecord = clients.find((c) => c.id === currentUser.id);
     const unreadCount = countUnreadForMainApp(userNotifications, messengerAvailable);
     const accountStatusLabel =
@@ -14044,7 +14064,7 @@ export default function App() {
       />
     );
 
-    if (websiteAccountView === 'profile') {
+    if (accountShellView === 'profile') {
       accountBody = (
         <div className="website-account-panel">
           <UserProfileScreen
@@ -14068,7 +14088,7 @@ export default function App() {
           />
         </div>
       );
-    } else if (websiteAccountView === 'settings') {
+    } else if (accountShellView === 'settings') {
       accountBody = (
         <div className="website-account-panel">
           <UserSettingsScreen
@@ -14079,7 +14099,7 @@ export default function App() {
           />
         </div>
       );
-    } else if (websiteAccountView === 'support') {
+    } else if (accountShellView === 'support') {
       accountBody = (
         <div className="website-account-panel">
           <SupportScreen
@@ -14092,15 +14112,15 @@ export default function App() {
           />
         </div>
       );
-    } else if (websiteAccountView === 'documents') {
+    } else if (accountShellView === 'documents') {
       accountBody = (
         <WebsiteAccountDocuments currentUser={currentUser} onOpenLegal={openLegalPage} />
       );
-    } else if (websiteAccountView === 'downloads') {
+    } else if (accountShellView === 'downloads') {
       accountBody = (
         <WebsiteAccountDownloads role={productRole} canDownloadApks={canDownloadApks} />
       );
-    } else if (websiteAccountView === 'billing' || websiteAccountView === 'payouts') {
+    } else if (accountShellView === 'billing' || accountShellView === 'payouts') {
       if (productRole === 'client' && clientRecord) {
         accountBody = (
           <ClientCapabilitiesProvider clientType={clientRecord.clientType}>
@@ -14160,7 +14180,7 @@ export default function App() {
           userName={currentUser.name}
           userEmail={currentUser.email}
           avatarUrl={currentUser.avatar}
-          activeView={websiteAccountView}
+          activeView={accountShellView}
           onNavigate={goWebsiteAccount}
           onOpenApp={openSignedInApp}
           onboardingOpen={resolveWebsiteAccess(currentUser) === 'activation'}
