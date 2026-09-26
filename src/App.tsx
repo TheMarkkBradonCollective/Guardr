@@ -575,6 +575,7 @@ import {
   withDeviceConflict,
   writeDeviceRoleAccount,
   readDeviceRoleAccount,
+  clearDeviceRoleAccount,
   type OneRoleCase,
 } from './lib/oneRolePolicy';
 import { loadOneRoleCases, persistOneRoleCase } from './lib/oneRoleCasesStore';
@@ -4315,6 +4316,7 @@ export default function App() {
   const handleSignOut = () => {
     if (currentUser) void writeAuditLog(currentUser, 'sign_out', 'session', currentUser.id);
     void signOutAuth();
+    clearDeviceRoleAccount();
     localStorage.removeItem('guardr_current_user');
     clearPersistedAppRoute();
     if (isMessengerExperience()) {
