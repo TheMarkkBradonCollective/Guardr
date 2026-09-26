@@ -6,7 +6,8 @@
 -- Includes v1.0 platform extensions: auth linking, audit log, availability,
 -- recurring shifts, compliance alerts, invoicing, onboarding progress, role-based RLS,
 -- open-contract pricing, shift reports/activity logs, and company public placard.
--- Replaces the former supabase/migrations/ folder (87 incremental files).
+-- Consolidated baseline plus supabase/migrations through 2026-09-26 (device bindings,
+-- one-role cases, guard suggestions, crew coordination removed, Finance side_role, etc.).
 -- Ends with PostgREST schema reload so the API sees new columns immediately.
 -- =============================================================================
 
@@ -101,8 +102,11 @@ ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_document_type TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_license_class TEXT;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS migrated_to_staff_at TIMESTAMPTZ;
 ALTER TABLE guards ADD COLUMN IF NOT EXISTS trusted BOOLEAN NOT NULL DEFAULT FALSE;
-ALTER TABLE guards ADD COLUMN IF NOT EXISTS standing_crew_name TEXT DEFAULT '';
-ALTER TABLE guards ADD COLUMN IF NOT EXISTS standing_crew_description TEXT DEFAULT '';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS side_role TEXT;
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_side_role_check;
+ALTER TABLE guards ADD CONSTRAINT guards_side_role_check
+  CHECK (side_role IS NULL OR side_role IN ('Finance'));
+COMMENT ON COLUMN guards.side_role IS 'Optional specialty seat mirrored from staff — Finance payment desk.';
 
 ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_staff_role_check;
 ALTER TABLE guards ADD CONSTRAINT guards_staff_role_check
@@ -219,6 +223,8 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS application_revision_note TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS trusted BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS favorite_guard_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS security_company_roster JSONB NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN clients.security_company_roster IS
+  'Independent contractor guards on the PPO roster — not employees; marketplace bookings only.';
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS business_type TEXT;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS industries TEXT[];
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS business_license TEXT;
@@ -485,11 +491,10 @@ ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_hours N
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_amount NUMERIC(12, 2);
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS break_minutes INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_breaks JSONB NOT NULL DEFAULT '[]'::jsonb;
-ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS team_lead_id TEXT REFERENCES guards(id) ON DELETE SET NULL;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS opened_at TIMESTAMPTZ;
-ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS team_code TEXT;
-ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS crew_name TEXT;
-ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS crew_description TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_suggestions JSONB NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN security_requests.guard_suggestions IS
+  'Guard-to-guard suggestions for open jobs; client reviews before placement.';
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS service_agreement JSONB;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS auto_payout_scheduled_at TIMESTAMPTZ;
 ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_start_date TIMESTAMPTZ;
@@ -745,6 +750,20 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS app_channel TEXT DEFAULT 'main';
 UPDATE push_subscriptions SET app_channel = 'main' WHERE app_channel IS NULL;
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'push_subscriptions_app_channel_check'
+  ) THEN
+    ALTER TABLE push_subscriptions
+      ADD CONSTRAINT push_subscriptions_app_channel_check
+      CHECK (app_channel IN ('main', 'messenger'));
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_app_channel
+  ON push_subscriptions (app_channel);
+
 -- ── PUSH NOTIFICATION DEDUP (server-side duplicate prevention) ───────────────
 CREATE TABLE IF NOT EXISTS push_notification_dedup (
   id TEXT PRIMARY KEY,
@@ -964,7 +983,6 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   guard_trusted_status BOOLEAN NOT NULL DEFAULT true,
   client_trusted_status BOOLEAN NOT NULL DEFAULT true,
   job_relisted BOOLEAN NOT NULL DEFAULT true,
-  team_chat_message BOOLEAN NOT NULL DEFAULT true,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
@@ -986,15 +1004,13 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS reaction_notificat
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_trusted_status BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_trusted_status BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_relisted BOOLEAN NOT NULL DEFAULT true;
-ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS team_chat_message BOOLEAN NOT NULL DEFAULT true;
 
 COMMENT ON COLUMN notification_preferences.support_ticket IS 'Staff alert for new support chats and formal reports';
 COMMENT ON COLUMN notification_preferences.support_ticket_status IS 'User alert when staff updates ticket status';
 COMMENT ON COLUMN notification_preferences.dispute_update IS 'Alerts for dispute filings and resolutions';
 COMMENT ON COLUMN notification_preferences.guard_trusted_status IS 'Guard alert when staff mark or remove trusted status';
 COMMENT ON COLUMN notification_preferences.client_trusted_status IS 'Client alert when staff mark or remove trusted status';
-COMMENT ON COLUMN notification_preferences.job_relisted IS 'Client alert when a coordinated crew is dissolved and the job returns to the marketplace';
-COMMENT ON COLUMN notification_preferences.team_chat_message IS 'Crew chat messages for multi-guard coordinated jobs';
+COMMENT ON COLUMN notification_preferences.job_relisted IS 'Client alert when a job returns to the marketplace';
 
 CREATE TABLE IF NOT EXISTS platform_settings (
   id TEXT PRIMARY KEY DEFAULT 'default',
@@ -1103,6 +1119,9 @@ ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_document_type TEXT
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_license_class TEXT;
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_revision_history JSONB;
 
+COMMENT ON COLUMN staff.stripe_connect_account_id IS 'Stripe Connect Express account for staff compensation payouts.';
+COMMENT ON COLUMN staff.id_verification_status IS 'Government ID verification for staff onboarding — required before ops access.';
+
 UPDATE staff
 SET id_verification_status = 'not_submitted'
 WHERE id_verification_status = 'verified'
@@ -1144,9 +1163,6 @@ SET
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_enabled BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_delay_hours INTEGER NOT NULL DEFAULT 48;
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS verified_guard_self_serve BOOLEAN NOT NULL DEFAULT TRUE;
-ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS team_lead_bonus_per_guard_per_hour NUMERIC(10, 2) NOT NULL DEFAULT 1.00;
-ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS team_lead_bonus_client_share_percent INTEGER NOT NULL DEFAULT 50;
-ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS team_lead_bonus_platform_share_percent INTEGER NOT NULL DEFAULT 50;
 
 COMMENT ON COLUMN platform_settings.verified_guard_self_serve IS
   'When true, verified insured guards skip staff applicant review on card jobs';
@@ -1155,11 +1171,7 @@ UPDATE security_requests
 SET opened_at = COALESCE(opened_at, created_at)
 WHERE status = 'open' AND opened_at IS NULL;
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_security_requests_team_code_unique
-  ON security_requests (UPPER(team_code))
-  WHERE team_code IS NOT NULL AND status = 'open';
-
--- ── MULTI-GUARD CREW SLOTS ───────────────────────────────────────────────────
+-- ── MULTI-GUARD JOB SLOTS (independent guards per job — no crew coordination) ──
 CREATE TABLE IF NOT EXISTS job_guard_slots (
   id TEXT PRIMARY KEY,
   job_id TEXT NOT NULL REFERENCES security_requests(id) ON DELETE CASCADE,
@@ -1195,74 +1207,6 @@ ALTER TABLE job_guard_slots ADD CONSTRAINT job_guard_slots_status_check CHECK (
 CREATE INDEX IF NOT EXISTS idx_job_guard_slots_job_id ON job_guard_slots(job_id);
 CREATE INDEX IF NOT EXISTS idx_job_guard_slots_guard_id ON job_guard_slots(guard_id);
 CREATE INDEX IF NOT EXISTS idx_job_guard_slots_status ON job_guard_slots(status);
-
--- ── CREW TEAM CHAT ────────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS team_chat_threads (
-  id TEXT PRIMARY KEY,
-  request_id TEXT NOT NULL UNIQUE REFERENCES security_requests(id) ON DELETE CASCADE,
-  team_lead_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  archived_at TIMESTAMPTZ
-);
-
-CREATE TABLE IF NOT EXISTS team_chat_messages (
-  id TEXT PRIMARY KEY,
-  thread_id TEXT NOT NULL REFERENCES team_chat_threads(id) ON DELETE CASCADE,
-  sender_id TEXT NOT NULL,
-  sender_name TEXT NOT NULL,
-  sender_role TEXT NOT NULL,
-  body TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_team_chat_threads_request_id ON team_chat_threads(request_id);
-CREATE INDEX IF NOT EXISTS idx_team_chat_threads_status ON team_chat_threads(status);
-CREATE INDEX IF NOT EXISTS idx_team_chat_messages_thread_id ON team_chat_messages(thread_id);
-
--- ── STANDING CREW ROSTER (trusted guard teams) ───────────────────────────────
-CREATE TABLE IF NOT EXISTS guard_standing_crew_members (
-  id TEXT PRIMARY KEY,
-  lead_guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
-  member_guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
-  status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'active', 'declined', 'removed')),
-  invited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  responded_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (lead_guard_id, member_guard_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_standing_crew_lead
-  ON guard_standing_crew_members (lead_guard_id, status);
-
-CREATE INDEX IF NOT EXISTS idx_standing_crew_member
-  ON guard_standing_crew_members (member_guard_id, status);
-
-COMMENT ON TABLE guard_standing_crew_members IS
-  'Persistent roster a trusted guard maintains across jobs; pending until member accepts';
-
--- ── CREW LEAD REQUESTS (trusted guards requesting to lead their own crew) ─────
-CREATE TABLE IF NOT EXISTS guard_crew_join_requests (
-  id TEXT PRIMARY KEY,
-  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
-  status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'approved', 'declined')),
-  message TEXT,
-  requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  resolved_at TIMESTAMPTZ,
-  resolved_by_staff_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (guard_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_crew_join_requests_status
-  ON guard_crew_join_requests (status, requested_at DESC);
-
-COMMENT ON TABLE guard_crew_join_requests IS
-  'Trusted guards without their own crew can request staff approval to become a crew lead';
 
 -- ── USER NOTIFICATION INBOX ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS user_notifications (
@@ -1468,8 +1412,6 @@ ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_schedule_chang
 COMMENT ON COLUMN notification_preferences.job_schedule_changed IS 'Alert when a job schedule changes (client, guard, or staff)';
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS pre_shift_briefing BOOLEAN NOT NULL DEFAULT true;
 COMMENT ON COLUMN notification_preferences.pre_shift_briefing IS 'Guard alert when a pre-shift briefing unlocks or a reminder tier fires';
-ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS standing_crew_invite BOOLEAN NOT NULL DEFAULT true;
-COMMENT ON COLUMN notification_preferences.standing_crew_invite IS 'Guard alert for standing crew invites and crew updates';
 ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_invoice_ready BOOLEAN NOT NULL DEFAULT true;
 COMMENT ON COLUMN notification_preferences.client_invoice_ready IS 'Client alert when a job invoice is ready after staff approval';
 
@@ -1477,9 +1419,6 @@ COMMENT ON COLUMN notification_preferences.guard_arrived IS 'Staff/client alert 
 COMMENT ON COLUMN notification_preferences.guard_left_site IS 'Staff/client/guard alert when a guard leaves the job site';
 COMMENT ON COLUMN notification_preferences.job_open_to_guards IS 'Guard broadcast when a paid job is opened on the marketplace map';
 
-CREATE INDEX IF NOT EXISTS job_chat_threads_request_id_idx ON job_chat_threads(request_id);
-CREATE INDEX IF NOT EXISTS job_chat_threads_status_idx ON job_chat_threads(status);
-CREATE INDEX IF NOT EXISTS job_chat_messages_thread_id_idx ON job_chat_messages(thread_id);
 CREATE INDEX IF NOT EXISTS staff_messages_created_at_idx ON staff_messages(created_at);
 CREATE INDEX IF NOT EXISTS guard_messages_created_at_idx ON guard_messages(created_at);
 CREATE INDEX IF NOT EXISTS client_messages_created_at_idx ON client_messages(created_at);
@@ -1537,15 +1476,11 @@ ALTER TABLE chat_read_receipts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE job_guard_slots ENABLE ROW LEVEL SECURITY;
-ALTER TABLE team_chat_threads ENABLE ROW LEVEL SECURITY;
-ALTER TABLE team_chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_legal_acceptances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_insurance_policies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_vehicle_insurance_policies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_vehicle_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE company_public_documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE guard_standing_crew_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE guard_crew_join_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE one_role_cases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE device_account_bindings ENABLE ROW LEVEL SECURITY;
@@ -1560,10 +1495,10 @@ BEGIN
     'support_tickets', 'support_messages', 'push_subscriptions', 'push_notification_dedup',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages',
     'message_reactions', 'chat_read_receipts', 'notification_preferences',
-    'platform_settings', 'platform_cities', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
+    'platform_settings', 'platform_cities', 'job_guard_slots',
     'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
     'guard_vehicle_profiles', 'company_public_documents',
-    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications',
+    'user_notifications',
     'one_role_cases', 'device_account_bindings'
   ]
   LOOP
@@ -1610,9 +1545,10 @@ BEGIN
     'support_tickets', 'support_messages',
     'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages', 'message_reactions',
     'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
-    'guard_vehicle_profiles', 'team_chat_threads', 'team_chat_messages', 'job_guard_slots',
-    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications',
+    'guard_vehicle_profiles', 'job_guard_slots',
+    'user_notifications',
     'platform_settings', 'platform_cities', 'client_locations', 'job_locations', 'company_public_documents',
+    'one_role_cases', 'device_account_bindings',
     'client_invoices', 'message_reactions', 'guard_availability', 'guard_availability_date_overrides'
   ]
   LOOP
@@ -1776,7 +1712,8 @@ ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_compensation_config
     "Founder": { "percentOfFees": 0.119, "floorPerPeriod": 0, "capPerPeriod": 8300, "hourlyPayRate": 40 }
   }
 }'::jsonb;
-COMMENT ON COLUMN platform_settings.staff_compensation_config IS 'Staff revenue-share compensation — ~50% of collected platform fees across roles, caps/floors, cadence.';
+COMMENT ON COLUMN platform_settings.staff_compensation_config IS
+  'Staff revenue-share compensation — % of collected platform fees per role, caps/floors, cadence, hourlyPayRate for Prop 22 add-ons.';
 
 ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS client_credential_rules JSONB NOT NULL DEFAULT '[]'::jsonb;
 COMMENT ON COLUMN platform_settings.client_credential_rules IS
@@ -1804,8 +1741,12 @@ CREATE TABLE IF NOT EXISTS staff_compensation_payouts (
 CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_staff ON staff_compensation_payouts(staff_id);
 CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_period ON staff_compensation_payouts(period_start, period_end);
 CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_confirmed ON staff_compensation_payouts(confirmed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_status
+  ON staff_compensation_payouts(payout_status)
+  WHERE payout_status = 'base_paid';
 
-COMMENT ON TABLE staff_compensation_payouts IS 'Confirmed staff revenue-share payouts — contractor-style, not W-2 payroll.';
+COMMENT ON TABLE staff_compensation_payouts IS
+  'Staff period payout ledger — instant revenue-share base (may be $0) plus Prop 22 add-only adjustments. Pack-pay can extend this table later.';
 
 ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_hours NUMERIC(10, 2);
 ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_rate NUMERIC(10, 2);
@@ -1847,7 +1788,8 @@ CREATE INDEX IF NOT EXISTS idx_staff_time_entries_staff ON staff_time_entries(st
 CREATE INDEX IF NOT EXISTS idx_staff_time_entries_clock_in ON staff_time_entries(clock_in_at DESC);
 CREATE INDEX IF NOT EXISTS idx_staff_time_entries_open ON staff_time_entries(staff_id) WHERE clock_out_at IS NULL;
 
-COMMENT ON TABLE staff_time_entries IS 'Staff automatic time tracker — first to last website action per session.';
+COMMENT ON TABLE staff_time_entries IS
+  'Staff smart time tracking — automatic app sessions plus manager corrections (Profile → Timesheets).';
 
 CREATE TABLE IF NOT EXISTS audit_log (
   id TEXT PRIMARY KEY,
@@ -2183,6 +2125,43 @@ BEGIN
   END LOOP;
 END $$;
 
+-- ── LEGACY CLEANUP (brownfield — matches supabase/migrations through 2026-09-26) ──
+DROP TABLE IF EXISTS team_chat_messages CASCADE;
+DROP TABLE IF EXISTS team_chat_threads CASCADE;
+DROP TABLE IF EXISTS guard_standing_crew_members CASCADE;
+DROP TABLE IF EXISTS guard_crew_join_requests CASCADE;
+
+DROP INDEX IF EXISTS idx_security_requests_team_code_unique;
+
+DO $$
+BEGIN
+  IF to_regclass('public.security_requests') IS NOT NULL THEN
+    ALTER TABLE security_requests
+      DROP COLUMN IF EXISTS team_lead_id,
+      DROP COLUMN IF EXISTS team_code,
+      DROP COLUMN IF EXISTS crew_name,
+      DROP COLUMN IF EXISTS crew_description,
+      DROP COLUMN IF EXISTS shift_time_adjustment;
+  END IF;
+  IF to_regclass('public.guards') IS NOT NULL THEN
+    ALTER TABLE guards
+      DROP COLUMN IF EXISTS standing_crew_name,
+      DROP COLUMN IF EXISTS standing_crew_description;
+  END IF;
+  IF to_regclass('public.platform_settings') IS NOT NULL THEN
+    ALTER TABLE platform_settings
+      DROP COLUMN IF EXISTS team_lead_bonus_per_guard_per_hour,
+      DROP COLUMN IF EXISTS team_lead_bonus_client_share_percent,
+      DROP COLUMN IF EXISTS team_lead_bonus_platform_share_percent;
+  END IF;
+  IF to_regclass('public.notification_preferences') IS NOT NULL THEN
+    ALTER TABLE notification_preferences
+      DROP COLUMN IF EXISTS standing_crew_invite,
+      DROP COLUMN IF EXISTS crew_lead_request,
+      DROP COLUMN IF EXISTS team_chat_message;
+  END IF;
+END $$;
+
 NOTIFY pgrst, 'reload schema';
 
 -- ── VERIFY (read-only) ─────────────────────────────────────────────────────
@@ -2224,7 +2203,7 @@ WHERE table_schema = 'public'
     'break_minutes', 'shift_breaks',
     'check_in_audit', 'spot_checks', 'mid_shift_audits', 'en_route_at', 'arrived_at', 'guard_live_location', 'replacement_request', 'no_show', 'client_violation_reports', 'check_out_audit',
     'pending_guard_id', 'staff_approved_guard_at',
-    'team_lead_id', 'opened_at', 'team_code', 'crew_name', 'crew_description',
+    'opened_at', 'guard_suggestions',
     'service_agreement', 'auto_payout_scheduled_at',
     'pending_start_date', 'pending_end_date', 'pending_duration_hours', 'pending_estimated_payout',
     'schedule_change_status', 'schedule_change_requested_at', 'schedule_change_requested_by',
@@ -2239,7 +2218,7 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'clients'
-  AND column_name IN ('account_status', 'approved', 'password', 'must_change_password', 'first_name', 'last_name', 'trusted', 'favorite_guard_ids', 'business_type', 'service_description', 'service_city', 'service_state')
+  AND column_name IN ('account_status', 'approved', 'password', 'must_change_password', 'first_name', 'last_name', 'trusted', 'favorite_guard_ids', 'business_type', 'service_description', 'service_city', 'service_state', 'security_company_roster', 'client_type')
 ORDER BY column_name;
 
 SELECT column_name, data_type, is_nullable
@@ -2267,8 +2246,7 @@ WHERE table_schema = 'public'
   AND table_name = 'platform_settings'
   AND column_name IN ('payment_cash_enabled', 'payment_stripe_enabled', 'payment_square_enabled', 'fee_config',
     'auto_stripe_payout_enabled', 'auto_stripe_payout_delay_hours', 'verified_guard_self_serve',
-    'team_lead_bonus_per_guard_per_hour', 'team_lead_bonus_client_share_percent',
-    'team_lead_bonus_platform_share_percent', 'owner_message', 'director_message',
+    'staff_compensation_config', 'client_credential_rules', 'owner_message', 'director_message',
     'job_review_mode', 'trusted_client_auto_publish', 'sms_notifications_enabled',
     'background_check_provider', 'insurance_verification_mode', 'company_placard_public_enabled')
 ORDER BY column_name;
@@ -2295,7 +2273,7 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'guards'
-  AND column_name IN ('id_document_type', 'id_license_class', 'trusted', 'standing_crew_name')
+  AND column_name IN ('id_document_type', 'id_license_class', 'trusted', 'side_role')
 ORDER BY column_name;
 
 SELECT column_name, data_type, is_nullable
@@ -2321,12 +2299,6 @@ ORDER BY column_name;
 SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
-  AND table_name = 'guard_crew_join_requests'
-ORDER BY column_name;
-
-SELECT column_name, data_type, is_nullable
-FROM information_schema.columns
-WHERE table_schema = 'public'
   AND table_name = 'guard_availability_date_overrides'
 ORDER BY column_name;
 
@@ -2334,12 +2306,6 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'push_notification_dedup'
-ORDER BY column_name;
-
-SELECT column_name, data_type, is_nullable
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name = 'guard_standing_crew_members'
 ORDER BY column_name;
 
 SELECT column_name, data_type, is_nullable
