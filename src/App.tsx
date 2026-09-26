@@ -344,6 +344,14 @@ import {
 import { removeStoredPassword } from './lib/accountPasswords';
 import { writeAuditLog } from './lib/auditLog';
 import { signOutAuth } from './lib/auth/authService';
+import { resolveDeviceId } from './lib/deviceIdentity';
+import {
+  deviceBindingBlocksAccount,
+  fetchDeviceAccountBinding,
+  registerDeviceRoleAppClaim,
+  upsertDeviceAccountBinding,
+} from './lib/deviceBindingStore';
+import { writeDeviceRoleAppClaim } from './lib/deviceRoleClaim';
 import { getTourForRole, migrateLegacyTourCompletion } from './lib/onboardingTours';
 import { TutorialExperience } from './components/onboarding/OnboardingTour';
 import {
@@ -554,6 +562,7 @@ import {
   isWebsiteAccountPath,
   parseWebsiteAccountView,
   persistPostAuthPath,
+  bakedNativeProductApp,
   productAppForRole,
   productAppFromPath,
   productRoleForApp,
@@ -571,11 +580,11 @@ import {
   collectRoleAccounts,
   ignoreOneRoleCase,
   kindFromSessionRole,
+  ONE_ROLE_DEVICE_ACCOUNT_MESSAGE,
   openHoldForAccount,
   withDeviceConflict,
   writeDeviceRoleAccount,
   readDeviceRoleAccount,
-  clearDeviceRoleAccount,
   type OneRoleCase,
 } from './lib/oneRolePolicy';
 import { loadOneRoleCases, persistOneRoleCase } from './lib/oneRoleCasesStore';
@@ -4129,11 +4138,27 @@ export default function App() {
     supportMode,
   ]);
 
+  useEffect(() => {
+    const baked = bakedNativeProductApp();
+    if (!baked) return;
+    void resolveDeviceId().then((deviceId) => registerDeviceRoleAppClaim(deviceId, baked));
+  }, []);
+
   // ── Auth ───────────────────────────────────────────────────
   const handleSignIn = (user: SessionUser, options?: { passwordChangeRecommended?: boolean }) => {
     const kind = kindFromSessionRole(user.role);
     if (kind) {
       writeDeviceRoleAccount({ kind, id: user.id });
+      const roleApp = productAppForRole(kind);
+      writeDeviceRoleAppClaim(roleApp);
+      void resolveDeviceId().then((deviceId) =>
+        upsertDeviceAccountBinding({
+          deviceId,
+          accountKind: kind,
+          accountId: user.id,
+          roleAppClaim: roleApp,
+        }),
+      );
       if (isMessengerExperience() || isMessengerCompanionRuntime()) {
         setProductApp(kind);
         setMessengerCompanion(true);
@@ -4316,7 +4341,6 @@ export default function App() {
   const handleSignOut = () => {
     if (currentUser) void writeAuditLog(currentUser, 'sign_out', 'session', currentUser.id);
     void signOutAuth();
-    clearDeviceRoleAccount();
     localStorage.removeItem('guardr_current_user');
     clearPersistedAppRoute();
     if (isMessengerExperience()) {
@@ -4824,6 +4848,16 @@ export default function App() {
     }
 
     const emailLower = assertEmailAvailable(profile.email);
+
+    const deviceId = await resolveDeviceId();
+    const remoteDevice = await fetchDeviceAccountBinding(deviceId);
+    if (deviceBindingBlocksAccount(remoteDevice, { kind: role, id: profile.id })) {
+      throw new Error(ONE_ROLE_DEVICE_ACCOUNT_MESSAGE);
+    }
+    const localDevice = readDeviceRoleAccount();
+    if (localDevice && (localDevice.kind !== role || localDevice.id !== profile.id)) {
+      throw new Error(ONE_ROLE_DEVICE_ACCOUNT_MESSAGE);
+    }
 
     const flagSignupIfSecondRole = (created: {
       kind: 'guard' | 'client' | 'staff';

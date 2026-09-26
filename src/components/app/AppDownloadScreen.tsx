@@ -31,6 +31,8 @@ import {
   type ProductRole,
 } from '../../lib/productApps';
 import { userFacingError } from '../../lib/userFacingError';
+import { useDeviceDownloadPolicy } from '../../hooks/useDeviceDownloadPolicy';
+import { DEVICE_OTHER_ROLE_APP_MESSAGE } from '../../lib/deviceRoleClaim';
 
 interface AppDownloadScreenProps {
   onBack?: () => void;
@@ -87,6 +89,7 @@ export function AppDownloadScreen({
     refresh,
   } = useAppDownloadStatus();
   const [installing, setInstalling] = useState(false);
+  const downloadPolicy = useDeviceDownloadPolicy();
 
   const isNativeView = liveContext === 'apk';
 
@@ -208,7 +211,9 @@ export function AppDownloadScreen({
               {(accountRole
                 ? GITHUB_ROLE_APKS.filter((app) => app.id === productAppForRole(accountRole))
                 : GITHUB_ROLE_APKS
-              ).map((app) => (
+              ).map((app) => {
+                const blocked = downloadPolicy.ready && !downloadPolicy.canInstallRoleApp(app.id);
+                return (
                 <article key={app.id} className="install-product-card install-product-card--full">
                   <div className="install-product-card-top">
                     <img
@@ -232,7 +237,19 @@ export function AppDownloadScreen({
                       <p className="install-product-card-subtitle">{app.tagline}</p>
                     </div>
                   </div>
+                  {blocked ? (
+                    <p className="install-product-card-copy" role="status">
+                      {DEVICE_OTHER_ROLE_APP_MESSAGE}
+                    </p>
+                  ) : null}
                   <div className="install-product-card-actions">
+                    {blocked ? (
+                      <span className="install-cta install-cta--primary install-cta--disabled" aria-disabled="true">
+                        <span className="install-cta-copy">
+                          <span className="install-cta-title">{app.label} blocked on this device</span>
+                        </span>
+                      </span>
+                    ) : (
                     <a href={app.url} className="install-cta install-cta--primary" style={{ textDecoration: 'none' }}>
                       <span className="install-cta-icon" aria-hidden>
                         <Download className="w-4 h-4" />
@@ -242,13 +259,20 @@ export function AppDownloadScreen({
                         <span className="install-cta-sub">{app.file}</span>
                       </span>
                     </a>
+                    )}
                   </div>
                 </article>
-              ))}
-              {!accountRole ? (
+              );
+              })}
+              {!accountRole && downloadPolicy.canDownloadAllApksZip() ? (
                 <a href={GITHUB_ALL_APKS_ZIP} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
                   Download all APKs (GitHub zip)
                 </a>
+              ) : null}
+              {!accountRole && downloadPolicy.roleAppClaim ? (
+                <p className="install-product-card-copy" role="status">
+                  {downloadPolicy.blockedReason}
+                </p>
               ) : null}
               <a href={GITHUB_MESSENGER_APP.url} download={GITHUB_MESSENGER_APP.file} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
                 Download Messenger

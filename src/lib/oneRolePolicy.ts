@@ -1,5 +1,3 @@
-import { resolveOneRoleDeviceSurface, type OneRoleDeviceSurface } from './oneRoleDeviceSurface';
-
 /** One person, one Guardr role. Nobody may be Guard and Customer, Customer and Staff, or Staff and Guard. */
 
 export type OneRoleKind = 'guard' | 'client' | 'staff';
@@ -13,6 +11,9 @@ export const ONE_ROLE_POLICY_REASON =
 
 export const ONE_ROLE_LOCK_MESSAGE =
   'Both accounts are locked while a manager reviews a one-role policy hold. You can only sign out and wait — there is no switch-account. Staff will either clear the hold or block both accounts.';
+
+export const ONE_ROLE_DEVICE_ACCOUNT_MESSAGE =
+  'This device is already tied to another Guardr account. One device, one account — you cannot sign in with a different account on this phone or browser. Use the original account or contact support.';
 
 export const ONE_ROLE_SIGN_OUT_ONLY_COPY =
   'There is no switch account. Sign out, then sign in with the same Guardr account.';
@@ -41,12 +42,10 @@ export interface OneRoleDeviceAccount {
   id: string;
 }
 
-/** @deprecated Legacy single-slot key; cleared on read. Use per-surface keys instead. */
+/** Global device slot — shared across website tabs and installed PWAs on the same origin. */
 export const ONE_ROLE_DEVICE_STORAGE_KEY = 'guardr_device_role_account_v1';
 
-export function oneRoleDeviceStorageKey(surface: OneRoleDeviceSurface): string {
-  return `${ONE_ROLE_DEVICE_STORAGE_KEY}:${surface}`;
-}
+const LEGACY_SURFACE_PREFIX = `${ONE_ROLE_DEVICE_STORAGE_KEY}:`;
 
 export function normalizeEmail(email: string | null | undefined): string {
   return (email ?? '').trim().toLowerCase();
@@ -160,6 +159,21 @@ export function conflictingAccountsFor(
   return kinds.size > 1 ? group : null;
 }
 
+function accountRefForDevice(
+  accounts: OneRoleAccountRef[],
+  device: OneRoleDeviceAccount,
+): OneRoleAccountRef {
+  const found = accounts.find((account) => account.kind === device.kind && account.id === device.id);
+  if (found) return found;
+  return {
+    kind: device.kind,
+    id: device.id,
+    name: oneRoleKindLabel(device.kind),
+    email: '',
+    phone: '',
+  };
+}
+
 export function withDeviceConflict(
   accounts: OneRoleAccountRef[],
   current: OneRoleAccountRef,
@@ -177,9 +191,9 @@ export function withDeviceConflict(
       : 'phone';
     return { accounts: identityConflict, matchKind };
   }
-  if (!device || device.kind === current.kind) return null;
-  const previous = accounts.find((account) => account.kind === device.kind && account.id === device.id);
-  if (!previous || previous.id === current.id) return null;
+  if (!device) return null;
+  if (device.kind === current.kind && device.id === current.id) return null;
+  const previous = accountRefForDevice(accounts, device);
   return { accounts: [previous, current], matchKind: 'device' };
 }
 
@@ -272,47 +286,36 @@ function parseDeviceRoleAccount(raw: string | null): OneRoleDeviceAccount | null
   return null;
 }
 
-/** Drop the old global device slot so PWA + website tabs stop cross-blocking. */
-export function clearLegacyGlobalDeviceRoleAccount(): void {
+/** Remove per-surface keys from an earlier release. */
+export function clearLegacyPerSurfaceDeviceRoleKeys(): void {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.removeItem(ONE_ROLE_DEVICE_STORAGE_KEY);
+    const remove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i);
+      if (key?.startsWith(LEGACY_SURFACE_PREFIX)) remove.push(key);
+    }
+    for (const key of remove) window.localStorage.removeItem(key);
   } catch {
     /* ignore */
   }
 }
 
-export function readDeviceRoleAccount(
-  surface: OneRoleDeviceSurface = resolveOneRoleDeviceSurface(),
-): OneRoleDeviceAccount | null {
+export function readDeviceRoleAccount(): OneRoleDeviceAccount | null {
   if (typeof window === 'undefined') return null;
-  clearLegacyGlobalDeviceRoleAccount();
+  clearLegacyPerSurfaceDeviceRoleKeys();
   try {
-    return parseDeviceRoleAccount(window.localStorage.getItem(oneRoleDeviceStorageKey(surface)));
+    return parseDeviceRoleAccount(window.localStorage.getItem(ONE_ROLE_DEVICE_STORAGE_KEY));
   } catch {
     return null;
   }
 }
 
-export function writeDeviceRoleAccount(
-  account: OneRoleDeviceAccount,
-  surface: OneRoleDeviceSurface = resolveOneRoleDeviceSurface(),
-): void {
+export function writeDeviceRoleAccount(account: OneRoleDeviceAccount): void {
   if (typeof window === 'undefined') return;
-  clearLegacyGlobalDeviceRoleAccount();
+  clearLegacyPerSurfaceDeviceRoleKeys();
   try {
-    window.localStorage.setItem(oneRoleDeviceStorageKey(surface), JSON.stringify(account));
-  } catch {
-    /* ignore */
-  }
-}
-
-export function clearDeviceRoleAccount(
-  surface: OneRoleDeviceSurface = resolveOneRoleDeviceSurface(),
-): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.removeItem(oneRoleDeviceStorageKey(surface));
+    window.localStorage.setItem(ONE_ROLE_DEVICE_STORAGE_KEY, JSON.stringify(account));
   } catch {
     /* ignore */
   }
@@ -325,5 +328,5 @@ export function canReviewOneRoleHolds(role: string | null | undefined): boolean 
 export function matchKindLabel(matchKind: OneRoleMatchKind): string {
   if (matchKind === 'email') return 'Same email';
   if (matchKind === 'phone') return 'Same phone number';
-  return 'Same device signed into two roles';
+  return 'Same device — another account';
 }
