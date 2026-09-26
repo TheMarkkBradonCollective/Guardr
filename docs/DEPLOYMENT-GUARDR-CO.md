@@ -141,16 +141,20 @@ If guards see *"You can only create new accounts if you've signed up for Connect
 
 ---
 
-## Quick checklist
+## Quick checklist (bring Guardr online)
 
-- [ ] `supabase/complete_schema_setup.sql` applied in Supabase SQL Editor
-- [ ] Supabase Site URL = `https://guardr.co`
-- [ ] All env vars in Vercel (especially `VITE_*` for frontend)
-- [ ] Redeployed on Vercel
-- [ ] `https://guardr.co/api/health` works
-- [ ] GoDaddy DNS points to Vercel
-- [ ] Domain shows valid in Vercel
-- [ ] Stripe webhook URL = `https://guardr.co/api/stripe/webhook`
+- [ ] `supabase/complete_schema_setup.sql` applied in Supabase SQL Editor (includes `device_account_bindings` and latest migrations through 2026-09-26)
+- [ ] Supabase **Site URL** = `https://www.guardr.co` and redirect URLs include `https://www.guardr.co/**` and `https://guardr.co/**`
+- [ ] All env vars in Vercel (especially `VITE_*` for frontend, `SUPABASE_SERVICE_ROLE_KEY`, Stripe keys)
+- [ ] **Stripe Connect** platform profile complete (live or test) so guards can connect banks
+- [ ] Stripe webhook URL = `https://www.guardr.co/api/stripe/webhook`
+- [ ] Redeployed on Vercel (billing/plan active — deploy blocked if account is suspended)
+- [ ] `https://www.guardr.co/api/health` returns `"status":"ok"`
+- [ ] GoDaddy DNS points to Vercel; domain shows valid SSL
+- [ ] Android CI or local build uploaded **Guard**, **Customer**, **Staff**, and **Messenger** APKs to `public/download/` (or GitHub Release) — build **233** matches `package.json` **1.0.133-beta**
+- [ ] Firebase `google-services.json` covers all Android package ids if using native push
+- [ ] User PDF manuals regenerated (`npm run docs:manuals-pdf`) and deployed with the site under `/manuals/`
+- [ ] Smoke-test: customer/guard sign-in on website → account shell only; ops open in role APK; staff ops in browser
 
 ---
 

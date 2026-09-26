@@ -21,6 +21,8 @@ The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | Wha
 | 12:46 AM | Block Guard/Customer/Staff APK cross-download; Messenger still allowed |
 | 1:07 AM | `complete_schema_setup.sql` fully synced with migrations through 2026-09-26 (PR #1063) |
 | 1:10 AM | Release **v1.0.133-beta** — PWA cache bust, download manifest, Android versionCode **233** |
+| 1:21 AM | Audit hardening — account shell gate, device role blocks on sign-in (PR #1065) |
+| 1:30 AM | User manuals + Guide — app-first (website account vs role APK), v1.0.133 / build 233, device policy; PDFs regenerated |
 
 **Shipped**
 - **v1.0.133** (build **233**) — site + PWA + APK version alignment
@@ -28,6 +30,7 @@ The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | Wha
 - **Downloads:** role-app claim blocks other role APKs on the same device (Messenger exempt)
 - **Database:** monolithic SQL matches all `supabase/migrations` (guard suggestions, `guards.side_role`, no crew coordination tables)
 - PWA cache: `guardr-cache-v1-0-133-beta`
+- **Docs:** `docs/user-manuals/*.md`, `docs/guardr-general-guide.md`, `docs/DEPLOYMENT-GUARDR-CO.md` aligned with app-first + four APKs; run `npm run docs:manuals-pdf` before deploy
 
 **Download**
 - https://www.guardr.co/download/guardr.apk?v=233

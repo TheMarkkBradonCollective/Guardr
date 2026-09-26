@@ -22,6 +22,19 @@ Guardr is operated by **Signature Security Specialist, LLC** as a **technology m
 
 ---
 
+## Where you use Guardr
+
+| Surface | What you do there |
+|---------|-------------------|
+| **guardr.co (browser)** | Sign-up, activation checklist, **account shell** — profile, credentials, billing/payment history, **Downloads** (Customer APK), support, legal documents, Guide |
+| **Customer app (Android)** | **Map**, **Home**, **Jobs**, **Guards**, **Messages**, live coverage, post jobs, approve guards, pay on jobs |
+
+After staff **approve** your account, install the **Customer app** from **Account → Downloads** or [guardr.co/download](https://www.guardr.co/download). Operational pages (map, jobs, guards) are **not** available in a plain browser tab once you are active — use the app.
+
+Optional **Messenger** app: messages and support for your signed-in role; it does not replace the Customer app.
+
+---
+
 ## 1. Account setup
 
 1. Go to [guardr.co](https://guardr.co) and choose **I need security**.
@@ -30,14 +43,16 @@ Guardr is operated by **Signature Security Specialist, LLC** as a **technology m
    - **Business:** a company, venue, or organization is the contracting party. Extra tools for sites, staffing, reporting, and team contacts. You can still post a private event.
 3. Complete profile details under **Profile**. Upload **Credentials** there (government-issued ID is always required).
 4. On **Home**, watch for **Account pending approval**.
-5. While pending you can use **Home**, **Profile**, **Messages**, and **Guide**. Most ops pages stay blocked until staff approve you.
-6. After approval, the full client workspace opens. Personal and business share one client system — business unlocks management tools.
+5. While pending you can use account **Home**, **Profile**, and **Guide** on the website; install the Customer app when you are ready. Field ops stay blocked until staff approve you and you use the **Customer app**.
+6. After approval, open the **Customer app** for map, jobs, guards, and messages. The website account shell remains for profile, billing, downloads, and support. Personal and business share one client system — business unlocks management tools in the app.
 
 **Want a job at Guardr (ops/support)?** Use **Apply to work at Guardr** — not the client path.
 
 ---
 
-## 2. Main pages
+## 2. Main pages (Customer app)
+
+These pages live in the **Customer Android app** (and the installed Customer shell), not in a marketing browser tab after activation.
 
 | Page | Purpose |
 |------|---------|

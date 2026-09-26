@@ -30,6 +30,8 @@ Output is copied to `public/manuals/` for website and in-app downloads at `/manu
 
 Each manual is written for its role:
 
-- **Client** — Personal vs Business contracting party; hiring independent contractors; credentials, costs, billing
-- **Guard** — independent contractor status; credentials, shifts, payouts
-- **Staff** — Guardr employees; governance, marketplace payments pipeline, staff compensation
+- **Client** — Personal vs Business contracting party; hiring independent contractors; credentials, costs, billing; **Customer app** for field ops; website **account shell** only when active in a browser
+- **Guard** — independent contractor status; credentials, shifts, payouts; **Guard app** for map/jobs; website for activation and account
+- **Staff** — Guardr employees; governance, marketplace payments pipeline, staff compensation; **full ops in browser**; optional Staff APK
+
+**Product policy (Sep 2026):** app-first for customers and guards; device one-account / one role APK per phone (Messenger exempt). Regenerate PDFs after editing sources — document control date is stamped at build time.

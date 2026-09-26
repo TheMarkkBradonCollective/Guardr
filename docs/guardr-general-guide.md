@@ -1,6 +1,6 @@
 # Guardr — Guide
 
-**Last updated:** Wednesday, August 19, 2026
+**Last updated:** Friday, September 26, 2026
 
 Guardr connects **clients** who need security coverage with **licensed guards** through an independent-contractor technology marketplace. Guardr staff **verify guard credentials** for marketplace eligibility — that is the platform's core compliance role. Guardr is not the employer, PPO, or staffing agency.
 
@@ -25,6 +25,25 @@ Signup is three screens: **I need security** vs **I want to work**, then Persona
 
 Do **not** use guard or client signup if you are applying for a staff job — use **Apply to work at Guardr** instead. Personal vs Business is **who pays**, not the type of location.
 
+### Website vs role apps (September 2026)
+
+Guardr is **app-first** for marketplace field work:
+
+| Who | guardr.co in a **browser tab** | **Android role app** |
+|-----|--------------------------------|----------------------|
+| **Customer (active)** | Account shell — profile, billing, downloads, support, documents, Guide | **Customer app** — Map, Home, Jobs, Guards, Messages, live coverage |
+| **Guard (active)** | Account shell — profile, payout history, downloads, support, Guide | **Guard app** — Map, Jobs, Pay, Messages, shifts, performance |
+| **Guard / Customer (pending / activating)** | Activation checklist + credential uploads + support | Install role app from **Downloads** when ready; ops unlock after **active** |
+| **Staff (active)** | Full **operations** workspace (desktop command center) | Optional **Staff APK** for mobile ops |
+
+**Messenger** is a separate companion app (messages and support for whichever role you sign into). It does **not** replace the Customer or Guard app.
+
+**Downloads:** [guardr.co/download](https://www.guardr.co/download) lists **Guard**, **Customer**, **Staff**, and **Messenger** APKs. The account **Downloads** page shows only APKs allowed on **this device** (other role APKs are blocked; Messenger is always allowed).
+
+**Device policy:** one Guardr **role app** per phone and one **account** per device for those apps. Signing out does **not** clear the device binding.
+
+**Release:** **v1.0.133-beta** (Android build **233**).
+
 ### User-facing labels (August 2026)
 
 Guardr uses different words depending on who is looking at the screen. Internal code and database tables still use `client` — only the **display text** changed.
@@ -44,18 +63,18 @@ Staff **create** actions (add customer, guard, staff, credential, job) appear **
 | Audience | How to open it | Page title |
 |----------|----------------|------------|
 | **Public** | **guardr.co/guide** or **Guide** on the homepage · **Download** / **Manuals** in nav and footer | **Guide** (in-app) · PDF manuals at **/manuals** · install at **/download** |
-| **Client** | Account menu → **Guide** or **Settings → User manuals** | **Guide** + PDF downloads |
-| **Guard** | Account menu → **Guide** (also while pending) or **Settings → User manuals** | **Guide** + PDF downloads |
+| **Client** | Website account → **Guide** or **Settings → User manuals**; Customer app account menu → **Guide** | **Guide** + PDF downloads |
+| **Guard** | Website activation / account → **Guide**; Guard app account menu → **Guide** | **Guide** + PDF downloads |
 | **Staff** | Left sidebar → **Guide** — filter by role · **Settings → User manuals** | **Guide** + PDF downloads |
 
 ### Main navigation by role
 
 | Role | Main pages |
 |------|------------|
-| **Client** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus account menu / **More** → **Payments** (personal) or **Billing** (business), **Locations** / **Sites**, **Notifications**, **Settings**, **Profile**, **Guide**. **Reports** is a business-only tool. |
-| **Guard (pending)** | **Activation screen** — **Application under review**; upload the five required credentials while staff reviews your application. Account menu → **Settings** (sign out). |
-| **Guard (approved, not active)** | **Activation screen** — upload ID, COI, guard card, mandatory training, and Continuing Education inline; **Support** for **Contact support** with staff; **Guide** / PDF manuals available. **Map**, **Jobs**, **Payments**, and **Profile** remain blocked until **active**. |
-| **Guard (active)** | **Map**, **Jobs**, **Payments**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, and **Guide** |
+| **Client (website browser, active)** | Account shell — **Home**, **Profile**, **Billing** / **Payments**, **Downloads**, **Settings**, **Support**, **Documents**, **Guide**. Use **Open app** or **Downloads** for the Customer APK. |
+| **Client (Customer app)** | **Map**, **Home**, **Messages**, **Guards**, **Jobs**, plus **More** → **Payments** (personal) or **Billing** (business), **Locations** / **Sites**, **Notifications**, **Settings**, **Profile**, **Guide**. **Reports** is business-only. |
+| **Guard (website — pending / approved)** | **Activation screen** — upload credentials; **Support** / **Contact support**; **Guide** / PDF manuals; **Settings** (sign out). |
+| **Guard (Guard app — active)** | **Map**, **Jobs**, **Payments**, **Messages**, plus account menu → **Profile**, **Notifications**, **Performance**, **Vehicle** (if driving jobs), **Preferences**, **Availability**, **Settings**, **Guide** |
 | **Moderator** | **Overview**, **Map**, **Jobs**, **Applications**, **Credentials**, **Customers**, **Guards**, **Messages**, **Incidents**, **Stats** (desktop), **Guide** |
 | **Staff (pending / approved ops)** | **Staff activation** — upload government ID (front, back, selfie) and connect Stripe; ops panels blocked until **active** |
 | **Staff (management, Manager+)** | Ops dashboard available while **approved** (inactive on roster); upload government ID from **Profile** until verified and auto-activated — not the activation screen |
@@ -676,7 +695,7 @@ Payments complements the in-app **Jobs → Pay Now** flow — some jobs may show
      - Continuing Education — full **32-hour BSIS CE package** (all 9 course certificates).
      - Optional extra credentials (annual 8-hour refresher, supplemental BSIS, firearms, medical, FEMA).
 4. **Administrators verify each credential** — nothing auto-verifies on upload.
-5. When all five required credentials are verified, an **Administrator+ manually activates** your account (`approved` → `active`).
+5. When all five required credentials are verified, your account **activates automatically** (`approved` → `active`).
 6. After activation, the full guard app opens — **Map**, **Jobs**, **Pay**, **Messages**, and **Profile**.
 
 Grace period (optional training):
@@ -1492,15 +1511,19 @@ Available from the **Support** sidebar tab for clients and guards. Use for safet
 
 ### Install the app
 
-Guardr ships as a **website**, **PWA (Lite Version)**, and **APK (Full Version)** (currently **v1.0.115**, build **215**).
+Guardr ships as the **website** plus **four Android apps** (currently **v1.0.133-beta**, build **233**):
 
-| Surface | How to install |
-|---------|----------------|
-| **Website** | Open [guardr.co](https://www.guardr.co) in any browser — account menu → **Download** for install options |
-| **PWA (Lite Version)** | **iOS:** Safari → Share → **Add to Home Screen**. **Android/Chrome:** browser menu or install prompt → **Install** — auto-updates when you open it |
-| **APK (Full Version)** | Account menu → **APK (Full Version)** or [guardr.co/download](https://www.guardr.co/download) — scan QR or tap download |
+| Product | Who | Install |
+|---------|-----|---------|
+| **Website** | Everyone — marketing, sign-up, staff ops, customer/guard **account shell** | [guardr.co](https://www.guardr.co) |
+| **Customer APK** | Personal and business clients (field ops) | [guardr.co/download](https://www.guardr.co/download) or account **Downloads** |
+| **Guard APK** | Independent contractor guards | Same |
+| **Staff APK** | Platform employees (optional mobile ops) | Same |
+| **Messenger APK** | Messages & support for any signed-in role | Same — always allowed alongside one role app |
 
-The lite PWA is great for quick access; the full APK is recommended for guards in the field (stronger notifications, GPS, camera).
+Role APKs do **not** auto-update silently. When a new build ships, use **Settings → App update** in the app or download again from [guardr.co/download](https://www.guardr.co/download).
+
+The **Guard** and **Customer** apps are required for map, jobs, and live shifts once you are **active** — the marketing website is not a substitute.
 
 #### APK updates (important)
 
