@@ -1,5 +1,5 @@
 import { PRODUCT_APP_LABELS, PRODUCT_APP_TAGLINES, type ProductApp } from './productApps';
-import { isMessengerPath, MESSENGER_APP_LABEL, MESSENGER_APP_TAGLINE } from './messengerCompanion';
+import { MESSENGER_APP_LABEL } from './messengerCompanion';
 
 export type PwaManifestId = ProductApp | 'messenger';
 
@@ -82,12 +82,14 @@ export function pwaIconSet(id: PwaManifestId): { any192: string; any512: string;
   };
 }
 
+/**
+ * Single installable PWA (`/manifest.json`, scope `/`).
+ * Role is chosen at sign-in — not separate home-screen apps per role.
+ */
 export function pwaManifestIdFromLocation(
-  url: string,
-  productApp: ProductApp,
+  _url: string,
+  _productApp: ProductApp,
 ): PwaManifestId {
-  if (isMessengerPath(url)) return 'messenger';
-  if (productApp === 'client' || productApp === 'guard' || productApp === 'staff') return productApp;
   return 'website';
 }
 
@@ -115,16 +117,11 @@ export function applyPwaManifestForLocation(url: string, productApp: ProductApp)
   return id;
 }
 
-export function pwaInstallCopy(id: PwaManifestId): { title: string; body: string } {
-  if (id === 'messenger') {
-    return {
-      title: `Install ${MESSENGER_APP_LABEL}`,
-      body: MESSENGER_APP_TAGLINE,
-    };
-  }
-  const label = id === 'website' ? 'Guardr' : PRODUCT_APP_LABELS[id];
+export function pwaInstallCopy(_id: PwaManifestId = 'website'): { title: string; body: string } {
   return {
-    title: `Install ${label}`,
-    body: id === 'website' ? 'Account, billing, and the Guardr website on your home screen.' : PRODUCT_APP_TAGLINES[id],
+    title: 'Install Guardr',
+    body:
+      'One home-screen app for the whole platform — sign in as Customer, Guard, or Staff. ' +
+      'Field tools run here when installed; use role APKs on Android for the strongest native experience.',
   };
 }
