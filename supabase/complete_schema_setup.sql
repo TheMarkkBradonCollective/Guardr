@@ -1547,6 +1547,8 @@ ALTER TABLE company_public_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_standing_crew_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE guard_crew_join_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE one_role_cases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE device_account_bindings ENABLE ROW LEVEL SECURITY;
 
 DO $$
 DECLARE
@@ -1561,7 +1563,8 @@ BEGIN
     'platform_settings', 'platform_cities', 'job_guard_slots', 'team_chat_threads', 'team_chat_messages',
     'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
     'guard_vehicle_profiles', 'company_public_documents',
-    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications'
+    'guard_standing_crew_members', 'guard_crew_join_requests', 'user_notifications',
+    'one_role_cases', 'device_account_bindings'
   ]
   LOOP
     IF to_regclass(format('public.%I', tbl)) IS NULL THEN
@@ -1862,6 +1865,42 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_log_actor_id ON audit_log(actor_id);
 CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type, entity_id);
+
+-- One person, one Guardr role (Guard + Customer, Customer + Staff, or Staff + Guard).
+CREATE TABLE IF NOT EXISTS one_role_cases (
+  id TEXT PRIMARY KEY,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'ignored', 'blocked')),
+  reason TEXT NOT NULL,
+  match_kind TEXT NOT NULL CHECK (match_kind IN ('email', 'phone', 'device')),
+  accounts JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_one_role_cases_status ON one_role_cases(status);
+
+COMMENT ON TABLE one_role_cases IS
+  'Holds when the same person signs into more than one Guardr role. Both accounts stay locked until higher staff reviews.';
+
+-- One physical device → one account + one role app (Guard / Customer / Staff). Messenger excluded.
+CREATE TABLE IF NOT EXISTS device_account_bindings (
+  device_id TEXT PRIMARY KEY,
+  account_kind TEXT CHECK (account_kind IN ('guard', 'client', 'staff')),
+  account_id TEXT,
+  role_app_claim TEXT CHECK (role_app_claim IN ('guard', 'client', 'staff')),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT device_account_bindings_account_pair CHECK (
+    (account_kind IS NULL AND account_id IS NULL)
+    OR (account_kind IS NOT NULL AND account_id IS NOT NULL)
+  )
+);
+
+CREATE INDEX IF NOT EXISTS idx_device_account_bindings_account
+  ON device_account_bindings(account_kind, account_id);
+
+COMMENT ON TABLE device_account_bindings IS
+  'Binds a Guardr account and role app to a device id (web UUID or native Capacitor Device id).';
 
 CREATE TABLE IF NOT EXISTS guard_availability (
   id TEXT PRIMARY KEY,
@@ -2313,6 +2352,18 @@ SELECT column_name, data_type, is_nullable
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'company_public_documents'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'one_role_cases'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'device_account_bindings'
 ORDER BY column_name;
 
 SELECT policyname, cmd
