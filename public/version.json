@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.0.132-beta",
+  "webVersion": "1.0.133-beta",
   "apk": {
     "ready": true,
-    "version": "1.0.132",
-    "versionCode": 232,
+    "version": "1.0.133",
+    "versionCode": 233,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.0.132.apk",
+    "downloadName": "guardr-v1.0.133.apk",
     "fileSize": 134,
     "sha256": "153ac5e2c5ef4a9453995c983c4cd1c29f71d7e7ac519639d3968871c240938e",
-    "releaseNotes": "Issue backlog fixes: staff control center labels, staff signup requested-role picker, Founder staff cap editor, /client/sites routing, role-filtered APK downloads, SLA approval metric, guard card expiry collection, client credential verify fix — Customer/Guard stay app-first in browser."
+    "releaseNotes": "Device policy: one device id, one Guardr account, one role app (Messenger exempt); block cross-role APK downloads. Full Supabase schema sync (guard suggestions, Finance side_role, crew coordination removed). PWA cache bust and aligned web/APK version metadata."
   },
-  "updatedAt": "2026-09-26T00:41:52.361Z"
+  "updatedAt": "2026-09-26T01:12:56.304Z"
 }

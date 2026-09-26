@@ -37,8 +37,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Keep in sync with package.json via npm run generate:download-version
-        versionCode 232
-        versionName "1.0.132-beta"
+        versionCode 233
+        versionName "1.0.133-beta"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "PRODUCT_APP", "\"${productApp}\""
         if (roleLabels.containsKey(productApp)) {
