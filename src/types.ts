@@ -800,6 +800,8 @@ export interface SecurityGuard {
   referredBy?: string;
   isStaff?: boolean;
   staffRole?: StaffRole;
+  /** Role the applicant requested at sign-up (ladder seat still starts as Support until Director assigns). */
+  requestedStaffRole?: StaffRole;
   /** Optional Finance specialty — payment tools; may pair with a null/stagnant staffRole */
   sideRole?: StaffSideRole | null;
   /** Cities this staff member may manage or operate in */
@@ -1324,6 +1326,8 @@ export interface SecurityRequest {
   assignedGuardId: string | null;
   /** When the job listing went live (open) — used for invite expiry */
   openedAt?: string;
+  /** When the client or staff first submitted the job for review */
+  createdAt?: string;
   /** Client-requested schedule change awaiting staff approval */
   pendingStartDate?: string;
   pendingEndDate?: string;

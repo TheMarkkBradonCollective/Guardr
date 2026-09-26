@@ -444,6 +444,9 @@ function expiryBlocksQualification(catalogId: string): boolean {
 
 function credentialExpiryIsValid(cert: Certification, catalogId: string): boolean {
   if (!expiryBlocksQualification(catalogId)) return true;
+  if (catalogId === 'bsis-guard-card' && !cert.expiryDate?.trim()) {
+    return true;
+  }
   if (!cert.expiryDate?.trim()) return false;
   return isCertNotExpired(cert);
 }

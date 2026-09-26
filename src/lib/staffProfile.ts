@@ -35,9 +35,19 @@ export function defaultStaffHeadline(staffRole?: StaffRole | null, sideRole?: st
 
 /** Human-readable requested role for applications and review badges (Finance desk aware). */
 export function getStaffRequestedRoleLabel(
-  member: Pick<SecurityGuard, 'staffRole' | 'sideRole'>,
+  member: Pick<SecurityGuard, 'staffRole' | 'sideRole' | 'requestedStaffRole' | 'userStatus'>,
 ): string {
   const sideRole = member.sideRole as StaffSideRole | null | undefined;
+  if (
+    member.requestedStaffRole &&
+    member.userStatus === 'pending' &&
+    (!member.staffRole || member.staffRole === 'Support')
+  ) {
+    const requested = member.requestedStaffRole;
+    const platformRole = staffRoleToPlatformRole(requested);
+    const roleTitle = ROLE_LABELS[platformRole];
+    return roleTitle === requested ? `${requested} (requested)` : `${requested} — ${roleTitle} (requested)`;
+  }
   const isFinanceDesk = !member.staffRole && sideRole === 'Finance';
   const staffRole = member.staffRole || (isFinanceDesk ? null : 'Support');
   if (isFinanceDesk) {

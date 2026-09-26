@@ -200,6 +200,7 @@ const CLIENT_VIEW_FROM_SLUG: Record<string, ClientView> = {
   requests: 'requests',
   guards: 'guards',
   locations: 'locations',
+  sites: 'locations',
   roster: 'roster',
   operations: 'operations',
   guide: 'guide',

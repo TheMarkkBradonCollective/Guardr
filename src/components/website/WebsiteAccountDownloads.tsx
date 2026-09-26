@@ -34,7 +34,7 @@ export function WebsiteAccountDownloads({
         Android APKs for this active account. Download {appLabel} for this role, or another Guardr APK
         if you need it on a second device.
       </p>
-      <AppDownloadScreen embedded />
+      <AppDownloadScreen embedded accountRole={role} />
     </div>
   );
 }

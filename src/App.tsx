@@ -362,7 +362,6 @@ import { isTutorialDemoId, mergeTutorialRequests } from './lib/tutorialDemoData'
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { useStaffActivityTimeTracker } from './hooks/useStaffActivityTimeTracker';
 import { emitStaffTravelAction, trackStaffWorkActionForUser } from './lib/staffWorkActivity';
-import { scanAllGuardsCompliance } from './lib/complianceAlerts';
 import { SupportComposePage } from './components/support/SupportComposePage';
 import { SupportReportPage } from './components/support/SupportReportPage';
 import {
@@ -6299,7 +6298,10 @@ export default function App() {
     }
     const previous = clients.find((c) => c.id === clientId);
     if (!previous) throw new Error('Client not found.');
+    const existing = (previous.credentials ?? []).find((credential) => credential.id === credentialId);
+    if (!existing) throw new Error('Credential not found.');
     const nextCredentials = replaceClientCredential(previous.credentials ?? [], credentialId, {
+      ...existing,
       status: 'verified',
       reviewedAt: new Date().toISOString(),
       reviewedBy: currentUser.name,
@@ -14260,6 +14262,7 @@ export default function App() {
           onSaveVehicle={(profile) => handleSaveGuardVehicle(profile)}
           onSubmitVehicle={(profile) => handleSubmitGuardVehicle(profile)}
           onAcceptJob={handleApplyToJob}
+          onApplyAsTeamLead={handleApplyToJob}
           onDeclineDirectJob={handleGuardDeclineDirectJob}
           onInviteTeamGuard={handleInviteTeamGuard}
           onSuggestTeamGuard={handleSuggestTeamGuard}

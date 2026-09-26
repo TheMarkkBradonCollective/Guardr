@@ -57,4 +57,12 @@ test('getStaffRequestedRoleLabel handles Finance desk and ladder roles', () => {
     'Director + Finance — Director',
   );
   assert.equal(getStaffRequestedRoleLabel({ staffRole: 'Support' }), 'Support');
+  assert.match(
+    getStaffRequestedRoleLabel({
+      staffRole: 'Support',
+      requestedStaffRole: 'Director',
+      userStatus: 'pending',
+    }),
+    /Director.*requested/i,
+  );
 });

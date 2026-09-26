@@ -452,6 +452,7 @@ export function credentialRequiresExpiry(
   const catalogId =
     typeof certOrCatalogId === 'string' ? certOrCatalogId : resolveCertCatalogId(certOrCatalogId);
   if (!catalogId) return false;
+  if (catalogId === 'bsis-guard-card') return true;
   return getCertCatalogEntry(catalogId)?.category === 'bsis-permit';
 }
 

@@ -12,7 +12,7 @@ export interface StaffMarketplaceCapConfig {
 
 export const DEFAULT_STAFF_MARKETPLACE_CAP_CONFIG: StaffMarketplaceCapConfig = {
   marketplaceUsersPerStaffSlot: 100,
-  minStaffSlotsPerOpenCity: 2,
+  minStaffSlotsPerOpenCity: 6,
 };
 
 export function normalizeStaffMarketplaceCapConfig(

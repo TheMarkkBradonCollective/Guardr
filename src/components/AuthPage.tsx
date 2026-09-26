@@ -37,6 +37,8 @@ import { AuthFormHeader, AuthMobileTopBar, AuthTabletTopBar } from './auth/AuthF
 import { StaffSignupNotice } from './auth/StaffSignupNotice';
 import { ClientSignupIntake } from './auth/clientSignup/ClientSignupIntake';
 import type { ReferralPerson } from './auth/clientSignup/types';
+import type { StaffRole } from '../types';
+import { STAFF_ROLES_ORDERED } from '../lib/permissions';
 import {
   BUSINESS_TYPE_OPTIONS,
   ENGAGEMENT_TYPE_OPTIONS,
@@ -298,6 +300,7 @@ export function AuthPage({
   const [guardYearsExperience, setGuardYearsExperience] = useState('');
   const [guardSpecialties, setGuardSpecialties] = useState<string[]>([]);
   const [guardArmedPreference, setGuardArmedPreference] = useState<GuardArmedPreference | ''>('');
+  const [staffRequestedRole, setStaffRequestedRole] = useState<StaffRole>('Support');
   const [guardPrimaryCity, setGuardPrimaryCity] = useState<string>(() =>
     defaultSelectableCity('guard')
   );
@@ -462,6 +465,7 @@ export function AuthPage({
           hourlyRateRequirement: 0,
           isStaff: true,
           staffRole: 'Support',
+          requestedStaffRole: staffRequestedRole,
           userStatus: 'pending',
           idVerificationStatus: 'not_submitted',
         };
@@ -953,9 +957,25 @@ export function AuthPage({
                 <div className="space-y-5 pt-4 border-t border-brand-border">
                   <p className="uber-label">Apply to work at Guardr</p>
                   <p className="text-xs text-brand-text-muted leading-relaxed -mt-2">
-                    New staff start as Support. Sign in after submitting to upload government ID and connect
-                    Stripe payouts while a Director reviews your application.
+                    Choose the role you are applying for. New seats start as Support until a Director assigns
+                    your ladder role. Sign in after submitting to upload government ID and connect Stripe
+                    payouts while your application is reviewed.
                   </p>
+                  <div>
+                    <label className="uber-label block mb-2">Role you are applying for</label>
+                    <select
+                      required
+                      value={staffRequestedRole}
+                      onChange={(e) => setStaffRequestedRole(e.target.value as StaffRole)}
+                      className="uber-input"
+                    >
+                      {STAFF_ROLES_ORDERED.filter((r) => r !== 'Founder').map((staffRole) => (
+                        <option key={staffRole} value={staffRole}>
+                          {staffRole}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <EqualOpportunityNotice onOpenLegal={onOpenLegal} />
                   <div>
                     <label className="uber-label block mb-2">Phone</label>

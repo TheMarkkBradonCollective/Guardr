@@ -67,9 +67,9 @@ describe('signed-in landing', () => {
     assert.equal(defaultPathForSignedInUser('guard', false), '/guard/activation');
     assert.equal(defaultPathForSignedInUser('staff', false), '/staff/overview');
     assert.equal(defaultPathForSignedInUser('client', false, { clientStatus: 'pending' }), '/client/home');
-    assert.equal(defaultPathForSignedInUser('client', false, { clientStatus: 'active' }), '/account');
+    assert.equal(defaultPathForSignedInUser('client', false, { clientStatus: 'active' }), '/client/home');
     assert.equal(defaultPathForSignedInUser('guard', false, { guardStatus: 'pending' }), '/guard/activation');
-    assert.equal(defaultPathForSignedInUser('guard', false, { guardStatus: 'active' }), '/account');
+    assert.equal(defaultPathForSignedInUser('guard', false, { guardStatus: 'active' }), '/guard/map');
     assert.equal(defaultPathForSignedInUser('guard', false, { guardStatus: 'approved' }), '/guard/activation');
   });
 
@@ -79,18 +79,18 @@ describe('signed-in landing', () => {
     assert.equal(defaultPathForSignedInUser('staff', true), '/staff/overview');
   });
 
-  it('lets staff use operations in the browser and keeps active Customer/Guard on the account website', () => {
+  it('lets active Customer, Guard, and Staff use operations in the browser', () => {
     assert.equal(canUseOperationalAppInBrowser('staff'), true);
-    assert.equal(canUseOperationalAppInBrowser('client'), false);
-    assert.equal(canUseOperationalAppInBrowser('guard'), false);
+    assert.equal(canUseOperationalAppInBrowser('client'), true);
+    assert.equal(canUseOperationalAppInBrowser('guard'), true);
     assert.equal(websiteShellAccess({ role: 'staff' }), 'operations');
     assert.equal(websiteShellAccess({ role: 'client' }), 'activation');
     assert.equal(websiteShellAccess({ role: 'guard', guardStatus: 'approved' }), 'activation');
-    assert.equal(websiteShellAccess({ role: 'client', clientStatus: 'active' }), 'account');
-    assert.equal(websiteShellAccess({ role: 'guard', guardStatus: 'active' }), 'account');
+    assert.equal(websiteShellAccess({ role: 'client', clientStatus: 'active' }), 'operations');
+    assert.equal(websiteShellAccess({ role: 'guard', guardStatus: 'active' }), 'operations');
     assert.equal(websiteShellAccess({ role: 'guard', isInstalledShell: true, guardStatus: 'active' }), 'operations');
-    assert.equal(websiteNeedsAppMessage('client'), 'You need the Customer app to use the platform.');
-    assert.equal(websiteNeedsAppMessage('guard'), 'You need the Guard app to use the platform.');
+    assert.match(websiteNeedsAppMessage('client'), /browser/i);
+    assert.match(websiteNeedsAppMessage('guard'), /browser/i);
     assert.equal(websiteNeedsAppMessage('staff'), '');
   });
 

@@ -44,6 +44,8 @@ import {
   staffCityCapSnapshot,
   type StaffMarketplaceCapConfig,
 } from '../../lib/staffMarketplaceCap';
+import { canManagePlatformSettings } from '../../lib/permissions';
+import { AppButton } from '../ui/AppButton';
 import { userFacingError } from '../../lib/userFacingError';
 
 interface StaffCitiesPanelProps {
@@ -54,6 +56,7 @@ interface StaffCitiesPanelProps {
   marketplaceGuards?: SecurityGuard[];
   clients?: Client[];
   staffMarketplaceCap?: StaffMarketplaceCapConfig;
+  onUpdateStaffMarketplaceCap?: (config: StaffMarketplaceCapConfig) => Promise<void>;
   onUpdateCity: (
     cityId: string,
     patch: {
@@ -276,10 +279,15 @@ export function StaffCitiesPanel({
   marketplaceGuards = [],
   clients = [],
   staffMarketplaceCap,
+  onUpdateStaffMarketplaceCap,
   onUpdateCity,
   onAssignCityManager,
 }: StaffCitiesPanelProps) {
   const formFactor = useLayoutFormFactor();
+  const [minStaffSlots, setMinStaffSlots] = useState(
+    String(staffMarketplaceCap?.minStaffSlotsPerOpenCity ?? 6),
+  );
+  const [capSaving, setCapSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<CityMarketStatusFilter>('all');
   const [sort, setSort] = useState<CityMarketSort>('name-asc');
@@ -290,6 +298,11 @@ export function StaffCitiesPanel({
   const canManageStatus = canManageCityMarkets(currentUser);
   const canRecommend = canRecommendCityMarket(currentUser);
   const canView = canViewCityMarkets(currentUser);
+  const canEditCap = canManagePlatformSettings(currentUser) && Boolean(onUpdateStaffMarketplaceCap);
+
+  useEffect(() => {
+    setMinStaffSlots(String(staffMarketplaceCap?.minStaffSlotsPerOpenCity ?? 6));
+  }, [staffMarketplaceCap?.minStaffSlotsPerOpenCity]);
 
   const visibleCities = useMemo(
     () => filterCitiesForStaffActor(cities, currentUser.role, actorManagedCities),
@@ -394,6 +407,51 @@ export function StaffCitiesPanel({
     );
   }
 
+  const capEditor =
+    canEditCap && staffMarketplaceCap ? (
+      <div className="rounded-xl border border-brand-border px-3 py-3 mb-4 space-y-2 max-w-md">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text-muted">
+          Global staff cap (Founder)
+        </p>
+        <p className="text-xs text-brand-text-muted leading-relaxed">
+          Minimum staff slots per open city before marketplace user volume adds more (AUD-006).
+        </p>
+        <label className="block text-sm">
+          <span className="uber-label">Minimum slots per open city</span>
+          <input
+            type="number"
+            min={2}
+            max={50}
+            value={minStaffSlots}
+            onChange={(e) => setMinStaffSlots(e.target.value)}
+            className="uber-input mt-1"
+          />
+        </label>
+        <AppButton
+          variant="primary"
+          size="sm"
+          disabled={capSaving}
+          onClick={() => {
+            const parsed = parseInt(minStaffSlots, 10);
+            if (!Number.isFinite(parsed) || parsed < 2) {
+              setError('Enter at least 2 minimum staff slots.');
+              return;
+            }
+            if (!onUpdateStaffMarketplaceCap || !staffMarketplaceCap) return;
+            setCapSaving(true);
+            void onUpdateStaffMarketplaceCap({
+              ...staffMarketplaceCap,
+              minStaffSlotsPerOpenCity: parsed,
+            })
+              .catch((err) => setError(userFacingError(err, 'Could not save staff cap.')))
+              .finally(() => setCapSaving(false));
+          }}
+        >
+          {capSaving ? 'Saving…' : 'Save cap settings'}
+        </AppButton>
+      </div>
+    ) : null;
+
   const filterTabs = (
     <StaffListFilterTabs
       aria-label="Service area city status"
@@ -442,6 +500,7 @@ export function StaffCitiesPanel({
           />
         }
       >
+        {capEditor}
         {filterTabs}
         <p className="uber-workbench-subtitle adm-cities-count">
           Showing {filtered.length} of {visibleCities.length} cities
@@ -524,7 +583,8 @@ export function StaffCitiesPanel({
               </select>
             </label>
           </div>
-          {filterTabs}
+          {capEditor}
+        {filterTabs}
           <p className="text-xs text-brand-text-muted">
             Showing {filtered.length} of {visibleCities.length} cities
           </p>

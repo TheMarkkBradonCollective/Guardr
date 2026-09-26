@@ -29,8 +29,14 @@ export function computeSlaMetrics(
 
   const approvedJobs = requests.filter((r) => r.status !== 'draft' && r.status !== 'pending-review');
   const approvalTimes = requests
-    .filter((r) => r.openedAt && r.startDate)
-    .map((r) => hoursBetween(r.startDate, r.openedAt!));
+    .filter((r) => r.openedAt)
+    .map((r) => {
+      const submitted =
+        (r as SecurityRequest & { createdAt?: string }).createdAt ??
+        r.scheduleChangeRequestedAt ??
+        r.startDate;
+      return hoursBetween(submitted, r.openedAt!);
+    });
   const fillTimes = requests
     .filter((r) => (r as SecurityRequest & { acceptedAt?: string }).acceptedAt && r.openedAt)
     .map((r) =>

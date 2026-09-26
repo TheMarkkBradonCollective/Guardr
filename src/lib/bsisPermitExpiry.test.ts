@@ -32,7 +32,7 @@ describe('credentialRequiresExpiry', () => {
     assert.equal(credentialRequiresExpiry('bsis-exposed-firearm'), true);
     assert.equal(credentialRequiresExpiry('bsis-baton'), true);
     assert.equal(credentialRequiresExpiry('bsis-pta-uof-8hr'), false);
-    assert.equal(credentialRequiresExpiry('bsis-guard-card'), false);
+    assert.equal(credentialRequiresExpiry('bsis-guard-card'), true);
   });
 });
 

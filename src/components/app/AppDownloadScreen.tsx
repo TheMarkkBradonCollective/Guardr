@@ -24,7 +24,12 @@ import {
 } from '../../lib/installSurfaceCopy';
 import { formatAppVersion } from '../../lib/appVersion';
 import { GITHUB_ALL_APKS_ZIP, GITHUB_MESSENGER_APP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
-import { productAppHasGreyLauncher, productAppHasLightLauncher } from '../../lib/productApps';
+import {
+  productAppForRole,
+  productAppHasGreyLauncher,
+  productAppHasLightLauncher,
+  type ProductRole,
+} from '../../lib/productApps';
 import { userFacingError } from '../../lib/userFacingError';
 
 interface AppDownloadScreenProps {
@@ -32,6 +37,8 @@ interface AppDownloadScreenProps {
   headerRight?: React.ReactNode;
   /** Account Downloads tab — APK cards only, no public overlay chrome. */
   embedded?: boolean;
+  /** When set, account downloads show only this role's APK (plus Messenger). */
+  accountRole?: ProductRole;
 }
 
 type ProductStatus = 'installed' | 'update' | 'available' | 'current' | 'checking';
@@ -64,7 +71,12 @@ function FeatureRow({ icon: Icon, children }: { icon: typeof Bell; children: Rea
   );
 }
 
-export function AppDownloadScreen({ onBack, headerRight, embedded = false }: AppDownloadScreenProps) {
+export function AppDownloadScreen({
+  onBack,
+  headerRight,
+  embedded = false,
+  accountRole,
+}: AppDownloadScreenProps) {
   const {
     loading,
     error,
@@ -193,7 +205,10 @@ export function AppDownloadScreen({ onBack, headerRight, embedded = false }: App
             </article>
           ) : (
             <>
-              {GITHUB_ROLE_APKS.map((app) => (
+              {(accountRole
+                ? GITHUB_ROLE_APKS.filter((app) => app.id === productAppForRole(accountRole))
+                : GITHUB_ROLE_APKS
+              ).map((app) => (
                 <article key={app.id} className="install-product-card install-product-card--full">
                   <div className="install-product-card-top">
                     <img
@@ -230,9 +245,11 @@ export function AppDownloadScreen({ onBack, headerRight, embedded = false }: App
                   </div>
                 </article>
               ))}
-              <a href={GITHUB_ALL_APKS_ZIP} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
-                Download all APKs (GitHub zip)
-              </a>
+              {!accountRole ? (
+                <a href={GITHUB_ALL_APKS_ZIP} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
+                  Download all APKs (GitHub zip)
+                </a>
+              ) : null}
               <a href={GITHUB_MESSENGER_APP.url} download={GITHUB_MESSENGER_APP.file} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
                 Download Messenger
               </a>

@@ -1341,6 +1341,12 @@ export function StaffDashboard({
             marketplaceGuards={guards.filter((guard) => !guard.isStaff)}
             clients={clients}
             staffMarketplaceCap={platformSettings.staffMarketplaceCap}
+            onUpdateStaffMarketplaceCap={
+              onUpdatePlatformSettings
+                ? async (staffMarketplaceCap) =>
+                    onUpdatePlatformSettings({ ...platformSettings, staffMarketplaceCap })
+                : undefined
+            }
             onUpdateCity={onUpdatePlatformCity}
             onAssignCityManager={onAssignCityManager}
           />
