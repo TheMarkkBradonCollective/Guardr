@@ -12,6 +12,20 @@ Pick the door that matches what you want. Guardr runs **two separate worlds**:
 
 Open [guardr.co](https://guardr.co) → create account or sign in. Returning marketplace hiring accounts use **Log in as customer** on the role picker.
 
+### Website vs apps (September 2026)
+
+| Where | Customers & guards | Staff |
+|-------|-------------------|-------|
+| **guardr.co in a browser** | Sign-up, activation, **account shell** (profile, billing, downloads, support) | Full **operations** workspace |
+| **Customer / Guard Android app** | Map, jobs, messages, field tools | — |
+| **Messenger app** (optional) | Messages & support for your role — not a substitute for the role app | Same |
+
+After you are **active**, run day-to-day coverage from the **Customer** or **Guard** app (install from **Account → Downloads** or [guardr.co/download](https://www.guardr.co/download)). The website does **not** replace those apps for map, jobs, or live shifts.
+
+**Device rules:** one Guardr **role app** per phone (Guard, Customer, or Staff — pick one). **Messenger** can still be installed. One **account** per device for role apps; signing out does not reset the device.
+
+Current release: **v1.0.133** (Android build **233**).
+
 ---
 
 ## Path A — I need security (Client)
@@ -20,12 +34,15 @@ You hire **licensed independent contractors** through the platform. They do **no
 
 1. Choose **I need security**, then **Personal** or **Business**, and create a client account.
 2. Finish your profile (**Profile**) and upload required **Credentials** (government-issued ID is always required).
-3. Wait for staff approval (**Home** shows pending until approved).
-4. **Request security** / **Post job** (or **Guards** → direct request / rebook).
-5. After staff approve the listing, **Pay** on the job when prompted.
-6. For marketplace jobs: **Approve** or **Decline** guard applications on **Jobs**.
-7. During the shift: confirm **self-audit photos**, use **Messages** / **Support** as needed.
-8. After the shift: review reports, handle overtime if any, rate the guard.
+3. Wait for staff approval (account **Home** shows pending until approved).
+4. Install the **Customer app** from **Downloads** when staff approve you (or anytime after sign-in).
+5. In the **Customer app**: **Request security** / **Post job** (or **Guards** → direct request / rebook).
+6. After staff approve the listing, **Pay** on the job when prompted.
+7. For marketplace jobs: **Approve** or **Decline** guard applications on **Jobs**.
+8. During the shift: confirm **self-audit photos**, use **Messages** / **Support** as needed.
+9. After the shift: review reports, handle overtime if any, rate the guard.
+
+On the **website**, use the account shell for profile, billing history, APK downloads, and support — not for map or live job control.
 
 **What you pay:** Posted **hourly rate × hours × guards**, plus approved overtime, schedule extensions, and optional tips. Guardr retains a **platform fee** from that rate (separate Personal vs Business tables, per guard type); the guard receives the remainder. Posted jobs keep the fee saved at post time.
 
@@ -40,10 +57,11 @@ You are an **independent contractor** using Guardr to find clients. You do **not
 1. Choose **I'm a licensed guard (contractor)** under **I want to work** and create a guard account.
 2. On the **activation screen**, upload the five required credentials while staff reviews your application.
 3. Wait for **application approval**, then **credential verification** → **active**.
-4. Open **Pay** → connect your bank (Stripe Connect).
-5. Open **Map** → apply to open jobs or **claim** a direct request.
-6. On shift day: head → arrive → start → self-audit → work → end shift.
-7. After pay is **released** (~48h typical), collect earnings on **Pay** (bank transfer via Stripe).
+4. Install the **Guard app** from **Downloads** (website account) or [guardr.co/download](https://www.guardr.co/download).
+5. In the **Guard app**: open **Pay** → connect your bank (Stripe Connect).
+6. Open **Map** → apply to open jobs or **claim** a direct request.
+7. On shift day: head → arrive → start → self-audit → work → end shift.
+8. After pay is **released** (~48h typical), collect earnings on **Pay** (bank transfer via Stripe).
 
 **What you earn:** **Guard pay** = client hourly rate minus platform fee (from the client's Personal or Business fee table for that guard type; often around **$5–$6/hr** unless negotiated). You contract **directly with the client** per job.
 

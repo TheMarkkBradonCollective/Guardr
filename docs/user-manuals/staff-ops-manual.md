@@ -19,6 +19,20 @@ Guardr is **not** a private patrol operator (PPO), guard employer, or staffing a
 
 ---
 
+## Where staff work
+
+| Surface | Use |
+|---------|-----|
+| **guardr.co in a desktop or tablet browser** | Primary **operations** workspace — Applications, Credentials, Map, Jobs, Payments, Staff roster, Settings |
+| **Staff APK (optional)** | Same ops stack for mobile/tablet admins; install from internal download flow when offered |
+| **Messenger APK** | Messages and support threads — not the full ops console |
+
+**Marketplace users (customers and guards)** do **not** run map/jobs in a browser once active — they use the **Customer** or **Guard** app. Direct them to **Account → Downloads** or [guardr.co/download](https://www.guardr.co/download).
+
+**Device policy (support):** one **role app** binding per device for Guard / Customer / Staff APKs; **Messenger** exempt. Sign-out does not clear device binding — escalates to Director+ if someone needs a device reset.
+
+---
+
 ## Part A — New hire onboarding (all staff roles)
 
 ### A1. Apply the right way

@@ -24,6 +24,21 @@ On shift screens and job details, the hiring party is labeled **Customer** (pers
 
 ---
 
+## Where you use Guardr
+
+| Surface | What you do there |
+|---------|-------------------|
+| **guardr.co (browser)** | Sign-up, **activation screen** (upload credentials while pending), account shell when **active** — profile, payout history, **Downloads** (Guard APK), support, Guide |
+| **Guard app (Android)** | **Map**, **Jobs**, **Pay**, **Messages**, shifts, self-audits, performance, vehicle, availability |
+
+Install the **Guard app** from **Downloads** on the website account or [guardr.co/download](https://www.guardr.co/download). Map, jobs, and pay run in the app — not in a plain browser tab once you are **active**.
+
+Optional **Messenger** app: messages and support; not a substitute for the Guard app.
+
+**Device:** one Guardr role app per phone (Guard, Customer, or Staff). Messenger is always allowed separately.
+
+---
+
 ## 1. Choose the right signup
 
 - **I'm a guard** — marketplace contractor work (**this manual**).
@@ -37,9 +52,9 @@ On shift screens and job details, the hiring party is labeled **Customer** (pers
 |--------|--------------|------------|
 | **Pending** | Activation screen — application under review | Upload credentials while staff reviews |
 | **Approved** | Activation screen — finish credentials | Keep uploading; staff verify documents |
-| **Active** | Full app (Map, Jobs, Pay, Messages, …) | Find work and run shifts |
+| **Active** | **Guard app** — Map, Jobs, Pay, Messages, … | Find work and run shifts |
 
-While pending/approved: **Map**, **Jobs**, **Pay**, **Messages**, **Profile**, and **Guide** stay blocked. Approved guards can use **Contact support** (activation help).
+While pending/approved on the website: upload credentials on the **activation screen**; **Contact support** when approved. **Map**, **Jobs**, **Pay**, and field tools unlock in the **Guard app** after **active** — not in the browser account shell.
 
 ---
 
@@ -69,7 +84,7 @@ Official BSIS training reference: [bsis.ca.gov guard training](https://www.bsis.
 
 ---
 
-## 4. Main pages (active guards)
+## 4. Main pages (Guard app — active guards)
 
 | Page | Purpose |
 |------|---------|
