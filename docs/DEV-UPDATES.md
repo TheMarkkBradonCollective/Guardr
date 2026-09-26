@@ -3,13 +3,37 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Friday, September 26, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.132**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.133**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
 The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | What shipped |` tables under dated `## Weekday, Month D, YYYY` headings (and from `**Activity:**` / `### Title (h:mm AM)` lines). Every `/update` must add those Time rows from git commit times, bump **Last updated**, fill Guide gaps for what shipped, and refresh **Quick reference by date**. Changelog-only entries without times do not light up the cloud.
+
+---
+
+## Friday, September 26, 2026 — /update → v1.0.133
+
+| Time | What shipped |
+|------|----------------|
+| 12:45 AM | One-role device split reverted; unified device id + one account per device (PR #1061) |
+| 12:46 AM | Block Guard/Customer/Staff APK cross-download; Messenger still allowed |
+| 1:07 AM | `complete_schema_setup.sql` fully synced with migrations through 2026-09-26 (PR #1063) |
+| 1:10 AM | Release **v1.0.133-beta** — PWA cache bust, download manifest, Android versionCode **233** |
+
+**Shipped**
+- **v1.0.133** (build **233**) — site + PWA + APK version alignment
+- **Device enforcement:** Capacitor/web device id, `device_account_bindings`, local one-account lock; sign-out does not swap accounts
+- **Downloads:** role-app claim blocks other role APKs on the same device (Messenger exempt)
+- **Database:** monolithic SQL matches all `supabase/migrations` (guard suggestions, `guards.side_role`, no crew coordination tables)
+- PWA cache: `guardr-cache-v1-0-133-beta`
+
+**Download**
+- https://www.guardr.co/download/guardr.apk?v=233
+
+**Ops**
+- Apply `supabase/complete_schema_setup.sql` (or migration `20260926010000_device_account_bindings.sql`) on Supabase before relying on server-side device checks
 
 ---
 
@@ -1286,6 +1310,8 @@ Bringing this to investors — needed every workflow working, every button, ever
 
 | Date | Commits | What happened |
 |------|---------|---------------|
+| **Sep 26** | 8+ | /update v1.0.133 — device one-account policy, APK download blocks, full SQL sync, build 233 |
+| **Sep 26** | 6+ | /update v1.0.132 — issue batch fixes, app-first browser, build 232 |
 | **Jun 6** | 15 | App born — Guardr, Supabase, self-audit, themes |
 | **Jun 7** | 30 | platform redesign, Stripe, PWA, certs |
 | **Jun 8** | 21 | guardr.co live |
