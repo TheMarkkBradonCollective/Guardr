@@ -3,13 +3,32 @@
 **Started:** Saturday, June 6, 2026  
 **Last updated:** Friday, September 26, 2026  
 **Commits so far:** 1,200+  
-**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.133**
+**Live at:** [guardr.co](https://www.guardr.co) — currently **v1.0.134**
 
 ---
 
 This is my running log of what shipped on Guardr. I'm building the on-demand security marketplace for Signature Security — clients post coverage, licensed guards pick up work on the map, staff verify credentials so the platform stays compliant. Most of the heavy lifting is Cursor agents plus my direction; timestamps below come from git when stuff actually landed.
 
 The **Dev activity** heatmap on Staff → Dev notes is parsed from `| Time | What shipped |` tables under dated `## Weekday, Month D, YYYY` headings (and from `**Activity:**` / `### Title (h:mm AM)` lines). Every `/update` must add those Time rows from git commit times, bump **Last updated**, fill Guide gaps for what shipped, and refresh **Quick reference by date**. Changelog-only entries without times do not light up the cloud.
+
+---
+
+## Friday, September 26, 2026 — /update → v1.0.134
+
+| Time | What shipped |
+|------|----------------|
+| 1:21 AM | Audit hardening — account shell gate, device role blocks on sign-in (PR #1065) |
+| 1:23 AM | User manuals + Guide — app-first, deployment checklist, PDFs (PR #1066) |
+| 1:24 AM | Single Guardr PWA — one `/manifest.json`, removed per-role webmanifests (PR #1067) |
+| 1:38 AM | Release **v1.0.134-beta** — PWA cache bust, download manifest, Android versionCode **234** |
+
+**Shipped**
+- **v1.0.134** (build **234**) — packages post-#1063 release fixes (#1065–#1067) for site, PWA, and GitHub APK tag
+- PWA cache: `guardr-cache-v1-0-134-beta`
+- **GitHub Release:** workflow publishes `apks-v1.0.134-beta` on green **Android Release** (requires Actions + `GOOGLE_SERVICES_JSON`)
+
+**Download**
+- https://www.guardr.co/download/guardr.apk?v=234
 
 ---
 
@@ -1313,6 +1332,7 @@ Bringing this to investors — needed every workflow working, every button, ever
 
 | Date | Commits | What happened |
 |------|---------|---------------|
+| **Sep 26** | 10+ | /update v1.0.134 — audit #1065, manuals #1066, single PWA #1067, build 234 |
 | **Sep 26** | 8+ | /update v1.0.133 — device one-account policy, APK download blocks, full SQL sync, build 233 |
 | **Sep 26** | 6+ | /update v1.0.132 — issue batch fixes, app-first browser, build 232 |
 | **Jun 6** | 15 | App born — Guardr, Supabase, self-audit, themes |

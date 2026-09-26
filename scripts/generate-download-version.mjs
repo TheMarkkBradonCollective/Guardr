@@ -23,6 +23,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.134':
+    'Audit hardening (account shell gate, device role blocks on sign-in). User manuals and Guide for app-first + deployment checklist. Single Guardr PWA (/manifest.json) — no per-role home-screen manifests. PWA cache bust; web/APK versionCode 234.',
   '1.0.133':
     'Device policy: one device id, one Guardr account, one role app (Messenger exempt); block cross-role APK downloads. Full Supabase schema sync (guard suggestions, Finance side_role, crew coordination removed). PWA cache bust and aligned web/APK version metadata.',
   '1.0.132':

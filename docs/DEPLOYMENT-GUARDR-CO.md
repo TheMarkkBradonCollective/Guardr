@@ -151,7 +151,7 @@ If guards see *"You can only create new accounts if you've signed up for Connect
 - [ ] Redeployed on Vercel (billing/plan active — deploy blocked if account is suspended)
 - [ ] `https://www.guardr.co/api/health` returns `"status":"ok"`
 - [ ] GoDaddy DNS points to Vercel; domain shows valid SSL
-- [ ] Android CI or local build uploaded **Guard**, **Customer**, **Staff**, and **Messenger** APKs to `public/download/` (or GitHub Release) — build **233** matches `package.json` **1.0.133-beta**
+- [ ] Android CI or local build uploaded **Guard**, **Customer**, **Staff**, and **Messenger** APKs to `public/download/` (or GitHub Release) — build **234** matches `package.json` **1.0.134-beta**
 - [ ] Firebase `google-services.json` covers all Android package ids if using native push
 - [ ] User PDF manuals regenerated (`npm run docs:manuals-pdf`) and deployed with the site under `/manuals/`
 - [ ] Smoke-test: customer/guard sign-in on website → account shell only; ops open in role APK; staff ops in browser
