@@ -13,9 +13,9 @@ Step-by-step guide to upload **Guard, Customer, and Staff** to Google Play. Each
 Output AABs after a successful build:
 
 ```
-dist/play-store/Guardr-Guard.aab    (Guard — com.signaturesecurity.guardr.guard)
-dist/play-store/Guardr-Client.aab   (Customer — com.signaturesecurity.guardr.client)
-dist/play-store/Guardr-Staff.aab    (Staff — com.signaturesecurity.guardr.staff)
+dist/play-store/Guardr-Guard.aab    (Guard — com.tmbcworks.guardr.guard)
+dist/play-store/Guardr-Client.aab   (Customer — com.tmbcworks.guardr.client)
+dist/play-store/Guardr-Staff.aab    (Staff — com.tmbcworks.guardr.staff)
 ```
 
 ---
@@ -70,7 +70,7 @@ On first upload, enroll in **Play App Signing** (recommended). Google holds the 
 
 Play builds require the same Firebase setup as sideload APKs.
 
-1. Firebase Console → add Android app with package `com.signaturesecurity.guardr`
+1. Firebase Console → add Android app with package `com.tmbcworks.guardr`
 2. Download `google-services.json`
 3. Place at **`secrets/google-services.json`** (preferred) or set env `GOOGLE_SERVICES_JSON`
 4. Set **`FCM_SERVICE_ACCOUNT_JSON`** on the Guardr server (Vercel) for push delivery

@@ -11,7 +11,7 @@ import { isGoogleServicesConfigured, writeGoogleServicesFromEnv } from './write-
 export const ROOT = process.cwd();
 export const ANDROID_HOME = process.env.ANDROID_HOME || path.join(process.env.HOME || '', 'Android', 'Sdk');
 export const GRADLE = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
-export const EXPECTED_ANDROID_PACKAGE = 'com.signaturesecurity.guardr';
+export const EXPECTED_ANDROID_PACKAGE = 'com.tmbcworks.guardr';
 
 export function run(cmd, args, options = {}) {
   const result = spawnSync(cmd, args, {

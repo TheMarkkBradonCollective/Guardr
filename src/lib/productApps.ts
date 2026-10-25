@@ -237,9 +237,9 @@ declare global {
 }
 
 export const NATIVE_APPLICATION_IDS: Record<Exclude<ProductApp, 'website'>, string> = {
-  client: 'com.signaturesecurity.guardr.client',
-  guard: 'com.signaturesecurity.guardr.guard',
-  staff: 'com.signaturesecurity.guardr.staff',
+  client: 'com.tmbcworks.guardr.client',
+  guard: 'com.tmbcworks.guardr.guard',
+  staff: 'com.tmbcworks.guardr.staff',
 };
 
 export function parseBakedNativeProductApp(
@@ -444,7 +444,7 @@ export function pathFromDeepLink(url: string): string | null {
     if (scheme === 'guardr-messenger') {
       return parsed.search ? `/messenger${parsed.search}` : '/messenger';
     }
-    if (scheme === 'guardr' || scheme === 'com.signaturesecurity.guardr') {
+    if (scheme === 'guardr' || scheme === 'com.tmbcworks.guardr') {
       const rest = `${parsed.host}${parsed.pathname}`.replace(/^\/+/, '');
       return rest ? `/${rest}` : '/';
     }

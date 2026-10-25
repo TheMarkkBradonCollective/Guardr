@@ -20,7 +20,7 @@ const ASSETS_PUBLIC = path.join(ROOT, 'android/app/src/main/assets/public');
 const CAPACITOR_CONFIG_PATH = path.join(ROOT, 'android/app/src/main/assets/capacitor.config.json');
 
 export function rolePackage(role) {
-  return `com.signaturesecurity.guardr.${role}`;
+  return `com.tmbcworks.guardr.${role}`;
 }
 
 export async function writeNativeProductAppJs(role) {

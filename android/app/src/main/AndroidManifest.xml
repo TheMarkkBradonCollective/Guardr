@@ -90,9 +90,9 @@
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <queries>
-        <package android:name="com.signaturesecurity.guardr.client" />
-        <package android:name="com.signaturesecurity.guardr.guard" />
-        <package android:name="com.signaturesecurity.guardr.staff" />
+        <package android:name="com.tmbcworks.guardr.client" />
+        <package android:name="com.tmbcworks.guardr.guard" />
+        <package android:name="com.tmbcworks.guardr.staff" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="guardr-client" />
