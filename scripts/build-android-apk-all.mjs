@@ -81,7 +81,7 @@ try {
     console.log(`✓ ${companion.apk}`);
   }
 
-  console.log('\n→ Assembling combined sideload APK (com.signaturesecurity.guardr)…');
+  console.log('\n→ Assembling combined sideload APK (com.tmbcworks.guardr)…');
   await writeNativeProductAppJs('');
   generateAndroidIcons('');
   run(GRADLE, ['assembleSideloadRelease'], {

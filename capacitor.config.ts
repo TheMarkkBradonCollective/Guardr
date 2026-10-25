@@ -8,7 +8,7 @@
  *   npm run build && npx cap sync android
  */
 const config = {
-  appId: 'com.signaturesecurity.guardr',
+  appId: 'com.tmbcworks.guardr',
   appName: 'Guardr',
   webDir: 'dist',
   server: {

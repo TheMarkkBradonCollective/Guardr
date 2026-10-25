@@ -1,4 +1,4 @@
-package com.signaturesecurity.guardr;
+package com.tmbcworks.guardr;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

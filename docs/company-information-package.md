@@ -131,7 +131,7 @@ Signature Security Specialist, LLC
 
 | Item | Value |
 |------|-------|
-| Android package ID | `com.signaturesecurity.guardr` |
+| Android package ID | `com.tmbcworks.guardr` |
 | Keystore legal name | Signature Security Specialist LLC, California, US |
 
 ---

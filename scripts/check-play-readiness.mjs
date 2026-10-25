@@ -95,10 +95,10 @@ if (existsSync(googleServicesPath)) {
   try {
     const json = JSON.parse(readFileSync(googleServicesPath, 'utf8'));
     const pkgName = json.client?.[0]?.client_info?.android_client_info?.package_name;
-    if (pkgName === 'com.signaturesecurity.guardr') {
-      ok('google-services.json configured for com.signaturesecurity.guardr');
+    if (pkgName === 'com.tmbcworks.guardr') {
+      ok('google-services.json configured for com.tmbcworks.guardr');
     } else {
-      fail(`google-services.json package_name is ${pkgName ?? 'missing'}, expected com.signaturesecurity.guardr`);
+      fail(`google-services.json package_name is ${pkgName ?? 'missing'}, expected com.tmbcworks.guardr`);
     }
   } catch {
     fail('android/app/google-services.json is not valid JSON');

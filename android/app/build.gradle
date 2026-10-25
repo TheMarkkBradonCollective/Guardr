@@ -12,7 +12,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.signaturesecurity.guardr"
+    namespace "com.tmbcworks.guardr"
     compileSdk rootProject.ext.compileSdkVersion
     buildFeatures {
         buildConfig true
@@ -20,10 +20,10 @@ android {
     defaultConfig {
         def productApp = (findProperty('guardrProductApp') ?: '').toString().trim()
         def roleApplicationIds = [
-            client: 'com.signaturesecurity.guardr.client',
-            guard: 'com.signaturesecurity.guardr.guard',
-            staff: 'com.signaturesecurity.guardr.staff',
-            messenger: 'com.signaturesecurity.guardr.messenger',
+            client: 'com.tmbcworks.guardr.client',
+            guard: 'com.tmbcworks.guardr.guard',
+            staff: 'com.tmbcworks.guardr.staff',
+            messenger: 'com.tmbcworks.guardr.messenger',
         ]
         def roleLabels = [
             client: 'Customer',
@@ -33,7 +33,7 @@ android {
         ]
         applicationId (roleApplicationIds.containsKey(productApp)
             ? roleApplicationIds[productApp]
-            : 'com.signaturesecurity.guardr')
+            : 'com.tmbcworks.guardr')
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Keep in sync with package.json via npm run generate:download-version

@@ -163,9 +163,9 @@ describe('deep links and CTAs', () => {
   });
 
   it('assigns distinct Android application ids per app', () => {
-    assert.equal(NATIVE_APPLICATION_IDS.client, 'com.signaturesecurity.guardr.client');
-    assert.equal(NATIVE_APPLICATION_IDS.guard, 'com.signaturesecurity.guardr.guard');
-    assert.equal(NATIVE_APPLICATION_IDS.staff, 'com.signaturesecurity.guardr.staff');
+    assert.equal(NATIVE_APPLICATION_IDS.client, 'com.tmbcworks.guardr.client');
+    assert.equal(NATIVE_APPLICATION_IDS.guard, 'com.tmbcworks.guardr.guard');
+    assert.equal(NATIVE_APPLICATION_IDS.staff, 'com.tmbcworks.guardr.staff');
     assert.equal(parseBakedNativeProductApp('staff'), 'staff');
     assert.equal(parseBakedNativeProductApp(''), null);
   });

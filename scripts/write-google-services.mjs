@@ -2,7 +2,7 @@
 /**
  * Write android/app/google-services.json from GOOGLE_SERVICES_JSON when set.
  * Used by local builds and GitHub Actions so push-enabled APKs share one path.
- * CI: secret GOOGLE_SERVICES_JSON must target com.signaturesecurity.guardr.
+ * CI: secret GOOGLE_SERVICES_JSON must target com.tmbcworks.guardr.
  */
 import { writeFile, mkdir } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = process.cwd();
 const servicesPath = path.join(ROOT, 'android/app/google-services.json');
 const secretsPath = path.join(ROOT, 'secrets/google-services.json');
-const EXPECTED_PACKAGE = 'com.signaturesecurity.guardr';
+const EXPECTED_PACKAGE = 'com.tmbcworks.guardr';
 
 function validateGoogleServices(json) {
   const pkg = json.client?.[0]?.client_info?.android_client_info?.package_name;

@@ -11,11 +11,11 @@ Guardr ships as a **website** plus three **Capacitor Android apps** (Guard, Cust
 
 | App | Package | GitHub asset |
 |-----|---------|--------------|
-| Guard | `com.signaturesecurity.guardr.guard` | `Guardr-Guard.apk` |
-| Customer | `com.signaturesecurity.guardr.client` | `Guardr-Client.apk` |
-| Staff | `com.signaturesecurity.guardr.staff` | `Guardr-Staff.apk` |
-| Messenger (companion) | `com.signaturesecurity.guardr.messenger` | site `/download/Guardr-Messenger.apk` |
-| Combined (legacy) | `com.signaturesecurity.guardr` | site `/download/guardr.apk` |
+| Guard | `com.tmbcworks.guardr.guard` | `Guardr-Guard.apk` |
+| Customer | `com.tmbcworks.guardr.client` | `Guardr-Client.apk` |
+| Staff | `com.tmbcworks.guardr.staff` | `Guardr-Staff.apk` |
+| Messenger (companion) | `com.tmbcworks.guardr.messenger` | site `/download/Guardr-Messenger.apk` |
+| Combined (legacy) | `com.tmbcworks.guardr` | site `/download/guardr.apk` |
 
 The three role APKs can be installed side by side. Each opens its own app (not the marketing website). The all-apps zip is a **GitHub Release** asset (same pattern as MBC All-APKs), not a file on guardr.co. **Messenger is not in that zip** — sign in there as Guard, Customer, or Staff for messages and support. There is no switch-account: sign out, then sign in.
 
@@ -123,7 +123,7 @@ Permissions are declared in `android/app/src/main/AndroidManifest.xml` and reque
 
 ### Push setup (APK)
 
-1. Create a Firebase project and add an Android app with package `com.signaturesecurity.guardr`
+1. Create a Firebase project and add an Android app with package `com.tmbcworks.guardr`
 2. Place Firebase config in **one** of these locations (gitignored — never commit):
    - `secrets/google-services.json` (preferred for local/cloud-agent builds — copied to `android/app/` automatically)
    - `android/app/google-services.json` directly
@@ -143,7 +143,7 @@ Permissions are declared in `android/app/src/main/AndroidManifest.xml` and reque
 Full guide: **[docs/GOOGLE-PLAY.md](GOOGLE-PLAY.md)**
 
 1. Create upload keystore → `android/keystore.properties` (see `keystore.properties.example`)
-2. Add Firebase `google-services.json` for `com.signaturesecurity.guardr`
+2. Add Firebase `google-services.json` for `com.tmbcworks.guardr`
 3. `npm run android:play` → upload `dist/play-store/Guardr-Client.aab`, `Guardr-Guard.aab`, and `Guardr-Staff.aab`
 4. Complete Play Console store listing, Data safety, content rating, and reviewer test accounts
 
@@ -155,7 +155,7 @@ GitHub Actions workflow `.github/workflows/android-apk.yml` builds the three rol
 
 **Zip download (GitHub, not the site):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
 
-Firebase `google-services.json` currently lists `com.signaturesecurity.guardr`. Role APKs rewrite `package_name` at build time so Gradle accepts the suffixed ids. For native push on the three packages, add matching Android apps in the same Firebase project and ship a `google-services.json` with all four client entries.
+Firebase `google-services.json` currently lists `com.tmbcworks.guardr`. Role APKs rewrite `package_name` at build time so Gradle accepts the suffixed ids. For native push on the three packages, add matching Android apps in the same Firebase project and ship a `google-services.json` with all four client entries.
 
 Required secrets for a push-enabled APK:
 
