@@ -5,9 +5,19 @@ declare module 'pg' {
       ssl?: boolean | { rejectUnauthorized?: boolean };
     });
     connect(): Promise<void>;
-    query(sql: string): Promise<unknown>;
+    query(sql: string): Promise<{ rows: Record<string, unknown>[]; rowCount: number | null }>;
     end(): Promise<void>;
   }
-  const pg: { Client: typeof Client };
+  export class Pool {
+    constructor(config: {
+      connectionString?: string;
+      max?: number;
+      idleTimeoutMillis?: number;
+      ssl?: boolean | { rejectUnauthorized?: boolean };
+    });
+    query(sql: string): Promise<{ rows: Record<string, unknown>[]; rowCount: number | null }>;
+    end(): Promise<void>;
+  }
+  const pg: { Client: typeof Client; Pool: typeof Pool };
   export default pg;
 }
