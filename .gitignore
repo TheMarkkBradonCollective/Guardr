@@ -20,3 +20,4 @@ dist/play-store/
 !public/download/guardr.apk
 !public/download/Guardr-Messenger.apk
 !public/guardr.apk
+.neon
