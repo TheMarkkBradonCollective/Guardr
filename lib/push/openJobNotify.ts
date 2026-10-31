@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import { isPushConfigured } from './config';
 import { dispatchPushNotification } from './delivery';
 import { findGuardsToNotifyForOpenJob } from './guardOpenJobRecipients';
@@ -12,7 +12,7 @@ import {
 import { resolveGuardTierMap, sleep } from './guardTierResolve';
 
 export async function notifyOpenJobToGuards(
-  db: SupabaseClient,
+  db: AppDb,
   options: {
     requestId: string;
     title: string;

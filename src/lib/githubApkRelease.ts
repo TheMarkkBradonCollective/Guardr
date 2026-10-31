@@ -1,12 +1,15 @@
-/** GitHub Release assets for sideload APKs — same pattern as MBC All-APKs. */
+/** GitHub Release assets for sideload APKs (Cloudflare beta track). */
 
 export const GITHUB_APK_RELEASE_REPO = 'TheMarkkBradonCollective/Guardr';
 
+/** Pinned tag for the Neon + Worker beta APKs. */
+export const GITHUB_APK_RELEASE_TAG = 'v1.1.0-cf-beta';
+
 export const GITHUB_APK_RELEASE_LATEST =
-  `https://github.com/${GITHUB_APK_RELEASE_REPO}/releases/latest`;
+  `https://github.com/${GITHUB_APK_RELEASE_REPO}/releases/tag/${GITHUB_APK_RELEASE_TAG}`;
 
 const ASSET = (name: string) =>
-  `https://github.com/${GITHUB_APK_RELEASE_REPO}/releases/latest/download/${name}`;
+  `https://github.com/${GITHUB_APK_RELEASE_REPO}/releases/download/${GITHUB_APK_RELEASE_TAG}/${name}`;
 
 export const GITHUB_ALL_APKS_ZIP = ASSET('Guardr-All-APKs.zip');
 export const GITHUB_CLIENT_APK = ASSET('Guardr-Client.apk');
@@ -43,5 +46,5 @@ export const GITHUB_MESSENGER_APP = {
   label: 'Messenger',
   tagline: 'Messages, support, and team chat',
   file: 'Guardr-Messenger.apk',
-  url: '/download/Guardr-Messenger.apk',
+  url: GITHUB_MESSENGER_APK,
 };

@@ -2,7 +2,7 @@ import type Stripe from 'stripe';
 
 export { computeGuardPayoutCents, getStripe } from './stripeClient';
 
-import { getSupabaseAdmin } from './supabaseAdmin';
+import { getSupabaseAdmin } from './db/adminClient.ts';
 
 async function getDb() {
   return getSupabaseAdmin();
@@ -106,7 +106,14 @@ export async function markCashDeposit(
   const depositAmount = amountCents / 100;
   const currentDeposited = Number(job.cash_deposited_amount ?? 0);
   const newDeposited = Math.round((currentDeposited + depositAmount) * 100) / 100;
-  const requiredTotal = computeRequiredCashDeposit(job);
+  const requiredTotal = computeRequiredCashDeposit(
+    job as {
+      estimated_payout: number;
+      duration_hours: number;
+      platform_fee_per_hour?: number | null;
+      guard_payout_method?: string | null;
+    }
+  );
   const fullyDeposited = newDeposited >= requiredTotal - 0.01;
   const depositedAt = new Date().toISOString();
 

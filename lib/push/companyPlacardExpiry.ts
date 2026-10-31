@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import {
   claimNotificationDedup,
   companyPlacardExpiryDedupKey,
@@ -121,7 +121,7 @@ function alertCopy(
   }
 }
 
-async function loadExecutiveUserIds(db: SupabaseClient): Promise<string[]> {
+async function loadExecutiveUserIds(db: AppDb): Promise<string[]> {
   const ids = new Set<string>();
 
   const { data: staffRows, error: staffErr } = await db
@@ -151,7 +151,7 @@ async function loadExecutiveUserIds(db: SupabaseClient): Promise<string[]> {
 }
 
 async function persistInboxNotification(
-  db: SupabaseClient,
+  db: AppDb,
   userId: string,
   notificationId: string,
   title: string,
@@ -184,7 +184,7 @@ export interface CompanyPlacardExpiryScanResult {
 }
 
 export async function scanAndNotifyCompanyPlacardExpiry(
-  db: SupabaseClient
+  db: AppDb
 ): Promise<CompanyPlacardExpiryScanResult> {
   if (!isPushConfigured()) {
     return { scanned: 0, executives: 0, notified: 0, skipped: 0, sent: 0, failed: 0 };
@@ -206,7 +206,7 @@ export async function scanAndNotifyCompanyPlacardExpiry(
   }
 
   const byType = new Map<string, CompanyDocRow>();
-  for (const row of (rows ?? []) as CompanyDocRow[]) {
+  for (const row of (rows ?? []) as unknown as CompanyDocRow[]) {
     byType.set(row.document_type, row);
   }
 

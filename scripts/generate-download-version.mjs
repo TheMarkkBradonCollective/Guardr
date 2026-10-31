@@ -9,20 +9,23 @@ import path from 'node:path';
 import QRCode from 'qrcode';
 
 const ROOT = process.cwd();
+const WORKER_ORIGIN = 'https://guardr.themarkkbrandoncollective-2d9.workers.dev';
+const RELEASE_TAG = 'v1.1.0-cf-beta';
+const GITHUB_REPO = 'TheMarkkBradonCollective/Guardr';
+const assetUrl = (name) =>
+  `https://github.com/${GITHUB_REPO}/releases/download/${RELEASE_TAG}/${name}`;
+const GITHUB_ALL_APKS_ZIP = assetUrl('Guardr-All-APKs.zip');
+const GITHUB_CLIENT_APK = assetUrl('Guardr-Client.apk');
+const GITHUB_GUARD_APK = assetUrl('Guardr-Guard.apk');
+const GITHUB_STAFF_APK = assetUrl('Guardr-Staff.apk');
+const APK_DIRECT_URL = GITHUB_GUARD_APK;
 const APK_SLUG = 'guardr';
-const APK_DIRECT_URL = 'https://www.guardr.co/download/guardr.apk';
-const GITHUB_ALL_APKS_ZIP =
-  'https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip';
-const GITHUB_CLIENT_APK =
-  'https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Client.apk';
-const GITHUB_GUARD_APK =
-  'https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Guard.apk';
-const GITHUB_STAFF_APK =
-  'https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-Staff.apk';
 const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.1.0':
+    'Neon Postgres + Cloudflare Worker backend, JWT auth, R2 uploads, GitHub Release APKs (v1.1.0-cf-beta). API at guardr.themarkkbrandoncollective-2d9.workers.dev.',
   '1.0.134':
     'Audit hardening (account shell gate, device role blocks on sign-in). User manuals and Guide for app-first + deployment checklist. Single Guardr PWA (/manifest.json) — no per-role home-screen manifests. PWA cache bust; web/APK versionCode 234.',
   '1.0.133':

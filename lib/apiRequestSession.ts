@@ -3,7 +3,7 @@ import type { SessionCredentials } from './accountSessionAuth';
 type RequestLike = {
   method?: string;
   query?: Record<string, unknown>;
-  body?: Record<string, unknown>;
+  body?: unknown;
 };
 
 function readField(source: Record<string, unknown>, key: string): string {

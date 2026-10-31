@@ -1,0 +1,76 @@
+name: Cloudflare Android Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [cloudflare-neon-migration]
+    paths:
+      - '.github/workflows/cf-android-release.yml'
+      - 'android/**'
+      - 'capacitor.config.ts'
+      - 'scripts/build-android-apk*.mjs'
+      - 'src/**'
+      - 'package.json'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync version manifests
+        run: npm run generate:download-version
+
+      - name: Write Firebase google-services.json
+        run: node scripts/write-google-services.mjs
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        continue-on-error: true
+
+      - name: Build APKs (Worker backend)
+        run: npm run android:apk:all
+        env:
+          VITE_APP_URL: https://guardr.themarkkbrandoncollective-2d9.workers.dev
+          ALLOW_APK_WITHOUT_FCM: '1'
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.1.0-cf-beta
+          name: Guardr 1.1.0 Cloudflare beta
+          make_latest: false
+          fail_on_unmatched_files: true
+          files: |
+            public/download/Guardr-All-APKs.zip
+            public/download/Guardr-Client.apk
+            public/download/Guardr-Guard.apk
+            public/download/Guardr-Staff.apk
+            public/download/Guardr-Messenger.apk
+          body: |
+            Neon Postgres + Cloudflare Worker beta APKs.
+
+            API: https://guardr.themarkkbrandoncollective-2d9.workers.dev
+
+            - [Guardr-All-APKs.zip](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-All-APKs.zip)
+            - [Guardr-Guard.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Guard.apk)
+            - [Guardr-Client.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Client.apk)
+            - [Guardr-Staff.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Staff.apk)
+            - [Guardr-Messenger.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Messenger.apk)

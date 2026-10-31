@@ -1,0 +1,2204 @@
+-- Guardr plain PostgreSQL schema (Neon + Cloudflare Worker).
+-- Derived from supabase/complete_schema_setup.sql — Supabase-only pieces removed.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Application auth (replaces Supabase Auth for Worker deployment).
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  profile_kind TEXT NOT NULL CHECK (profile_kind IN ('guard', 'client', 'staff')),
+  profile_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_profile ON users(profile_kind, profile_id);
+CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users(lower(email));
+
+-- =============================================================================
+-- Guardr — COMPLETE SITE SCHEMA (single source of truth)
+-- Run once in Supabase SQL Editor for new projects or to catch up existing DBs.
+-- Idempotent: safe to re-run. Does NOT delete your data.
+-- Adds all tables, columns, constraints, RLS policies, and realtime.
+-- Includes v1.0 platform extensions: auth linking, audit log, availability,
+-- recurring shifts, compliance alerts, invoicing, onboarding progress, role-based RLS,
+-- open-contract pricing, shift reports/activity logs, and company public placard.
+-- Consolidated baseline plus supabase/migrations through 2026-09-26 (device bindings,
+-- one-role cases, guard suggestions, crew coordination removed, Finance side_role, etc.).
+-- Ends with PostgREST schema reload so the API sees new columns immediately.
+-- =============================================================================
+
+-- ── GUARDS ──────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS guards (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  badge_number TEXT NOT NULL,
+  avatar TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  bio TEXT NOT NULL DEFAULT '',
+  is_armed BOOLEAN NOT NULL DEFAULT FALSE,
+  background_checked BOOLEAN NOT NULL DEFAULT FALSE,
+  verified BOOLEAN NOT NULL DEFAULT FALSE,
+  rating NUMERIC(4, 2) NOT NULL DEFAULT 0,
+  jobs_completed INTEGER NOT NULL DEFAULT 0,
+  hourly_rate_requirement INTEGER,
+  is_staff BOOLEAN NOT NULL DEFAULT FALSE,
+  staff_role TEXT CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support')),
+  user_status TEXT NOT NULL DEFAULT 'pending' CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked')),
+  failed_audits INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS failed_audits INTEGER NOT NULL DEFAULT 0;
+UPDATE guards SET failed_audits = 0 WHERE failed_audits IS NULL;
+
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS headline TEXT DEFAULT '';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS summary TEXT DEFAULT '';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS about TEXT DEFAULT '';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS skills JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS languages JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS service_areas JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS specialties JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS years_experience INTEGER;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS availability_notes TEXT DEFAULT '';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS armed_preference TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS guard_card_status TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS has_reliable_transportation BOOLEAN;
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_armed_preference_check;
+ALTER TABLE guards ADD CONSTRAINT guards_armed_preference_check
+  CHECK (armed_preference IS NULL OR armed_preference IN ('armed', 'unarmed', 'both'));
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_guard_card_status_check;
+ALTER TABLE guards ADD CONSTRAINT guards_guard_card_status_check
+  CHECK (guard_card_status IS NULL OR guard_card_status IN ('active', 'in_progress', 'none'));
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS listed_weapon_gear JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS listed_equipment_gear JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS inventory_equipment JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS inventory_uniforms JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS job_type_preferences JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS job_type_onboarding JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS theme_preference TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_status TEXT NOT NULL DEFAULT 'not_submitted';
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_state TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_number TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_expiry_date DATE;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_front_url TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_back_url TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_selfie_url TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_submitted_at TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_reviewed_at TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_verification_rejection_reason TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_requested_at TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_update_request_note TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS application_revision_requested_at TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS application_revision_note TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS application_submission_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_revision_history JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_expiry_restricted BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_id_verification_status_check;
+ALTER TABLE guards ADD CONSTRAINT guards_id_verification_status_check
+  CHECK (id_verification_status IN ('not_submitted', 'pending', 'verified', 'rejected'));
+
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_user_status_check;
+ALTER TABLE guards ADD CONSTRAINT guards_user_status_check
+  CHECK (user_status IN ('pending', 'approved', 'active', 'suspended', 'blocked'));
+ALTER TABLE guards ALTER COLUMN user_status SET DEFAULT 'pending';
+
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS middle_name TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS password TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_grace_deadline TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_grace_hours INTEGER;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS credential_grace_missing JSONB;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_submitted_by TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_document_type TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS id_license_class TEXT;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS migrated_to_staff_at TIMESTAMPTZ;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS trusted BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS side_role TEXT;
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_side_role_check;
+ALTER TABLE guards ADD CONSTRAINT guards_side_role_check
+  CHECK (side_role IS NULL OR side_role IN ('Finance'));
+COMMENT ON COLUMN guards.side_role IS 'Optional specialty seat mirrored from staff — Finance payment desk.';
+
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_staff_role_check;
+ALTER TABLE guards ADD CONSTRAINT guards_staff_role_check
+  CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support'));
+
+ALTER TABLE guards DROP CONSTRAINT IF EXISTS guards_theme_preference_check;
+ALTER TABLE guards ADD CONSTRAINT guards_theme_preference_check
+  CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light'));
+
+-- Backfill name parts from display name where empty
+UPDATE guards
+SET
+  first_name = COALESCE(NULLIF(trim(first_name), ''), split_part(trim(name), ' ', 1)),
+  last_name = COALESCE(
+    NULLIF(trim(last_name), ''),
+    CASE
+      WHEN array_length(regexp_split_to_array(trim(name), '\s+'), 1) >= 2
+        THEN (regexp_split_to_array(trim(name), '\s+'))[array_length(regexp_split_to_array(trim(name), '\s+'), 1)]
+      ELSE ''
+    END
+  ),
+  middle_name = COALESCE(
+    NULLIF(trim(middle_name), ''),
+    CASE
+      WHEN array_length(regexp_split_to_array(trim(name), '\s+'), 1) > 2
+        THEN array_to_string(
+          (regexp_split_to_array(trim(name), '\s+'))[2:array_length(regexp_split_to_array(trim(name), '\s+'), 1) - 1],
+          ' '
+        )
+      ELSE NULL
+    END
+  )
+WHERE trim(coalesce(name, '')) <> '';
+
+-- ── STAFF (platform ops accounts — separate from field guards) ───────────────
+CREATE TABLE IF NOT EXISTS staff (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  first_name TEXT,
+  middle_name TEXT,
+  last_name TEXT,
+  email TEXT UNIQUE NOT NULL,
+  badge_number TEXT NOT NULL,
+  avatar TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  bio TEXT NOT NULL DEFAULT '',
+  staff_role TEXT
+    CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support')),
+  side_role TEXT
+    CHECK (side_role IS NULL OR side_role IN ('Finance')),
+  user_status TEXT NOT NULL DEFAULT 'active'
+    CHECK (user_status IN ('pending', 'active', 'suspended', 'blocked')),
+  password TEXT,
+  must_change_password BOOLEAN NOT NULL DEFAULT false,
+  theme_preference TEXT CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  migrated_from_guards_at TIMESTAMPTZ,
+  CONSTRAINT staff_role_or_side_role_present CHECK (staff_role IS NOT NULL OR side_role IS NOT NULL)
+);
+
+ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_staff_role_check;
+ALTER TABLE staff ADD CONSTRAINT staff_staff_role_check
+  CHECK (staff_role IS NULL OR staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support'));
+
+ALTER TABLE staff ALTER COLUMN staff_role DROP NOT NULL;
+
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS side_role TEXT;
+ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_side_role_check;
+ALTER TABLE staff ADD CONSTRAINT staff_side_role_check
+  CHECK (side_role IS NULL OR side_role IN ('Finance'));
+COMMENT ON COLUMN staff.side_role IS 'Optional specialty seat — Finance grants payment-only tools; may be used with a null/stagnant staff_role.';
+
+ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_role_or_side_role_present;
+ALTER TABLE staff ADD CONSTRAINT staff_role_or_side_role_present
+  CHECK (staff_role IS NOT NULL OR side_role IS NOT NULL);
+
+ALTER TABLE staff DROP CONSTRAINT IF EXISTS staff_user_status_check;
+ALTER TABLE staff ADD CONSTRAINT staff_user_status_check
+  CHECK (user_status IN ('pending', 'approved', 'active', 'suspended', 'blocked'));
+
+-- ── CLIENTS ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS clients (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  company_name TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  avatar TEXT NOT NULL DEFAULT '',
+  total_requests INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS rating NUMERIC(4, 2);
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS theme_preference TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS middle_name TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS password TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS account_status TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS application_revision_requested_at TIMESTAMPTZ;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS application_revision_note TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS trusted BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS favorite_guard_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS security_company_roster JSONB NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN clients.security_company_roster IS
+  'Independent contractor guards on the PPO roster — not employees; marketplace bookings only.';
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS business_type TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS industries TEXT[];
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS business_license TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_description TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_types TEXT[];
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS estimated_guards_needed INTEGER;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS armed_preference TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_frequencies TEXT[];
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS estimated_start_date TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS budget_range TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_city TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS service_state TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS property_types TEXT[];
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS referred_by TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS referred_by_id TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS how_heard_about_us TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS has_prior_security_service BOOLEAN;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS prior_security_provider TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS special_requirements TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS default_assignment_mode TEXT DEFAULT 'client-approve';
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS client_type TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS authorized_contacts JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS credentials JSONB NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN clients.credentials IS
+  'Client credential library uploads: type, document, expiration, and verification status.';
+
+UPDATE clients
+SET client_type = 'business'
+WHERE client_type IS NULL OR client_type NOT IN ('personal', 'business');
+
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_account_kind_check;
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_client_type_check;
+ALTER TABLE clients ADD CONSTRAINT clients_client_type_check
+  CHECK (client_type IN ('personal', 'business', 'security-company'));
+
+ALTER TABLE clients ALTER COLUMN client_type SET DEFAULT 'business';
+ALTER TABLE clients ALTER COLUMN client_type SET NOT NULL;
+
+UPDATE clients SET favorite_guard_ids = '[]'::jsonb WHERE favorite_guard_ids IS NULL;
+UPDATE guards SET trusted = FALSE WHERE trusted IS NULL;
+UPDATE clients SET trusted = FALSE WHERE trusted IS NULL;
+UPDATE clients SET approved = TRUE WHERE approved IS NULL;
+UPDATE clients
+SET account_status = CASE
+  WHEN approved = FALSE THEN 'suspended'
+  ELSE 'active'
+END
+WHERE account_status IS NULL;
+ALTER TABLE clients ALTER COLUMN account_status SET DEFAULT 'pending';
+UPDATE clients SET account_status = 'active' WHERE account_status IS NULL;
+ALTER TABLE clients ALTER COLUMN account_status SET NOT NULL;
+
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_account_status_check;
+ALTER TABLE clients ADD CONSTRAINT clients_account_status_check
+  CHECK (account_status IN ('pending', 'active', 'suspended'));
+
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_theme_preference_check;
+ALTER TABLE clients ADD CONSTRAINT clients_theme_preference_check
+  CHECK (theme_preference IS NULL OR theme_preference IN ('dark', 'light'));
+
+UPDATE clients
+SET
+  first_name = COALESCE(NULLIF(trim(first_name), ''), split_part(trim(name), ' ', 1)),
+  last_name = COALESCE(
+    NULLIF(trim(last_name), ''),
+    CASE
+      WHEN array_length(regexp_split_to_array(trim(name), '\s+'), 1) >= 2
+        THEN (regexp_split_to_array(trim(name), '\s+'))[array_length(regexp_split_to_array(trim(name), '\s+'), 1)]
+      ELSE ''
+    END
+  ),
+  middle_name = COALESCE(
+    NULLIF(trim(middle_name), ''),
+    CASE
+      WHEN array_length(regexp_split_to_array(trim(name), '\s+'), 1) > 2
+        THEN array_to_string(
+          (regexp_split_to_array(trim(name), '\s+'))[2:array_length(regexp_split_to_array(trim(name), '\s+'), 1) - 1],
+          ' '
+        )
+      ELSE NULL
+    END
+  )
+WHERE trim(coalesce(name, '')) <> '';
+
+-- ── CERTIFICATIONS ──────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS certifications (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  issuer TEXT NOT NULL,
+  number TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('verified', 'pending', 'rejected')),
+  issue_date DATE NOT NULL,
+  expiry_date DATE,
+  state TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS catalog_id TEXT;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS submitted_by_role TEXT;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS revision_history JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS pending_update JSONB;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS update_requested_at TIMESTAMPTZ;
+ALTER TABLE certifications ADD COLUMN IF NOT EXISTS update_request_note TEXT;
+
+-- Cert expiry is optional — app no longer collects cert expiry (COI and government ID keep their own).
+ALTER TABLE certifications ALTER COLUMN expiry_date DROP NOT NULL;
+
+COMMENT ON COLUMN certifications.expiry_date IS
+  'Legacy optional field — app no longer collects cert expiry; COI and government ID keep their own expiry columns';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_certifications_unique_normalized_number
+ON certifications (
+  upper(regexp_replace(trim(number), '[^a-zA-Z0-9]', '', 'g'))
+)
+WHERE trim(number) <> '';
+
+-- ── EXPERIENCE & EDUCATION ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS experience (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  company TEXT NOT NULL,
+  period TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS education (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  school TEXT NOT NULL,
+  degree TEXT NOT NULL DEFAULT '',
+  field TEXT NOT NULL DEFAULT '',
+  period TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- ── SECURITY REQUESTS (jobs) — what clients post ────────────────────────────
+CREATE TABLE IF NOT EXISTS security_requests (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  client_id TEXT NOT NULL,
+  client_name TEXT NOT NULL,
+  client_logo TEXT NOT NULL DEFAULT '',
+  client_rating NUMERIC(4, 2),
+  site_name TEXT NOT NULL DEFAULT '',
+  address TEXT NOT NULL DEFAULT '',
+  state TEXT NOT NULL DEFAULT '',
+  location TEXT NOT NULL DEFAULT '',
+  type TEXT NOT NULL DEFAULT 'event',
+  armed_required BOOLEAN NOT NULL DEFAULT FALSE,
+  guards_needed INTEGER NOT NULL DEFAULT 1,
+  uniform_requirements TEXT NOT NULL DEFAULT '',
+  equipment_requirements TEXT NOT NULL DEFAULT '',
+  site_instructions TEXT NOT NULL DEFAULT '',
+  start_date TIMESTAMPTZ NOT NULL,
+  end_date TIMESTAMPTZ NOT NULL,
+  duration_hours NUMERIC(10, 2) NOT NULL DEFAULT 8,
+  hourly_rate INTEGER NOT NULL DEFAULT 35,
+  guard_pay INTEGER,
+  platform_fee_per_hour INTEGER NOT NULL DEFAULT 5,
+  estimated_payout NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'open',
+  assigned_guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
+  required_certifications TEXT[] NOT NULL DEFAULT '{}',
+  applicants TEXT[] NOT NULL DEFAULT '{}',
+  rating_given INTEGER,
+  review_text TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS site_name TEXT DEFAULT '';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS state TEXT DEFAULT '';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guards_needed INTEGER DEFAULT 1;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_type TEXT DEFAULT 'one-time';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS recurring_end_date TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS recurring_days INTEGER[];
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS assignment_mode TEXT DEFAULT 'client-approve';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS min_years_experience INTEGER;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_location_id TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS location_risk_level TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tier_pay_rates JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS post_orders_acknowledgments JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS briefing_acknowledgments JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_audit_violations JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS uniform_requirements TEXT DEFAULT '';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS equipment_requirements TEXT DEFAULT '';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS site_instructions TEXT DEFAULT '';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS operational_details JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_pay INTEGER;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS platform_fee_per_hour INTEGER DEFAULT 5;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_rating NUMERIC(4, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS stripe_payment_intent_id TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'unpaid';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS request_type TEXT DEFAULT 'marketplace';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS target_guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS min_guard_qualification TEXT DEFAULT 'pending';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_payment_method TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_method TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_to_stripe BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_amount NUMERIC(12, 2) NOT NULL DEFAULT 0;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS cash_deposited_manually BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS platform_fee_paid_cash BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_requested BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_cash_payout_requested_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_available BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_payout_available_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_cash_payment_requested BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_cash_payment_requested_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS staff_approved_guard_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS check_in_audit JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS spot_checks JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS mid_shift_audits JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS en_route_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS arrived_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_live_location JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS replacement_request JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS no_show BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS client_violation_reports JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS check_out_audit JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS contact_name TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS contact_phone TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS parking_instructions TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS access_instructions TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS scheduled_duration_hours NUMERIC(10, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS scheduled_estimated_payout NUMERIC(12, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_hours NUMERIC(10, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_amount NUMERIC(12, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_payment_status TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_status TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_approved_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_approved_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_payment_method TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_cash_payment_requested BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_client_cash_payment_requested_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_available BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_available_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_guard_payout_method TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_amount NUMERIC(12, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_payment_status TEXT DEFAULT 'none';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_stripe_session_id TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_stripe_payment_intent_id TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS tip_paid_at TIMESTAMPTZ;
+
+-- Overtime dispute: client contests late clock-out charge; staff reviews and adjusts.
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_reason TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_disputed_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_claimed_clock_out_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_resolved_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_dispute_resolution TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_hours NUMERIC(10, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS overtime_original_amount NUMERIC(12, 2);
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS break_minutes INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS shift_breaks JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS opened_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS guard_suggestions JSONB NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN security_requests.guard_suggestions IS
+  'Guard-to-guard suggestions for open jobs; client reviews before placement.';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS service_agreement JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS auto_payout_scheduled_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_start_date TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_end_date TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_duration_hours NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pending_estimated_payout NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_change_status TEXT NOT NULL DEFAULT 'none';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_change_requested_at TIMESTAMPTZ;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_change_requested_by TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS schedule_change_extra_amount NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS early_clock_out_actual_hours NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS early_clock_out_refund_amount NUMERIC;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS early_clock_out_refund_status TEXT;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS break_paid BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS pricing_mode TEXT NOT NULL DEFAULT 'standard';
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS agreement_fee_config JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS opening_price_offer JSONB;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS price_negotiations JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS reports JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS activity_log JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS self_audit JSONB;
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_pricing_mode_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_pricing_mode_check
+  CHECK (pricing_mode IN ('standard', 'open_contract'));
+
+COMMENT ON COLUMN security_requests.break_minutes IS 'Total unpaid break minutes the client allows during the shift';
+COMMENT ON COLUMN security_requests.shift_breaks IS 'Guard break sessions: [{ id, startedAt, endedAt? }]';
+COMMENT ON COLUMN security_requests.service_agreement IS 'Generated client-guard per-job service agreement at assignment';
+COMMENT ON COLUMN security_requests.auto_payout_scheduled_at IS 'When automatic Stripe payout should run after shift completion';
+COMMENT ON COLUMN security_requests.schedule_change_status IS 'none | pending_staff | pending_client | awaiting_payment | pending_staff_billing';
+COMMENT ON COLUMN security_requests.schedule_change_requested_by IS 'client | staff — who proposed the pending schedule change';
+COMMENT ON COLUMN security_requests.early_clock_out_actual_hours IS 'Actual hours worked when guard clocked out early';
+COMMENT ON COLUMN security_requests.early_clock_out_refund_amount IS 'Amount owed back to client for unused scheduled time';
+COMMENT ON COLUMN security_requests.early_clock_out_refund_status IS 'pending | returned_stripe | returned_cash | waived';
+
+COMMENT ON COLUMN security_requests.scheduled_duration_hours IS 'Original scheduled shift length before late clock-out adjustment';
+COMMENT ON COLUMN security_requests.scheduled_estimated_payout IS 'Original client bill before late clock-out adjustment';
+COMMENT ON COLUMN security_requests.overtime_hours IS 'Extra hours billed when guard clocked out after scheduled end';
+COMMENT ON COLUMN security_requests.overtime_amount IS 'Additional client charge for late clock-out';
+COMMENT ON COLUMN security_requests.overtime_payment_status IS 'none | unpaid | paid — tracks collection of overtime difference';
+COMMENT ON COLUMN security_requests.overtime_status IS 'none | pending_guard | pending_client | awaiting_payment | disputed | paid | waived';
+COMMENT ON COLUMN security_requests.overtime_guard_approved_at IS 'When the guard confirmed late clock-out overtime';
+COMMENT ON COLUMN security_requests.overtime_client_approved_at IS 'When the client approved paying overtime';
+COMMENT ON COLUMN security_requests.overtime_dispute_reason IS 'Client explanation when disputing late clock-out overtime';
+COMMENT ON COLUMN security_requests.overtime_disputed_at IS 'When the client opened an overtime dispute';
+COMMENT ON COLUMN security_requests.overtime_dispute_claimed_clock_out_at IS 'Client-stated actual guard clock-out time when disputing overtime';
+COMMENT ON COLUMN security_requests.overtime_dispute_resolved_at IS 'When staff resolved an overtime dispute';
+COMMENT ON COLUMN security_requests.overtime_dispute_resolution IS 'Staff note describing how an overtime dispute was resolved';
+COMMENT ON COLUMN security_requests.overtime_original_hours IS 'Overtime hours claimed when the client opened a dispute';
+COMMENT ON COLUMN security_requests.overtime_original_amount IS 'Overtime amount claimed when the client opened a dispute';
+COMMENT ON COLUMN security_requests.overtime_client_payment_method IS 'stripe | cash — how the client paid overtime';
+COMMENT ON COLUMN security_requests.overtime_guard_payout_method IS 'stripe | cash — how the guard was paid for overtime';
+COMMENT ON COLUMN security_requests.break_paid IS 'When true, scheduled break minutes are paid; when false, breaks are unpaid';
+COMMENT ON COLUMN security_requests.pricing_mode IS 'standard = preset rates; open_contract = client-guard negotiated pricing';
+COMMENT ON COLUMN security_requests.agreement_fee_config IS 'Per-deal platform fee override for open-contract jobs';
+COMMENT ON COLUMN security_requests.opening_price_offer IS 'Client opening offer before guard responds on open-contract jobs';
+COMMENT ON COLUMN security_requests.price_negotiations IS 'Per-guard price negotiation threads for open-contract jobs';
+COMMENT ON COLUMN security_requests.reports IS 'Incident and activity reports filed during the shift';
+COMMENT ON COLUMN security_requests.activity_log IS 'Timestamped activity entries during the shift';
+COMMENT ON COLUMN security_requests.self_audit IS 'Legacy offline self-audit payload; main flow uses check_in_audit';
+
+UPDATE security_requests SET cash_deposited_to_stripe = FALSE WHERE cash_deposited_to_stripe IS NULL;
+UPDATE security_requests SET cash_deposited_amount = estimated_payout
+  WHERE cash_deposited_to_stripe = TRUE AND cash_deposited_amount = 0;
+UPDATE security_requests SET cash_deposited_manually = FALSE WHERE cash_deposited_manually IS NULL;
+UPDATE security_requests SET site_name = '' WHERE site_name IS NULL;
+UPDATE security_requests SET address = '' WHERE address IS NULL;
+UPDATE security_requests SET state = '' WHERE state IS NULL;
+UPDATE security_requests SET guards_needed = 1 WHERE guards_needed IS NULL;
+UPDATE security_requests SET uniform_requirements = '' WHERE uniform_requirements IS NULL;
+UPDATE security_requests SET equipment_requirements = '' WHERE equipment_requirements IS NULL;
+UPDATE security_requests SET site_instructions = '' WHERE site_instructions IS NULL;
+UPDATE security_requests SET description = '' WHERE description IS NULL;
+UPDATE security_requests SET platform_fee_per_hour = 5 WHERE platform_fee_per_hour IS NULL;
+UPDATE security_requests SET payment_status = 'unpaid' WHERE payment_status IS NULL;
+UPDATE security_requests SET request_type = 'marketplace' WHERE request_type IS NULL;
+UPDATE security_requests SET min_guard_qualification = 'pending' WHERE min_guard_qualification IS NULL;
+UPDATE security_requests SET min_guard_qualification = 'pending'
+  WHERE min_guard_qualification NOT IN ('pending', 'active');
+UPDATE security_requests SET request_type = 'marketplace'
+  WHERE request_type IS NOT NULL AND request_type NOT IN ('marketplace', 'direct');
+UPDATE security_requests SET required_certifications = '{}' WHERE required_certifications IS NULL;
+UPDATE security_requests SET applicants = '{}' WHERE applicants IS NULL;
+UPDATE security_requests SET spot_checks = '[]'::jsonb WHERE spot_checks IS NULL;
+UPDATE security_requests SET mid_shift_audits = '[]'::jsonb WHERE mid_shift_audits IS NULL;
+UPDATE security_requests SET platform_fee_paid_cash = FALSE WHERE platform_fee_paid_cash IS NULL;
+UPDATE security_requests SET guard_cash_payout_requested = FALSE WHERE guard_cash_payout_requested IS NULL;
+UPDATE security_requests SET client_cash_payment_requested = FALSE WHERE client_cash_payment_requested IS NULL;
+UPDATE security_requests SET guard_payout_available = FALSE WHERE guard_payout_available IS NULL;
+UPDATE security_requests SET overtime_client_cash_payment_requested = FALSE WHERE overtime_client_cash_payment_requested IS NULL;
+UPDATE security_requests SET overtime_guard_payout_available = FALSE WHERE overtime_guard_payout_available IS NULL;
+UPDATE security_requests SET break_minutes = 0 WHERE break_minutes IS NULL;
+UPDATE security_requests SET shift_breaks = '[]'::jsonb WHERE shift_breaks IS NULL;
+UPDATE security_requests SET schedule_change_status = 'none' WHERE schedule_change_status IS NULL;
+UPDATE security_requests SET break_paid = TRUE WHERE break_paid IS NULL;
+UPDATE security_requests SET pricing_mode = 'standard' WHERE pricing_mode IS NULL;
+UPDATE security_requests SET price_negotiations = '[]'::jsonb WHERE price_negotiations IS NULL;
+UPDATE security_requests SET reports = '[]'::jsonb WHERE reports IS NULL;
+UPDATE security_requests SET activity_log = '[]'::jsonb WHERE activity_log IS NULL;
+UPDATE security_requests
+SET
+  guard_payout_available = TRUE,
+  guard_payout_available_at = COALESCE(guard_payout_available_at, NOW())
+WHERE status = 'completed'
+  AND payment_status IN ('paid', 'held')
+  AND COALESCE(guard_payout_method, '') <> 'cash'
+  AND payment_status <> 'released';
+
+UPDATE security_requests SET status = 'accepted' WHERE status = 'assigned';
+UPDATE security_requests SET status = 'closed' WHERE status = 'cancelled';
+UPDATE security_requests SET status = 'open' WHERE status NOT IN (
+  'draft', 'pending-review', 'open', 'accepted', 'in-progress', 'completed', 'closed'
+);
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_status_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_status_check
+  CHECK (status IN ('draft', 'pending-review', 'open', 'accepted', 'in-progress', 'completed', 'closed'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_payment_status_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_payment_status_check
+  CHECK (payment_status IS NULL OR payment_status IN ('unpaid', 'paid', 'held', 'released'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_request_type_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_request_type_check
+  CHECK (request_type IS NULL OR request_type IN ('marketplace', 'direct'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_min_guard_qualification_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_min_guard_qualification_check
+  CHECK (min_guard_qualification IN ('pending', 'active'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_client_payment_method_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_client_payment_method_check
+  CHECK (client_payment_method IS NULL OR client_payment_method IN ('stripe', 'cash'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_guard_payout_method_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_guard_payout_method_check
+  CHECK (guard_payout_method IS NULL OR guard_payout_method IN ('stripe', 'cash'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_payment_status_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_payment_status_check
+  CHECK (overtime_payment_status IS NULL OR overtime_payment_status IN ('none', 'unpaid', 'paid'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_status_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_status_check
+  CHECK (overtime_status IS NULL OR overtime_status IN (
+    'none', 'pending_guard', 'pending_client', 'awaiting_payment', 'disputed', 'paid', 'waived'
+  ));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_client_payment_method_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_client_payment_method_check
+  CHECK (overtime_client_payment_method IS NULL OR overtime_client_payment_method IN ('stripe', 'cash'));
+
+ALTER TABLE security_requests DROP CONSTRAINT IF EXISTS security_requests_overtime_guard_payout_method_check;
+ALTER TABLE security_requests ADD CONSTRAINT security_requests_overtime_guard_payout_method_check
+  CHECK (overtime_guard_payout_method IS NULL OR overtime_guard_payout_method IN ('stripe', 'cash'));
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'security_requests' AND column_name = 'preferred_guard_id'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'security_requests' AND column_name = 'target_guard_id'
+  ) THEN
+    ALTER TABLE security_requests RENAME COLUMN preferred_guard_id TO target_guard_id;
+  END IF;
+END $$;
+
+-- ── PAYMENTS ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS payments (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL REFERENCES security_requests(id) ON DELETE CASCADE,
+  amount NUMERIC(12, 2) NOT NULL,
+  payment_method TEXT CHECK (payment_method IS NULL OR payment_method IN ('stripe', 'cash')),
+  stripe_session_id TEXT,
+  stripe_payment_intent_id TEXT,
+  stripe_transfer_id TEXT,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'paid', 'held', 'released', 'failed', 'refunded')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method TEXT;
+
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_payment_method_check;
+ALTER TABLE payments ADD CONSTRAINT payments_payment_method_check
+  CHECK (payment_method IS NULL OR payment_method IN ('stripe', 'cash'));
+
+-- ── GUARD PAYOUT INVOICES ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS guard_payout_invoices (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT NOT NULL,
+  guard_name TEXT NOT NULL,
+  guard_email TEXT NOT NULL,
+  method TEXT NOT NULL CHECK (method IN ('cash', 'stripe')),
+  job_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  lines JSONB NOT NULL DEFAULT '[]'::jsonb,
+  total NUMERIC(12, 2) NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'completed', 'cancelled')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  resolved_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS guard_payout_invoices_guard_id_idx ON guard_payout_invoices(guard_id);
+CREATE INDEX IF NOT EXISTS guard_payout_invoices_status_idx ON guard_payout_invoices(status);
+
+-- ── SUPPORT ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS support_tickets (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  user_name TEXT NOT NULL,
+  user_email TEXT NOT NULL,
+  user_role TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('chat', 'report')),
+  subject TEXT NOT NULL,
+  category TEXT NOT NULL,
+  priority TEXT NOT NULL DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'in-progress', 'resolved')),
+  related_request_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS support_messages (
+  id TEXT PRIMARY KEY,
+  ticket_id TEXT NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- ── PUSH SUBSCRIPTIONS ──────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  push_role TEXT NOT NULL CHECK (push_role IN ('guard', 'dispatch', 'admin', 'client')),
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  site_id TEXT,
+  quiet_hours_start TIME,
+  quiet_hours_end TIME,
+  app_channel TEXT NOT NULL DEFAULT 'main' CHECK (app_channel IN ('main', 'messenger')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS app_channel TEXT DEFAULT 'main';
+UPDATE push_subscriptions SET app_channel = 'main' WHERE app_channel IS NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'push_subscriptions_app_channel_check'
+  ) THEN
+    ALTER TABLE push_subscriptions
+      ADD CONSTRAINT push_subscriptions_app_channel_check
+      CHECK (app_channel IN ('main', 'messenger'));
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_app_channel
+  ON push_subscriptions (app_channel);
+
+-- ── PUSH NOTIFICATION DEDUP (server-side duplicate prevention) ───────────────
+CREATE TABLE IF NOT EXISTS push_notification_dedup (
+  id TEXT PRIMARY KEY,
+  notification_type TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_notification_dedup_created
+  ON push_notification_dedup (created_at);
+
+COMMENT ON TABLE push_notification_dedup IS
+  'Prevents duplicate operational push alerts; rows older than ~25h are pruned by cron.';
+
+-- ── MESSAGING (job chat + staff channel + notification prefs) ───────────────
+CREATE TABLE IF NOT EXISTS job_chat_threads (
+  id TEXT PRIMARY KEY,
+  request_id TEXT NOT NULL UNIQUE,
+  client_id TEXT NOT NULL,
+  guard_id TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  archived_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS job_chat_messages (
+  id TEXT PRIMARY KEY,
+  thread_id TEXT NOT NULL REFERENCES job_chat_threads(id) ON DELETE CASCADE,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS staff_messages (
+  id TEXT PRIMARY KEY,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS guard_messages (
+  id TEXT PRIMARY KEY,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS client_messages (
+  id TEXT PRIMARY KEY,
+  sender_id TEXT NOT NULL,
+  sender_name TEXT NOT NULL,
+  sender_role TEXT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS message_reactions (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  message_type TEXT NOT NULL
+    CHECK (message_type IN ('job_chat', 'staff', 'guard', 'client', 'support')),
+  message_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  user_name TEXT NOT NULL DEFAULT '',
+  emoji TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  UNIQUE (message_type, message_id, user_id, emoji)
+);
+
+CREATE INDEX IF NOT EXISTS message_reactions_lookup_idx
+  ON message_reactions (message_type, message_id);
+CREATE INDEX IF NOT EXISTS message_reactions_user_idx
+  ON message_reactions (user_id);
+
+CREATE TABLE IF NOT EXISTS chat_read_receipts (
+  user_id TEXT NOT NULL,
+  channel_type TEXT NOT NULL
+    CHECK (channel_type IN ('job_chat', 'staff', 'guard', 'client', 'support')),
+  channel_id TEXT NOT NULL,
+  last_read_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  PRIMARY KEY (user_id, channel_type, channel_id)
+);
+
+CREATE INDEX IF NOT EXISTS chat_read_receipts_channel_idx
+  ON chat_read_receipts (channel_type, channel_id);
+
+CREATE OR REPLACE FUNCTION mark_channel_read(
+  p_user_id TEXT,
+  p_channel_type TEXT,
+  p_channel_id TEXT
+)
+RETURNS VOID
+LANGUAGE sql
+AS $$
+  INSERT INTO chat_read_receipts (user_id, channel_type, channel_id, last_read_at)
+  VALUES (p_user_id, p_channel_type, p_channel_id, timezone('utc'::text, now()))
+  ON CONFLICT (user_id, channel_type, channel_id)
+  DO UPDATE SET last_read_at = EXCLUDED.last_read_at;
+$$;
+
+CREATE OR REPLACE FUNCTION unread_counts(p_user_id TEXT)
+RETURNS TABLE (
+  channel_type TEXT,
+  channel_id TEXT,
+  unread_count BIGINT
+)
+LANGUAGE sql STABLE
+AS $$
+  SELECT
+    'job_chat'::TEXT AS channel_type,
+    t.id AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM job_chat_threads t
+  JOIN job_chat_messages m ON m.thread_id = t.id
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'job_chat'
+   AND r.channel_id = t.id
+  WHERE t.client_id = p_user_id OR t.guard_id = p_user_id
+  GROUP BY t.id, r.last_read_at
+
+  UNION ALL
+
+  SELECT
+    'guard'::TEXT AS channel_type,
+    'guard-community'::TEXT AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM guard_messages m
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'guard'
+   AND r.channel_id = 'guard-community'
+
+  UNION ALL
+
+  SELECT
+    'client'::TEXT AS channel_type,
+    'client-community'::TEXT AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM client_messages m
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'client'
+   AND r.channel_id = 'client-community'
+
+  UNION ALL
+
+  SELECT
+    'staff'::TEXT AS channel_type,
+    'staff-community'::TEXT AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM staff_messages m
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'staff'
+   AND r.channel_id = 'staff-community'
+
+  UNION ALL
+
+  SELECT
+    'support'::TEXT AS channel_type,
+    t.id AS channel_id,
+    COUNT(m.id) FILTER (
+      WHERE m.created_at > COALESCE(r.last_read_at, '-infinity'::TIMESTAMPTZ)
+        AND m.sender_id <> p_user_id
+    ) AS unread_count
+  FROM support_tickets t
+  JOIN support_messages m ON m.ticket_id = t.id
+  LEFT JOIN chat_read_receipts r
+    ON r.user_id = p_user_id
+   AND r.channel_type = 'support'
+   AND r.channel_id = t.id
+  WHERE t.user_id = p_user_id
+  GROUP BY t.id, r.last_read_at
+$$;
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  user_id TEXT PRIMARY KEY,
+  assignment BOOLEAN NOT NULL DEFAULT true,
+  guard_checkin BOOLEAN NOT NULL DEFAULT true,
+  missed_checkin BOOLEAN NOT NULL DEFAULT true,
+  emergency_alert BOOLEAN NOT NULL DEFAULT true,
+  support_message BOOLEAN NOT NULL DEFAULT true,
+  job_chat_message BOOLEAN NOT NULL DEFAULT true,
+  staff_message BOOLEAN NOT NULL DEFAULT true,
+  guard_message BOOLEAN NOT NULL DEFAULT true,
+  client_message BOOLEAN NOT NULL DEFAULT true,
+  job_submitted BOOLEAN NOT NULL DEFAULT true,
+  guard_application BOOLEAN NOT NULL DEFAULT true,
+  guard_pending_approval BOOLEAN NOT NULL DEFAULT true,
+  client_pending_approval BOOLEAN NOT NULL DEFAULT true,
+  credential_pending BOOLEAN NOT NULL DEFAULT true,
+  payment_attention BOOLEAN NOT NULL DEFAULT true,
+  support_ticket BOOLEAN NOT NULL DEFAULT true,
+  support_ticket_status BOOLEAN NOT NULL DEFAULT true,
+  dispute_update BOOLEAN NOT NULL DEFAULT true,
+  guard_clockout BOOLEAN NOT NULL DEFAULT true,
+  guard_break_start BOOLEAN NOT NULL DEFAULT true,
+  guard_break_end BOOLEAN NOT NULL DEFAULT true,
+  reaction_notification BOOLEAN NOT NULL DEFAULT true,
+  guard_trusted_status BOOLEAN NOT NULL DEFAULT true,
+  client_trusted_status BOOLEAN NOT NULL DEFAULT true,
+  job_relisted BOOLEAN NOT NULL DEFAULT true,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_message BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_message BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_submitted BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_application BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_pending_approval BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_pending_approval BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS credential_pending BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS payment_attention BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS support_ticket BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS support_ticket_status BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS dispute_update BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_clockout BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_break_start BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_break_end BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS reaction_notification BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_trusted_status BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_trusted_status BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_relisted BOOLEAN NOT NULL DEFAULT true;
+
+COMMENT ON COLUMN notification_preferences.support_ticket IS 'Staff alert for new support chats and formal reports';
+COMMENT ON COLUMN notification_preferences.support_ticket_status IS 'User alert when staff updates ticket status';
+COMMENT ON COLUMN notification_preferences.dispute_update IS 'Alerts for dispute filings and resolutions';
+COMMENT ON COLUMN notification_preferences.guard_trusted_status IS 'Guard alert when staff mark or remove trusted status';
+COMMENT ON COLUMN notification_preferences.client_trusted_status IS 'Client alert when staff mark or remove trusted status';
+COMMENT ON COLUMN notification_preferences.job_relisted IS 'Client alert when a job returns to the marketplace';
+
+CREATE TABLE IF NOT EXISTS platform_settings (
+  id TEXT PRIMARY KEY DEFAULT 'default',
+  payment_cash_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  payment_stripe_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  fee_config JSONB NOT NULL DEFAULT '{
+    "model": "flat",
+    "flatFeePerHour": 5,
+    "percentRate": 0.15,
+    "minFeePerHour": 4,
+    "maxFeePerHour": 12,
+    "tiers": [
+      { "minHourlyRate": 75, "feePerHour": 10 },
+      { "minHourlyRate": 50, "feePerHour": 8 },
+      { "minHourlyRate": 30, "feePerHour": 6 },
+      { "minHourlyRate": 0, "feePerHour": 5 }
+    ]
+  }'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS payment_square_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE platform_settings
+SET payment_cash_enabled = FALSE,
+    payment_stripe_enabled = TRUE,
+    payment_square_enabled = COALESCE(payment_square_enabled, FALSE)
+WHERE id = 'default';
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS fee_config JSONB NOT NULL DEFAULT '{
+  "model": "flat",
+  "flatFeePerHour": 5,
+  "percentRate": 0.15,
+  "minFeePerHour": 4,
+  "maxFeePerHour": 12,
+  "tiers": [
+    { "minHourlyRate": 75, "feePerHour": 10 },
+    { "minHourlyRate": 50, "feePerHour": 8 },
+    { "minHourlyRate": 30, "feePerHour": 6 },
+    { "minHourlyRate": 0, "feePerHour": 5 }
+  ]
+}'::jsonb;
+
+INSERT INTO platform_settings (id, payment_cash_enabled, payment_stripe_enabled, payment_square_enabled)
+VALUES ('default', FALSE, TRUE, FALSE)
+ON CONFLICT (id) DO NOTHING;
+
+-- ── PLATFORM CITIES (market rollout controls) ────────────────────────────────
+CREATE TABLE IF NOT EXISTS platform_cities (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  state_code TEXT NOT NULL DEFAULT 'CA',
+  status TEXT NOT NULL DEFAULT 'open'
+    CHECK (status IN ('open', 'closed', 'waitlist')),
+  waitlist_audience TEXT NOT NULL DEFAULT 'both'
+    CHECK (waitlist_audience IN ('guard', 'client', 'both')),
+  recommend_open BOOLEAN NOT NULL DEFAULT FALSE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  credential_resource_links JSONB NOT NULL DEFAULT '{}'::jsonb,
+  city_manager_id TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_by TEXT
+);
+
+ALTER TABLE platform_cities ADD COLUMN IF NOT EXISTS credential_resource_links JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE platform_cities ADD COLUMN IF NOT EXISTS city_manager_id TEXT;
+
+COMMENT ON COLUMN platform_cities.city_manager_id IS
+  'Manager staff ID responsible for this city market; at most one manager per city';
+
+COMMENT ON TABLE platform_cities IS 'Director-controlled city rollout — open, closed, or waitlist with audience targeting.';
+COMMENT ON COLUMN platform_cities.status IS 'open = live; closed = deny applications; waitlist = accept but hold staff release';
+COMMENT ON COLUMN platform_cities.waitlist_audience IS 'Which role sees waitlist messaging when status is waitlist';
+COMMENT ON COLUMN platform_cities.recommend_open IS 'Manager recommendation for directors to open a city';
+
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS managed_cities JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS assigned_manager_ids JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS headline TEXT NOT NULL DEFAULT '';
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS summary TEXT NOT NULL DEFAULT '';
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS about TEXT NOT NULL DEFAULT '';
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS specialties JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS personal_email TEXT;
+
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS years_experience INTEGER;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS availability_notes TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS referred_by TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS application_revision_requested_at TIMESTAMPTZ;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS application_revision_note TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS stripe_connect_account_id TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_verification_status TEXT
+  CHECK (id_verification_status IS NULL OR id_verification_status IN ('not_submitted', 'pending', 'verified', 'rejected'));
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_state TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_number TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_expiry_date TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_front_url TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_back_url TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_selfie_url TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_verification_submitted_at TIMESTAMPTZ;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_verification_reviewed_at TIMESTAMPTZ;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_verification_rejection_reason TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_update_requested_at TIMESTAMPTZ;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_update_request_note TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_submitted_by TEXT
+  CHECK (id_submitted_by IS NULL OR id_submitted_by IN ('guard', 'staff'));
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_document_type TEXT
+  CHECK (id_document_type IS NULL OR id_document_type IN ('state_id', 'drivers_license'));
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_license_class TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS id_revision_history JSONB;
+
+COMMENT ON COLUMN staff.stripe_connect_account_id IS 'Stripe Connect Express account for staff compensation payouts.';
+COMMENT ON COLUMN staff.id_verification_status IS 'Government ID verification for staff onboarding — required before ops access.';
+
+UPDATE staff
+SET id_verification_status = 'not_submitted'
+WHERE id_verification_status = 'verified'
+  AND (
+    COALESCE(btrim(id_front_url), '') = ''
+    OR COALESCE(btrim(id_back_url), '') = ''
+    OR COALESCE(btrim(id_selfie_url), '') = ''
+  );
+
+-- Active staff missing a real verified ID are inactive (approved) until reactivation.
+UPDATE staff
+SET user_status = 'approved'
+WHERE user_status = 'active'
+  AND COALESCE(staff_role, '') NOT IN ('Founder', 'Owner')
+  AND (
+    id_verification_status IS DISTINCT FROM 'verified'
+    OR COALESCE(btrim(id_front_url), '') = ''
+    OR COALESCE(btrim(id_back_url), '') = ''
+    OR COALESCE(btrim(id_selfie_url), '') = ''
+  );
+
+COMMENT ON COLUMN staff.personal_email IS 'Optional personal contact email; staff.email remains work/login email';
+
+COMMENT ON COLUMN staff.headline IS 'Professional title shown on staff roster profiles';
+COMMENT ON COLUMN staff.summary IS 'Short intro shown on staff roster cards';
+COMMENT ON COLUMN staff.about IS 'Full background / about section for staff profiles';
+COMMENT ON COLUMN staff.specialties IS 'Platform focus areas (guard verification, payouts, etc.)';
+
+COMMENT ON COLUMN staff.managed_cities IS 'California cities this staff member may operate or manage';
+COMMENT ON COLUMN staff.assigned_manager_ids IS 'Manager staff IDs supervising this account (set by Director+)';
+
+-- All configured cities start closed; directors open markets in Staff → City markets.
+UPDATE platform_cities
+SET
+  status = 'closed',
+  recommend_open = FALSE,
+  updated_at = timezone('utc'::text, now());
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_enabled BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS auto_stripe_payout_delay_hours INTEGER NOT NULL DEFAULT 48;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS verified_guard_self_serve BOOLEAN NOT NULL DEFAULT TRUE;
+
+COMMENT ON COLUMN platform_settings.verified_guard_self_serve IS
+  'When true, verified insured guards skip staff applicant review on card jobs';
+
+UPDATE security_requests
+SET opened_at = COALESCE(opened_at, created_at)
+WHERE status = 'open' AND opened_at IS NULL;
+
+-- ── MULTI-GUARD JOB SLOTS (independent guards per job — no crew coordination) ──
+CREATE TABLE IF NOT EXISTS job_guard_slots (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL REFERENCES security_requests(id) ON DELETE CASCADE,
+  slot_index INTEGER NOT NULL CHECK (slot_index >= 1),
+  guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
+  is_lead BOOLEAN NOT NULL DEFAULT FALSE,
+  status TEXT NOT NULL DEFAULT 'open',
+  invited_by_guard_id TEXT REFERENCES guards(id) ON DELETE SET NULL,
+  invited_at TIMESTAMPTZ,
+  invite_expires_at TIMESTAMPTZ,
+  staff_approved_at TIMESTAMPTZ,
+  client_approved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (job_id, slot_index)
+);
+
+ALTER TABLE job_guard_slots DROP CONSTRAINT IF EXISTS job_guard_slots_status_check;
+ALTER TABLE job_guard_slots ADD CONSTRAINT job_guard_slots_status_check CHECK (
+  status IN (
+    'open',
+    'invited',
+    'pending_staff',
+    'crew_confirmed',
+    'pending_client',
+    'approved',
+    'declined',
+    'expired',
+    'withdrawn'
+  )
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_guard_slots_job_id ON job_guard_slots(job_id);
+CREATE INDEX IF NOT EXISTS idx_job_guard_slots_guard_id ON job_guard_slots(guard_id);
+CREATE INDEX IF NOT EXISTS idx_job_guard_slots_status ON job_guard_slots(status);
+
+-- ── USER NOTIFICATION INBOX ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_notifications (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  url TEXT,
+  request_id TEXT,
+  guard_id TEXT,
+  ticket_id TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  read_at TIMESTAMPTZ,
+  clicked_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_notifications_user_created
+  ON user_notifications (user_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_user_notifications_unread
+  ON user_notifications (user_id)
+  WHERE read_at IS NULL;
+
+COMMENT ON TABLE user_notifications IS
+  'Persistent in-app notification inbox — unread until read_at or clicked_at is set';
+
+-- ── MARKETPLACE LEGAL ACCEPTANCES ─────────────────────────────────────────────
+DO $$
+BEGIN
+  IF to_regclass('public.user_legal_acceptances') IS NOT NULL THEN
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'user_legal_acceptances'
+        AND column_name = 'user_id'
+        AND udt_name = 'uuid'
+    ) THEN
+      ALTER TABLE user_legal_acceptances
+        ALTER COLUMN user_id TYPE TEXT USING user_id::text;
+    END IF;
+  END IF;
+
+  IF to_regclass('public.guard_insurance_policies') IS NOT NULL THEN
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'guard_insurance_policies'
+        AND column_name = 'guard_id'
+        AND udt_name = 'uuid'
+    ) THEN
+      ALTER TABLE guard_insurance_policies
+        ALTER COLUMN guard_id TYPE TEXT USING guard_id::text;
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'guard_insurance_policies'
+        AND column_name = 'reviewed_by'
+        AND udt_name = 'uuid'
+    ) THEN
+      ALTER TABLE guard_insurance_policies
+        ALTER COLUMN reviewed_by TYPE TEXT USING reviewed_by::text;
+    END IF;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS user_legal_acceptances (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL,
+  user_role TEXT NOT NULL CHECK (user_role IN ('guard', 'client', 'staff')),
+  document_id TEXT NOT NULL,
+  document_version TEXT NOT NULL,
+  accepted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, document_id, document_version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_legal_acceptances_user_id
+  ON user_legal_acceptances (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_legal_acceptances_user_role
+  ON user_legal_acceptances (user_role);
+
+COMMENT ON TABLE user_legal_acceptances IS
+  'Versioned legal document acceptances — marketplace agreements accepted once per user';
+
+-- ── GUARD COI / GENERAL LIABILITY INSURANCE ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS guard_insurance_policies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  carrier TEXT NOT NULL DEFAULT '',
+  policy_number TEXT NOT NULL DEFAULT '',
+  general_liability_limit NUMERIC,
+  effective_date DATE,
+  expiry_date DATE,
+  document_url TEXT,
+  status TEXT NOT NULL DEFAULT 'not_submitted'
+    CHECK (status IN ('not_submitted', 'pending', 'verified', 'rejected', 'expired')),
+  rejection_reason TEXT,
+  submitted_at TIMESTAMPTZ,
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_insurance_policies_guard_id
+  ON guard_insurance_policies (guard_id);
+
+COMMENT ON TABLE guard_insurance_policies IS
+  'Guard general liability COI — required for marketplace profile approval and jobs';
+
+ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS update_requested_at TIMESTAMPTZ;
+ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS update_request_note TEXT;
+ALTER TABLE guard_insurance_policies ADD COLUMN IF NOT EXISTS revision_history JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+CREATE TABLE IF NOT EXISTS guard_vehicle_insurance_policies (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  guard_id TEXT NOT NULL UNIQUE REFERENCES guards(id) ON DELETE CASCADE,
+  carrier TEXT NOT NULL DEFAULT '',
+  policy_number TEXT NOT NULL DEFAULT '',
+  effective_date DATE,
+  expiry_date DATE,
+  document_url TEXT,
+  status TEXT NOT NULL DEFAULT 'not_submitted',
+  rejection_reason TEXT,
+  submitted_at TIMESTAMPTZ,
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT,
+  update_requested_at TIMESTAMPTZ,
+  update_request_note TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_vehicle_insurance_policies_guard_id
+  ON guard_vehicle_insurance_policies (guard_id);
+
+COMMENT ON TABLE guard_vehicle_insurance_policies IS
+  'Guard auto insurance for patrol / driving work — separate from general liability COI';
+
+ALTER TABLE guard_vehicle_insurance_policies DROP CONSTRAINT IF EXISTS guard_vehicle_insurance_policies_status_check;
+ALTER TABLE guard_vehicle_insurance_policies ADD CONSTRAINT guard_vehicle_insurance_policies_status_check
+  CHECK (status IN ('not_submitted', 'pending', 'verified', 'rejected', 'expired'));
+
+CREATE TABLE IF NOT EXISTS guard_vehicle_profiles (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  guard_id TEXT NOT NULL UNIQUE REFERENCES guards(id) ON DELETE CASCADE,
+  make TEXT NOT NULL DEFAULT '',
+  model TEXT NOT NULL DEFAULT '',
+  year TEXT,
+  color TEXT,
+  plate_number TEXT NOT NULL DEFAULT '',
+  plate_state TEXT NOT NULL DEFAULT '',
+  front_photo_url TEXT,
+  left_side_photo_url TEXT,
+  right_side_photo_url TEXT,
+  back_photo_url TEXT,
+  vehicle_insurance_policy_id TEXT,
+  status TEXT NOT NULL DEFAULT 'draft',
+  rejection_reason TEXT,
+  submitted_at TIMESTAMPTZ,
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_guard_vehicle_profiles_guard_id
+  ON guard_vehicle_profiles (guard_id);
+
+COMMENT ON TABLE guard_vehicle_profiles IS
+  'Guard vehicle submitted for staff approval before driving priority unlocks';
+
+ALTER TABLE guard_vehicle_profiles DROP CONSTRAINT IF EXISTS guard_vehicle_profiles_status_check;
+ALTER TABLE guard_vehicle_profiles ADD CONSTRAINT guard_vehicle_profiles_status_check
+  CHECK (status IN ('draft', 'pending', 'verified', 'rejected'));
+
+-- Company public placard — licenses, insurance, and other credentials displayed on the homepage.
+CREATE TABLE IF NOT EXISTS company_public_documents (
+  id TEXT PRIMARY KEY,
+  document_type TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  document_number TEXT,
+  issuer TEXT,
+  issued_date DATE,
+  expiry_date DATE,
+  image_url TEXT,
+  display_on_homepage BOOLEAN NOT NULL DEFAULT TRUE,
+  notes TEXT DEFAULT '',
+  uploaded_at TIMESTAMPTZ,
+  uploaded_by TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_company_public_documents_type ON company_public_documents(document_type);
+
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_arrived BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS guard_left_site BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_open_to_guards BOOLEAN NOT NULL DEFAULT true;
+
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS company_placard_expiry BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.company_placard_expiry IS 'Director/Founder alert for company placard missing items or upcoming expirations';
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS job_schedule_changed BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.job_schedule_changed IS 'Alert when a job schedule changes (client, guard, or staff)';
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS pre_shift_briefing BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.pre_shift_briefing IS 'Guard alert when a pre-shift briefing unlocks or a reminder tier fires';
+ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS client_invoice_ready BOOLEAN NOT NULL DEFAULT true;
+COMMENT ON COLUMN notification_preferences.client_invoice_ready IS 'Client alert when a job invoice is ready after staff approval';
+
+COMMENT ON COLUMN notification_preferences.guard_arrived IS 'Staff/client alert when a guard arrives on site';
+COMMENT ON COLUMN notification_preferences.guard_left_site IS 'Staff/client/guard alert when a guard leaves the job site';
+COMMENT ON COLUMN notification_preferences.job_open_to_guards IS 'Guard broadcast when a paid job is opened on the marketplace map';
+
+CREATE INDEX IF NOT EXISTS staff_messages_created_at_idx ON staff_messages(created_at);
+CREATE INDEX IF NOT EXISTS guard_messages_created_at_idx ON guard_messages(created_at);
+CREATE INDEX IF NOT EXISTS client_messages_created_at_idx ON client_messages(created_at);
+
+-- ── INDEXES ─────────────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_guards_email ON guards(email);
+CREATE INDEX IF NOT EXISTS idx_guards_verified ON guards(verified);
+CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
+CREATE INDEX IF NOT EXISTS idx_clients_approved ON clients(approved);
+CREATE INDEX IF NOT EXISTS idx_certifications_guard_id ON certifications(guard_id);
+CREATE INDEX IF NOT EXISTS idx_certifications_catalog_id ON certifications(catalog_id);
+CREATE INDEX IF NOT EXISTS idx_certifications_category ON certifications(category);
+CREATE INDEX IF NOT EXISTS idx_certifications_state ON certifications(state);
+CREATE INDEX IF NOT EXISTS idx_experience_guard_id ON experience(guard_id);
+CREATE INDEX IF NOT EXISTS idx_education_guard_id ON education(guard_id);
+CREATE INDEX IF NOT EXISTS idx_security_requests_client_id ON security_requests(client_id);
+CREATE INDEX IF NOT EXISTS idx_security_requests_state ON security_requests(state);
+CREATE INDEX IF NOT EXISTS idx_security_requests_status ON security_requests(status);
+CREATE INDEX IF NOT EXISTS idx_security_requests_assigned_guard ON security_requests(assigned_guard_id);
+CREATE INDEX IF NOT EXISTS idx_security_requests_request_type ON security_requests(request_type);
+CREATE INDEX IF NOT EXISTS idx_security_requests_target_guard ON security_requests(target_guard_id);
+CREATE INDEX IF NOT EXISTS idx_payments_job_id ON payments(job_id);
+CREATE INDEX IF NOT EXISTS idx_payments_stripe_session_id ON payments(stripe_session_id);
+CREATE INDEX IF NOT EXISTS idx_payments_stripe_payment_intent_id ON payments(stripe_payment_intent_id);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_push_role ON push_subscriptions(push_role);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_site_id ON push_subscriptions(site_id);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_user_id ON support_tickets(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_support_tickets_open_activation_help
+  ON support_tickets (user_id)
+  WHERE subject = 'Activation help' AND status <> 'resolved';
+CREATE INDEX IF NOT EXISTS support_tickets_status_idx ON support_tickets(status);
+CREATE INDEX IF NOT EXISTS idx_support_messages_ticket_id ON support_messages(ticket_id);
+
+-- ── ROW LEVEL SECURITY (open policies — app uses anon key) ─────────────────
+-- Skipped early RLS on future tables.
+
+DO $$
+DECLARE
+  tbl text;
+BEGIN
+  FOREACH tbl IN ARRAY ARRAY[
+    'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
+    'security_requests', 'payments', 'guard_payout_invoices',
+    'support_tickets', 'support_messages', 'push_subscriptions', 'push_notification_dedup',
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages',
+    'message_reactions', 'chat_read_receipts', 'notification_preferences',
+    'platform_settings', 'platform_cities', 'job_guard_slots',
+    'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
+    'guard_vehicle_profiles', 'company_public_documents',
+    'user_notifications',
+    'one_role_cases', 'device_account_bindings'
+  ]
+  LOOP
+    IF to_regclass(format('public.%I', tbl)) IS NULL THEN
+      CONTINUE;
+    END IF;
+
+    -- RLS skipped on Neon; the Worker enforces access.
+    NULL;
+  END LOOP;
+END $$;
+
+-- ── REALTIME (live sync without refresh) ────────────────────────────────────
+DO $$
+DECLARE
+  tbl text;
+BEGIN
+  FOREACH tbl IN ARRAY ARRAY[
+    'guards', 'staff', 'clients', 'certifications', 'experience', 'education',
+    'security_requests', 'payments', 'guard_payout_invoices',
+    'support_tickets', 'support_messages',
+    'job_chat_threads', 'job_chat_messages', 'staff_messages', 'guard_messages', 'client_messages', 'message_reactions',
+    'user_legal_acceptances', 'guard_insurance_policies', 'guard_vehicle_insurance_policies',
+    'guard_vehicle_profiles', 'job_guard_slots',
+    'user_notifications',
+    'platform_settings', 'platform_cities', 'client_locations', 'job_locations', 'company_public_documents',
+    'one_role_cases', 'device_account_bindings',
+    'client_invoices', 'message_reactions', 'guard_availability', 'guard_availability_date_overrides'
+  ]
+  LOOP
+    IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
+      BEGIN
+        -- Skipped: Supabase Realtime publication.
+        NULL;
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+        WHEN OTHERS THEN
+          IF SQLERRM NOT LIKE '%already member of publication%' THEN
+            RAISE;
+          END IF;
+      END;
+    END IF;
+  END LOOP;
+END $$;
+
+-- ── OPTIONAL: Founder and Director staff accounts ───────────────────────────────
+INSERT INTO staff (
+  id, name, email, badge_number, avatar, phone, bio,
+  headline, summary, about, specialties,
+  staff_role, user_status
+) VALUES
+  (
+    'staff-director',
+    'M. White',
+    'm.white@signaturesecurityspecialist.com',
+    'OWN-00001',
+    '', '',
+    'Founder — Platform governance.',
+    'Founder & Platform Governance',
+    'Oversees Guardr strategy, staff governance, and the standards we hold every market to.',
+    'Markeith White founded Guardr to bring licensed security professionals and clients together on one accountable platform. He sets platform policy, approves executive staff, and keeps city rollouts aligned with how the field actually operates.',
+    '["Team leadership", "City markets", "Analytics & reporting"]'::jsonb,
+    'Founder', 'active'
+  ),
+  (
+    'staff-director-tyrone',
+    'Tyrone Johnson',
+    't.johnson@signaturesecurityspecialist.com',
+    'DIR-00001',
+    '', '',
+    'Director — Platform operations.',
+    'Director of Platform Operations',
+    'Runs day-to-day operations — guard verification, job flow, payouts, and the command center the team works from.',
+    'Tyrone keeps Guardr moving: credential reviews, job approvals, disputes, and the financial rails guards and clients depend on. He is the escalation point when markets need a steady hand.',
+    '["Guard verification", "Job operations", "Payments & payouts", "Disputes & incidents"]'::jsonb,
+    'Director', 'active'
+  )
+ON CONFLICT (email) DO UPDATE SET
+  name = EXCLUDED.name,
+  badge_number = EXCLUDED.badge_number,
+  staff_role = EXCLUDED.staff_role,
+  headline = EXCLUDED.headline,
+  summary = EXCLUDED.summary,
+  about = EXCLUDED.about,
+  specialties = EXCLUDED.specialties,
+  user_status = 'active';
+
+INSERT INTO staff (
+  id, name, first_name, middle_name, last_name, email, badge_number,
+  avatar, phone, bio, staff_role, user_status, password, must_change_password,
+  theme_preference, created_at, migrated_from_guards_at
+)
+SELECT
+  g.id, g.name, g.first_name, g.middle_name, g.last_name,
+  CASE
+    WHEN g.email LIKE 'migrated-%@guardr.internal' THEN COALESCE(s_live.email, g.email)
+    ELSE g.email
+  END,
+  g.badge_number,
+  g.avatar, g.phone, g.bio,
+  COALESCE(g.staff_role, s_live.staff_role, 'Moderator'),
+  CASE WHEN g.user_status IN ('active', 'suspended', 'blocked') THEN g.user_status ELSE 'active' END,
+  g.password, COALESCE(g.must_change_password, false), g.theme_preference, g.created_at, now()
+FROM guards g
+LEFT JOIN staff s_live ON s_live.id = g.id
+WHERE g.is_staff = true OR g.migrated_to_staff_at IS NOT NULL
+ON CONFLICT (id) DO NOTHING;
+
+-- Seed inserts may mark directors active; bounce those missing a real ID.
+UPDATE staff
+SET user_status = 'approved'
+WHERE user_status = 'active'
+  AND COALESCE(staff_role, '') NOT IN ('Founder', 'Owner')
+  AND (
+    id_verification_status IS DISTINCT FROM 'verified'
+    OR COALESCE(btrim(id_front_url), '') = ''
+    OR COALESCE(btrim(id_back_url), '') = ''
+    OR COALESCE(btrim(id_selfie_url), '') = ''
+  );
+
+DELETE FROM guard_payout_invoices WHERE guard_id IN (SELECT id FROM staff);
+
+DELETE FROM guards g
+WHERE g.is_staff = true
+   OR g.migrated_to_staff_at IS NOT NULL
+   OR EXISTS (SELECT 1 FROM staff s WHERE s.id = g.id);
+
+UPDATE guards g
+SET user_status = 'approved'
+WHERE NOT g.is_staff
+  AND g.user_status = 'active'
+  AND g.verified = true
+  AND g.id_verification_status = 'verified'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM certifications c
+    WHERE c.guard_id = g.id
+      AND c.status = 'verified'
+      AND (
+        c.catalog_id = 'bsis-guard-card'
+        OR c.name ILIKE '%guard card%'
+        OR c.name ILIKE '%bsis guard%'
+      )
+  );
+
+-- ── PLATFORM V1.0 EXTENSIONS ─────────────────────────────────────────────────
+-- Auth linking, audit log, availability, recurring shifts, compliance alerts,
+-- invoicing, onboarding progress, and role-based RLS on new tables.
+
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS auth_user_id UUID UNIQUE;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS auth_user_id UUID UNIQUE;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS auth_user_id UUID UNIQUE;
+ALTER TABLE guards ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS password_hash TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_guards_auth_user_id ON guards(auth_user_id) WHERE auth_user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_clients_auth_user_id ON clients(auth_user_id) WHERE auth_user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_staff_auth_user_id ON staff(auth_user_id) WHERE auth_user_id IS NOT NULL;
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS owner_message TEXT;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS owner_message_updated_at TIMESTAMPTZ;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS director_message TEXT;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS director_message_updated_at TIMESTAMPTZ;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS job_review_mode TEXT NOT NULL DEFAULT 'staff-all';
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS trusted_client_auto_publish BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS sms_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS background_check_provider TEXT DEFAULT 'manual';
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS insurance_verification_mode TEXT NOT NULL DEFAULT 'manual';
+
+COMMENT ON COLUMN platform_settings.job_review_mode IS 'staff-all | trusted-auto | none';
+COMMENT ON COLUMN platform_settings.trusted_client_auto_publish IS 'When true, trusted clients skip job review when coords are ready';
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS company_placard_public_enabled BOOLEAN NOT NULL DEFAULT TRUE;
+COMMENT ON COLUMN platform_settings.company_placard_public_enabled IS 'When true, the public homepage shows the company license & insurance placard.';
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_role_permissions JSONB;
+COMMENT ON COLUMN platform_settings.staff_role_permissions IS 'Custom staff-role permission lists — overrides built-in defaults when set.';
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS staff_compensation_config JSONB NOT NULL DEFAULT '{
+  "enabled": true,
+  "cadence": "weekly",
+  "roleRules": {
+    "Support": { "percentOfFees": 0.04, "floorPerPeriod": 0, "capPerPeriod": 1100, "hourlyPayRate": 18 },
+    "Moderator": { "percentOfFees": 0.06, "floorPerPeriod": 0, "capPerPeriod": 1700, "hourlyPayRate": 20 },
+    "Administrator": { "percentOfFees": 0.07, "floorPerPeriod": 0, "capPerPeriod": 2200, "hourlyPayRate": 22 },
+    "Manager": { "percentOfFees": 0.1, "floorPerPeriod": 0, "capPerPeriod": 3300, "hourlyPayRate": 28 },
+    "Director": { "percentOfFees": 0.111, "floorPerPeriod": 0, "capPerPeriod": 5600, "hourlyPayRate": 35 },
+    "Founder": { "percentOfFees": 0.119, "floorPerPeriod": 0, "capPerPeriod": 8300, "hourlyPayRate": 40 }
+  }
+}'::jsonb;
+COMMENT ON COLUMN platform_settings.staff_compensation_config IS
+  'Staff revenue-share compensation — % of collected platform fees per role, caps/floors, cadence, hourlyPayRate for Prop 22 add-ons.';
+
+ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS client_credential_rules JSONB NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN platform_settings.client_credential_rules IS
+  'Admin overrides for the client credential library (applicable to / required for).';
+
+CREATE TABLE IF NOT EXISTS staff_compensation_payouts (
+  id TEXT PRIMARY KEY,
+  staff_id TEXT NOT NULL,
+  staff_name TEXT NOT NULL,
+  staff_email TEXT NOT NULL,
+  staff_role TEXT NOT NULL CHECK (staff_role IN ('Founder', 'Owner', 'Director', 'Manager', 'Administrator', 'Moderator', 'Support')),
+  period_start TIMESTAMPTZ NOT NULL,
+  period_end TIMESTAMPTZ NOT NULL,
+  platform_fees_in_period NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  base_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  adjustment_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  final_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  confirmed_by_id TEXT NOT NULL,
+  confirmed_by_email TEXT NOT NULL,
+  confirmed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  note TEXT,
+  UNIQUE (staff_id, period_start, period_end)
+);
+
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_staff ON staff_compensation_payouts(staff_id);
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_period ON staff_compensation_payouts(period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_confirmed ON staff_compensation_payouts(confirmed_at DESC);
+-- idx_staff_comp_payouts_status is created after payout_status exists.
+
+COMMENT ON TABLE staff_compensation_payouts IS
+  'Staff period payout ledger — instant revenue-share base (may be $0) plus Prop 22 add-only adjustments. Pack-pay can extend this table later.';
+
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_hours NUMERIC(10, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_rate NUMERIC(10, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS hourly_amount NUMERIC(12, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS manual_adjustment_amount NUMERIC(12, 2);
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS include_hourly_pay BOOLEAN;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS payout_status TEXT
+  CHECK (payout_status IS NULL OR payout_status IN ('base_paid', 'finalized'));
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS base_paid_at TIMESTAMPTZ;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustment_choice TEXT
+  CHECK (adjustment_choice IS NULL OR adjustment_choice IN ('none', 'custom'));
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustments_confirmed_at TIMESTAMPTZ;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustments_confirmed_by_id TEXT;
+ALTER TABLE staff_compensation_payouts ADD COLUMN IF NOT EXISTS adjustments_confirmed_by_email TEXT;
+
+CREATE TABLE IF NOT EXISTS staff_time_entries (
+  id TEXT PRIMARY KEY,
+  staff_id TEXT NOT NULL,
+  staff_name TEXT NOT NULL,
+  clock_in_at TIMESTAMPTZ NOT NULL,
+  last_activity_at TIMESTAMPTZ,
+  clock_out_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  source TEXT NOT NULL DEFAULT 'automatic' CHECK (source IN ('automatic', 'manual')),
+  adjusted_by_id TEXT,
+  adjusted_by_email TEXT,
+  adjusted_at TIMESTAMPTZ,
+  adjustment_note TEXT
+);
+
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS last_activity_at TIMESTAMPTZ;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'automatic';
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjusted_by_id TEXT;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjusted_by_email TEXT;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjusted_at TIMESTAMPTZ;
+ALTER TABLE staff_time_entries ADD COLUMN IF NOT EXISTS adjustment_note TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_staff_time_entries_staff ON staff_time_entries(staff_id);
+CREATE INDEX IF NOT EXISTS idx_staff_time_entries_clock_in ON staff_time_entries(clock_in_at DESC);
+CREATE INDEX IF NOT EXISTS idx_staff_time_entries_open ON staff_time_entries(staff_id) WHERE clock_out_at IS NULL;
+
+COMMENT ON TABLE staff_time_entries IS
+  'Staff smart time tracking — automatic app sessions plus manager corrections (Profile → Timesheets).';
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id TEXT PRIMARY KEY,
+  actor_id TEXT NOT NULL,
+  actor_email TEXT NOT NULL,
+  actor_role TEXT NOT NULL,
+  action TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT,
+  details JSONB DEFAULT '{}'::jsonb,
+  ip_address TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_log_actor_id ON audit_log(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type, entity_id);
+
+-- One person, one Guardr role (Guard + Customer, Customer + Staff, or Staff + Guard).
+CREATE TABLE IF NOT EXISTS one_role_cases (
+  id TEXT PRIMARY KEY,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'ignored', 'blocked')),
+  reason TEXT NOT NULL,
+  match_kind TEXT NOT NULL CHECK (match_kind IN ('email', 'phone', 'device')),
+  accounts JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_one_role_cases_status ON one_role_cases(status);
+
+COMMENT ON TABLE one_role_cases IS
+  'Holds when the same person signs into more than one Guardr role. Both accounts stay locked until higher staff reviews.';
+
+-- One physical device → one account + one role app (Guard / Customer / Staff). Messenger excluded.
+CREATE TABLE IF NOT EXISTS device_account_bindings (
+  device_id TEXT PRIMARY KEY,
+  account_kind TEXT CHECK (account_kind IN ('guard', 'client', 'staff')),
+  account_id TEXT,
+  role_app_claim TEXT CHECK (role_app_claim IN ('guard', 'client', 'staff')),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT device_account_bindings_account_pair CHECK (
+    (account_kind IS NULL AND account_id IS NULL)
+    OR (account_kind IS NOT NULL AND account_id IS NOT NULL)
+  )
+);
+
+CREATE INDEX IF NOT EXISTS idx_device_account_bindings_account
+  ON device_account_bindings(account_kind, account_id);
+
+COMMENT ON TABLE device_account_bindings IS
+  'Binds a Guardr account and role app to a device id (web UUID or native Capacitor Device id).';
+
+CREATE TABLE IF NOT EXISTS guard_availability (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  is_available BOOLEAN NOT NULL DEFAULT TRUE,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (guard_id, day_of_week, start_time)
+);
+
+CREATE INDEX IF NOT EXISTS idx_guard_availability_guard_id ON guard_availability(guard_id);
+
+CREATE TABLE IF NOT EXISTS guard_availability_date_overrides (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  start_time TIME NOT NULL DEFAULT '00:00',
+  end_time TIME NOT NULL DEFAULT '23:59',
+  is_available BOOLEAN NOT NULL DEFAULT FALSE,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (guard_id, date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_guard_avail_date_guard
+  ON guard_availability_date_overrides (guard_id, date);
+
+COMMENT ON TABLE guard_availability_date_overrides IS
+  'One-off calendar day availability overrides (off-days or custom hours) per guard';
+
+CREATE TABLE IF NOT EXISTS client_locations (
+  id TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  state TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  risk_level TEXT NOT NULL DEFAULT 'medium' CHECK (risk_level IN ('low', 'medium', 'high')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected')),
+  site_instructions TEXT,
+  shared_location_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_client_locations_client ON client_locations(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_locations_status ON client_locations(status);
+ALTER TABLE client_locations ADD COLUMN IF NOT EXISTS shared_location_id TEXT;
+ALTER TABLE client_locations ADD COLUMN IF NOT EXISTS listed BOOLEAN NOT NULL DEFAULT true;
+
+-- Shared job sites for staff QC and reuse across clients/jobs
+CREATE TABLE IF NOT EXISTS job_locations (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  state TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  risk_level TEXT NOT NULL DEFAULT 'medium' CHECK (risk_level IN ('low', 'medium', 'high')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('pending', 'active', 'rejected', 'archived')),
+  listed BOOLEAN NOT NULL DEFAULT true,
+  site_instructions TEXT,
+  parking_instructions TEXT,
+  access_instructions TEXT,
+  place_key TEXT NOT NULL,
+  created_by_client_id TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_locations_place_key ON job_locations(place_key);
+CREATE INDEX IF NOT EXISTS idx_job_locations_status ON job_locations(status);
+CREATE INDEX IF NOT EXISTS idx_job_locations_updated ON job_locations(updated_at DESC);
+ALTER TABLE job_locations ADD COLUMN IF NOT EXISTS listed BOOLEAN NOT NULL DEFAULT true;
+
+ALTER TABLE security_requests ADD COLUMN IF NOT EXISTS job_location_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_security_requests_job_location ON security_requests(job_location_id);
+
+CREATE TABLE IF NOT EXISTS recurring_shift_templates (
+  id TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  site_name TEXT,
+  address TEXT,
+  state TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  recurrence_rule TEXT NOT NULL DEFAULT 'weekly',
+  day_of_week INTEGER CHECK (day_of_week BETWEEN 0 AND 6),
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  hourly_rate NUMERIC(10,2) NOT NULL DEFAULT 35,
+  guards_needed INTEGER NOT NULL DEFAULT 1,
+  uniform_requirements TEXT,
+  equipment_requirements TEXT,
+  site_instructions TEXT,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  last_generated_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_recurring_shifts_client ON recurring_shift_templates(client_id);
+CREATE INDEX IF NOT EXISTS idx_recurring_shifts_active ON recurring_shift_templates(active) WHERE active = TRUE;
+
+CREATE TABLE IF NOT EXISTS compliance_alerts (
+  id TEXT PRIMARY KEY,
+  guard_id TEXT REFERENCES guards(id) ON DELETE CASCADE,
+  client_id TEXT REFERENCES clients(id) ON DELETE CASCADE,
+  alert_type TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'warning' CHECK (severity IN ('info', 'warning', 'critical')),
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  expires_at TIMESTAMPTZ,
+  acknowledged_at TIMESTAMPTZ,
+  acknowledged_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_compliance_alerts_guard ON compliance_alerts(guard_id);
+CREATE INDEX IF NOT EXISTS idx_compliance_alerts_unacked ON compliance_alerts(acknowledged_at) WHERE acknowledged_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS client_invoices (
+  id TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  request_id TEXT REFERENCES security_requests(id) ON DELETE SET NULL,
+  invoice_number TEXT NOT NULL UNIQUE,
+  subtotal NUMERIC(12,2) NOT NULL DEFAULT 0,
+  platform_fee NUMERIC(12,2) NOT NULL DEFAULT 0,
+  tax NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total NUMERIC(12,2) NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'paid', 'void')),
+  line_items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  issued_at TIMESTAMPTZ,
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_client_invoices_client ON client_invoices(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_invoices_request ON client_invoices(request_id);
+
+CREATE TABLE IF NOT EXISTS onboarding_tour_progress (
+  user_id TEXT NOT NULL,
+  tour_id TEXT NOT NULL,
+  completed_at TIMESTAMPTZ,
+  step_index INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, tour_id)
+);
+
+DO $$
+DECLARE tbl text;
+BEGIN
+  FOREACH tbl IN ARRAY ARRAY[
+    'audit_log', 'guard_availability', 'guard_availability_date_overrides', 'recurring_shift_templates',
+    'compliance_alerts', 'client_invoices'
+  ]
+  LOOP
+    IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
+      BEGIN
+        -- Skipped: Supabase Realtime publication.
+        NULL;
+      EXCEPTION WHEN duplicate_object THEN NULL;
+        WHEN OTHERS THEN
+          IF SQLERRM NOT LIKE '%already member of publication%' THEN RAISE; END IF;
+      END;
+    END IF;
+  END LOOP;
+END $$;
+
+-- ── LEGACY CLEANUP (brownfield — matches supabase/migrations through 2026-09-26) ──
+DROP TABLE IF EXISTS team_chat_messages CASCADE;
+DROP TABLE IF EXISTS team_chat_threads CASCADE;
+DROP TABLE IF EXISTS guard_standing_crew_members CASCADE;
+DROP TABLE IF EXISTS guard_crew_join_requests CASCADE;
+
+DROP INDEX IF EXISTS idx_security_requests_team_code_unique;
+
+DO $$
+BEGIN
+  IF to_regclass('public.security_requests') IS NOT NULL THEN
+    ALTER TABLE security_requests
+      DROP COLUMN IF EXISTS team_lead_id,
+      DROP COLUMN IF EXISTS team_code,
+      DROP COLUMN IF EXISTS crew_name,
+      DROP COLUMN IF EXISTS crew_description,
+      DROP COLUMN IF EXISTS shift_time_adjustment;
+  END IF;
+  IF to_regclass('public.guards') IS NOT NULL THEN
+    ALTER TABLE guards
+      DROP COLUMN IF EXISTS standing_crew_name,
+      DROP COLUMN IF EXISTS standing_crew_description;
+  END IF;
+  IF to_regclass('public.platform_settings') IS NOT NULL THEN
+    ALTER TABLE platform_settings
+      DROP COLUMN IF EXISTS team_lead_bonus_per_guard_per_hour,
+      DROP COLUMN IF EXISTS team_lead_bonus_client_share_percent,
+      DROP COLUMN IF EXISTS team_lead_bonus_platform_share_percent;
+  END IF;
+  IF to_regclass('public.notification_preferences') IS NOT NULL THEN
+    ALTER TABLE notification_preferences
+      DROP COLUMN IF EXISTS standing_crew_invite,
+      DROP COLUMN IF EXISTS crew_lead_request,
+      DROP COLUMN IF EXISTS team_chat_message;
+  END IF;
+END $$;
+
+-- Skipped: PostgREST reload.
+
+-- ── VERIFY (read-only) ─────────────────────────────────────────────────────
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'certifications'
+  AND column_name IN ('image_url', 'submitted_by_role', 'rejection_reason', 'catalog_id', 'category')
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guards'
+  AND column_name IN (
+    'user_status', 'credential_grace_deadline', 'credential_grace_hours', 'credential_grace_missing',
+    'id_submitted_by', 'id_verification_status', 'id_state', 'id_number', 'id_expiry_date'
+  )
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'security_requests'
+  AND column_name IN (
+    'latitude', 'longitude', 'contact_name', 'contact_phone',
+    'parking_instructions', 'access_instructions', 'operational_details',
+    'platform_fee_paid_cash', 'cash_deposited_amount', 'cash_deposited_manually',
+    'guard_payout_available', 'guard_payout_available_at',
+    'scheduled_duration_hours', 'scheduled_estimated_payout',
+    'overtime_hours', 'overtime_amount', 'overtime_payment_status', 'overtime_status',
+    'overtime_guard_approved_at', 'overtime_client_approved_at',
+    'overtime_dispute_reason', 'overtime_disputed_at', 'overtime_dispute_claimed_clock_out_at',
+    'overtime_dispute_resolved_at',
+    'overtime_dispute_resolution', 'overtime_original_hours', 'overtime_original_amount',
+    'overtime_client_payment_method', 'overtime_client_cash_payment_requested',
+    'overtime_guard_payout_available', 'overtime_guard_payout_available_at',
+    'overtime_guard_payout_method',
+    'break_minutes', 'shift_breaks',
+    'check_in_audit', 'spot_checks', 'mid_shift_audits', 'en_route_at', 'arrived_at', 'guard_live_location', 'replacement_request', 'no_show', 'client_violation_reports', 'check_out_audit',
+    'pending_guard_id', 'staff_approved_guard_at',
+    'opened_at', 'guard_suggestions',
+    'service_agreement', 'auto_payout_scheduled_at',
+    'pending_start_date', 'pending_end_date', 'pending_duration_hours', 'pending_estimated_payout',
+    'schedule_change_status', 'schedule_change_requested_at', 'schedule_change_requested_by',
+    'schedule_change_extra_amount',
+    'early_clock_out_actual_hours', 'early_clock_out_refund_amount', 'early_clock_out_refund_status',
+    'break_paid', 'pricing_mode', 'agreement_fee_config', 'opening_price_offer', 'price_negotiations',
+    'reports', 'activity_log', 'self_audit'
+  )
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'clients'
+  AND column_name IN ('account_status', 'approved', 'password', 'must_change_password', 'first_name', 'last_name', 'trusted', 'favorite_guard_ids', 'business_type', 'service_description', 'service_city', 'service_state', 'security_company_roster', 'client_type')
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guards'
+  AND column_name IN ('trusted')
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'message_reactions'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'chat_read_receipts'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'platform_settings'
+  AND column_name IN ('payment_cash_enabled', 'payment_stripe_enabled', 'payment_square_enabled', 'fee_config',
+    'auto_stripe_payout_enabled', 'auto_stripe_payout_delay_hours', 'verified_guard_self_serve',
+    'staff_compensation_config', 'client_credential_rules', 'owner_message', 'director_message',
+    'job_review_mode', 'trusted_client_auto_publish', 'sms_notifications_enabled',
+    'background_check_provider', 'insurance_verification_mode', 'company_placard_public_enabled')
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_insurance_policies'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_vehicle_insurance_policies'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_vehicle_profiles'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guards'
+  AND column_name IN ('id_document_type', 'id_license_class', 'trusted', 'side_role')
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'user_legal_acceptances'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'notification_preferences'
+  AND column_name IN (
+    'job_submitted', 'guard_application', 'guard_pending_approval',
+    'client_pending_approval', 'credential_pending', 'payment_attention',
+    'support_ticket', 'support_ticket_status', 'dispute_update',
+    'guard_clockout', 'guard_break_start', 'guard_break_end', 'reaction_notification',
+    'guard_arrived', 'guard_left_site', 'job_open_to_guards', 'company_placard_expiry',
+    'job_schedule_changed', 'pre_shift_briefing'
+  )
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'guard_availability_date_overrides'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'push_notification_dedup'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'user_notifications'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'company_public_documents'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'one_role_cases'
+ORDER BY column_name;
+
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'device_account_bindings'
+ORDER BY column_name;
+
+SELECT policyname, cmd
+FROM pg_policies
+WHERE schemaname = 'public' AND tablename = 'company_public_documents'
+ORDER BY policyname;
+
+SELECT policyname, cmd
+FROM pg_policies
+WHERE schemaname = 'public' AND tablename = 'security_requests'
+ORDER BY policyname;
+
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+ORDER BY table_name;
+
+CREATE INDEX IF NOT EXISTS idx_staff_comp_payouts_status
+  ON staff_compensation_payouts(payout_status)
+  WHERE payout_status = 'base_paid';

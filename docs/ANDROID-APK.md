@@ -1,165 +1,45 @@
-# Android APK (Guardr)
+# Android APK (Cloudflare Worker backend)
 
-Guardr ships as a **website** plus three **Capacitor Android apps** (Guard, Customer, Staff) and **Messenger**. Each role has an APK for sideload and an AAB for Google Play. Messenger is a companion app: sign in as Guard, Customer, or Staff, then use **messages and support**. Field work, jobs, map, and dispatch stay in the role app or on the website. There is no switch-account.
+APKs are Capacitor shells that load the Guardr UI from the **Cloudflare Worker** origin (not guardr.co or Vercel).
 
-## Download
+## Worker URL
 
-- **Install page:** [https://guardr.co/download/](https://guardr.co/download/) — Guard, Customer, Staff, and Messenger
-- **All three APKs (GitHub zip):** [https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip)
-- **Release page:** [https://github.com/TheMarkkBradonCollective/Guardr/releases/latest](https://github.com/TheMarkkBradonCollective/Guardr/releases/latest)
-- **Combined APK (existing installs):** [https://www.guardr.co/download/guardr.apk](https://www.guardr.co/download/guardr.apk)
+```
+https://guardr.themarkkbrandoncollective-2d9.workers.dev
+```
 
-| App | Package | GitHub asset |
-|-----|---------|--------------|
-| Guard | `com.tmbcworks.guardr.guard` | `Guardr-Guard.apk` |
-| Customer | `com.tmbcworks.guardr.client` | `Guardr-Client.apk` |
-| Staff | `com.tmbcworks.guardr.staff` | `Guardr-Staff.apk` |
-| Messenger (companion) | `com.tmbcworks.guardr.messenger` | site `/download/Guardr-Messenger.apk` |
-| Combined (legacy) | `com.tmbcworks.guardr` | site `/download/guardr.apk` |
-
-The three role APKs can be installed side by side. Each opens its own app (not the marketing website). The all-apps zip is a **GitHub Release** asset (same pattern as MBC All-APKs), not a file on guardr.co. **Messenger is not in that zip** — sign in there as Guard, Customer, or Staff for messages and support. There is no switch-account: sign out, then sign in.
-
-**One person, one role.** Nobody may be a Guard and a Customer, a Customer and Staff, or Staff and a Guard. Signing into a second role on the website or in an app locks both accounts until a manager, director, administrator, or owner reviews the hold and either clears it or blocks both.
-
-The install page lists **Guard, Customer, and Staff** APKs plus Messenger. **PWA:** one **Guardr** home-screen app (`/manifest.json`, full site scope) — sign in as Customer, Guard, or Staff; not separate PWAs per role. Role APKs remain separate native packages.
-
-Share the install page with the Signature Security network.
-
-## Runtime: website vs APK
-
-The APK **UI is bundled** — opening the app does not load HTML/JS from guardr.co.
-
-| Need | guardr.co down, Supabase up |
-|------|-----------------------------|
-| Sign-in, jobs, roster, chat (group channels) | Works (Supabase direct) |
-| Push **registration** (FCM token saved) | Works (writes `push_subscriptions` in Supabase) |
-| Map basemap | Works (Esri public tiles, not the site) |
-| APK version / sideload update check | Works (falls back to baked version + GitHub Release URLs) |
-| Push **delivery** to other people, Stripe checkout, Connect | Needs `VITE_API_BASE_URL` / www.guardr.co `/api/*` |
-
-Optional env: `VITE_API_BASE_URL` if the API host is split from the marketing site later.
-
-## Build locally
-
-### Prerequisites
-
-- Node.js 22+
-- Java 17+ (21 recommended)
-- Android SDK (`ANDROID_HOME` set)
-
-Install Android command-line tools if needed:
+Set at build time:
 
 ```bash
-# Ubuntu example — see https://developer.android.com/studio#command-tools
-export ANDROID_HOME="$HOME/Android/Sdk"
+export VITE_APP_URL=https://guardr.themarkkbrandoncollective-2d9.workers.dev
+npm run android:apk:all
 ```
 
-### Commands
+`capacitor.config.ts` sets `server.url` from `VITE_APP_URL`.
 
-```bash
-npm install
-npm run android:apk        # combined APK → public/download/guardr.apk
-npm run android:apk:all    # Guard + Customer + Staff APKs + zip, then Messenger
-npm run android:play       # Guard + Customer + Staff AABs → dist/play-store/
-```
+## GitHub Release downloads
 
-`npm run android:apk:all` will:
+In-app and `public/download/version.json` point at release **`v1.1.0-cf-beta`**:
 
-1. Sync `public/download/version.json` and `android/app/build.gradle` from `package.json`
-2. Run `npm run apk:audit` to catch version drift before building
-3. Build the Vite web bundle with `VITE_APP_URL=https://guardr.co`
-4. Sync assets into `android/`
-5. Assemble three sideload APKs (`-PguardrProductApp=client|guard|staff`), the Messenger companion (`-PguardrProductApp=messenger`), plus the combined APK
-6. Copy binaries to `public/download/` and zip the three role APKs as `Guardr-All-APKs.zip` (Messenger is copied beside them, not zipped)
-7. Re-run the parity audit (warnings if the bundled web assets are stale)
+| App | URL |
+|-----|-----|
+| All roles (zip) | https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-All-APKs.zip |
+| Guard | https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Guard.apk |
+| Customer | https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Client.apk |
+| Staff | https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Staff.apk |
+| Messenger | https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Messenger.apk |
 
-`npm run android:play` builds three signed Play bundles:
-
-- `dist/play-store/Guardr-Guard.aab` (Guard)
-- `dist/play-store/Guardr-Client.aab` (Customer)
-- `dist/play-store/Guardr-Staff.aab` (Staff)
-
-### Verify without building
-
-```bash
-npm run apk:audit
-```
-
-Checks `package.json`, `version.json`, `build.gradle`, Capacitor plugins, and whether `public/download/guardr.apk` matches the current version.
-
-Output APK path:
-
-```
-android/app/build/outputs/apk/release/app-release.apk
-```
-
-### Open in Android Studio
-
-```bash
-npm run cap:sync
-npm run android:open
-```
-
-## How it works
-
-- **One codebase** — same React app as the website, bundled into the APK
-- **API calls** — `apiUrl()` in `src/lib/siteConfig.ts` routes `/api/*` to `https://guardr.co` when running in the native shell
-- **Push notifications** — The website uses Web Push (VAPID). Android APKs/AABs use native FCM via `@capacitor/push-notifications` (requires `android/app/google-services.json` and server `FCM_SERVICE_ACCOUNT_JSON`).
-- **Runtime permissions** — location, camera, photos, and notifications are requested on first launch (see `src/lib/platform/nativePermissions.ts`)
-- **Release signing** — sideload builds use the debug keystore; Play Store builds use `android/keystore.properties` (see [GOOGLE-PLAY.md](GOOGLE-PLAY.md))
-
-## Permissions
-
-The Android app requests permissions needed for guard field work:
-
-| Permission | Used for |
-|------------|----------|
-| **Location** | Map, job proximity, check-in validation |
-| **Camera** | Self-audit photos, ID verification selfies |
-| **Photos** | Credential and document uploads from gallery |
-| **Notifications** | Job alerts, shift reminders, operational push |
-
-Permissions are declared in `android/app/src/main/AndroidManifest.xml` and requested at runtime on first launch via Capacitor (`@capacitor/geolocation`, `@capacitor/camera`, `@capacitor/push-notifications`).
-
-### Push setup (APK)
-
-1. Create a Firebase project and add an Android app with package `com.tmbcworks.guardr`
-2. Place Firebase config in **one** of these locations (gitignored — never commit):
-   - `secrets/google-services.json` (preferred for local/cloud-agent builds — copied to `android/app/` automatically)
-   - `android/app/google-services.json` directly
-   - `GOOGLE_SERVICES_JSON` environment variable (full JSON string)
-3. Set `FCM_SERVICE_ACCOUNT_JSON` on the Guardr server (Vercel env):
-   - Firebase Console → Project settings → **Service accounts** → **Generate new private key**
-   - Paste the full JSON file contents as the env var value (single line is fine)
-   - Use the **Firebase Cloud Messaging API (V1)** — the legacy Server key is deprecated and disabled on new projects
-4. Rebuild the APK: `npm run android:apk` (fails if Firebase config is missing unless `ALLOW_APK_WITHOUT_FCM=1`)
-
-**Important:** Always ship the CI-built APK (or a local build with Firebase) so `versionName` / `versionCode` inside the binary match `package.json`. Copying an older CI artifact while bumping `version.json` alone will make guards see the wrong version after install.
-
-**CI:** Add a GitHub Actions secret `GOOGLE_SERVICES_JSON` with the full contents of `google-services.json`. The Android APK workflow writes it before building so release artifacts include native FCM.
-
-## Play Store
-
-Full guide: **[docs/GOOGLE-PLAY.md](GOOGLE-PLAY.md)**
-
-1. Create upload keystore → `android/keystore.properties` (see `keystore.properties.example`)
-2. Add Firebase `google-services.json` for `com.tmbcworks.guardr`
-3. `npm run android:play` → upload `dist/play-store/Guardr-Client.aab`, `Guardr-Guard.aab`, and `Guardr-Staff.aab`
-4. Complete Play Console store listing, Data safety, content rating, and reviewer test accounts
-
-The **play** flavor omits sideload-only permissions; **sideload** (`npm run android:apk`) keeps debug signing for guardr.co/download.
+Constants: `src/lib/githubApkRelease.ts`.
 
 ## CI
 
-GitHub Actions workflow `.github/workflows/android-apk.yml` builds the three role APKs, Messenger, and `Guardr-All-APKs.zip`, and when a Play upload keystore is configured, the three Play AABs.
+- **Cloudflare Android Release** — `.github/workflows/cf-android-release.yml` (branch `cloudflare-neon-migration`, tag `v1.1.0-cf-beta`)
+- Legacy **Android Release** workflow on `main` may still reference Vercel/Supabase; use the Cloudflare workflow for this stack.
 
-**Zip download (GitHub, not the site):** https://github.com/TheMarkkBradonCollective/Guardr/releases/latest/download/Guardr-All-APKs.zip
+## Firebase / FCM
 
-Firebase `google-services.json` currently lists `com.tmbcworks.guardr`. Role APKs rewrite `package_name` at build time so Gradle accepts the suffixed ids. For native push on the three packages, add matching Android apps in the same Firebase project and ship a `google-services.json` with all four client entries.
+Native push still requires `google-services.json` (or `GOOGLE_SERVICES_JSON` in CI). Local builds without Firebase: `ALLOW_APK_WITHOUT_FCM=1`.
 
-Required secrets for a push-enabled APK:
+## Play Store
 
-| Secret | Purpose |
-|--------|---------|
-| `GOOGLE_SERVICES_JSON` | Full `google-services.json` file (written to `android/app/` at build time) |
-| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Optional; omitted values fall back to production keys in the client |
+See [GOOGLE-PLAY.md](./GOOGLE-PLAY.md). Play builds use the same `VITE_APP_URL` Worker origin.

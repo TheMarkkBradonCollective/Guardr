@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import { sendNotificationToRole } from './delivery';
 import type { PushRole } from './types';
 
@@ -8,7 +8,7 @@ export function canSessionBroadcast(platformRole: string | undefined): boolean {
   return platformRole === 'owner' || platformRole === 'director';
 }
 
-export async function collectBroadcastRecipientIds(db: SupabaseClient): Promise<string[]> {
+export async function collectBroadcastRecipientIds(db: AppDb): Promise<string[]> {
   const ids = new Set<string>();
   const tables = ['clients', 'staff', 'guards'] as const;
   for (const table of tables) {
@@ -22,7 +22,7 @@ export async function collectBroadcastRecipientIds(db: SupabaseClient): Promise<
 }
 
 export async function persistBroadcastInbox(
-  db: SupabaseClient,
+  db: AppDb,
   input: { title: string; body: string; url?: string; recipientIds: string[] }
 ): Promise<number> {
   const now = new Date().toISOString();
@@ -46,7 +46,7 @@ export async function persistBroadcastInbox(
 }
 
 export async function sendPlatformBroadcast(
-  db: SupabaseClient,
+  db: AppDb,
   input: { title: string; body: string }
 ): Promise<{ sent: number; failed: number; inbox: number }> {
   const title = input.title.trim() || 'Guardr';

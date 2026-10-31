@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 import { NEON_SMOKE_SQL } from './neonSmoke.ts';
 import { REQUIRED_NEON_TABLES, toNeonSchema } from './neonSchema.ts';
 
-const source = readFileSync(new URL('../../supabase/complete_schema_setup.sql', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../../docs/legacy/complete_schema_setup.sql', import.meta.url), 'utf8');
 
 describe('Neon schema transform', () => {
   it('keeps the marketplace tables and drops Supabase-only listeners', () => {

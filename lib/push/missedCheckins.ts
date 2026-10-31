@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import {
   checkInEscalationDedupKey,
   claimNotificationDedup,
@@ -59,7 +59,7 @@ export interface MissedCheckinScanResult {
 }
 
 export async function scanAndNotifyMissedCheckins(
-  db: SupabaseClient
+  db: AppDb
 ): Promise<MissedCheckinScanResult> {
   if (!isPushConfigured()) {
     return { scanned: 0, notified: 0, skipped: 0, sent: 0, failed: 0 };
@@ -93,11 +93,13 @@ export async function scanAndNotifyMissedCheckins(
   if (guardIds.length) {
     const { data: guards } = await db.from('guards').select('id, name').in('id', guardIds);
     for (const guard of guards ?? []) {
-      guardNames.set(guard.id, guard.name);
+      if (typeof guard.id === 'string' && typeof guard.name === 'string') {
+        guardNames.set(guard.id, guard.name);
+      }
     }
   }
 
-  for (const job of (jobs ?? []) as InProgressJob[]) {
+  for (const job of (jobs ?? []) as unknown as InProgressJob[]) {
     if (!job.assigned_guard_id) {
       skipped += 1;
       continue;

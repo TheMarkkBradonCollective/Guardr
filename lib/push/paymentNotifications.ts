@@ -1,9 +1,9 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import { isPushConfigured } from './config';
 import { dispatchPushNotification } from './delivery';
 
 export async function notifyPaymentAttention(
-  db: SupabaseClient,
+  db: AppDb,
   options: { requestId?: string; body: string; title?: string }
 ): Promise<void> {
   if (!isPushConfigured()) return;
@@ -18,7 +18,7 @@ export async function notifyPaymentAttention(
 }
 
 export async function notifyStripePaymentComplete(
-  db: SupabaseClient,
+  db: AppDb,
   options: { requestId?: string; body: string; title?: string }
 ): Promise<void> {
   if (!isPushConfigured()) return;
@@ -33,7 +33,7 @@ export async function notifyStripePaymentComplete(
 }
 
 export async function notifyJobOpenToGuards(
-  db: SupabaseClient,
+  db: AppDb,
   options: {
     requestId: string;
     body: string;
