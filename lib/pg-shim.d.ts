@@ -5,7 +5,10 @@ declare module 'pg' {
       ssl?: boolean | { rejectUnauthorized?: boolean };
     });
     connect(): Promise<void>;
-    query(sql: string): Promise<{ rows: Record<string, unknown>[]; rowCount: number | null }>;
+    query(
+      sql: string,
+      values?: unknown[]
+    ): Promise<{ rows: Record<string, unknown>[]; rowCount: number | null }>;
     end(): Promise<void>;
   }
   export class Pool {
@@ -15,7 +18,10 @@ declare module 'pg' {
       idleTimeoutMillis?: number;
       ssl?: boolean | { rejectUnauthorized?: boolean };
     });
-    query(sql: string): Promise<{ rows: Record<string, unknown>[]; rowCount: number | null }>;
+    query(
+      sql: string,
+      values?: unknown[]
+    ): Promise<{ rows: Record<string, unknown>[]; rowCount: number | null }>;
     end(): Promise<void>;
   }
   const pg: { Client: typeof Client; Pool: typeof Pool };

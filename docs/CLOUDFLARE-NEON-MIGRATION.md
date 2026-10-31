@@ -1,24 +1,36 @@
 # Guardr: Supabase + Vercel -> Neon + Cloudflare (status)
 
-Draft, phased. Production still runs on Supabase + Vercel. Nothing in Supabase, Vercel, or DNS was changed.
+Production still runs on Supabase + Vercel until cutover. This branch adds the Neon + Worker stack alongside it.
 
-## Where the earlier attempt stopped (PRs #1070, #1071)
-- Added Neon helpers (`lib/db/*`), `scripts/neon/apply-schema.ts`, `neon.ts`, docs/NEON-MIGRATION.md.
-- Neon project existed (now renamed **Guardr**, id gentle-firefly-57124649, us-west-2) but had only the default `neondb`, with no tables. Schema was never applied and no data was copied.
-- Cloudflare: a Worker named `guardr` exists but is the "Hello world" template (no bindings, no assets). No Pages project. R2 is not enabled on the account.
-- The app's API, auth, realtime and client calls were all still Supabase/Vercel.
+## Done on `cloudflare-neon-migration` (PR #1072)
 
-## Done in this branch so far
-- Neon project renamed to Guardr; empty `guardr` database created.
+- **`db/neon-schema.sql`** — plain Postgres schema (no Supabase Auth, Storage, Realtime, or RLS), plus a **`users`** table for app JWT auth. Regenerate with `npm run db:schema:generate`.
+- **`npm run db:seed`** — applies schema if needed, seeds staff admin from `STAFF_ADMIN_PASSWORD` (and optional `STAFF_ADMIN_EMAIL`).
+- **`worker/`** — Hono app on **`@neondatabase/serverless`**: auth, `/api/data/query`, R2 uploads (`FILES` → **`guardr-files`**), sync polling, and ported **`api/`** + cron routes via Vercel adapter.
+- **`wrangler.toml`** — Worker name **`guardr`**, `account_id` set, **`[assets]`** SPA from `dist`, R2 binding.
+- **Frontend** — `src/lib/supabase.ts` now uses a same-origin fetch client (`src/lib/api/guardrClient.ts`); realtime → polling.
+- **Server** — `lib/db/adminClient.ts` uses Neon when `DATABASE_URL` / `NEON_DATABASE_URL` is set.
 
-## Remaining phases
-1. Apply schema to Neon `guardr` (`npm run db:neon:apply` with the direct URL).
-2. Copy data from Supabase project opgzwurnjkrqkjujqokh (read-only dump -> Neon restore).
-3. Worker API (Hono + @neondatabase/serverless) replacing `api/` and `server.ts`; Vite build served as Worker static assets.
-4. Own auth (bcrypt/PBKDF2 + JWT signed with a Worker secret); migrate Supabase auth hashes if exportable, else reset flow.
-5. R2 for uploads (bucket `guardr-media`), polling instead of Supabase Realtime.
-6. Stripe webhooks/cron as Worker routes and Cron Triggers.
+## Deploy (do not run in CI without approval)
 
-## Blockers
-- The Supabase connector only sees project "Line", not Guardr's (opgzwurnjkrqkjujqokh), so data and auth hashes can't be read yet.
-- R2 must be enabled in the Cloudflare dashboard by the account owner.
+```bash
+npm run build
+wrangler secret put DATABASE_URL      # pooled Neon URL, database guardr
+wrangler secret put JWT_SECRET
+wrangler secret put STRIPE_SECRET_KEY
+wrangler secret put STRIPE_WEBHOOK_SECRET
+wrangler secret put VAPID_PUBLIC_KEY
+wrangler secret put VAPID_PRIVATE_KEY
+wrangler secret put CRON_SECRET
+npm run db:seed   # with NEON_DATABASE_URL_UNPOOLED + STAFF_ADMIN_PASSWORD
+wrangler deploy   # omit --dry-run when ready; do not merge DNS yet
+```
+
+Validate bundle: `npm run worker:dry-run`
+
+## Still manual / follow-up
+
+- Enable **R2** on the Cloudflare account and create bucket **`guardr-files`**.
+- Copy production data from Supabase when the connector can reach project `opgzwurnjkrqkjujqokh`.
+- `/api/auth/bridge` still targets Supabase Auth for linking; retire or rewrite before cutover.
+- Point DNS at the Worker only after smoke tests; leave Vercel files in place for guardr.co until then.

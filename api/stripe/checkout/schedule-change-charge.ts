@@ -1,3 +1,4 @@
+import { getSupabaseAdmin } from '../../../lib/db/adminClient.ts';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 function getSiteUrl(): string {
@@ -13,18 +14,6 @@ async function getStripe() {
   return new StripeSdk(key);
 }
 
-async function getSupabaseAdmin() {
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) return null;
-  const { createClient } = await import('@supabase/supabase-js');
-  return createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

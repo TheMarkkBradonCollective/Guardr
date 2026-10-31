@@ -1,19 +1,8 @@
+import { getSupabaseAdmin } from '../../../lib/db/adminClient.ts';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { applyApiCors } from '../apiCors';
 import { handlePushSubscribe } from '../handlers';
 
-async function getSupabaseAdmin() {
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
-  if (!url || !serviceKey) return null;
-  const { createClient } = await import('@supabase/supabase-js');
-  return createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 function readBody(req: VercelRequest): Parameters<typeof handlePushSubscribe>[1] {
   const raw = req.body;
