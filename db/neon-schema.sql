@@ -1485,7 +1485,9 @@ BEGIN
       CONTINUE;
     END IF;
 
-    EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('EXECUTE format('END LOOP;
+    -- RLS skipped on Neon; the Worker enforces access.
+    NULL;
+  END LOOP;
 END $$;
 
 -- ── REALTIME (live sync without refresh) ────────────────────────────────────
