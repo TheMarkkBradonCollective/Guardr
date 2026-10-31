@@ -18,6 +18,11 @@ type Filter =
   | { kind: 'eq'; col: string; val: unknown }
   | { kind: 'neq'; col: string; val: unknown }
   | { kind: 'in'; col: string; vals: unknown[] }
+  | { kind: 'lt'; col: string; val: unknown }
+  | { kind: 'lte'; col: string; val: unknown }
+  | { kind: 'gte'; col: string; val: unknown }
+  | { kind: 'notNull'; col: string }
+  | { kind: 'overlaps'; col: string; vals: unknown[] }
   | { kind: 'or'; expr: string };
 
 class QueryBuilder {
@@ -61,6 +66,33 @@ class QueryBuilder {
     return this;
   }
 
+  lt(col: string, val: unknown): this {
+    this.filters.push({ kind: 'lt', col, val });
+    return this;
+  }
+
+  lte(col: string, val: unknown): this {
+    this.filters.push({ kind: 'lte', col, val });
+    return this;
+  }
+
+  gte(col: string, val: unknown): this {
+    this.filters.push({ kind: 'gte', col, val });
+    return this;
+  }
+
+  not(col: string, op: 'is', val: null): this {
+    if (op === 'is' && val === null) {
+      this.filters.push({ kind: 'notNull', col });
+    }
+    return this;
+  }
+
+  overlaps(col: string, vals: unknown[]): this {
+    this.filters.push({ kind: 'overlaps', col, vals });
+    return this;
+  }
+
   or(expr: string): this {
     this.filters.push({ kind: 'or', expr });
     return this;
@@ -82,9 +114,9 @@ class QueryBuilder {
     return this;
   }
 
-  maybeSingle(): Promise<DbResult<Record<string, unknown>>> {
+  maybeSingle(): Promise<DbResult<Record<string, unknown> | null>> {
     this.maybeSingleRow = true;
-    return this.execute() as unknown as Promise<DbResult<Record<string, unknown>>>;
+    return this.executeSingle() as Promise<DbResult<Record<string, unknown> | null>>;
   }
 
   then<TResult1 = DbResult<Record<string, unknown>[]>, TResult2 = never>(
@@ -116,6 +148,24 @@ class QueryBuilder {
           params.push(...f.vals);
           parts.push(`${quoteIdent(f.col)} IN (${placeholders.join(', ')})`);
         }
+      } else if (f.kind === 'lt') {
+        parts.push(`${quoteIdent(f.col)} < $${idx++}`);
+        params.push(f.val);
+      } else if (f.kind === 'lte') {
+        parts.push(`${quoteIdent(f.col)} <= $${idx++}`);
+        params.push(f.val);
+      } else if (f.kind === 'gte') {
+        parts.push(`${quoteIdent(f.col)} >= $${idx++}`);
+        params.push(f.val);
+      } else if (f.kind === 'notNull') {
+        parts.push(`${quoteIdent(f.col)} IS NOT NULL`);
+      } else if (f.kind === 'overlaps') {
+        if (!f.vals.length) {
+          parts.push('FALSE');
+        } else {
+          parts.push(`${quoteIdent(f.col)} && $${idx++}::text[]`);
+          params.push(f.vals);
+        }
       } else if (f.kind === 'or') {
         const orParts = f.expr.split(',').map((part) => part.trim());
         const orSql: string[] = [];
@@ -133,7 +183,16 @@ class QueryBuilder {
     return { sql: parts.length ? ` WHERE ${parts.join(' AND ')}` : '', params };
   }
 
-  private async execute(): Promise<DbResult<Record<string, unknown>[]>> {
+  private async executeSingle(): Promise<DbResult<Record<string, unknown> | null>> {
+    const result = await this.execute();
+    if (result.error) return { data: null, error: result.error };
+    const rows = result.data;
+    if (!rows) return { data: null, error: null };
+    if (Array.isArray(rows)) return { data: rows[0] ?? null, error: null };
+    return { data: rows as Record<string, unknown>, error: null };
+  }
+
+  private async execute(): Promise<DbResult<Record<string, unknown>[] | Record<string, unknown> | null>> {
     try {
       if (this.operation === 'select') {
         const { sql: where, params } = this.whereClause(1);
@@ -148,7 +207,7 @@ class QueryBuilder {
           if (this.singleRow && !row) {
             return { data: null, error: { message: 'No rows', code: 'PGRST116' } };
           }
-          return { data: row as unknown as Record<string, unknown>[], error: null };
+          return { data: row, error: null };
         }
         return { data: result.rows, error: null, count: result.rowCount };
       }

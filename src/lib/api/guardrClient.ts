@@ -3,6 +3,18 @@
  */
 
 const TOKEN_KEY = 'guardr_api_jwt';
+const DEFAULT_API_ORIGIN = 'https://guardr.themarkkbrandoncollective-2d9.workers.dev';
+
+function apiOrigin(): string {
+  const env = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_APP_URL?.trim().replace(/\/$/, '');
+  if (env) return env;
+  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin;
+  return DEFAULT_API_ORIGIN;
+}
+
+function apiUrl(path: string): string {
+  return `${apiOrigin()}${path.startsWith('/') ? path : `/${path}`}`;
+}
 
 type Filter =
   | { col: string; op: 'eq'; val: unknown }
@@ -108,7 +120,7 @@ class ApiQueryBuilder {
         sessionHeader = undefined;
       }
     }
-    const res = await fetch('/api/data/query', {
+    const res = await fetch(apiUrl('/api/data/query'), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -156,7 +168,7 @@ class RealtimeChannel {
     const poll = async () => {
       try {
         const since = sessionStorage.getItem(`guardr_poll_${this.name}`) ?? new Date(0).toISOString();
-        const res = await fetch(`/api/sync/poll?since=${encodeURIComponent(since)}`, { credentials: 'include' });
+        const res = await fetch(apiUrl(`/api/sync/poll?since=${encodeURIComponent(since)}`), { credentials: 'include' });
         const json = (await res.json()) as { changed?: string[]; serverTime?: string };
         if (json.changed?.length) {
           sessionStorage.setItem(`guardr_poll_${this.name}`, json.serverTime ?? new Date().toISOString());
@@ -176,7 +188,7 @@ class RealtimeChannel {
 export function createGuardrClient() {
   const auth = {
     async signInWithPassword(input: { email: string; password: string }) {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         credentials: 'include',
@@ -196,7 +208,7 @@ export function createGuardrClient() {
       };
     },
     async signUp(input: { email: string; password: string; options?: { data?: Record<string, unknown> } }) {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch(apiUrl('/api/auth/signup'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -216,7 +228,7 @@ export function createGuardrClient() {
     async getSession() {
       const token = localStorage.getItem(TOKEN_KEY);
       if (!token) return { data: { session: null }, error: null };
-      const res = await fetch('/api/auth/session', {
+      const res = await fetch(apiUrl('/api/auth/session'), {
         headers: { authorization: `Bearer ${token}` },
         credentials: 'include',
       });
@@ -225,7 +237,7 @@ export function createGuardrClient() {
     },
     async signOut() {
       localStorage.removeItem(TOKEN_KEY);
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
       return { error: null };
     },
   };
@@ -258,7 +270,7 @@ export function createGuardrClient() {
             form.append('file', file);
             form.append('path', path);
             const token = localStorage.getItem(TOKEN_KEY);
-            const res = await fetch('/api/files/upload', {
+            const res = await fetch(apiUrl('/api/files/upload'), {
               method: 'POST',
               headers: token ? { authorization: `Bearer ${token}` } : {},
               body: form,
@@ -272,3 +284,5 @@ export function createGuardrClient() {
     },
   };
 }
+
+export { apiUrl, apiOrigin };

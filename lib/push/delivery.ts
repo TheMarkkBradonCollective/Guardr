@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import {
   buildNotificationData,
   platformRoleToPushRole,
@@ -55,7 +55,7 @@ const PREF_COLUMN: Partial<Record<PushNotificationType, string>> = {
 };
 
 async function isTypeEnabledForUser(
-  db: SupabaseClient,
+  db: AppDb,
   userId: string,
   type: PushNotificationType
 ): Promise<boolean> {
@@ -175,7 +175,7 @@ async function sendToSubscription(
 }
 
 async function removeInvalidSubscriptions(
-  db: SupabaseClient,
+  db: AppDb,
   endpoints: string[]
 ): Promise<void> {
   if (!endpoints.length) return;
@@ -183,7 +183,7 @@ async function removeInvalidSubscriptions(
 }
 
 async function deliverToSubscriptions(
-  db: SupabaseClient,
+  db: AppDb,
   subscriptions: Array<{
     endpoint: string;
     p256dh: string;
@@ -317,7 +317,7 @@ async function loadPushSubscriptions(
 }
 
 export async function sendNotificationToUser(
-  db: SupabaseClient,
+  db: AppDb,
   userId: string,
   payload: PushSendPayload
 ): Promise<{ sent: number; failed: number }> {
@@ -332,7 +332,7 @@ export async function sendNotificationToUser(
 }
 
 export async function sendNotificationToRole(
-  db: SupabaseClient,
+  db: AppDb,
   role: PushRole,
   payload: PushSendPayload
 ): Promise<{ sent: number; failed: number }> {
@@ -346,7 +346,7 @@ export async function sendNotificationToRole(
 }
 
 export async function dispatchPushNotification(
-  db: SupabaseClient,
+  db: AppDb,
   payload: PushSendPayload
 ): Promise<{ sent: number; failed: number }> {
   if (payload.userId) {

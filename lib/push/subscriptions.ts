@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import type { PushRole, PushSubscriptionPayload } from './types';
 import { parsePushAppChannel, type PushAppChannel } from './channel';
 
@@ -12,7 +12,7 @@ function subscriptionId(userId: string, endpoint: string): string {
 }
 
 export async function upsertPushSubscription(
-  db: SupabaseClient,
+  db: AppDb,
   params: {
     userId: string;
     pushRole: PushRole;
@@ -55,7 +55,7 @@ export async function upsertPushSubscription(
 }
 
 export async function removePushSubscription(
-  db: SupabaseClient,
+  db: AppDb,
   userId: string,
   endpoint?: string
 ): Promise<void> {

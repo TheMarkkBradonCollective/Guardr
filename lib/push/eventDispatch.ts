@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import type { PushSendPayload, PushNotificationType } from './types';
 
 export interface PushEventInput {
@@ -228,7 +228,7 @@ function basePayload(event: PushEventInput): PushSendPayload {
 }
 
 async function loadJobParticipants(
-  db: SupabaseClient,
+  db: AppDb,
   requestId: string
 ): Promise<{ clientId: string | null; guardId: string | null }> {
   const { data } = await db
@@ -238,8 +238,8 @@ async function loadJobParticipants(
     .maybeSingle();
 
   return {
-    clientId: data?.client_id ?? null,
-    guardId: data?.assigned_guard_id ?? null,
+    clientId: typeof data?.client_id === 'string' ? data.client_id : null,
+    guardId: typeof data?.assigned_guard_id === 'string' ? data.assigned_guard_id : null,
   };
 }
 
@@ -247,7 +247,7 @@ async function loadJobParticipants(
  * Build one or more dispatch payloads for a push event.
  */
 export async function buildEventDispatchPayloads(
-  db: SupabaseClient,
+  db: AppDb,
   event: PushEventInput
 ): Promise<PushSendPayload[]> {
   const payload = basePayload(event);

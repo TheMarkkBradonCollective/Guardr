@@ -4,7 +4,7 @@
  * auth.uid() is provided as a local shim so existing RLS helpers still parse.
  */
 
-export const NEON_SCHEMA_SOURCE = 'supabase/complete_schema_setup.sql';
+export const NEON_SCHEMA_SOURCE = 'docs/legacy/complete_schema_setup.sql';
 
 const PUBLICATION_EXECUTE = "EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', tbl);";
 

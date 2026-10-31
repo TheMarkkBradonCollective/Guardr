@@ -34,8 +34,10 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_SUPABASE_URL: https://example.supabase.co
-          VITE_SUPABASE_ANON_KEY: placeholder
+          VITE_APP_URL: https://guardr.themarkkbrandoncollective-2d9.workers.dev
+
+      - name: Worker dry-run
+        run: npm run worker:dry-run
 
       - name: Version parity audit
         run: npm run apk:audit
@@ -60,5 +62,4 @@ jobs:
       - name: E2E tests
         run: npm run test:e2e
         env:
-          VITE_SUPABASE_URL: https://example.supabase.co
-          VITE_SUPABASE_ANON_KEY: placeholder
+          VITE_APP_URL: https://guardr.themarkkbrandoncollective-2d9.workers.dev

@@ -1,13 +1,19 @@
-/** Production site URL — used when APP_URL is not set in production */
-/** Use www until apex SSL is fully provisioned on Vercel */
-export const PRODUCTION_SITE_URL = 'https://www.guardr.co';
+/** Production app origin — Cloudflare Worker until custom domain cutover. */
+export const WORKER_DEPLOY_URL = 'https://guardr.themarkkbrandoncollective-2d9.workers.dev';
 
-export const SITE_DOMAIN = 'guardr.co';
+/** Marketing domain (unchanged until DNS moves). */
+export const PRODUCTION_SITE_URL = WORKER_DEPLOY_URL;
+
+export const SITE_DOMAIN = 'guardr.themarkkbrandoncollective-2d9.workers.dev';
 
 export function getSiteUrl(): string {
   const configured = process.env.APP_URL?.trim().replace(/\/$/, '');
   if (configured) return configured;
-  return process.env.NODE_ENV === 'production' || process.env.VERCEL
-    ? PRODUCTION_SITE_URL
-    : 'http://localhost:3000';
+  return WORKER_DEPLOY_URL;
+}
+
+export function getPublicAppUrl(): string {
+  const vite = process.env.VITE_APP_URL?.trim().replace(/\/$/, '');
+  if (vite) return vite;
+  return getSiteUrl();
 }

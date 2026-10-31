@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import type { PushNotificationType } from './types';
 import type { VerifiedSession } from '../accountSessionAuth';
 
@@ -17,7 +17,7 @@ export interface PushEventContext {
 }
 
 async function isJobParticipant(
-  db: SupabaseClient,
+  db: AppDb,
   requestId: string,
   userId: string
 ): Promise<boolean> {
@@ -32,7 +32,7 @@ async function isJobParticipant(
 }
 
 async function isSupportTicketParticipant(
-  db: SupabaseClient,
+  db: AppDb,
   ticketId: string,
   userId: string
 ): Promise<boolean> {
@@ -49,7 +49,7 @@ async function isSupportTicketParticipant(
  * Returns null when authorized, or an error message when denied.
  */
 export async function authorizePushEvent(
-  db: SupabaseClient,
+  db: AppDb,
   session: VerifiedSession,
   event: PushEventContext
 ): Promise<string | null> {

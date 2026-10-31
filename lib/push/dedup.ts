@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import type { PushNotificationType } from './types';
 
 const DEDUP_TTL_MS = 25 * 60 * 60 * 1000;
@@ -44,7 +44,7 @@ export function preShiftBriefingReminderDedupKey(
  * Returns true when this notification was already sent for the dedup key.
  */
 export async function claimNotificationDedup(
-  db: SupabaseClient,
+  db: AppDb,
   dedupKey: string,
   notificationType: PushNotificationType
 ): Promise<boolean> {
@@ -69,7 +69,7 @@ export async function claimNotificationDedup(
   return false;
 }
 
-export async function pruneStaleNotificationDedup(db: SupabaseClient): Promise<void> {
+export async function pruneStaleNotificationDedup(db: AppDb): Promise<void> {
   const cutoff = new Date(Date.now() - DEDUP_TTL_MS).toISOString();
   await db.from('push_notification_dedup').delete().lt('created_at', cutoff);
 }

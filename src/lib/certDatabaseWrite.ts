@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../../lib/db/adminClient.ts';
 import { certDatabaseErrorMessage } from './certImagePolicy';
 
 type CertRow = Record<string, unknown>;
@@ -64,7 +64,7 @@ async function writeWithOptionalColumnFallback(
 }
 
 export async function insertCertificationRow(
-  supabase: SupabaseClient,
+  supabase: AppDb,
   row: CertRow
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const { error } = await writeWithOptionalColumnFallback(
@@ -79,7 +79,7 @@ export async function insertCertificationRow(
 }
 
 export async function updateCertificationRow(
-  supabase: SupabaseClient,
+  supabase: AppDb,
   certId: string,
   row: CertRow
 ): Promise<{ ok: true } | { ok: false; error: string }> {

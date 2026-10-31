@@ -1,36 +1,18 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { getNeonDatabase } from './neonServerless.ts';
+import type { SqlDatabase } from './sqlDatabase.ts';
 
-let adminClient: SupabaseClient | null | undefined;
-let adminPromise: Promise<SupabaseClient | null> | undefined;
+export type AppDb = SqlDatabase;
 
-async function createSupabaseServiceClient(): Promise<SupabaseClient | null> {
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
-  if (!url || !key) return null;
-  const { createClient } = await import('@supabase/supabase-js');
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+/** Neon SQL client for Worker and local tools (requires DATABASE_URL / NEON_DATABASE_URL). */
+export async function getAppDb(): Promise<AppDb | null> {
+  return getNeonDatabase();
 }
 
-/** Neon SQL client when DATABASE_URL is set; otherwise Supabase service role. */
-export async function getSupabaseAdmin(): Promise<SupabaseClient | null> {
-  const neon = getNeonDatabase();
-  if (neon) return neon as unknown as SupabaseClient;
-
-  if (adminClient !== undefined) return adminClient;
-  if (!adminPromise) {
-    adminPromise = createSupabaseServiceClient();
-  }
-  adminClient = await adminPromise;
-  return adminClient;
+/** @deprecated Use getAppDb */
+export async function getSupabaseAdmin(): Promise<AppDb | null> {
+  return getAppDb();
 }
 
 export function resetAdminClientCache(): void {
-  adminClient = undefined;
-  adminPromise = undefined;
+  // no-op; pool is keyed by connection string in neonServerless
 }

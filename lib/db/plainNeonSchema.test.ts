@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { toPlainNeonSchema, PLAIN_USERS_TABLE } from './plainNeonSchema.ts';
 
-const source = readFileSync(new URL('../../supabase/complete_schema_setup.sql', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../../docs/legacy/complete_schema_setup.sql', import.meta.url), 'utf8');
 
 describe('Plain Neon schema', () => {
   it('drops RLS, auth.uid helpers, and Supabase realtime', () => {
