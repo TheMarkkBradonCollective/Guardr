@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import { computeGuardPerformanceRating } from '../../src/lib/guardPerformance.ts';
 import {
   performanceTierId,
@@ -34,7 +34,7 @@ function mapTierRequestRow(row: TierRequestRow): SecurityRequest {
 
 /** Load historical jobs used to compute performance tiers for open-job notifications. */
 export async function loadRequestsForGuardTierBatch(
-  db: SupabaseClient,
+  db: AppDb,
   guardIds: string[]
 ): Promise<SecurityRequest[]> {
   if (!guardIds.length) return [];
@@ -52,14 +52,14 @@ export async function loadRequestsForGuardTierBatch(
   if (applicantError) throw new Error(applicantError.message);
 
   const byId = new Map<string, SecurityRequest>();
-  for (const row of [...(assignedRows ?? []), ...(applicantRows ?? [])] as TierRequestRow[]) {
+  for (const row of [...(assignedRows ?? []), ...(applicantRows ?? [])] as unknown as TierRequestRow[]) {
     byId.set(row.id, mapTierRequestRow(row));
   }
   return [...byId.values()];
 }
 
 export async function resolveGuardTierMap(
-  db: SupabaseClient,
+  db: AppDb,
   guards: Array<Pick<SecurityGuard, 'id' | 'failedAudits'>>
 ): Promise<Map<string, PerformanceTierId>> {
   const guardIds = guards.map((guard) => guard.id);

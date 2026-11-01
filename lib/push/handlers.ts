@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import { isValidPushSubscriptionPayload } from './fcm';
 import { isPushConfigured } from './config';
 import { checkInEscalationDedupKey, claimNotificationDedup, missedCheckinDedupKey } from './dedup';
@@ -24,7 +24,7 @@ export function pushNotConfiguredResponse() {
 }
 
 export async function handlePushSubscribe(
-  db: SupabaseClient,
+  db: AppDb,
   body: {
     userId?: string;
     email?: string;
@@ -64,7 +64,7 @@ export async function handlePushSubscribe(
 }
 
 export async function handlePushUnsubscribe(
-  db: SupabaseClient,
+  db: AppDb,
   body: { userId?: string; email?: string; role?: string; endpoint?: string }
 ) {
   const session = await verifySession(db, {
@@ -82,7 +82,7 @@ export async function handlePushUnsubscribe(
 }
 
 export async function handlePushSend(
-  db: SupabaseClient,
+  db: AppDb,
   authHeader: string | undefined,
   body: PushSendPayload
 ) {
@@ -103,7 +103,7 @@ export async function handlePushSend(
 }
 
 export async function handlePushTest(
-  db: SupabaseClient,
+  db: AppDb,
   body: SessionCredentials & { siteId?: string; broadcast?: boolean; title?: string; body?: string }
 ) {
   const session = await verifySession(db, body);
@@ -159,7 +159,7 @@ export interface PushEventBody extends SessionCredentials {
 }
 
 export async function dispatchPushEvent(
-  db: SupabaseClient,
+  db: AppDb,
   event: PushEventBody,
   options?: { skipAuth?: boolean }
 ): Promise<{ sent: number; failed: number }> {
@@ -225,7 +225,7 @@ export async function dispatchPushEvent(
   return { sent, failed };
 }
 
-export async function handlePushEvent(db: SupabaseClient, body: PushEventBody) {
+export async function handlePushEvent(db: AppDb, body: PushEventBody) {
   const session = await verifySession(db, body);
   if (!session) {
     return { status: 401, body: { error: 'Unauthorized — invalid session' } };

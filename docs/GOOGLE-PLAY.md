@@ -22,7 +22,7 @@ dist/play-store/Guardr-Staff.aab    (Staff — com.tmbcworks.guardr.staff)
 
 ## What was automated in this repo
 
-- **Play vs sideload flavors** — `play` build has no `REQUEST_INSTALL_PACKAGES` (Play policy safe); `sideload` keeps in-app APK updates for guardr.co/download
+- **Play vs sideload flavors** — `play` build has no `REQUEST_INSTALL_PACKAGES` (Play policy safe); `sideload` keeps in-app APK updates via GitHub Release (`v1.1.0-cf-beta`) or in-app update UI
 - **Release signing** — reads `android/keystore.properties` (see `keystore.properties.example`)
 - **Play build flag** — `VITE_PLAY_STORE_BUILD=true` hides sideload update UI in Settings
 - **Store assets script** — unlabeled `icon-512.png`, Guard (white + black, no word) / Customer (black, no word) / Staff (grey + white, no word) `*-icon-512.png`, `feature-graphic-1024x500.png`
@@ -73,7 +73,7 @@ Play builds require the same Firebase setup as sideload APKs.
 1. Firebase Console → add Android app with package `com.tmbcworks.guardr`
 2. Download `google-services.json`
 3. Place at **`secrets/google-services.json`** (preferred) or set env `GOOGLE_SERVICES_JSON`
-4. Set **`FCM_SERVICE_ACCOUNT_JSON`** on the Guardr server (Vercel) for push delivery
+4. Set **`FCM_SERVICE_ACCOUNT_JSON`** as a Worker secret (`wrangler secret put FCM_SERVICE_ACCOUNT_JSON`) for native push delivery
 
 Verify:
 
@@ -86,6 +86,15 @@ npm run play:check
 ## Step 3 — Build the AAB
 
 Prerequisites: Java 17+, Android SDK (`ANDROID_HOME`), Node 22+.
+
+Sideload/debug APKs must point at the Cloudflare Worker API (not guardr.co):
+
+```bash
+export VITE_APP_URL=https://guardr.themarkkbrandoncollective-2d9.workers.dev
+npm run android:apk:all   # or npm run android:apk
+```
+
+CI builds and attaches APKs to GitHub Release **`v1.1.0-cf-beta`** via `.github/workflows/cf-android-release.yml`.
 
 ```bash
 npm install

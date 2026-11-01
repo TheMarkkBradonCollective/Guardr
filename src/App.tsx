@@ -27,6 +27,8 @@ import {
   GuardMessage,
   ClientMessage,
   GuardInsurancePolicy,
+  GuardVehicleInsurancePolicy,
+  GuardVehicleProfile,
   GuardWeaponGearId,
   GuardEquipmentGearId,
   JobType,
@@ -2708,19 +2710,19 @@ export default function App() {
         console.warn('Company public documents load (run migration if missing):', companyPublicDocumentsErr);
       }
 
-      const insuranceByGuardId = new Map(
+      const insuranceByGuardId = new Map<string, GuardInsurancePolicy>(
         (dbInsurance ?? []).map((row: Record<string, unknown>) => [
           String(row.guard_id),
           insurancePolicyFromRow(row),
         ])
       );
-      const vehicleInsuranceByGuardId = new Map(
+      const vehicleInsuranceByGuardId = new Map<string, GuardVehicleInsurancePolicy>(
         (dbVehicleInsurance ?? []).map((row: Record<string, unknown>) => [
           String(row.guard_id),
           vehicleInsurancePolicyFromRow(row),
         ])
       );
-      const vehicleProfileByGuardId = new Map(
+      const vehicleProfileByGuardId = new Map<string, GuardVehicleProfile>(
         (dbVehicleProfiles ?? []).map((row: Record<string, unknown>) => [
           String(row.guard_id),
           vehicleProfileFromRow(row),

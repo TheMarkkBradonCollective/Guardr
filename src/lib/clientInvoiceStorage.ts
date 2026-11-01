@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../../lib/db/adminClient.ts';
 import type { Client, SecurityRequest } from '../types';
 import {
   buildInvoiceFromJob,
@@ -142,7 +142,7 @@ export function syncInvoicePaymentStatus(
 }
 
 export async function persistClientInvoiceToDb(
-  db: SupabaseClient,
+  db: AppDb,
   invoice: ClientInvoice
 ): Promise<void> {
   const { error } = await db.from('client_invoices').upsert(clientInvoiceToRow(invoice));

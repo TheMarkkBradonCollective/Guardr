@@ -293,9 +293,8 @@ async function resolveProfileForSignIn(
   return (await fetchClientProfileFromDb(emailLower)) ?? (await fetchGuardProfileFromDb(emailLower));
 }
 
-export async function trySupabaseSignIn(email: string, password: string): Promise<boolean> {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  return !error && !!data.session;
+export async function trySupabaseSignIn(_email: string, _password: string): Promise<boolean> {
+  return false;
 }
 
 export async function linkAuthUserId(
@@ -407,25 +406,14 @@ export async function signInWithCredentials(
   }
 
   if (profile.authUserId) {
-    const supabaseEmail = profile.guard?.isStaff
-      ? staffWorkLoginEmail(profile.guard)
-      : emailLower;
-    const ok = await trySupabaseSignIn(supabaseEmail, password);
-    if (ok) {
-      return {
-        status: 'ok',
-        result: {
-          sessionUser: sessionUserFromProfile(profile),
-          passwordChangeRecommended: profile.mustChangePassword,
-          authMode: 'supabase',
-        },
-      };
-    }
+    // Legacy Supabase auth linking is removed; Worker JWT is issued on API login below.
   }
 
   if (profile.password && !profile.passwordHash) {
     void migratePasswordToHash(profile.table, profile.id, password);
   }
+
+  void supabase.auth.signInWithPassword({ email: emailLower, password }).catch(() => undefined);
 
   return {
     status: 'ok',
@@ -443,15 +431,15 @@ export async function signUpWithSupabaseAuth(
   profileId: string,
   table: 'guards' | 'clients' | 'staff'
 ): Promise<string | null> {
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error || !data.user?.id) return null;
-  const passwordHash = await hashPassword(password);
-  await supabase
-    .from(table)
-    .update({ auth_user_id: data.user.id, password_hash: passwordHash, password: null })
-    .eq('id', profileId);
-  if (data.session) return data.user.id;
-  return data.user.id;
+  const profileKind = table === 'staff' ? 'staff' : table === 'clients' ? 'client' : 'guard';
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { profileKind, profileId } },
+  });
+  if (error) return null;
+  const token = (data as { token?: string }).token;
+  return profileId;
 }
 
 export async function restoreSupabaseSession(): Promise<boolean> {

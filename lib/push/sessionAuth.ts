@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import type { SessionCredentials } from './types';
 import {
   verifyAccountSession,
@@ -9,7 +9,7 @@ import {
 export type { PlatformRole, VerifiedSession };
 
 export async function verifySession(
-  db: SupabaseClient,
+  db: AppDb,
   credentials: SessionCredentials | null | undefined
 ): Promise<VerifiedSession | null> {
   return verifyAccountSession(db, credentials);

@@ -1,5 +1,7 @@
 # Guardr — Company Information Package
 
+> **Cloudflare beta branch:** API and sideload APKs use `https://guardr.themarkkbrandoncollective-2d9.workers.dev` (Neon + R2). Sections below that mention Vercel, Supabase, or guardr.co hosting reflect the prior stack until DNS is cut over.
+
 **Prepared for:** Legal counsel, advisors, investors, partners, and other stakeholders  
 **Legal entity:** Signature Security Specialist, LLC  
 **Product:** Guardr — [guardr.co](https://guardr.co)  
@@ -269,7 +271,7 @@ Draft → Pending Review → Open → Accepted → In Progress → Completed →
 |-------|------------|
 | Frontend | React 19, Vite 6, Tailwind CSS 4, Base Web |
 | Backend / database | Supabase (PostgreSQL + RLS) |
-| Auth | Supabase Auth + PBKDF2 bridge (`/api/auth/bridge`) |
+| Auth | Worker JWT + PBKDF2 (`users` table, `/api/auth/*`) |
 | Payments | Stripe Connect (primary); Square also integrated |
 | Maps | Leaflet + react-leaflet |
 | Push notifications | Web Push (VAPID) + FCM (Android) |

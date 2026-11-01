@@ -3,7 +3,7 @@
  * Stored format: pbkdf2:{iterations}:{base64salt}:{base64hash}
  */
 
-const ITERATIONS = 120_000;
+const ITERATIONS = 100_000;
 const PREFIX = 'pbkdf2';
 
 function toBase64(bytes: Uint8Array): string {

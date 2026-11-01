@@ -76,6 +76,14 @@ export function neonVariablePointsAtSupabase(env?: Env): boolean {
   return false;
 }
 
+/** Pooled connection string for Worker/API queries (Neon preferred). */
+export function resolveApplicationConnectionString(env?: Env): string | undefined {
+  const neon = resolveNeonConnectionString(env);
+  if (neon) return neon;
+  const source = envOf(env);
+  return readEnv(source, 'DATABASE_URL');
+}
+
 /** Pooled Neon URL for application queries. Ignores a Supabase DATABASE_URL. */
 export function resolveNeonConnectionString(env?: Env): string | undefined {
   const source = envOf(env);

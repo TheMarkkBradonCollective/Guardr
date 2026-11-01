@@ -1,6 +1,5 @@
 /**
- * Apply the Guardr schema to an empty Neon database.
- * Does not connect to Supabase and does not read production data.
+ * Apply db/neon-schema.sql to an empty Neon database.
  *
  *   NEON_DATABASE_URL_UNPOOLED=postgresql://.../guardr npm run db:neon:apply
  */
@@ -12,28 +11,19 @@ import {
   redactSecrets,
   resolveMigrationConnectionString,
 } from '../../lib/db/databaseUrl.ts';
-import { missingRequiredTables, toNeonSchema } from '../../lib/db/neonSchema.ts';
+import { missingRequiredTables } from '../../lib/db/neonSchema.ts';
 import { withPgClient } from '../../lib/db/neonPool.ts';
 
 async function main(): Promise<void> {
   if (neonVariablePointsAtSupabase()) {
-    console.error(
-      'Refusing to run the Neon migration against a Supabase host. The existing Supabase database is left unchanged.'
-    );
+    console.error('Refusing to run against a Supabase host.');
     process.exitCode = 2;
     return;
   }
 
   const connectionString = resolveMigrationConnectionString();
   if (!connectionString) {
-    console.error(
-      [
-        'Neon schema apply did not run.',
-        'Set NEON_DATABASE_URL_UNPOOLED to the direct (non-pooler) Neon connection string for the guardr database.',
-        'The pooled URL belongs in NEON_DATABASE_URL and is not used for DDL.',
-        'Do not point this script at Supabase. Production traffic stays on Supabase until you choose a cutover.',
-      ].join('\n')
-    );
+    console.error('Set NEON_DATABASE_URL_UNPOOLED to the direct Neon connection string for the guardr database.');
     process.exitCode = 2;
     return;
   }
@@ -47,8 +37,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const sourcePath = resolve(process.cwd(), 'supabase/complete_schema_setup.sql');
-  const sql = toNeonSchema(readFileSync(sourcePath, 'utf8'));
+  const sql = readFileSync(resolve(process.cwd(), 'db/neon-schema.sql'), 'utf8');
 
   await withPgClient(connectionString, async (query) => {
     await query(sql);
@@ -63,14 +52,8 @@ async function main(): Promise<void> {
     if (missing.length) {
       throw new Error(`Schema apply finished but these tables are missing: ${missing.join(', ')}`);
     }
-    const authFn = await query(
-      `SELECT proname
-       FROM pg_proc
-       JOIN pg_namespace ON pg_namespace.oid = pg_proc.pronamespace
-       WHERE nspname = 'auth' AND proname = 'uid'`
-    );
-    if (!authFn.rows.length) {
-      throw new Error('auth.uid() shim was not created.');
+    if (!names.includes('users')) {
+      throw new Error('users table was not created.');
     }
     console.log(
       JSON.stringify({
@@ -78,7 +61,7 @@ async function main(): Promise<void> {
         provider: target.provider,
         database: target.database,
         tables: names.length,
-        requiredTables: missingRequiredTables(names).length === 0,
+        requiredTables: missing.length === 0,
       })
     );
   });

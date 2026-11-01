@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../../lib/db/adminClient.ts';
 import { guardAccountDatabaseErrorMessage } from './accountStatus';
 
 type GuardRow = Record<string, unknown>;
@@ -65,7 +65,7 @@ async function writeGuardRowWithFallback(
 }
 
 export async function updateGuardAccountRow(
-  supabase: SupabaseClient,
+  supabase: AppDb,
   guardId: string,
   row: GuardRow,
   action: 'approve' | 'activate' | 'revision'

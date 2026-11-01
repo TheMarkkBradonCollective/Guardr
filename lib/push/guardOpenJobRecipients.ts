@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../db/adminClient.ts';
 import { normalizeGuardServiceAreas } from '../../src/lib/californiaCities.ts';
 import {
   defaultAvailabilitySlots,
@@ -86,7 +86,7 @@ function buildScheduleMap(
 
 /** Active verified guards who should receive job_open_to_guards for this job. */
 export async function findGuardsToNotifyForOpenJob(
-  db: SupabaseClient,
+  db: AppDb,
   job: OpenJobNotifyContext
 ): Promise<string[]> {
   const { data: guardRows, error } = await db

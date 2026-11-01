@@ -1,0 +1,23 @@
+name = "guardr"
+main = "worker/index.ts"
+compatibility_date = "2024-11-01"
+account_id = "92d9592953c4d46474ae07993913f710"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "guardr-files"
+
+[vars]
+# Non-secret defaults only. Set secrets with `wrangler secret put`.
+
+[triggers]
+crons = ["*/5 * * * *", "0 14 * * *"]
+
+[build]
+command = "npm run build"

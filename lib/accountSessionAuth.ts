@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from './db/adminClient.ts';
 
 export type PlatformRole =
   | 'client'
@@ -90,7 +90,7 @@ export function hasFinancePlatformAccess(
 }
 
 async function verifyStaffSession(
-  db: SupabaseClient,
+  db: AppDb,
   userId: string,
   email: string
 ): Promise<VerifiedSession | null> {
@@ -112,20 +112,22 @@ async function verifyStaffSession(
   }
 
   if (!data && error?.code === '42P01') return null;
-  const matchesWork = data?.email?.toLowerCase() === emailLower;
-  const matchesPersonal = data?.personal_email?.toLowerCase() === emailLower;
-  if (!data || (!matchesWork && !matchesPersonal)) return null;
+  const row = data as Record<string, unknown> | null;
+  const matchesWork = typeof row?.email === 'string' && row.email.toLowerCase() === emailLower;
+  const matchesPersonal =
+    typeof row?.personal_email === 'string' && row.personal_email.toLowerCase() === emailLower;
+  if (!row || (!matchesWork && !matchesPersonal)) return null;
 
-  const sideRole = data.side_role === 'Finance' ? ('Finance' as const) : null;
+  const sideRole = row.side_role === 'Finance' ? ('Finance' as const) : null;
   const platformRole = resolvePlatformRole({
     isStaff: true,
-    staffRole: data.staff_role ?? undefined,
+    staffRole: row.staff_role as StaffDbRole | undefined,
     sideRole,
     legacyRole: 'staff',
   });
 
   return {
-    userId: data.id,
+    userId: String(row.id),
     email: emailLower,
     role: platformRole,
     platformRole,
@@ -134,7 +136,7 @@ async function verifyStaffSession(
 }
 
 async function verifyFieldGuardSession(
-  db: SupabaseClient,
+  db: AppDb,
   userId: string,
   email: string,
   credentialsRole: string
@@ -156,15 +158,16 @@ async function verifyFieldGuardSession(
   }
 
   if (!data && error?.code === '42P01') return null;
-  if (!data || data.email?.toLowerCase() !== email) return null;
-  if (data.migrated_to_staff_at) return null;
+  const row = data as Record<string, unknown> | null;
+  if (!row || typeof row.email !== 'string' || row.email.toLowerCase() !== email) return null;
+  if (row.migrated_to_staff_at) return null;
 
-  const sideRole = data.side_role === 'Finance' ? ('Finance' as const) : null;
+  const sideRole = row.side_role === 'Finance' ? ('Finance' as const) : null;
   const platformRole = resolvePlatformRole({
-    isStaff: data.is_staff,
-    staffRole: data.staff_role ?? undefined,
+    isStaff: row.is_staff === true,
+    staffRole: row.staff_role as StaffDbRole | undefined,
     sideRole,
-    legacyRole: data.is_staff ? 'staff' : 'guard',
+    legacyRole: row.is_staff === true ? 'staff' : 'guard',
   });
 
   if (platformRole !== credentialsRole && credentialsRole !== 'staff' && credentialsRole !== 'auditor') {
@@ -173,7 +176,7 @@ async function verifyFieldGuardSession(
     );
   }
 
-  return { userId: data.id, email, role: platformRole, platformRole, sideRole };
+  return { userId: String(row.id), email, role: platformRole, platformRole, sideRole };
 }
 
 /** True when the verified session is allowed to use this product app. */
@@ -187,7 +190,7 @@ export function sessionOwnsProductApp(
 }
 
 export async function verifyAccountSession(
-  db: SupabaseClient,
+  db: AppDb,
   credentials: SessionCredentials | null | undefined
 ): Promise<VerifiedSession | null> {
   if (!credentials?.userId || !credentials?.email || !credentials?.role) {
@@ -203,8 +206,10 @@ export async function verifyAccountSession(
       const byEmail = await db.from('clients').select('id, email').eq('email', email).maybeSingle();
       data = byEmail.data ?? null;
     }
-    if (!data || data.email?.toLowerCase() !== email) return null;
-    return { userId: data.id, email, role: 'client', platformRole: 'client' };
+    const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | null | undefined;
+    if (!row || typeof row.email !== 'string') return null;
+    if (row.email.toLowerCase() !== email) return null;
+    return { userId: String(row.id), email, role: 'client', platformRole: 'client' };
   }
 
   if (STAFF_PLATFORM_ROLES.has(role)) {
@@ -216,7 +221,7 @@ export async function verifyAccountSession(
 }
 
 export async function verifyFinanceStaffSession(
-  db: SupabaseClient,
+  db: AppDb,
   credentials: SessionCredentials | null | undefined
 ): Promise<VerifiedSession | null> {
   const session = await verifyAccountSession(db, credentials);

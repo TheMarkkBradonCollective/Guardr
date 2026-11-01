@@ -20,11 +20,11 @@ Open [guardr.co](https://guardr.co) → create account or sign in. Returning mar
 | **Customer / Guard Android app** | Map, jobs, messages, field tools | — |
 | **Messenger app** (optional) | Messages & support for your role — not a substitute for the role app | Same |
 
-After you are **active**, run day-to-day coverage from the **Customer** or **Guard** app (install from **Account → Downloads** or [guardr.co/download](https://www.guardr.co/download)). The website does **not** replace those apps for map, jobs, or live shifts.
+After you are **active**, run day-to-day coverage from the **Customer** or **Guard** app (install from **Account → Downloads** or the [GitHub Release APKs](https://github.com/TheMarkkBradonCollective/Guardr/releases/tag/v1.1.0-cf-beta) on the Cloudflare beta stack). The website does **not** replace those apps for map, jobs, or live shifts.
 
 **Device rules:** one Guardr **role app** per phone (Guard, Customer, or Staff — pick one). **Messenger** can still be installed. One **account** per device for role apps; signing out does not reset the device.
 
-Current release: **v1.0.134** (Android build **234**).
+Current Cloudflare beta release: **v1.1.0-cf-beta** (Android build **110**). Legacy guardr.co release line remains **v1.0.134** (build **234**) until DNS migration.
 
 ---
 

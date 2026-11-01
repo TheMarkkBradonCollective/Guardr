@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppDb } from '../../lib/db/adminClient.ts';
 import type { Certification, SecurityGuard } from '../types';
 
 /** Certification columns loaded in bulk — excludes heavy base64 document photos. */
@@ -81,7 +81,7 @@ function imagesByGuardFromRows(rows: CertificationImageRow[]): Map<string, Map<s
 }
 
 export async function fetchCertificationImagesForGuards(
-  supabase: SupabaseClient,
+  supabase: AppDb,
   guardIds: string[]
 ): Promise<{ imagesByGuardId: Map<string, Map<string, string>>; error: { message?: string } | null }> {
   const uniqueIds = [...new Set(guardIds.filter(Boolean))];
@@ -105,7 +105,7 @@ export async function fetchCertificationImagesForGuards(
 }
 
 export async function fetchCertificationImagesByCertIds(
-  supabase: SupabaseClient,
+  supabase: AppDb,
   certIds: string[]
 ): Promise<{
   imagesByCertId: Map<string, string>;
@@ -140,7 +140,7 @@ export async function fetchCertificationImagesByCertIds(
 }
 
 export async function fetchCertificationImagesForGuard(
-  supabase: SupabaseClient,
+  supabase: AppDb,
   guardId: string
 ): Promise<{ imagesByCertId: Map<string, string>; error: { message?: string } | null }> {
   const { imagesByGuardId, error } = await fetchCertificationImagesForGuards(supabase, [guardId]);

@@ -13,9 +13,11 @@ import {
 } from './githubApkRelease.ts';
 
 describe('GitHub APK release URLs', () => {
-  it('points the all-apps zip at GitHub Releases, not the website', () => {
-    assert.match(GITHUB_ALL_APKS_ZIP, /github\.com\/TheMarkkBradonCollective\/Guardr\/releases\/latest\/download\/Guardr-All-APKs\.zip$/);
-    assert.ok(!GITHUB_ALL_APKS_ZIP.includes('guardr.co'));
+  it('points the all-apps zip at GitHub Releases', () => {
+    assert.match(
+      GITHUB_ALL_APKS_ZIP,
+      /github\.com\/TheMarkkBradonCollective\/Guardr\/releases\/download\/v1\.1\.0-cf-beta\/Guardr-All-APKs\.zip$/
+    );
   });
 
   it('lists Client, Guard, and Staff APK assets', () => {
@@ -25,9 +27,9 @@ describe('GitHub APK release URLs', () => {
     assert.equal(GITHUB_STAFF_APK.endsWith('Guardr-Staff.apk'), true);
   });
 
-  it('offers Messenger as a website sign-in app, not in the three-app zip', () => {
+  it('offers Messenger via GitHub release asset', () => {
     assert.equal(GITHUB_MESSENGER_APP.file, 'Guardr-Messenger.apk');
-    assert.equal(GITHUB_MESSENGER_APP.url, '/download/Guardr-Messenger.apk');
+    assert.match(GITHUB_MESSENGER_APP.url, /v1\.1\.0-cf-beta\/Guardr-Messenger\.apk$/);
     assert.match(GITHUB_MESSENGER_APP.tagline, /Messages, support, and team chat/);
     assert.equal(GITHUB_ROLE_APKS.length, 3);
     assert.ok(!GITHUB_ROLE_APKS.map((app) => app.label).includes('Messenger'));
