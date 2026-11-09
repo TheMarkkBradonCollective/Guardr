@@ -38,6 +38,7 @@ import cronMissed from '../lib/http/routes/_push/entries/missed-checkins.ts';
 import cronPlacard from '../lib/http/routes/_push/entries/company-placard-expiry.ts';
 import cronBriefings from '../lib/http/routes/_push/entries/pre-shift-briefings.ts';
 import { describeNeonConfig } from '../lib/db/databaseUrl.ts';
+import { getSiteUrl } from '../lib/siteConfig.ts';
 
 export type WorkerEnv = {
   DATABASE_URL: string;
@@ -49,6 +50,8 @@ export type WorkerEnv = {
   FCM_SERVICE_ACCOUNT_JSON?: string;
   PUSH_INTERNAL_SECRET?: string;
   CRON_SECRET?: string;
+  APP_URL?: string;
+  VITE_APP_URL?: string;
   FILES: R2Bucket;
   ASSETS: Fetcher;
 };
@@ -103,6 +106,7 @@ export function createWorkerApp() {
   app.get('/api/health/worker', (c) =>
     c.json({
       status: 'ok',
+      appUrl: getSiteUrl(),
       neonDatabase: describeNeonConfig({ DATABASE_URL: c.env.DATABASE_URL }),
     })
   );

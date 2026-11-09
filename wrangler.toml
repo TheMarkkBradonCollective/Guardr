@@ -15,6 +15,8 @@ bucket_name = "guardr-files"
 
 [vars]
 # Non-secret defaults only. Set secrets with `wrangler secret put`.
+APP_URL = "https://www.guardr.co"
+VITE_APP_URL = "https://www.guardr.co"
 
 [triggers]
 crons = ["*/5 * * * *", "0 14 * * *"]
