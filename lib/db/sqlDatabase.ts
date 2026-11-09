@@ -227,10 +227,24 @@ class QueryBuilder {
         const conflict = this.upsertConflict ?? (this.operation === 'upsert' ? 'id' : null);
         let sql = `INSERT INTO ${quoteIdent(this.table)} (${keys.map(quoteIdent).join(', ')}) VALUES ${valueGroups.join(', ')}`;
         if (conflict) {
+          // Support PostgREST-style multi-column targets: "user_id,document_id,document_version"
+          const conflictCols = conflict
+            .split(',')
+            .map((col) => col.trim())
+            .filter(Boolean);
+          if (!conflictCols.length) {
+            throw new Error(`Invalid identifier: ${conflict}`);
+          }
+          const conflictSet = new Set(conflictCols);
           const updates = keys
-            .filter((k) => k !== conflict)
+            .filter((k) => !conflictSet.has(k))
             .map((k) => `${quoteIdent(k)} = EXCLUDED.${quoteIdent(k)}`);
-          sql += ` ON CONFLICT (${quoteIdent(conflict)}) DO UPDATE SET ${updates.join(', ')}`;
+          const conflictSql = conflictCols.map(quoteIdent).join(', ');
+          if (updates.length === 0) {
+            sql += ` ON CONFLICT (${conflictSql}) DO NOTHING`;
+          } else {
+            sql += ` ON CONFLICT (${conflictSql}) DO UPDATE SET ${updates.join(', ')}`;
+          }
         }
         if (this.columns !== '*') {
           sql += ` RETURNING ${this.columns}`;

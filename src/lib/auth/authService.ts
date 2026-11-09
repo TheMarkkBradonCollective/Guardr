@@ -278,6 +278,25 @@ async function fetchGuardProfileFromDb(emailLower: string): Promise<AuthProfile 
     return profileFromGuard(guardFromRow(staffRow as Record<string, unknown>, true));
   }
 
+  // Fallback when .or() is unsupported by the Worker data client: try work email eq.
+  const { data: staffByEmail, error: staffByEmailError } = await supabase
+    .from('staff')
+    .select('*')
+    .eq('email', emailLower)
+    .maybeSingle();
+  if (!staffByEmailError && staffByEmail) {
+    return profileFromGuard(guardFromRow(staffByEmail as Record<string, unknown>, true));
+  }
+
+  const { data: staffByPersonal, error: staffByPersonalError } = await supabase
+    .from('staff')
+    .select('*')
+    .eq('personal_email', emailLower)
+    .maybeSingle();
+  if (!staffByPersonalError && staffByPersonal) {
+    return profileFromGuard(guardFromRow(staffByPersonal as Record<string, unknown>, true));
+  }
+
   return null;
 }
 
@@ -293,64 +312,116 @@ async function resolveProfileForSignIn(
   return (await fetchClientProfileFromDb(emailLower)) ?? (await fetchGuardProfileFromDb(emailLower));
 }
 
-export async function trySupabaseSignIn(_email: string, _password: string): Promise<boolean> {
-  return false;
-}
 
-export async function linkAuthUserId(
-  table: 'guards' | 'clients' | 'staff',
-  profileId: string,
-  authUserId: string
-): Promise<void> {
-  await supabase.from(table).update({ auth_user_id: authUserId }).eq('id', profileId);
-}
-
-export async function migratePasswordToHash(
-  table: 'guards' | 'clients' | 'staff',
-  profileId: string,
-  password: string
-): Promise<string> {
-  const passwordHash = await hashPassword(password);
-  await supabase.from(table).update({ password_hash: passwordHash, password: null }).eq('id', profileId);
-  return passwordHash;
-}
-
-export function authPathForProfile(profile: AuthProfile): AuthRole {
-  if (profile.table === 'clients' || profile.role === 'client') return 'client';
-  if (
-    profile.table === 'staff' ||
-    profile.guard?.isStaff === true ||
-    isStaffRole(profile.role)
-  ) {
-    return 'staff';
+async function fetchProfileById(profileId: string): Promise<AuthProfile | null> {
+  const { data: staffRow, error: staffError } = await supabase
+    .from('staff')
+    .select('*')
+    .eq('id', profileId)
+    .maybeSingle();
+  if (!staffError && staffRow) {
+    return profileFromGuard(guardFromRow(staffRow as Record<string, unknown>, true));
   }
-  return 'guard';
+
+  const { data: guardRow, error: guardError } = await supabase
+    .from('guards')
+    .select('*')
+    .eq('id', profileId)
+    .maybeSingle();
+  if (!guardError && guardRow) {
+    return profileFromGuard(guardFromRow(guardRow as Record<string, unknown>));
+  }
+
+  const { data: clientRow, error: clientError } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('id', profileId)
+    .maybeSingle();
+  if (!clientError && clientRow) {
+    return profileFromClient(clientFromRow(clientRow as Record<string, unknown>));
+  }
+
+  return null;
 }
 
-export function profileMatchesAuthPath(profile: AuthProfile, expectedPath: AuthRole): boolean {
-  return authPathForProfile(profile) === expectedPath;
+function minimalProfileFromApiUser(input: {
+  id: string;
+  email: string;
+  role: PlatformRole;
+  name?: string;
+}): AuthProfile {
+  const name = input.name?.trim() || input.email;
+  if (input.role === 'client') {
+    return {
+      table: 'clients',
+      id: input.id,
+      email: input.email,
+      name,
+      role: 'client',
+      client: {
+        id: input.id,
+        name,
+        email: input.email,
+        companyName: '',
+        clientType: 'business',
+        phone: '',
+        avatar: '',
+        totalRequests: 0,
+        approved: true,
+        accountStatus: 'active',
+      },
+    };
+  }
+  const staff = isStaffRole(input.role);
+  const staffRole: StaffRole | undefined =
+    input.role === 'owner'
+      ? 'Founder'
+      : input.role === 'director'
+        ? 'Director'
+        : input.role === 'manager'
+          ? 'Manager'
+          : input.role === 'administrator'
+            ? 'Administrator'
+            : input.role === 'moderator'
+              ? 'Moderator'
+              : input.role === 'support'
+                ? 'Support'
+                : undefined;
+  const guard: SecurityGuard = {
+    id: input.id,
+    name,
+    email: input.email,
+    badgeNumber: '',
+    avatar: '',
+    phone: '',
+    bio: '',
+    isArmed: false,
+    backgroundChecked: true,
+    verified: true,
+    rating: 0,
+    jobsCompleted: 0,
+    certifications: [],
+    experience: [],
+    hourlyRateRequirement: 0,
+    isStaff: staff,
+    staffRole,
+    userStatus: 'active',
+  };
+  return profileFromGuard(guard);
 }
 
-export async function signInWithCredentials(
-  email: string,
+async function finishSignInWithProfile(
+  profile: AuthProfile,
   password: string,
   guards: SecurityGuard[],
   clients: Client[],
-  expectedPath?: AuthRole,
-  oneRoleCases: OneRoleCase[] = [],
+  expectedPath: AuthRole | undefined,
+  oneRoleCases: OneRoleCase[],
+  authMode: 'supabase' | 'legacy',
 ): Promise<SignInAttemptResult> {
-  const emailLower = email.trim().toLowerCase();
-  if (!emailLower) return { status: 'not_found' };
-
-  const profile = await resolveProfileForSignIn(emailLower, guards, clients);
-  if (!profile) return { status: 'not_found' };
-
   if (profile.guard?.userStatus === 'blocked') {
     return { status: 'blocked' };
   }
-
-  const passwordOk = await verifyStoredPassword(profile.password, profile.passwordHash ?? undefined, password);
-  if (!passwordOk) return { status: 'invalid_password' };
 
   if (expectedPath && !profileMatchesAuthPath(profile, expectedPath)) {
     return {
@@ -405,24 +476,143 @@ export async function signInWithCredentials(
     };
   }
 
-  if (profile.authUserId) {
-    // Legacy Supabase auth linking is removed; Worker JWT is issued on API login below.
-  }
-
-  if (profile.password && !profile.passwordHash) {
+  if (profile.password && !profile.passwordHash && authMode === 'legacy') {
     void migratePasswordToHash(profile.table, profile.id, password);
   }
-
-  void supabase.auth.signInWithPassword({ email: emailLower, password }).catch(() => undefined);
 
   return {
     status: 'ok',
     result: {
       sessionUser: sessionUserFromProfile(profile),
       passwordChangeRecommended: profile.mustChangePassword,
-      authMode: 'legacy',
+      authMode,
     },
   };
+}
+
+export async function trySupabaseSignIn(_email: string, _password: string): Promise<boolean> {
+  return false;
+}
+
+export async function linkAuthUserId(
+  table: 'guards' | 'clients' | 'staff',
+  profileId: string,
+  authUserId: string
+): Promise<void> {
+  await supabase.from(table).update({ auth_user_id: authUserId }).eq('id', profileId);
+}
+
+export async function migratePasswordToHash(
+  table: 'guards' | 'clients' | 'staff',
+  profileId: string,
+  password: string
+): Promise<string> {
+  const passwordHash = await hashPassword(password);
+  await supabase.from(table).update({ password_hash: passwordHash, password: null }).eq('id', profileId);
+  return passwordHash;
+}
+
+export function authPathForProfile(profile: AuthProfile): AuthRole {
+  if (profile.table === 'clients' || profile.role === 'client') return 'client';
+  if (
+    profile.table === 'staff' ||
+    profile.guard?.isStaff === true ||
+    isStaffRole(profile.role)
+  ) {
+    return 'staff';
+  }
+  return 'guard';
+}
+
+export function profileMatchesAuthPath(profile: AuthProfile, expectedPath: AuthRole): boolean {
+  return authPathForProfile(profile) === expectedPath;
+}
+
+export async function signInWithCredentials(
+  email: string,
+  password: string,
+  guards: SecurityGuard[],
+  clients: Client[],
+  expectedPath?: AuthRole,
+  oneRoleCases: OneRoleCase[] = [],
+): Promise<SignInAttemptResult> {
+  const emailLower = email.trim().toLowerCase();
+  if (!emailLower) return { status: 'not_found' };
+
+  // Worker JWT login first. Roster preload often 401s while logged out, so local
+  // profile lookup alone cannot unlock staff/founder sign-in on Cloudflare.
+  const apiAuth = await supabase.auth.signInWithPassword({ email: emailLower, password });
+  if (!apiAuth.error && apiAuth.data?.user) {
+    const apiUser = apiAuth.data.user as {
+      id?: string;
+      email?: string;
+      role?: PlatformRole;
+      name?: string;
+    };
+    const profileId = typeof apiUser.id === 'string' ? apiUser.id : '';
+    let profile =
+      (profileId ? await fetchProfileById(profileId) : null) ??
+      (await resolveProfileForSignIn(emailLower, guards, clients));
+
+    if (
+      !profile &&
+      profileId &&
+      apiUser.role &&
+      (apiUser.role === 'client' ||
+        apiUser.role === 'guard' ||
+        isStaffRole(apiUser.role))
+    ) {
+      profile = minimalProfileFromApiUser({
+        id: profileId,
+        email: emailLower,
+        role: apiUser.role,
+        name: typeof apiUser.name === 'string' ? apiUser.name : undefined,
+      });
+    }
+
+    if (!profile) return { status: 'not_found' };
+    return finishSignInWithProfile(
+      profile,
+      password,
+      guards,
+      clients,
+      expectedPath,
+      oneRoleCases,
+      'supabase',
+    );
+  }
+
+  const apiMessage = (apiAuth.error?.message ?? '').toLowerCase();
+  const apiRejectedCredentials =
+    apiMessage.includes('invalid') ||
+    apiMessage.includes('credentials') ||
+    apiMessage.includes('unauthorized');
+
+  const profile = await resolveProfileForSignIn(emailLower, guards, clients);
+  if (!profile) {
+    if (apiRejectedCredentials) return { status: 'invalid_password' };
+    return { status: 'not_found' };
+  }
+
+  const passwordOk = await verifyStoredPassword(
+    profile.password,
+    profile.passwordHash ?? undefined,
+    password,
+  );
+  if (!passwordOk) return { status: 'invalid_password' };
+
+  // Best-effort JWT issuance after legacy password match.
+  void supabase.auth.signInWithPassword({ email: emailLower, password }).catch(() => undefined);
+
+  return finishSignInWithProfile(
+    profile,
+    password,
+    guards,
+    clients,
+    expectedPath,
+    oneRoleCases,
+    'legacy',
+  );
 }
 
 export async function signUpWithSupabaseAuth(

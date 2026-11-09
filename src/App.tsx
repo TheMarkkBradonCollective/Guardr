@@ -4177,6 +4177,8 @@ export default function App() {
     setPasswordChangePromptOpen(!!options?.passwordChangeRecommended);
     setIsAuthView(false);
     void writeAuditLog(user, 'sign_in', 'session', user.id);
+    // Roster preload 401s while logged out; reload now that JWT is in localStorage.
+    void loadFromSupabase();
   };
 
   const rememberOneRoleHold = (oneRoleCase: OneRoleCase) => {
@@ -4377,12 +4379,19 @@ export default function App() {
         documentVersion: CURRENT_LEGAL_VERSIONS[documentId],
       })
     );
-    if (isDbConnected && rows.length > 0) {
+    if (rows.length > 0) {
       const { error } = await supabase.from('user_legal_acceptances').upsert(rows, {
         onConflict: 'user_id,document_id,document_version',
-        ignoreDuplicates: true,
       });
-      if (error) console.warn('Legal acceptance save:', error);
+      if (error) {
+        console.warn('Legal acceptance save:', error);
+        const hasJwt =
+          typeof localStorage !== 'undefined' && Boolean(localStorage.getItem('guardr_api_jwt'));
+        // Logged-in accepts must persist; signup before JWT still keeps local keys.
+        if (hasJwt) {
+          throw new Error(error.message || 'Could not save marketplace agreement acceptance.');
+        }
+      }
     }
     setLegalAcceptanceKeys((prev) => {
       const next = new Set(prev);
@@ -13707,8 +13716,9 @@ export default function App() {
     ? resolveLegalAcceptanceUserIds(currentUser, verifiedGuards, clients)
     : [];
 
+  // Founder (platform owner) is exempt from the marketplace agreements gate.
   const marketplaceLegalGate =
-    currentUser && legalAcceptanceRole ? (
+    currentUser && legalAcceptanceRole && !isFounder(currentUser) ? (
       <LegalAcceptanceModal
         role={legalAcceptanceRole}
         userIds={legalAcceptanceUserIds}

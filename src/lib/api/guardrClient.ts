@@ -29,6 +29,7 @@ class ApiQueryBuilder {
   private upsertConflict: string | undefined;
   private wantMaybeSingle = false;
   private wantSingle = false;
+  private orExpr: string | null = null;
 
   constructor(private readonly table: string) {}
 
@@ -77,7 +78,8 @@ class ApiQueryBuilder {
     return this;
   }
 
-  or(_expr: string): this {
+  or(expr: string): this {
+    this.orExpr = expr;
     return this;
   }
 
@@ -120,27 +122,66 @@ class ApiQueryBuilder {
         sessionHeader = undefined;
       }
     }
-    const res = await fetch(apiUrl('/api/data/query'), {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        ...(token ? { authorization: `Bearer ${token}` } : {}),
-        ...(sessionHeader ? { 'x-guardr-session': sessionHeader } : {}),
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        table: this.table,
-        operation: this.operation,
-        columns: this.columns,
-        payload: this.payload ?? undefined,
-        filters: this.filters,
-        upsertConflict: this.upsertConflict,
-      }),
-    });
-    const json = (await res.json().catch(() => ({}))) as {
-      data?: unknown;
-      error?: { message: string; code?: string };
+
+    const request = async (filters: Filter[]) => {
+      const res = await fetch(apiUrl('/api/data/query'), {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+          ...(sessionHeader ? { 'x-guardr-session': sessionHeader } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          table: this.table,
+          operation: this.operation,
+          columns: this.columns,
+          payload: this.payload ?? undefined,
+          filters,
+          upsertConflict: this.upsertConflict,
+        }),
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: unknown;
+        error?: { message: string; code?: string };
+      };
+      return { res, json };
     };
+
+    // Worker /api/data/query only supports eq/neq/in. Emulate PostgREST or=
+    // "col.eq.val,col2.eq.val2" with sequential eq lookups for maybeSingle/select.
+    if (this.orExpr && this.operation === 'select') {
+      const parts = this.orExpr
+        .split(',')
+        .map((part) => part.trim())
+        .map((part) => {
+          const match = /^([^.]+)\.eq\.(.*)$/.exec(part);
+          return match ? { col: match[1], op: 'eq' as const, val: match[2] } : null;
+        })
+        .filter((part): part is { col: string; op: 'eq'; val: string } => part != null);
+
+      if (parts.length > 0) {
+        for (const part of parts) {
+          const { res, json } = await request([...this.filters, part]);
+          if (!res.ok) {
+            return { data: null, error: json.error ?? { message: 'Request failed' } };
+          }
+          const rows = Array.isArray(json.data) ? json.data : json.data ? [json.data] : [];
+          if (rows.length > 0) {
+            if (this.wantMaybeSingle || this.wantSingle) {
+              return { data: rows[0] ?? null, error: json.error ?? null };
+            }
+            return { data: rows, error: json.error ?? null };
+          }
+        }
+        if (this.wantMaybeSingle || this.wantSingle) {
+          return { data: null, error: null };
+        }
+        return { data: [], error: null };
+      }
+    }
+
+    const { res, json } = await request(this.filters);
     if (!res.ok) {
       return { data: null, error: json.error ?? { message: 'Request failed' } };
     }
