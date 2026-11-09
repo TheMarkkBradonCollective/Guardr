@@ -42,7 +42,7 @@ jobs:
           java-version: '21'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install dependencies
         run: npm ci
@@ -63,7 +63,14 @@ jobs:
         run: npm run apk:audit
         continue-on-error: true
 
+      - name: Require existing release signing secrets
+        if: env.ANDROID_KEYSTORE_READY != 'true'
+        run: |
+          echo "::error::ANDROID_UPLOAD_KEYSTORE_BASE64 or ANDROID_KEYSTORE_PASSWORD is missing. Refusing to create a new keystore or sign with the debug key."
+          exit 1
+
       - name: Build APKs
+        if: env.ANDROID_KEYSTORE_READY == 'true'
         run: npm run android:apk:all
         env:
           VITE_APP_URL: https://www.guardr.co

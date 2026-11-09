@@ -2,6 +2,8 @@ name: Cloudflare Android Release
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
     paths:
@@ -22,7 +24,23 @@ permissions:
   contents: write
 
 jobs:
+  signing-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require existing release signing secrets
+        env:
+          HAS_KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 != '' }}
+          HAS_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD != '' }}
+        run: |
+          if [ "$HAS_KEYSTORE" != "true" ] || [ "$HAS_STORE_PASSWORD" != "true" ]; then
+            echo "::error::ANDROID_UPLOAD_KEYSTORE_BASE64 or ANDROID_KEYSTORE_PASSWORD is missing. Refusing to create a new keystore or sign with the debug key."
+            exit 1
+          fi
+          echo "Release signing secrets are present."
+
   build-and-release:
+    needs: signing-secrets
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +55,7 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
 
       - name: Install dependencies
         run: npm ci
