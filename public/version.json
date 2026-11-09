@@ -1,14 +1,14 @@
 {
-  "webVersion": "1.1.0-cf-beta",
+  "webVersion": "1.0.135",
   "apk": {
     "ready": false,
-    "version": "1.1.0",
-    "versionCode": 110,
+    "version": "1.0.135",
+    "versionCode": 235,
     "url": "/guardr.apk",
-    "downloadName": "guardr-v1.1.0.apk",
+    "downloadName": "guardr-v1.0.135.apk",
     "fileSize": 0,
     "sha256": "",
-    "releaseNotes": "Neon Postgres + Cloudflare Worker backend, JWT auth, R2 uploads, GitHub Release APKs (v1.1.0-cf-beta). API at guardr.themarkkbrandoncollective-2d9.workers.dev."
+    "releaseNotes": "Firebase Cloud Messaging enabled for Guardr and Messenger Android builds (guardr-tmbc). Native push registers on launch when permission is granted; Worker reads FCM_SERVICE_ACCOUNT_JSON at runtime."
   },
-  "updatedAt": "2026-10-31T11:34:00.195Z"
+  "updatedAt": "2026-11-09T19:18:26.649Z"
 }

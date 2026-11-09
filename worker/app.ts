@@ -46,6 +46,8 @@ export type WorkerEnv = {
   STRIPE_WEBHOOK_SECRET?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
+  FCM_SERVICE_ACCOUNT_JSON?: string;
+  PUSH_INTERNAL_SECRET?: string;
   CRON_SECRET?: string;
   FILES: R2Bucket;
   ASSETS: Fetcher;

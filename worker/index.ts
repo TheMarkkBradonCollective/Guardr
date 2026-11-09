@@ -11,6 +11,10 @@ function applyEnv(env: WorkerEnv): void {
   if (env.STRIPE_WEBHOOK_SECRET) process.env.STRIPE_WEBHOOK_SECRET = env.STRIPE_WEBHOOK_SECRET;
   if (env.VAPID_PUBLIC_KEY) process.env.VAPID_PUBLIC_KEY = env.VAPID_PUBLIC_KEY;
   if (env.VAPID_PRIVATE_KEY) process.env.VAPID_PRIVATE_KEY = env.VAPID_PRIVATE_KEY;
+  if (env.FCM_SERVICE_ACCOUNT_JSON) {
+    process.env.FCM_SERVICE_ACCOUNT_JSON = env.FCM_SERVICE_ACCOUNT_JSON;
+  }
+  if (env.PUSH_INTERNAL_SECRET) process.env.PUSH_INTERNAL_SECRET = env.PUSH_INTERNAL_SECRET;
   if (env.CRON_SECRET) process.env.CRON_SECRET = env.CRON_SECRET;
 }
 

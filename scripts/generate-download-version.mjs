@@ -24,6 +24,8 @@ const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
 
 const RELEASE_NOTES = {
+  '1.0.135':
+    'Firebase Cloud Messaging enabled for Guardr and Messenger Android builds (guardr-tmbc). Native push registers on launch when permission is granted; Worker reads FCM_SERVICE_ACCOUNT_JSON at runtime.',
   '1.1.0':
     'Neon Postgres + Cloudflare Worker backend, JWT auth, R2 uploads, GitHub Release APKs (v1.1.0-cf-beta). API at guardr.themarkkbrandoncollective-2d9.workers.dev.',
   '1.0.134':
@@ -160,10 +162,21 @@ await writeFile(
   `${JSON.stringify(catalogManifest, null, 2)}\n`,
 );
 
+const messengerVersionName = '1.1.2';
+const messengerVersionCode = 233;
+
 const gradlePath = path.join(ROOT, 'android/app/build.gradle');
 let gradle = await readFile(gradlePath, 'utf8');
-gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`);
-gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "${version}"`);
+gradle = gradle.replace(/def guardrVersionCode = \d+/, `def guardrVersionCode = ${versionCode}`);
+gradle = gradle.replace(/def guardrVersionName = "[^"]+"/, `def guardrVersionName = "${version}"`);
+gradle = gradle.replace(
+  /def messengerVersionCode = \d+/,
+  `def messengerVersionCode = ${messengerVersionCode}`,
+);
+gradle = gradle.replace(
+  /def messengerVersionName = "[^"]+"/,
+  `def messengerVersionName = "${messengerVersionName}"`,
+);
 await writeFile(gradlePath, gradle);
 
 const swPath = path.join(ROOT, 'public/sw.js');
