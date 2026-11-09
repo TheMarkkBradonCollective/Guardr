@@ -851,7 +851,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     } else if (event.type === 'payment_intent.succeeded') {
       const intent = event.data.object as Stripe.PaymentIntent;
-      if (intent.metadata?.job_id) {
+      const checkoutType = String(intent.metadata?.checkout_type ?? '');
+      if (intent.metadata?.job_id && !['cash_deposit', 'overtime', 'schedule_change', 'tip'].includes(checkoutType)) {
         const verified = await db.query(
           `SELECT id, status FROM public.payments
            WHERE stripe_payment_intent_id = $1
