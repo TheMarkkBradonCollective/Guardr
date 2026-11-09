@@ -119,7 +119,8 @@ async function markCashDeposit(
   jobId: string,
   paymentIntentId: string | null,
   sessionId: string,
-  amountCents: number
+  amountCents: number,
+  eventId: string
 ) {
   const db = await getSupabaseAdmin();
   if (!db) return;
@@ -135,27 +136,31 @@ async function markCashDeposit(
   if (!job || job.client_payment_method !== 'cash') return;
 
   const depositAmount = amountCents / 100;
-  const currentDeposited = Number(job.cash_deposited_amount ?? 0);
-  const newDeposited = Math.round((currentDeposited + depositAmount) * 100) / 100;
-  const requiredTotal = computeRequiredCashDeposit(
-    job as {
-      estimated_payout: number;
-      duration_hours: number;
-      platform_fee_per_hour?: number | null;
-      guard_payout_method?: string | null;
-    }
-  );
-  const fullyDeposited = newDeposited >= requiredTotal - 0.01;
   const depositedAt = new Date().toISOString();
 
-  await db
-    .from('security_requests')
-    .update({
-      cash_deposited_amount: newDeposited,
-      cash_deposited_to_stripe: fullyDeposited,
-      cash_deposited_at: depositedAt,
-    })
-    .eq('id', jobId);
+  // The job total is incremented only if this exact Stripe event has not already
+  // been applied. The marker and amount update happen in one PostgreSQL statement.
+  const applied = await db.query(
+    `UPDATE public.security_requests
+     SET cash_deposited_amount = ROUND((COALESCE(cash_deposited_amount, 0) + $1)::numeric, 2),
+         cash_deposited_to_stripe = (
+           COALESCE(cash_deposited_amount, 0) + $1 >=
+           CASE
+             WHEN guard_payout_method = 'cash'
+               THEN COALESCE(duration_hours, 0) * COALESCE(platform_fee_per_hour, 5)
+             ELSE COALESCE(estimated_payout, 0)
+           END - 0.01
+         ),
+         cash_deposited_at = $3,
+         cash_deposit_stripe_event_ids =
+           COALESCE(cash_deposit_stripe_event_ids, '[]'::jsonb) || jsonb_build_array($2)
+     WHERE id = $4
+       AND client_payment_method = 'cash'
+       AND NOT (COALESCE(cash_deposit_stripe_event_ids, '[]'::jsonb) @> jsonb_build_array($2))
+     RETURNING cash_deposited_amount, cash_deposited_to_stripe`,
+    [depositAmount, eventId, depositedAt, jobId]
+  );
+  if (applied.error) throw new Error(applied.error.message);
 
   const { data: existing } = await db
     .from('payments')
@@ -164,7 +169,7 @@ async function markCashDeposit(
     .maybeSingle();
 
   if (existing?.id) {
-    await db
+    const updated = await db
       .from('payments')
       .update({
         status: 'paid',
@@ -174,9 +179,10 @@ async function markCashDeposit(
         updated_at: depositedAt,
       })
       .eq('id', existing.id);
+    if (updated.error) throw new Error(updated.error.message);
   } else {
-    await db.from('payments').insert({
-      id: `pay-deposit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    const inserted = await db.from('payments').insert({
+      id: `pay-deposit-${sessionId}`,
       job_id: jobId,
       amount: depositAmount,
       stripe_session_id: sessionId,
@@ -184,11 +190,14 @@ async function markCashDeposit(
       status: 'paid',
       payment_method: 'stripe',
     });
+    if (inserted.error) throw new Error(inserted.error.message);
   }
 
-  if (fullyDeposited) {
+  const fullyDeposited = Boolean(applied.data?.[0]?.cash_deposited_to_stripe);
+  if (applied.data?.length && fullyDeposited) {
     try {
       const { notifyPaymentAttention } = await import('../../../push/paymentNotifications');
+      const newDeposited = Number(applied.data[0].cash_deposited_amount ?? 0);
       await notifyPaymentAttention(db, {
         requestId: jobId,
         body: `Cash deposit completed for job — $${newDeposited.toFixed(2)} received via Stripe`,
@@ -539,7 +548,7 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
           : session.payment_intent?.id ?? null;
 
       if (session.metadata?.checkout_type === 'cash_deposit') {
-        await markCashDeposit(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
+        await markCashDeposit(jobId, paymentIntentId, session.id, session.amount_total ?? 0, event.id);
       } else if (session.metadata?.checkout_type === 'overtime') {
         await markOvertimePaid(jobId, paymentIntentId, session.id, session.amount_total ?? 0);
       } else if (session.metadata?.checkout_type === 'schedule_change') {
