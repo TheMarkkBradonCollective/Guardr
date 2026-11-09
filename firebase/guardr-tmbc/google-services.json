@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1069740414204",
+    "project_id": "guardr-tmbc",
+    "storage_bucket": "guardr-tmbc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069740414204:android:70acfa8347f7941a11b379",
+        "android_client_info": {
+          "package_name": "com.tmbcworks.guardr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4hLhpkv9zlpQMEMthArTJe_Y230Pk5O0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069740414204:android:5268bf11a19d6f0e11b379",
+        "android_client_info": {
+          "package_name": "com.tmbcworks.guardr.messenger"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4hLhpkv9zlpQMEMthArTJe_Y230Pk5O0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

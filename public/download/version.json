@@ -1,9 +1,9 @@
 {
-  "webVersion": "1.1.0-cf-beta",
-  "apkVersion": "1.1.0-cf-beta",
-  "apkVersionCode": 110,
-  "apkUrl": "/download/guardr.apk?v=110",
-  "apkDirectUrl": "https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Guard.apk?v=110",
+  "webVersion": "1.0.135",
+  "apkVersion": "1.0.135",
+  "apkVersionCode": 235,
+  "apkUrl": "/download/guardr.apk?v=235",
+  "apkDirectUrl": "https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Guard.apk?v=235",
   "appsZipUrl": "https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-All-APKs.zip",
   "appsZipDirectUrl": "https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-All-APKs.zip",
   "apkApps": {
@@ -11,5 +11,5 @@
     "guard": "https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Guard.apk",
     "staff": "https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Staff.apk"
   },
-  "updatedAt": "2026-10-31T11:34:00.195Z"
+  "updatedAt": "2026-11-09T19:18:26.649Z"
 }

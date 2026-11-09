@@ -12,13 +12,20 @@ import { fileURLToPath } from 'node:url';
 const ROOT = process.cwd();
 const servicesPath = path.join(ROOT, 'android/app/google-services.json');
 const secretsPath = path.join(ROOT, 'secrets/google-services.json');
+const bundledPath = path.join(ROOT, 'firebase/guardr-tmbc/google-services.json');
 const EXPECTED_PACKAGE = 'com.tmbcworks.guardr';
 
+function hasGuardrAndroidClient(json) {
+  return (json.client ?? []).some(
+    (entry) =>
+      entry.client_info?.android_client_info?.package_name === EXPECTED_PACKAGE,
+  );
+}
+
 function validateGoogleServices(json) {
-  const pkg = json.client?.[0]?.client_info?.android_client_info?.package_name;
-  if (pkg !== EXPECTED_PACKAGE) {
+  if (!hasGuardrAndroidClient(json)) {
     throw new Error(
-      `google-services.json package_name must be ${EXPECTED_PACKAGE}, got ${pkg ?? 'undefined'}`,
+      `google-services.json must include an Android client for ${EXPECTED_PACKAGE}`,
     );
   }
 }
@@ -53,6 +60,20 @@ export async function writeGoogleServicesFromEnv() {
       await mkdir(path.dirname(servicesPath), { recursive: true });
       await writeFile(servicesPath, `${JSON.stringify(json, null, 2)}\n`);
       console.log(`Firebase config: copied secrets/google-services.json → android/app/`);
+      return true;
+    }
+    if (existsSync(bundledPath)) {
+      const bundledRaw = readFileSync(bundledPath, 'utf8');
+      let json;
+      try {
+        json = JSON.parse(bundledRaw);
+      } catch (error) {
+        throw new Error(`firebase/guardr-tmbc/google-services.json is not valid JSON: ${error.message}`);
+      }
+      validateGoogleServices(json);
+      await mkdir(path.dirname(servicesPath), { recursive: true });
+      await writeFile(servicesPath, `${JSON.stringify(json, null, 2)}\n`);
+      console.log('Firebase config: copied firebase/guardr-tmbc/google-services.json → android/app/');
       return true;
     }
     return false;

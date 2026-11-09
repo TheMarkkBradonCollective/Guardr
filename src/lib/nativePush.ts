@@ -235,12 +235,20 @@ export async function waitForNativePushRegistration(timeoutMs = 20000): Promise<
 export async function restoreNativePushIfEnabled(): Promise<void> {
   if (!isNativePushPlatform() || !isNativeFcmConfigured()) return;
 
-  const permission = await getNativePushPermission();
-  const token = getStoredNativePushToken();
-  syncNativePushLocalState(permission, token);
+  initNativePushBridge();
 
-  // Never call PushNotifications.register() on cold boot — it can crash the WebView
-  // when Firebase is misconfigured. Registration happens only from Settings toggle.
+  const permission = await getNativePushPermission();
+  const existingToken = getStoredNativePushToken();
+  syncNativePushLocalState(permission, existingToken);
+
+  if (permission !== 'granted') return;
+
+  try {
+    const token = await waitForNativePushRegistration();
+    syncNativePushLocalState(permission, token);
+  } catch (error) {
+    console.warn('[native-push] launch registration failed:', error);
+  }
 }
 
 export async function resolveNativePushToggleState(): Promise<{

@@ -19,6 +19,11 @@ android {
     }
     defaultConfig {
         def productApp = (findProperty('guardrProductApp') ?: '').toString().trim()
+        // Synced via npm run generate:download-version (messenger track is independent of package.json).
+        def guardrVersionCode = 235
+        def guardrVersionName = "1.0.135"
+        def messengerVersionCode = 233
+        def messengerVersionName = "1.1.2"
         def roleApplicationIds = [
             client: 'com.tmbcworks.guardr.client',
             guard: 'com.tmbcworks.guardr.guard',
@@ -36,9 +41,8 @@ android {
             : 'com.tmbcworks.guardr')
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // Keep in sync with package.json via npm run generate:download-version
-        versionCode 110
-        versionName "1.1.0-cf-beta"
+        versionCode (productApp == 'messenger' ? messengerVersionCode : guardrVersionCode)
+        versionName (productApp == 'messenger' ? messengerVersionName : guardrVersionName)
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "PRODUCT_APP", "\"${productApp}\""
         if (roleLabels.containsKey(productApp)) {

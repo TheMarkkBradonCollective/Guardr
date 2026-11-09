@@ -78,10 +78,12 @@ try {
 }
 
 const gradle = await readText('android/app/build.gradle').catch(() => '');
-const versionNameMatch = gradle.match(/versionName\s+"([^"]+)"/);
-const versionCodeMatch = gradle.match(/versionCode\s+(\d+)/);
+const versionNameMatch =
+  gradle.match(/def guardrVersionName = "([^"]+)"/) ?? gradle.match(/versionName\s+"([^"]+)"/);
+const versionCodeMatch =
+  gradle.match(/def guardrVersionCode = (\d+)/) ?? gradle.match(/versionCode\s+(\d+)/);
 if (!versionNameMatch) {
-  fail('android/app/build.gradle missing versionName');
+  fail('android/app/build.gradle missing guardrVersionName / versionName');
 } else if (versionNameMatch[1] !== webVersion) {
   fail(`build.gradle versionName ${versionNameMatch[1]} !== package.json ${webVersion}`);
 }

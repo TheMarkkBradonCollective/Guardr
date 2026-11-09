@@ -34,9 +34,17 @@ export async function patchGoogleServicesPackage(packageName) {
   if (!existsSync(SERVICES_PATH)) return null;
   const original = await readFile(SERVICES_PATH, 'utf8');
   const json = JSON.parse(original);
-  for (const client of json.client ?? []) {
-    if (client.client_info?.android_client_info) {
-      client.client_info.android_client_info.package_name = packageName;
+  const clients = json.client ?? [];
+  const matching = clients.filter(
+    (client) => client.client_info?.android_client_info?.package_name === packageName,
+  );
+  if (matching.length > 0) {
+    json.client = matching;
+  } else {
+    for (const client of clients) {
+      if (client.client_info?.android_client_info) {
+        client.client_info.android_client_info.package_name = packageName;
+      }
     }
   }
   await writeFile(SERVICES_PATH, `${JSON.stringify(json, null, 2)}\n`);
