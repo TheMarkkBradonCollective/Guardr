@@ -1,9 +1,9 @@
 # Guardr — Company Information Package
 
-> **Current infrastructure:** Guardr is moving to a lower-cost Cloudflare + Neon architecture. Cloudflare provides application/API runtime and R2 object storage; Neon provides managed PostgreSQL. The current beta API endpoint is `https://guardr.themarkkbrandoncollective-2d9.workers.dev`. Verify production-domain routing against the live deployment before external reliance.
+> **Current infrastructure:** Guardr now uses a lower-cost Cloudflare + Neon architecture. Cloudflare provides application/API runtime and R2 object storage; Neon provides managed PostgreSQL. The current beta API endpoint is `https://guardr.themarkkbrandoncollective-2d9.workers.dev`. Verify production-domain routing against the live deployment before external reliance.
 
 **Prepared for:** Legal counsel, advisors, investors, partners, and other stakeholders  
-**Legal entity:** Signature Security Specialist, LLC  
+**Planned legal entity:** Signature Security Specialist, LLC  
 **Product:** Guardr — [guardr.co](https://guardr.co)  
 **Tagline:** *Anytime. Anywhere. Security, When You Need It.*  
 **Document version:** 1.0  
@@ -13,7 +13,7 @@
 
 ## How to Use This Document
 
-This is a **head-to-toe informational briefing** on Signature Security Specialist, LLC and its Guardr platform. It is designed to be handed to:
+This is a **head-to-toe informational briefing** on the planned Signature Security Specialist, LLC and its Guardr platform. It is designed to be handed to:
 
 - **Legal advisors** — entity structure, marketplace positioning, regulatory context, agreements, and risk areas
 - **General business advisors** — strategy, operations, market, and organizational model
@@ -40,8 +40,9 @@ Build PDFs: `npm run docs:stakeholder-pdf`. In the staff app: **Resources → Co
 
 | Field | Detail |
 |-------|--------|
-| **Legal name** | Signature Security Specialist, LLC |
-| **Entity type** | Limited Liability Company (LLC) |
+| **Planned legal name** | Signature Security Specialist, LLC |
+| **Entity formation status** | Planned; LLC formation documents not yet confirmed on file |
+| **Entity type** | Planned California Limited Liability Company (LLC) |
 | **State of operation** | California (BSIS-aligned) |
 | **PPO licensing status** | Planned for Signature Security Specialist, LLC; not represented as issued or active |
 | **State of formation** | (Gap — provide articles of organization / state of filing) |
@@ -113,7 +114,7 @@ Become the trusted compliance-first marketplace for independent security profess
 ## 4. Corporate Structure
 
 ```
-Signature Security Specialist, LLC
+Planned: Signature Security Specialist, LLC
 └── Guardr (product brand)
     ├── Marketplace participants (independent contractors)
     │   ├── Guards — independent contractors per job (ICA)
