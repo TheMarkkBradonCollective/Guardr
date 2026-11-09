@@ -933,6 +933,7 @@ export function RequestSecurityFlow({
                 estimatedPayout={estimatedTotal}
                 guardPay={guardPay}
                 platformFeeTotal={platformFeeTotal}
+                guardsNeeded={selectedFavoriteGuardId ? 1 : effectiveGuards}
               />
             </div>
           </div>
