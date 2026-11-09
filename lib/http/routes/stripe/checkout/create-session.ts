@@ -81,9 +81,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       ],
       payment_intent_data: {
-        metadata: { job_id: jobId },
+        metadata: { job_id: jobId, checkout_type: 'job_payment' },
       },
-      metadata: { job_id: jobId },
+      metadata: { job_id: jobId, checkout_type: 'job_payment' },
       success_url: `${base}/client/invoices?payment=success&job_id=${jobId}`,
       cancel_url: `${base}/client/invoices?payment=cancelled&job_id=${jobId}`,
     });

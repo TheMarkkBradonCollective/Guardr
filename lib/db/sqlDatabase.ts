@@ -291,6 +291,8 @@ function quoteIdent(name: string): string {
 }
 
 export interface SqlDatabase {
+  /** Execute a parameterized server-side SQL statement. Never pass untrusted SQL fragments. */
+  query(sql: string, params?: unknown[]): Promise<DbResult<Record<string, unknown>[]>>;
   from(table: string): {
     select(cols?: string): QueryBuilder;
     insert(row: Record<string, unknown> | Record<string, unknown>[]): QueryBuilder;
@@ -302,6 +304,15 @@ export interface SqlDatabase {
 
 export function createSqlDatabase(run: SqlQueryFn): SqlDatabase {
   return {
+    async query(sql, params = []) {
+      try {
+        const result = await run(sql, params);
+        return { data: result.rows, error: null, count: result.rowCount };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Query failed';
+        return { data: null, error: { message } };
+      }
+    },
     from(table: string) {
       return {
         select(cols = '*') {
