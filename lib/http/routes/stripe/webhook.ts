@@ -669,6 +669,99 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
   }
 }
 
+async function recordStripeReceipt(
+  db: Awaited<ReturnType<typeof getSupabaseAdmin>>,
+  event: Stripe.Event
+): Promise<void> {
+  if (!db) throw new Error('Billing database is unavailable');
+
+  let objectId: string;
+  let paymentIntentId: string | null;
+  let sessionId: string | null = null;
+  let jobId: string | null;
+  let amountMinor: number;
+  let currency: string;
+  let checkoutType = 'job_payment';
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    if (session.payment_status !== 'paid' && session.payment_status !== 'no_payment_required') return;
+    objectId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? session.id;
+    paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null;
+    sessionId = session.id;
+    jobId = session.metadata?.job_id ?? null;
+    amountMinor = session.amount_total ?? 0;
+    currency = session.currency ?? 'usd';
+    checkoutType = session.metadata?.checkout_type ?? 'job_payment';
+  } else if (event.type === 'payment_intent.succeeded') {
+    const intent = event.data.object as Stripe.PaymentIntent;
+    checkoutType = intent.metadata?.checkout_type ?? 'job_payment';
+    // Checkout-specific handlers use the canonical session event to avoid
+    // recording the same underlying payment before its payment row is linked.
+    if (['cash_deposit', 'overtime', 'schedule_change', 'tip'].includes(checkoutType)) return;
+    objectId = intent.id;
+    paymentIntentId = intent.id;
+    jobId = intent.metadata?.job_id ?? null;
+    amountMinor = intent.amount_received ?? intent.amount;
+    currency = intent.currency ?? 'usd';
+  } else {
+    return;
+  }
+
+  if (!jobId || !Number.isSafeInteger(amountMinor) || amountMinor <= 0) return;
+
+  const payment = await db.query(
+    `SELECT id, status FROM public.payments
+     WHERE ($1::text IS NOT NULL AND stripe_session_id = $1)
+        OR ($2::text IS NOT NULL AND stripe_payment_intent_id = $2)
+     ORDER BY created_at DESC LIMIT 1`,
+    [sessionId, paymentIntentId]
+  );
+  if (payment.error || !payment.data?.length) {
+    throw new Error(payment.error?.message ?? 'Paid Stripe transaction has no linked payment record');
+  }
+
+  const job = await db.query(
+    `SELECT client_id, assigned_guard_id FROM public.security_requests WHERE id = $1 LIMIT 1`,
+    [jobId]
+  );
+  if (job.error || !job.data?.length) {
+    throw new Error(job.error?.message ?? 'Paid Stripe transaction references an unknown job');
+  }
+
+  const entryType = checkoutType === 'tip' ? 'pass_through' : 'client_charge';
+  const ledger = await db.query(
+    `INSERT INTO public.financial_ledger_entries (
+       id, job_id, payment_id, guard_id, client_id, stripe_event_id,
+       stripe_object_id, entry_type, direction, amount_minor, currency,
+       idempotency_key, metadata
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'credit', $9, $10, $11, $12::jsonb)
+     ON CONFLICT (idempotency_key) DO NOTHING
+     RETURNING id`,
+    [
+      `ledger-${event.id}`,
+      jobId,
+      payment.data[0].id,
+      job.data[0].assigned_guard_id ?? null,
+      job.data[0].client_id ?? null,
+      event.id,
+      objectId,
+      entryType,
+      amountMinor,
+      currency.toUpperCase(),
+      `stripe-receipt:${objectId}`,
+      JSON.stringify({
+        stripe_event_type: event.type,
+        checkout_type: checkoutType,
+        stripe_session_id: sessionId,
+        stripe_payment_intent_id: paymentIntentId,
+        allocation_status: 'gross_receipt_recorded',
+      }),
+    ]
+  );
+  if (ledger.error) throw new Error(ledger.error.message);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -770,6 +863,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
     }
+
+    await recordStripeReceipt(db, event);
 
     const completed = await db.query(
       `UPDATE public.stripe_webhook_events
