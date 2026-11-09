@@ -527,6 +527,9 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
+      if (session.payment_status !== 'paid' && session.payment_status !== 'no_payment_required') {
+        break;
+      }
       const jobId = session.metadata?.job_id;
       if (!jobId) break;
 
@@ -572,32 +575,10 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
       }
 
       if (intent.metadata?.checkout_type === 'overtime') {
+        // Checkout Session completion applies the overtime schedule change.
+        // This event only confirms payment, preventing the same hours being added twice.
         const db = await getSupabaseAdmin();
         if (db) {
-          const { data: job } = await db
-            .from('security_requests')
-            .select(
-              'scheduled_duration_hours, scheduled_estimated_payout, overtime_hours, overtime_amount, duration_hours, estimated_payout'
-            )
-            .eq('id', jobId)
-            .maybeSingle();
-
-          const scheduledDuration = Number(job?.scheduled_duration_hours ?? job?.duration_hours ?? 0);
-          const scheduledPayout = Number(job?.scheduled_estimated_payout ?? job?.estimated_payout ?? 0);
-          const overtimeHours = Number(job?.overtime_hours ?? 0);
-          const overtimeAmount = Number(job?.overtime_amount ?? 0);
-
-          await db
-            .from('security_requests')
-            .update({
-              overtime_payment_status: 'paid',
-              overtime_status: 'paid',
-              overtime_client_payment_method: 'stripe',
-              duration_hours: Math.round((scheduledDuration + overtimeHours) * 100) / 100,
-              estimated_payout: Math.round((scheduledPayout + overtimeAmount) * 100) / 100,
-            })
-            .eq('id', jobId);
-
           await db
             .from('payments')
             .update({
@@ -726,6 +707,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
        last_error = NULL,
        last_attempt_at = NOW()
      WHERE public.stripe_webhook_events.processing_status IN ('received', 'failed')
+        OR (
+          public.stripe_webhook_events.processing_status = 'processing'
+          AND public.stripe_webhook_events.last_attempt_at < NOW() - INTERVAL '10 minutes'
+        )
      RETURNING event_id`,
     [
       event.id,
@@ -747,6 +732,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     await processStripeWebhookEvent(event);
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (session.payment_status === 'paid' || session.payment_status === 'no_payment_required') {
+        const paymentIntentId = typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : session.payment_intent?.id ?? null;
+        const verified = await db.query(
+          `SELECT id, status FROM public.payments
+           WHERE stripe_session_id = $1
+              OR ($2::text IS NOT NULL AND stripe_payment_intent_id = $2)
+           ORDER BY created_at DESC LIMIT 1`,
+          [session.id, paymentIntentId]
+        );
+        if (verified.error || !verified.data?.length || !['paid', 'released'].includes(String(verified.data[0].status))) {
+          throw new Error(verified.error?.message ?? 'Stripe Checkout payment was not durably recorded');
+        }
+      }
+    } else if (event.type === 'payment_intent.succeeded') {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      if (intent.metadata?.job_id) {
+        const verified = await db.query(
+          `SELECT id, status FROM public.payments
+           WHERE stripe_payment_intent_id = $1
+           ORDER BY created_at DESC LIMIT 1`,
+          [intent.id]
+        );
+        if (verified.error || !verified.data?.length || !['paid', 'released'].includes(String(verified.data[0].status))) {
+          throw new Error(verified.error?.message ?? 'Stripe PaymentIntent was not durably recorded');
+        }
+      }
+    }
+
     const completed = await db.query(
       `UPDATE public.stripe_webhook_events
        SET processing_status = 'processed', processed_at = NOW(), last_error = NULL
