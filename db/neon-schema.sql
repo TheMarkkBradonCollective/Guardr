@@ -1523,48 +1523,6 @@ BEGIN
   END LOOP;
 END $$;
 
--- ── OPTIONAL: Founder and Director staff accounts ───────────────────────────────
-INSERT INTO staff (
-  id, name, email, badge_number, avatar, phone, bio,
-  headline, summary, about, specialties,
-  staff_role, user_status
-) VALUES
-  (
-    'staff-director',
-    'M. White',
-    'm.white@signaturesecurityspecialist.com',
-    'OWN-00001',
-    '', '',
-    'Founder — Platform governance.',
-    'Founder & Platform Governance',
-    'Oversees Guardr strategy, staff governance, and the standards we hold every market to.',
-    'Markeith White founded Guardr to bring licensed security professionals and clients together on one accountable platform. He sets platform policy, approves executive staff, and keeps city rollouts aligned with how the field actually operates.',
-    '["Team leadership", "City markets", "Analytics & reporting"]'::jsonb,
-    'Founder', 'active'
-  ),
-  (
-    'staff-director-tyrone',
-    'Tyrone Johnson',
-    't.johnson@signaturesecurityspecialist.com',
-    'DIR-00001',
-    '', '',
-    'Director — Platform operations.',
-    'Director of Platform Operations',
-    'Runs day-to-day operations — guard verification, job flow, payouts, and the command center the team works from.',
-    'Tyrone keeps Guardr moving: credential reviews, job approvals, disputes, and the financial rails guards and clients depend on. He is the escalation point when markets need a steady hand.',
-    '["Guard verification", "Job operations", "Payments & payouts", "Disputes & incidents"]'::jsonb,
-    'Director', 'active'
-  )
-ON CONFLICT (email) DO UPDATE SET
-  name = EXCLUDED.name,
-  badge_number = EXCLUDED.badge_number,
-  staff_role = EXCLUDED.staff_role,
-  headline = EXCLUDED.headline,
-  summary = EXCLUDED.summary,
-  about = EXCLUDED.about,
-  specialties = EXCLUDED.specialties,
-  user_status = 'active';
-
 INSERT INTO staff (
   id, name, first_name, middle_name, last_name, email, badge_number,
   avatar, phone, bio, staff_role, user_status, password, must_change_password,
