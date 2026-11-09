@@ -16,6 +16,8 @@ function applyEnv(env: WorkerEnv): void {
   }
   if (env.PUSH_INTERNAL_SECRET) process.env.PUSH_INTERNAL_SECRET = env.PUSH_INTERNAL_SECRET;
   if (env.CRON_SECRET) process.env.CRON_SECRET = env.CRON_SECRET;
+  if (env.APP_URL) process.env.APP_URL = env.APP_URL;
+  if (env.VITE_APP_URL) process.env.VITE_APP_URL = env.VITE_APP_URL;
 }
 
 async function runCron(path: string, env: WorkerEnv): Promise<void> {
