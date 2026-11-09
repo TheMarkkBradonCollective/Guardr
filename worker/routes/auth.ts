@@ -149,7 +149,7 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
     return c.json({
       session: {
         access_token: token,
-        user: { id: payload.profileId, email: payload.email },
+        user: { id: payload.profileId, email: payload.email, role: payload.role },
       },
     });
   });
