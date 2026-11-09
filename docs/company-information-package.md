@@ -272,7 +272,8 @@ Draft → Pending Review → Open → Accepted → In Progress → Completed →
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 19, Vite 6, Tailwind CSS 4, Base Web |
-| Backend / API | Cloudflare Workers |\n| Database | Neon managed PostgreSQL |
+| Backend / API | Cloudflare Workers |
+| Database | Neon managed PostgreSQL |
 | Auth | Worker JWT + PBKDF2 (`users` table, `/api/auth/*`) |
 | Payments | Stripe Connect (primary); Square also integrated |
 | Maps | Leaflet + react-leaflet |
