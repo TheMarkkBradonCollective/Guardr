@@ -13,6 +13,7 @@ interface JobBillingSummaryProps {
   guardPay?: number;
   platformFeePerHour?: number;
   platformFeeTotal?: number;
+  guardsNeeded?: number;
 }
 
 function BillingMetric({
@@ -40,19 +41,31 @@ export function JobBillingSummary({
   guardPay: guardPayProp,
   platformFeePerHour,
   platformFeeTotal,
+  guardsNeeded = 1,
 }: JobBillingSummaryProps) {
   const guardRate =
     guardPayProp ?? (hourlyRate != null ? computeGuardPay(hourlyRate, platformFeePerHour) : 0);
-  const guardEarns = Math.round(durationHours * guardRate * 100) / 100;
-  const platformRate = platformFeePerHour ?? PLATFORM_FEE_PER_HOUR;
+  const guardCount = Math.max(1, guardsNeeded);
+  const guardEarns = Math.round(durationHours * guardRate * guardCount * 100) / 100;
+  const platformRate =
+    platformFeePerHour ?? (hourlyRate != null ? Math.max(0, hourlyRate - guardRate) : PLATFORM_FEE_PER_HOUR);
   const platformFee =
-    platformFeeTotal ?? Math.round(platformRate * durationHours * 100) / 100;
+    platformFeeTotal ?? Math.round(platformRate * durationHours * guardCount * 100) / 100;
 
   if (variant === 'guard') {
     return (
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <BillingMetric label="Guard rate" value={`$${guardRate}/hr`} />
-        <BillingMetric label="Guard earns" value={`$${guardEarns}`} accent />
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+          <BillingMetric label="Your rate" value={`${guardRate.toFixed(2)}/hr`} />
+          <BillingMetric label="Your estimated earnings" value={`${guardEarns.toFixed(2)}`} accent />
+        </div>
+        {hourlyRate != null && (
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-brand-text-muted border-t border-brand-border pt-2">
+            <span>Agreed client rate: <strong className="text-brand-text">${hourlyRate.toFixed(2)}/hr</strong></span>
+            <span>Platform fee: <strong className="text-brand-text">${platformRate.toFixed(2)}/hr</strong></span>
+          </div>
+        )}
+        <p className="text-[11px] text-brand-text-muted">Your rate is the client rate less the disclosed platform fee. The saved job terms control this assignment.</p>
       </div>
     );
   }
@@ -60,17 +73,17 @@ export function JobBillingSummary({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
-        <BillingMetric label="Client rate" value={`$${hourlyRate}/hr`} />
-        <BillingMetric label="Client bill" value={`$${estimatedPayout}`} />
-        <BillingMetric label="Guard rate" value={`$${guardRate}/hr`} />
-        <BillingMetric label="Guard earns" value={`$${guardEarns}`} accent />
+        <BillingMetric label="Client rate" value={`${(hourlyRate ?? 0).toFixed(2)}/hr`} />
+        <BillingMetric label="Client bill" value={`${(estimatedPayout ?? 0).toFixed(2)}`} />
+        <BillingMetric label="Guard rate" value={`${guardRate.toFixed(2)}/hr`} />
+        <BillingMetric label="Guard earnings" value={`${guardEarns.toFixed(2)}`} accent />
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">
         <span>
-          Platform rate: <strong className="text-brand-text">${platformRate}/hr</strong>
+          Platform fee per hour: <strong className="text-brand-text">${platformRate.toFixed(2)}/hr</strong>
         </span>
         <span>
-          Platform fee: <strong className="text-brand-text">${platformFee}</strong>
+          Total platform fee (informational; included in client rate): <strong className="text-brand-text">${platformFee.toFixed(2)}</strong>
         </span>
       </div>
     </div>
@@ -97,6 +110,8 @@ export function JobBillingSummaryFromRequest({
         estimatedPayout={hasOvertime && !overtimeSettled ? scheduledPayout : req.estimatedPayout}
         guardPay={req.guardPay}
         platformFeePerHour={req.platformFeePerHour}
+        platformFeeTotal={(req.platformFeePerHour ?? Math.max(0, req.hourlyRate - (req.guardPay ?? computeGuardPay(req.hourlyRate, req.platformFeePerHour)))) * (hasOvertime && !overtimeSettled ? (req.scheduledDurationHours ?? req.durationHours) : req.durationHours) * Math.max(1, req.guardsNeeded ?? 1)}
+        guardsNeeded={req.guardsNeeded ?? 1}
       />
       {hasOvertime && (
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">
@@ -147,12 +162,14 @@ export function JobBillingSummaryFromRequest({
 export function JobBillingSummaryFromGuardJob({
   job,
 }: {
-  job: Pick<GuardJobView, 'guardPay' | 'durationHours'>;
+  job: Pick<GuardJobView, 'guardPay' | 'durationHours' | 'hourlyRate' | 'platformFeePerHour'>;
 }) {
   return (
     <JobBillingSummary
       variant="guard"
       durationHours={job.durationHours}
+      hourlyRate={job.hourlyRate}
+      platformFeePerHour={job.platformFeePerHour}
       guardPay={job.guardPay}
     />
   );
