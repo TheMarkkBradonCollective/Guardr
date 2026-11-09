@@ -556,6 +556,12 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
       const intent = event.data.object as Stripe.PaymentIntent;
       const jobId = intent.metadata?.job_id;
       if (!jobId) break;
+      // These payment types are finalized by checkout.session.completed, which
+      // has the canonical Checkout Session ID used by the pending payment row.
+      // Handling them here can create duplicate rows or apply overtime twice.
+      if (['cash_deposit', 'overtime', 'schedule_change', 'tip'].includes(String(intent.metadata?.checkout_type ?? ''))) {
+        break;
+      }
 
       if (intent.metadata?.checkout_type === 'cash_deposit') {
         const db = await getSupabaseAdmin();
