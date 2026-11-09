@@ -411,14 +411,11 @@ async function markTipPaid(
 
   const { data: job } = await db
     .from('security_requests')
-    .select('assigned_guard_id, tip_payment_status')
+    .select('assigned_guard_id')
     .eq('id', jobId)
     .maybeSingle();
 
-  if (job?.tip_payment_status === 'paid') return;
-
-  const guardId =
-    typeof job?.assigned_guard_id === 'string' ? job.assigned_guard_id : null;
+  const guardId = typeof job?.assigned_guard_id === 'string' ? job.assigned_guard_id : null;
   let connectAccountId: string | null = null;
   if (guardId) {
     const { data: guard } = await db
@@ -428,6 +425,37 @@ async function markTipPaid(
       .maybeSingle();
     connectAccountId =
       typeof guard?.stripe_connect_account_id === 'string' ? guard.stripe_connect_account_id : null;
+  }
+
+  const { data: existing } = await db
+    .from('payments')
+    .select('id, stripe_transfer_id')
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    const updated = await db
+      .from('payments')
+      .update({
+        status: 'paid',
+        stripe_payment_intent_id: paymentIntentId,
+        amount,
+        payment_method: 'stripe',
+        updated_at: paidAt,
+      })
+      .eq('id', existing.id);
+    if (updated.error) throw new Error(updated.error.message);
+  } else {
+    const inserted = await db.from('payments').insert({
+      id: `pay-tip-${sessionId}`,
+      job_id: jobId,
+      amount,
+      stripe_session_id: sessionId,
+      stripe_payment_intent_id: paymentIntentId,
+      status: 'paid',
+      payment_method: 'stripe',
+    });
+    if (inserted.error) throw new Error(inserted.error.message);
   }
 
   await db
@@ -441,57 +469,29 @@ async function markTipPaid(
     })
     .eq('id', jobId);
 
-  const { data: existing } = await db
-    .from('payments')
-    .select('id')
-    .eq('stripe_session_id', sessionId)
-    .maybeSingle();
-
-  if (existing?.id) {
-    await db
+  // Stripe's idempotency key protects the guard transfer if the webhook is
+  // retried after Stripe created the transfer but before Neon stored its ID.
+  if (connectAccountId && amountCents > 0 && !existing?.stripe_transfer_id) {
+    const stripe = await getStripe();
+    if (!stripe) throw new Error('Stripe is unavailable while releasing the tip');
+    const transfer = await stripe.transfers.create(
+      {
+        amount: amountCents,
+        currency: 'usd',
+        destination: connectAccountId,
+        metadata: { job_id: jobId, checkout_type: 'tip', checkout_session_id: sessionId },
+      },
+      { idempotencyKey: `guardr-tip-transfer-${sessionId}` }
+    );
+    const transferUpdate = await db
       .from('payments')
       .update({
-        status: 'paid',
-        stripe_payment_intent_id: paymentIntentId,
-        amount,
-        payment_method: 'stripe',
-        updated_at: paidAt,
+        stripe_transfer_id: transfer.id,
+        status: 'released',
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', existing.id);
-  } else {
-    await db.from('payments').insert({
-      id: `pay-tip-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      job_id: jobId,
-      amount,
-      stripe_session_id: sessionId,
-      stripe_payment_intent_id: paymentIntentId,
-      status: 'paid',
-      payment_method: 'stripe',
-    });
-  }
-
-  if (connectAccountId && amountCents > 0) {
-    try {
-      const stripe = await getStripe();
-      if (stripe) {
-        const transfer = await stripe.transfers.create({
-          amount: amountCents,
-          currency: 'usd',
-          destination: connectAccountId,
-          metadata: { job_id: jobId, checkout_type: 'tip' },
-        });
-        await db
-          .from('payments')
-          .update({
-            stripe_transfer_id: transfer.id,
-            status: 'released',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('stripe_session_id', sessionId);
-      }
-    } catch (err) {
-      console.error('Tip transfer failed:', err);
-    }
+      .eq('stripe_session_id', sessionId);
+    if (transferUpdate.error) throw new Error(transferUpdate.error.message);
   }
 
   try {
@@ -674,7 +674,7 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
     case 'transfer.updated': {
       const transfer = event.data.object as Stripe.Transfer;
       const jobId = transfer.metadata?.job_id;
-      if (jobId && !transfer.reversed) {
+      if (jobId && transfer.metadata?.checkout_type !== 'tip' && !transfer.reversed) {
         await markJobReleased(jobId, transfer.id);
       }
       break;
@@ -684,7 +684,12 @@ async function processStripeWebhookEvent(event: Stripe.Event) {
       const transfer = event.data.object as Stripe.Transfer;
       const jobId = transfer.metadata?.job_id;
       const db = await getSupabaseAdmin();
-      if (db && jobId) {
+      if (db && jobId && transfer.metadata?.checkout_type === 'tip') {
+        await db
+          .from('payments')
+          .update({ status: 'failed', updated_at: new Date().toISOString() })
+          .eq('stripe_transfer_id', transfer.id);
+      } else if (db && jobId) {
         await db
           .from('payments')
           .update({ status: 'failed', updated_at: new Date().toISOString() })
