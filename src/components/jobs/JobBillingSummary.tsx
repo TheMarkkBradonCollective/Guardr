@@ -76,7 +76,7 @@ export function JobBillingSummary({
         <BillingMetric label="Client rate" value={`${(hourlyRate ?? 0).toFixed(2)}/hr`} />
         <BillingMetric label="Client bill" value={`${(estimatedPayout ?? 0).toFixed(2)}`} />
         <BillingMetric label="Guard rate" value={`${guardRate.toFixed(2)}/hr`} />
-        <BillingMetric label="Guard earnings" value={`${guardEarns.toFixed(2)}`} accent />
+        <BillingMetric label="Total guard earnings" value={`${guardEarns.toFixed(2)}`} accent />
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-brand-text-muted border-t border-brand-border pt-3">
         <span>
@@ -86,6 +86,7 @@ export function JobBillingSummary({
           Total platform fee (informational; included in client rate): <strong className="text-brand-text">${platformFee.toFixed(2)}</strong>
         </span>
       </div>
+      <p className="text-[11px] text-brand-text-muted">The agreed client rate already includes the platform allocation shown above. These saved job terms do not change when live fee settings are updated.</p>
     </div>
   );
 }
