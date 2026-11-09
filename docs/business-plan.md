@@ -314,7 +314,8 @@ Guardr is a three-sided marketplace delivered as a cross-platform application (w
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 19, Vite 6, Tailwind CSS 4, Base Web |
-| Backend / API | Cloudflare Workers |\n| Database | Neon managed PostgreSQL |
+| Backend / API | Cloudflare Workers |
+| Database | Neon managed PostgreSQL |
 | Auth | Worker JWT + PBKDF2 |
 | Payments | Stripe Connect (marketplace facilitator) |
 | Maps | Leaflet + react-leaflet |
@@ -795,7 +796,10 @@ Open-contract pricing allows per-job negotiation.
 
 - **Surfaces:** Mobile (phone), Tablet, Desktop — resolved by viewport + device type
 - **Experience tiers:** PWA Full/Lite, APK Full/Premium
-- **Database:** Neon managed PostgreSQL\n- **Object storage:** Cloudflare R2\n- **Payments:** Stripe Connect\n- **Offline:** IndexedDB queue for field records; auto-flush on reconnect
+- **Database:** Neon managed PostgreSQL
+- **Object storage:** Cloudflare R2
+- **Payments:** Stripe Connect
+- **Offline:** IndexedDB queue for field records; auto-flush on reconnect
 - **Cron jobs:** Missed check-ins (5 min), pre-shift briefings (5 min), placard expiry (daily)
 - **Security:** Role-based RLS, rate limiting (60 req/min API), PBKDF2 password hashing
 
