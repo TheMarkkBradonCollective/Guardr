@@ -1,8 +1,8 @@
 # Guardr Business Plan
 
-**Prepared for:** Signature Security Specialist, LLC  
+**Prepared for:** Planned entity — Signature Security Specialist, LLC  
 **Product:** Guardr — [guardr.co](https://guardr.co)  
-**Date:** August 2026  
+**Date:** November 2026  
 **Version:** 1.0
 
 ---
@@ -101,14 +101,14 @@ Become the trusted compliance-first marketplace for independent security profess
 
 ### Legal Positioning
 
-Guardr is operated by Signature Security Specialist, LLC as a **technology platform only**. Guardr is explicitly **not**:
+Guardr is operated by Signature Security Specialist, LLC as a **technology marketplace**. Guardr, as the product, is explicitly **not itself**:
 
-- A private patrol operator (PPO)
+- The PPO licensee
 - A security guard employer
 - A staffing agency
 - A licensed security services provider
 
-Guards and clients enter into a direct independent contractor relationship for each job. Guardr facilitates discovery, booking, payment, and documentation. Credential review is administrative — not a guarantee of suitability or safety outcomes.
+Marketplace guards and clients enter into direct arrangements for each marketplace job. Guardr facilitates discovery, booking, payment, and documentation. Credential review is administrative — not a guarantee of suitability or safety outcomes. Separately, Signature Security Specialist, LLC plans to pursue a California PPO license; that license is pending until formally issued by BSIS, and licensed security-service operations must be distinguished from Guardr marketplace activity.
 
 ### What We Have Built
 
@@ -314,13 +314,14 @@ Guardr is a three-sided marketplace delivered as a cross-platform application (w
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 19, Vite 6, Tailwind CSS 4, Base Web |
-| Backend | Supabase (PostgreSQL + RLS) |
-| Auth | Supabase Auth + PBKDF2 bridge |
+| Backend / API | Cloudflare Workers |
+| Database | Neon managed PostgreSQL |
+| Auth | Worker JWT + PBKDF2 |
 | Payments | Stripe Connect (marketplace facilitator) |
 | Maps | Leaflet + react-leaflet |
 | Push | Web Push (VAPID) + FCM (Android) |
 | Mobile | Capacitor 7 (Android APK; iOS scaffolded) |
-| Hosting | Vercel (guardr.co) |
+| Hosting / runtime | Cloudflare Workers (and Pages where configured) |
 | CI/CD | GitHub Actions + Playwright E2E |
 
 ### Distribution Channels
@@ -402,17 +403,16 @@ At scale, fixed costs (hosting, insurance, legal) amortize across volume and mar
 
 ## 7. Go-to-Market Strategy
 
-### Phase 1: Supply-First Launch (Months 1–6)
+### Phase 1: Sacramento Launch (Months 1–6)
 
-**Goal:** Build guard supply in 2–3 California metro areas before heavy client marketing.
+**Goal:** Establish a concentrated, reliable guard and client network in Sacramento before expanding to another California market.
 
 | Tactic | Detail |
 |--------|--------|
-| Guard recruitment | BSIS training schools, guard card renewal offices, security Facebook groups, union adjacent networks |
-| Incentive | First 10 shifts bonus, referral bonuses ($50 guard refers guard) |
-| Credential support | Streamlined onboarding; staff verification SLA < 24 hours |
-| Target | 200 activated guards in LA + Inland Empire |
-
+| Guard recruitment | BSIS training schools, guard card renewal offices, security professional networks, and referrals in the Sacramento region |
+| Incentive | Launch and referral incentives, subject to budget |
+| Credential support | Streamlined onboarding; staff verification SLA target < 24 hours |
+| Target | Build the initial Sacramento guard supply and client base; validate numeric targets against local demand |
 ### Phase 2: Demand Activation (Months 4–12)
 
 **Goal:** Convert business clients in verticals with high on-demand need.
@@ -493,26 +493,23 @@ Draft → Pending Review → Open → Accepted → In Progress → Completed →
 
 ### Service Areas
 
-Launch cities (California):
+Launch sequence (California):
 
-1. **Greater Los Angeles** — largest market, events, nightlife, retail
-2. **Inland Empire** — warehouses, construction, logistics
-3. **Orange County** — corporate, retail, events
-4. **San Diego** — border-adjacent, military, tourism
-5. **Bay Area** — corporate campuses, tech events (Phase 2)
+1. **Sacramento** — first launch market and initial operating focus
+2. **Chico** — likely second market, subject to Sacramento launch readiness and demonstrated demand
+3. **Additional California markets** — evaluated after the first two markets are established.
 
-City-level service areas are managed by Directors/Founders in the platform.
-
+City-level service areas are managed by authorized platform leadership. Expansion timing depends on guard supply, client demand, operational capacity, and regulatory readiness.
 ### Technology Operations
 
 | System | Provider | Monthly Cost (est.) |
 |--------|----------|---------------------|
-| Hosting | Vercel | $20–$200 |
-| Database | Supabase | $25–$100 |
+| Hosting / runtime | Cloudflare | Usage-based; selected as the lower-cost hosting/runtime approach |
+| Database | Neon | Usage-based managed PostgreSQL |
 | Payments | Stripe | 2.9% + $0.30/txn |
 | Push notifications | FCM / VAPID | Free |
 | Error monitoring | Sentry | $0–$26 |
-| Domain / DNS | GoDaddy | ~$15 |
+| Object storage | Cloudflare R2 | Usage-based; confirm against current usage and plan |
 
 ### Quality Assurance
 
@@ -528,7 +525,7 @@ City-level service areas are managed by Directors/Founders in the platform.
 ### Corporate Structure
 
 ```
-Signature Security Specialist, LLC
+Planned: Signature Security Specialist, LLC
 └── Guardr (product brand)
     ├── Marketplace participants (independent contractors)
     │   ├── Guards
@@ -552,15 +549,9 @@ Staff compensation = **~50% of collected platform fees** (revenue share) + Prop 
 
 ### Hiring Plan
 
-| Role | Year 1 | Year 2 | Purpose |
-|------|--------|--------|---------|
-| Founder / CEO | 1 | 1 | Strategy, product, fundraising |
-| Director of Operations | 1 | 1 | Daily ops, client relationships |
-| Administrators (credential verification) | 2 | 4 | Scale onboarding |
-| Moderators (application intake) | 1 | 2 | Scale intake |
-| Support | 1 | 2 | User help desk |
-| Part-time sales / BD | 1 | 2 | Client acquisition |
+The previously listed headcounts are a baseline only and are not a cap. The company expects to staff above that baseline during Year 1 and Year 2 as Sacramento launches, Chico is prepared as the likely second market, and operational volume increases.
 
+Growth hiring may include additional operations leadership, city operations coordinators, guard recruiting and onboarding, credential/compliance administration, client sales and account management, customer support, moderation, finance, and administrative functions. Exact headcount and hiring dates will be set using actual demand, service volume, workload, budget, and regulatory requirements.
 ### Advisory Needs
 
 - **Legal:** Marketplace/IC classification, BSIS regulatory counsel, insurance
@@ -694,7 +685,7 @@ At base case unit economics (~$9.67 net revenue per shift after staff share and 
 | Credential fraud | High | Medium | Manual staff verification; expiry alerts; audit log |
 | No-shows | Medium | Medium | No-show detection workflow; replacement flows; performance tiers |
 | Payment disputes | Medium | Medium | Dispute resolution process; payout holds; overtime approval workflow |
-| Platform downtime | High | Low | Vercel hosting; CI/CD; Sentry monitoring; offline sync for guards |
+| Platform downtime | High | Low | Cloudflare hosting/runtime; Neon database; CI/CD; Sentry monitoring; offline sync for guards |
 
 ### Financial Risks
 
@@ -725,7 +716,7 @@ At base case unit economics (~$9.67 net revenue per shift after staff share and 
 - [ ] Google Play Store launch
 - [ ] First 100 activated guards
 - [ ] First 10 paying business clients
-- [ ] LA + Inland Empire service areas active
+- [ ] Sacramento first-launch market active
 
 ### Q4 2026
 
@@ -739,7 +730,7 @@ At base case unit economics (~$9.67 net revenue per shift after staff share and 
 
 - [ ] 2,000 guards, 400 clients
 - [ ] 5,000 monthly shifts
-- [ ] Expand to Bay Area and San Diego
+- [ ] Prepare Chico as the likely second market after Sacramento launch readiness is demonstrated
 - [ ] Enterprise client program (volume pricing)
 - [ ] Break-even on operating income
 - [ ] Evaluate second-state expansion (Nevada, Arizona, Texas)
@@ -805,6 +796,9 @@ Open-contract pricing allows per-job negotiation.
 
 - **Surfaces:** Mobile (phone), Tablet, Desktop — resolved by viewport + device type
 - **Experience tiers:** PWA Full/Lite, APK Full/Premium
+- **Database:** Neon managed PostgreSQL
+- **Object storage:** Cloudflare R2
+- **Payments:** Stripe Connect
 - **Offline:** IndexedDB queue for field records; auto-flush on reconnect
 - **Cron jobs:** Missed check-ins (5 min), pre-shift briefings (5 min), placard expiry (daily)
 - **Security:** Role-based RLS, rate limiting (60 req/min API), PBKDF2 password hashing
