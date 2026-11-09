@@ -1,13 +1,13 @@
 # Guardr — Company Information Package
 
-> **Cloudflare beta branch:** API and sideload APKs use `https://guardr.themarkkbrandoncollective-2d9.workers.dev` (Neon + R2). Sections below that mention Vercel, Supabase, or guardr.co hosting reflect the prior stack until DNS is cut over.
+> **Current infrastructure:** Guardr is moving to a lower-cost Cloudflare + Neon architecture. Cloudflare provides application/API runtime and R2 object storage; Neon provides managed PostgreSQL. The current beta API endpoint is `https://guardr.themarkkbrandoncollective-2d9.workers.dev`. Verify production-domain routing against the live deployment before external reliance.
 
 **Prepared for:** Legal counsel, advisors, investors, partners, and other stakeholders  
 **Legal entity:** Signature Security Specialist, LLC  
 **Product:** Guardr — [guardr.co](https://guardr.co)  
 **Tagline:** *Anytime. Anywhere. Security, When You Need It.*  
 **Document version:** 1.0  
-**Last updated:** September 10, 2026
+**Last updated:** November 9, 2026
 
 ---
 
@@ -43,6 +43,7 @@ Build PDFs: `npm run docs:stakeholder-pdf`. In the staff app: **Resources → Co
 | **Legal name** | Signature Security Specialist, LLC |
 | **Entity type** | Limited Liability Company (LLC) |
 | **State of operation** | California (BSIS-aligned) |
+| **PPO licensing status** | Planned for Signature Security Specialist, LLC; not represented as issued or active |
 | **State of formation** | (Gap — provide articles of organization / state of filing) |
 | **EIN / tax ID** | (Gap — provide for counsel and investors under NDA) |
 | **Registered address** | (Gap — available on request per Terms of Service) |
@@ -74,14 +75,14 @@ The platform handles discovery, credential verification, booking, in-app payment
 
 ### What it is not
 
-Guardr is explicitly **not**:
+Guardr, as the marketplace product, is explicitly **not itself**:
 
-- A private patrol operator (PPO)
+- The PPO licensee
 - A security guard employer
 - A staffing agency
 - A licensed security services provider
 
-**Guards and clients contract directly** for each job. Guardr facilitates the connection, payment, and recordkeeping — it does not dispatch, assign, employ, or supervise field security work.
+**Guards and clients contract directly** for each marketplace job. Guardr facilitates the connection, payment, and recordkeeping — it does not dispatch, assign, employ, or supervise field security work through the marketplace. Separately, Signature Security Specialist, LLC plans to pursue a California PPO license. That license is a future company milestone and must not be described as active until BSIS issues it; licensed company services and Guardr marketplace activity must be clearly distinguished.
 
 ### One-sentence summary
 
@@ -162,15 +163,16 @@ Staff compensation = **~50% of collected platform fees** (split by role) + Prop 
 
 ### Hiring plan
 
-| Role | Year 1 | Year 2 |
-|------|--------|--------|
-| Founder / CEO | 1 | 1 |
-| Director of Operations | 1 | 1 |
-| Administrators | 2 | 4 |
-| Moderators | 1 | 2 |
-| Support | 1 | 2 |
-| Part-time sales / BD | 1 | 2 |
+The headcounts in earlier planning drafts are a starting baseline, not a staffing ceiling. Management expects staffing to grow beyond that baseline during both Year 1 and Year 2 as marketplace activity, client demand, credential-review volume, and geographic coverage increase.
 
+The staffing model is intended to scale across:
+- Platform operations and city-level operations leads
+- Guard recruiting, onboarding, and credential administration
+- Client acquisition, account support, and business development
+- Customer support, moderation, and dispute handling
+- Compliance coordination, finance, and administrative support
+
+Exact headcount and timing remain to be set against launch traction, workload, budget, and regulatory requirements. Additional hiring is expected as Sacramento launches and further markets are activated.
 ### Advisory needs (identified)
 
 - **Legal:** Marketplace/IC classification, BSIS regulatory counsel, insurance
@@ -251,8 +253,8 @@ Draft → Pending Review → Open → Accepted → In Progress → Completed →
 
 ### Shipped platform capabilities (v1.0)
 
-- Supabase Auth bridge (PBKDF2 password hashing)
-- Role-based row-level security (RLS)
+- Worker-based authentication with PBKDF2 password hashing
+- Role-based authorization and access controls
 - Trusted-client auto-publish
 - Audit log and SLA dashboard
 - Guard availability calendar
@@ -270,13 +272,13 @@ Draft → Pending Review → Open → Accepted → In Progress → Completed →
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 19, Vite 6, Tailwind CSS 4, Base Web |
-| Backend / database | Supabase (PostgreSQL + RLS) |
+| Backend / API | Cloudflare Workers |\n| Database | Neon managed PostgreSQL |
 | Auth | Worker JWT + PBKDF2 (`users` table, `/api/auth/*`) |
 | Payments | Stripe Connect (primary); Square also integrated |
 | Maps | Leaflet + react-leaflet |
 | Push notifications | Web Push (VAPID) + FCM (Android) |
 | Mobile | Capacitor 7 (Android APK; iOS scaffolded) |
-| Hosting | Vercel (guardr.co) |
+| Hosting / runtime | Cloudflare Workers (and Pages where configured) |
 | Design system | Base Web + Guardr-branded themes |
 
 ### Cross-platform surfaces
@@ -305,7 +307,7 @@ Twilio (SMS), Checkr (background checks), insurance verification API, Sentry err
 
 ### Database
 
-Single source of truth: `supabase/complete_schema_setup.sql` (idempotent).
+Database source of truth: Neon PostgreSQL schema and migration tooling under `scripts/neon/`, `lib/db/`, and the repository's current schema-generation workflow.
 
 ---
 
@@ -340,12 +342,9 @@ Single source of truth: `supabase/complete_schema_setup.sql` (idempotent).
 
 ### Launch cities (California)
 
-1. Greater Los Angeles
-2. Inland Empire
-3. Orange County
-4. San Diego
-5. Bay Area (Phase 2)
-
+1. **Sacramento** — first launch market and initial operating focus
+2. **Chico** — likely second market, subject to Sacramento launch readiness and demonstrated demand
+3. Additional California markets will be evaluated after the first launch is established.
 ### 3-year growth targets (base case)
 
 | Metric | Year 1 | Year 2 | Year 3 |
@@ -452,8 +451,8 @@ Expected at **Month 10–12** (base case), ~2,400 shifts/month.
 
 | System | Monthly |
 |--------|---------|
-| Vercel | $20–$200 |
-| Supabase | $25–$100 |
+| Cloudflare | Usage-based; selected as the lower-cost hosting/runtime approach |
+| Neon | Usage-based managed PostgreSQL; actual cost depends on compute, storage, and usage |
 | Stripe | 2.9% + $0.30/transaction |
 | Sentry | $0–$26 |
 
@@ -495,7 +494,7 @@ General liability, E&O, and cyber insurance budgeted at $25K (Year 1), $40K (Yea
 
 ### Investor demo access
 
-Demo accounts are available for product walkthroughs. Contact the founder for credentials or run `supabase/investor_demo_accounts.sql` in a staging environment.
+Demo accounts are available for product walkthroughs. Contact the founder for credentials or use the current Neon-compatible staging/demo-data workflow documented in the repository; the former database seed path is retired.
 
 ---
 
@@ -580,7 +579,7 @@ Source code for all legal text: `src/lib/legalContent.ts`
 
 ### Go-to-market phases
 
-**Phase 1 (Months 1–6): Supply-first** — Recruit 200 activated guards in LA + Inland Empire via BSIS schools, social groups, referral bonuses.
+**Phase 1 (Months 1–6): Sacramento launch** — Build the initial guard supply and client network in Sacramento before expanding to another market.
 
 **Phase 2 (Months 4–12): Demand activation** — Direct B2B sales to event companies, property managers, construction firms. Founding client program (reduced fees for first 25 business accounts). Target: 75 business clients, 1,200 monthly shifts.
 
@@ -615,7 +614,7 @@ Source code for all legal text: `src/lib/legalContent.ts`
 | Credential fraud | High | Medium | Manual staff verification; expiry alerts; audit log |
 | No-shows | Medium | Medium | No-show detection workflow; replacement flows; performance tiers |
 | Payment disputes | Medium | Medium | Dispute resolution process; payout holds |
-| Platform downtime | High | Low | Vercel hosting; CI/CD; Sentry; offline sync for guards |
+| Platform downtime | High | Low | Cloudflare hosting/runtime; Neon database; CI/CD; Sentry; offline sync for guards |
 
 ### Financial
 
@@ -646,7 +645,7 @@ Source code for all legal text: `src/lib/legalContent.ts`
 - [ ] Google Play Store launch
 - [ ] First 100 activated guards
 - [ ] First 10 paying business clients
-- [ ] LA + Inland Empire service areas active
+- [ ] Sacramento first-launch market active
 
 ### Q4 2026
 
@@ -659,7 +658,7 @@ Source code for all legal text: `src/lib/legalContent.ts`
 ### 2027
 
 - [ ] 2,000 guards, 400 clients, 5,000 monthly shifts
-- [ ] Bay Area and San Diego expansion
+- [ ] Prepare Chico as the likely second market after Sacramento launch readiness is demonstrated
 - [ ] Enterprise client program
 - [ ] Break-even on operating income
 - [ ] Evaluate Nevada, Arizona, Texas
@@ -732,7 +731,7 @@ The following items should be gathered and appended (or provided under NDA) befo
 - [ ] Insurance policies (GL, E&O, cyber) with carrier and coverage limits
 - [ ] Banking relationship details (for due diligence)
 - [ ] Actual operating metrics (guards activated, clients, monthly shifts) as of current date
-- [ ] Signed contracts with key vendors (Stripe, Supabase, Vercel)
+- [ ] Signed contracts with key vendors (Stripe, Cloudflare, Neon)
 - [ ] Any pending or threatened litigation
 - [ ] BSIS or other regulatory correspondence
 
