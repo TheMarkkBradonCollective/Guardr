@@ -229,6 +229,24 @@ async function applyPaidScheduleChange(
     .maybeSingle();
 
   if (!job?.pending_start_date || !job.pending_end_date || job.pending_duration_hours == null) {
+    const existingPayment = await db
+      .from('payments')
+      .select('id')
+      .eq('stripe_session_id', sessionId)
+      .maybeSingle();
+    if (existingPayment.data?.id) {
+      const finalized = await db
+        .from('payments')
+        .update({
+          status: 'paid',
+          stripe_payment_intent_id: paymentIntentId,
+          amount,
+          payment_method: 'stripe',
+          updated_at: paidAt,
+        })
+        .eq('id', existingPayment.data.id);
+      if (finalized.error) throw new Error(finalized.error.message);
+    }
     return;
   }
 
@@ -313,28 +331,31 @@ async function markOvertimePaid(
   const { data: job } = await db
     .from('security_requests')
     .select(
-      'scheduled_duration_hours, scheduled_estimated_payout, overtime_hours, overtime_amount, duration_hours, estimated_payout'
+      'scheduled_duration_hours, scheduled_estimated_payout, overtime_hours, overtime_amount, duration_hours, estimated_payout, overtime_payment_status'
     )
     .eq('id', jobId)
     .maybeSingle();
 
-  const scheduledDuration = Number(job?.scheduled_duration_hours ?? job?.duration_hours ?? 0);
-  const scheduledPayout = Number(job?.scheduled_estimated_payout ?? job?.estimated_payout ?? 0);
-  const overtimeHours = Number(job?.overtime_hours ?? 0);
-  const overtimeAmount = Number(job?.overtime_amount ?? 0);
+  if (job?.overtime_payment_status !== 'paid') {
+    const scheduledDuration = Number(job?.scheduled_duration_hours ?? job?.duration_hours ?? 0);
+    const scheduledPayout = Number(job?.scheduled_estimated_payout ?? job?.estimated_payout ?? 0);
+    const overtimeHours = Number(job?.overtime_hours ?? 0);
+    const overtimeAmount = Number(job?.overtime_amount ?? 0);
 
-  await db
-    .from('security_requests')
-    .update({
-      overtime_payment_status: 'paid',
-      overtime_status: 'paid',
-      overtime_client_payment_method: 'stripe',
-      overtime_client_cash_payment_requested: false,
-      overtime_client_cash_payment_requested_at: null,
-      duration_hours: Math.round((scheduledDuration + overtimeHours) * 100) / 100,
-      estimated_payout: Math.round((scheduledPayout + overtimeAmount) * 100) / 100,
-    })
-    .eq('id', jobId);
+    const applied = await db
+      .from('security_requests')
+      .update({
+        overtime_payment_status: 'paid',
+        overtime_status: 'paid',
+        overtime_client_payment_method: 'stripe',
+        overtime_client_cash_payment_requested: false,
+        overtime_client_cash_payment_requested_at: null,
+        duration_hours: Math.round((scheduledDuration + overtimeHours) * 100) / 100,
+        estimated_payout: Math.round((scheduledPayout + overtimeAmount) * 100) / 100,
+      })
+      .eq('id', jobId);
+    if (applied.error) throw new Error(applied.error.message);
+  }
 
   const { data: existing } = await db
     .from('payments')
