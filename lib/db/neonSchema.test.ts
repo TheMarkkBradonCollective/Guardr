@@ -32,6 +32,18 @@ describe('Neon schema transform', () => {
     assert.ok(addStatus > 0 && statusIndex > addStatus);
   });
 
+  it('does not seed wiped staff accounts', () => {
+    const applied = readFileSync(new URL('../../db/neon-schema.sql', import.meta.url), 'utf8');
+    for (const sql of [source, applied]) {
+      assert.doesNotMatch(sql, /m\.white@signaturesecurityspecialist\.com/);
+      assert.doesNotMatch(sql, /t\.johnson@signaturesecurityspecialist\.com/);
+      assert.doesNotMatch(sql, /staff-director-tyrone/);
+      assert.doesNotMatch(sql, /'staff-director'/);
+      assert.doesNotMatch(sql, /admin@guardr\.co/);
+      assert.doesNotMatch(sql, /staff-admin-seed/);
+    }
+  });
+
   it('does not rewrite the Supabase source file', () => {
     assert.match(source, /ALTER PUBLICATION supabase_realtime/);
     assert.match(source, /auth\.uid\(\)/);

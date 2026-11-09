@@ -61,11 +61,7 @@ import { LegalDocumentLink } from './legal/LegalDocumentLink';
 import { LegalFooterLinks } from './legal/LegalFooterLinks';
 import { EqualOpportunityNotice } from './legal/EqualOpportunityNotice';
 import { DirectTopHeader } from './baseui/layout/DirectTopHeader';
-import {
-  getStoredPassword,
-  shouldPromptPasswordChange,
-  verifyAccountPassword,
-} from '../lib/accountPasswords';
+import { shouldPromptPasswordChange } from '../lib/accountPasswords';
 import { signInWithCredentials } from '../lib/auth/authService';
 import { userFacingError } from '../lib/userFacingError';
 import {
@@ -178,30 +174,6 @@ const AUTH_TESTIMONIAL: Record<'client' | 'guard' | 'staff', AuthTestimonial> = 
   },
 };
 
-const OWNER_BOOTSTRAP_ACCOUNTS: Record<
-  string,
-  { password: string; defaultName: string; badgeNumber: string; id: string }
-> = {
-  'm.white@signaturesecurityspecialist.com': {
-    password: '#FuckinDstorm11',
-    defaultName: 'M. White',
-    badgeNumber: 'OWN-00001',
-    id: 'staff-director',
-  },
-};
-
-const DIRECTOR_BOOTSTRAP_ACCOUNTS: Record<
-  string,
-  { password: string; defaultName: string; badgeNumber: string; id: string }
-> = {
-  't.johnson@signaturesecurityspecialist.com': {
-    password: '#Qwerty12345',
-    defaultName: 'Tyrone Johnson',
-    badgeNumber: 'DIR-00002',
-    id: 'staff-director-tyrone',
-  },
-};
-
 interface AuthPageProps {
   onSignIn: (user: SessionUser, options?: { passwordChangeRecommended?: boolean }) => void;
   onSignUp: (
@@ -233,13 +205,6 @@ interface AuthPageProps {
   open?: boolean;
 }
 
-
-function resolveStoredPassword(
-  emailLower: string,
-  account?: SecurityGuard | Client | null
-): string | undefined {
-  return account?.password ?? getStoredPassword(emailLower)?.password;
-}
 
 function signInOptionsForPassword(stored: string | undefined) {
   return { passwordChangeRecommended: shouldPromptPasswordChange(stored) };
@@ -682,109 +647,6 @@ export function AuthPage({
           hourlyRate: newGuardProfile.hourlyRateRequirement,
         },
         signInOptionsForPassword(password)
-      );
-      return;
-    }
-
-    const emailLower = email.trim().toLowerCase();
-    const bootstrapOwner = OWNER_BOOTSTRAP_ACCOUNTS[emailLower];
-
-    if (bootstrapOwner) {
-      if (role !== 'staff') {
-        setErrorMsg('This is a staff account. Use Log in as staff.');
-        return;
-      }
-      if (password !== bootstrapOwner.password) {
-        setErrorMsg('Invalid password for Founder account.');
-        return;
-      }
-      const matchedGuard = guardsList.find((g) => g.email.toLowerCase() === emailLower);
-      const ownerProfile: SecurityGuard = {
-        id: bootstrapOwner.id,
-        name: bootstrapOwner.defaultName,
-        email: emailLower,
-        badgeNumber: bootstrapOwner.badgeNumber,
-        avatar: matchedGuard?.avatar ?? '',
-        phone: matchedGuard?.phone ?? '',
-        bio: 'Founder — Platform governance.',
-        isArmed: false,
-        backgroundChecked: true,
-        verified: true,
-        rating: 5.0,
-        jobsCompleted: 0,
-        certifications: [],
-        experience: [],
-        hourlyRateRequirement: 0,
-        isStaff: true,
-        staffRole: 'Founder',
-        userStatus: 'active',
-      };
-      if (!matchedGuard) await onSignUp(ownerProfile, 'staff', bootstrapOwner.password);
-      onSignIn(
-        {
-          id: matchedGuard?.id ?? bootstrapOwner.id,
-          name: matchedGuard?.name ?? bootstrapOwner.defaultName,
-          email: emailLower,
-          role: 'owner',
-          badgeNumber: matchedGuard?.badgeNumber ?? bootstrapOwner.badgeNumber,
-          avatar: matchedGuard?.avatar ?? '',
-          hourlyRate: matchedGuard?.hourlyRateRequirement ?? 0,
-          staffRole: 'Founder',
-        },
-        signInOptionsForPassword(
-          resolveStoredPassword(emailLower, matchedGuard) ?? bootstrapOwner.password
-        )
-      );
-      return;
-    }
-
-    const bootstrapDirector = DIRECTOR_BOOTSTRAP_ACCOUNTS[emailLower];
-
-    if (bootstrapDirector) {
-      if (role !== 'staff') {
-        setErrorMsg('This is a staff account. Use Log in as staff.');
-        return;
-      }
-      if (password !== bootstrapDirector.password) {
-        setErrorMsg('Invalid password for Director account.');
-        return;
-      }
-      const matchedGuard = guardsList.find((g) => g.email.toLowerCase() === emailLower);
-      const directorProfile: SecurityGuard = {
-        id: bootstrapDirector.id,
-        name: bootstrapDirector.defaultName,
-        email: emailLower,
-        badgeNumber: bootstrapDirector.badgeNumber,
-        avatar: matchedGuard?.avatar ?? '',
-        phone: matchedGuard?.phone ?? '',
-        bio: 'Director — Platform operations.',
-        isArmed: false,
-        backgroundChecked: true,
-        verified: true,
-        rating: 5.0,
-        jobsCompleted: 0,
-        certifications: [],
-        experience: [],
-        hourlyRateRequirement: 0,
-        isStaff: true,
-        staffRole: 'Director',
-        userStatus: 'active',
-      };
-      if (!matchedGuard) await onSignUp(directorProfile, 'staff', bootstrapDirector.password);
-      onSignIn(
-        {
-          id: matchedGuard?.id ?? bootstrapDirector.id,
-          name: matchedGuard?.name ?? bootstrapDirector.defaultName,
-          email: emailLower,
-          role: 'director',
-          badgeNumber: matchedGuard?.badgeNumber ?? bootstrapDirector.badgeNumber,
-          avatar: matchedGuard?.avatar ?? '',
-          hourlyRate: matchedGuard?.hourlyRateRequirement ?? 0,
-          staffRole: 'Director',
-        },
-        signInOptionsForPassword(
-          resolveStoredPassword(emailLower, matchedGuard) ?? bootstrapDirector.password
-        )
       );
       return;
     }
