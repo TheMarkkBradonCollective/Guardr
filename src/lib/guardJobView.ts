@@ -10,7 +10,7 @@ import { isJobPaid } from './jobEditRules';
 /** Guard-safe payout state — no internal payment pipeline details */
 export type GuardPayoutStatus = 'pending' | 'processing' | 'paid';
 
-/** Job fields guards may see — never includes client billing or platform ledger data */
+/** Guard-safe job data. Exposes only the agreed rate split needed to verify the guard's own pay; client payment status and ledger details remain private. */
 export interface GuardJobView {
   id: string;
   title: string;
@@ -42,7 +42,9 @@ export interface GuardJobView {
   endDate: string;
   durationHours: number;
   guardPay: number;
-  /** Client hourly charge — shown for open-contract negotiation */
+  /** Agreed platform fee per hour, disclosed so guards can verify the rate split. */
+  platformFeePerHour?: number;
+  /** Client hourly charge — shown for open-contract negotiation and fee transparency. */
   hourlyRate?: number;
   pricingMode?: SecurityRequest['pricingMode'];
   openingPriceOffer?: SecurityRequest['openingPriceOffer'];
@@ -215,6 +217,7 @@ export function toGuardJobView(
     endDate: req.endDate,
     durationHours: req.durationHours,
     guardPay,
+    platformFeePerHour: req.platformFeePerHour ?? Math.max(0, req.hourlyRate - guardPay),
     hourlyRate: req.hourlyRate,
     pricingMode: req.pricingMode,
     openingPriceOffer: req.openingPriceOffer,
