@@ -114,7 +114,7 @@ You already chose the guard — no later **Approve guard** step for that person.
 
 ## 5. What you pay — costs, fees, and billing
 
-This section explains **your** charges as a client. You pay the **posted hourly rate** (and approved extras). Guardr retains a **platform fee** from that rate — the guard receives the remainder. You typically see the **client rate** on job cards and checkout, not a separate platform fee line.
+This section explains **your** charges as a client. You pay the **agreed client hourly rate** (and separately approved extras). The job summary shows the client rate, estimated client bill, guard rate, total guard earnings, and the platform fee allocation per hour and for the scheduled job. The platform fee is the disclosed portion of the agreed rate retained by Guardr; it is not a second markup added on top of that rate.
 
 ### 5.1 Base job cost
 
@@ -144,7 +144,7 @@ Guardr's platform fee is embedded in the marketplace economics:
 
 Personal and business accounts have **separate** fee tables. Each table has an account default plus optional per-guard-type rates (Directors set these in **Payment settings**). Defaults start around **$5/hr** personal and **$6/hr** business, with higher takes on some job types (for example bodyguard / armed escort).
 
-You pay the **full hourly rate** you agreed to. The guard's pay is calculated from that rate minus the fee. This is **not** an extra line item on most client checkout screens — it is part of how the marketplace price is split.
+You pay the **full hourly rate** you agreed to. The guard's pay is calculated from that rate minus the fee. The fee breakdown is displayed to make the split clear; it is an allocation of the agreed rate, not an additional charge.
 
 **Posted prices stay frozen.** Changing the live fee tables does **not** rewrite jobs that are already posted, approved, or under contract. Those jobs keep the platform fee and guard pay saved when they were created. Only a staff/open-contract recalculation rewrites a stored fee.
 
