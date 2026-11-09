@@ -1,6 +1,6 @@
 # Guardr Business Plan
 
-**Prepared for:** Signature Security Specialist, LLC  
+**Prepared for:** Planned entity — Signature Security Specialist, LLC  
 **Product:** Guardr — [guardr.co](https://guardr.co)  
 **Date:** November 2026  
 **Version:** 1.0
@@ -525,7 +525,7 @@ City-level service areas are managed by authorized platform leadership. Expansio
 ### Corporate Structure
 
 ```
-Signature Security Specialist, LLC
+Planned: Signature Security Specialist, LLC
 └── Guardr (product brand)
     ├── Marketplace participants (independent contractors)
     │   ├── Guards
