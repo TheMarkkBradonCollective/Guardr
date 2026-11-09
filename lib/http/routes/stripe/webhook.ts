@@ -708,9 +708,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: `Webhook Error: ${message}` });
   }
 
+  const db = await getSupabaseAdmin();
+  if (!db) {
+    return res.status(503).json({ error: 'Billing database is unavailable' });
+  }
+
+  // Claim each Stripe event atomically before any payment or payout side effects.
+  // Duplicate deliveries are acknowledged without running the handler twice.
+  const claim = await db.query(
+    `INSERT INTO public.stripe_webhook_events (
+       event_id, event_type, livemode, event_created_at, processing_status,
+       attempt_count, payload, last_attempt_at
+     ) VALUES ($1, $2, $3, to_timestamp($4), 'processing', 1, $5::jsonb, NOW())
+     ON CONFLICT (event_id) DO UPDATE SET
+       processing_status = 'processing',
+       attempt_count = public.stripe_webhook_events.attempt_count + 1,
+       last_error = NULL,
+       last_attempt_at = NOW()
+     WHERE public.stripe_webhook_events.processing_status IN ('received', 'failed')
+     RETURNING event_id`,
+    [
+      event.id,
+      event.type,
+      event.livemode,
+      event.created,
+      JSON.stringify(event),
+    ]
+  );
+
+  if (claim.error) {
+    console.error('Stripe webhook inbox claim failed:', claim.error.message);
+    return res.status(500).json({ error: 'Unable to record Stripe event' });
+  }
+
+  if (!claim.data?.length) {
+    return res.status(200).json({ received: true, duplicate: true });
+  }
+
   try {
     await processStripeWebhookEvent(event);
+    const completed = await db.query(
+      `UPDATE public.stripe_webhook_events
+       SET processing_status = 'processed', processed_at = NOW(), last_error = NULL
+       WHERE event_id = $1 AND processing_status = 'processing'`,
+      [event.id]
+    );
+    if (completed.error) throw new Error(completed.error.message);
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Webhook handler failed';
+    await db.query(
+      `UPDATE public.stripe_webhook_events
+       SET processing_status = 'failed', last_error = $2, last_attempt_at = NOW()
+       WHERE event_id = $1 AND processing_status = 'processing'`,
+      [event.id, message.slice(0, 4000)]
+    );
     console.error('Webhook handler error:', err);
     return res.status(500).json({ error: 'Webhook handler failed' });
   }
