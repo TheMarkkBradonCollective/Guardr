@@ -24,11 +24,13 @@ import {
 import {
   ANDROID_COMPANIONS,
   ANDROID_ROLES,
+  androidGradleVersionArgs,
   generateAndroidIcons,
   rolePackage,
   withRoleBuildPatches,
   writeNativeProductAppJs,
 } from './android-role-build.mjs';
+import { isReleaseKeystoreConfigured } from './write-keystore.mjs';
 
 const PUBLIC_DOWNLOAD = path.join(ROOT, 'public/download');
 const SIDELOAD_APK = path.join(
@@ -44,13 +46,21 @@ const { nativeFcmConfigured } = await prepareAndroidWebBuild({
 
 await mkdir(PUBLIC_DOWNLOAD, { recursive: true });
 
+if (process.env.REQUIRE_RELEASE_SIGNING === '1' && !isReleaseKeystoreConfigured()) {
+  console.error(
+    '\n✗ Release signing was required, but android/keystore.properties is missing. Refusing to create a new keystore.',
+  );
+  process.exit(1);
+}
+
+const versionArgs = androidGradleVersionArgs();
 const apkPaths = [];
 
 try {
   for (const role of ANDROID_ROLES) {
     console.log(`\n→ Assembling ${role.id} sideload APK (${rolePackage(role.id)})…`);
     await withRoleBuildPatches(role.id, async () => {
-      run(GRADLE, ['assembleSideloadRelease', `-PguardrProductApp=${role.id}`], {
+      run(GRADLE, ['assembleSideloadRelease', `-PguardrProductApp=${role.id}`, ...versionArgs], {
         cwd: path.join(ROOT, 'android'),
       });
     });
@@ -68,7 +78,7 @@ try {
   for (const companion of ANDROID_COMPANIONS) {
     console.log(`\n→ Assembling ${companion.id} sideload APK (${rolePackage(companion.id)})…`);
     await withRoleBuildPatches(companion.id, async () => {
-      run(GRADLE, ['assembleSideloadRelease', `-PguardrProductApp=${companion.id}`], {
+      run(GRADLE, ['assembleSideloadRelease', `-PguardrProductApp=${companion.id}`, ...versionArgs], {
         cwd: path.join(ROOT, 'android'),
       });
     });
@@ -84,7 +94,7 @@ try {
   console.log('\n→ Assembling combined sideload APK (com.tmbcworks.guardr)…');
   await writeNativeProductAppJs('');
   generateAndroidIcons('');
-  run(GRADLE, ['assembleSideloadRelease'], {
+  run(GRADLE, ['assembleSideloadRelease', ...versionArgs], {
     cwd: path.join(ROOT, 'android'),
   });
   await copyFile(SIDELOAD_APK, path.join(PUBLIC_DOWNLOAD, 'guardr.apk'));

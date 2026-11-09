@@ -9,6 +9,7 @@
 import { copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { GRADLE, prepareAndroidWebBuild, ROOT, run } from './build-android-common.mjs';
+import { androidGradleVersionArgs } from './android-role-build.mjs';
 
 const { nativeFcmConfigured } = await prepareAndroidWebBuild({
   playStoreBuild: false,
@@ -17,7 +18,7 @@ const { nativeFcmConfigured } = await prepareAndroidWebBuild({
 });
 
 console.log('→ Assembling sideload release APK…');
-run(GRADLE, ['assembleSideloadRelease'], {
+run(GRADLE, ['assembleSideloadRelease', ...androidGradleVersionArgs()], {
   cwd: path.join(ROOT, 'android'),
 });
 

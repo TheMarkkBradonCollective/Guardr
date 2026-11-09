@@ -73,6 +73,12 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     console.warn(
       'Play upload keystore is not configured — set ANDROID_UPLOAD_KEYSTORE_BASE64 and ANDROID_KEYSTORE_PASSWORD, or add android/keystore.properties.',
     );
+    if (process.env.REQUIRE_RELEASE_SIGNING === '1') {
+      console.error(
+        'Refusing to create a new keystore. A new key cannot update phones that already have Guardr installed.',
+      );
+      process.exit(1);
+    }
     process.exit(0);
   }
 }

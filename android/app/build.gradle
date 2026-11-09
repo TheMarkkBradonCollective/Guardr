@@ -36,8 +36,13 @@ android {
             : 'com.tmbcworks.guardr')
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // Keep in sync with package.json via npm run generate:download-version
-        versionCode 110
+        // Keep in sync with package.json via npm run generate:download-version.
+        // Role builds pass -PguardrVersionCode (scripts/android-role-build.mjs) so
+        // Customer, Guard, Staff, and Messenger share one code. Installed
+        // customer beta 1.0.131 is versionCode 231; this must stay higher.
+        def guardrVersionCodeProp = (findProperty('guardrVersionCode') ?: '').toString().trim()
+        def guardrVersionCodeFallback = 1100
+        versionCode (guardrVersionCodeProp ? guardrVersionCodeProp.toInteger() : guardrVersionCodeFallback)
         versionName "1.1.0-cf-beta"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "PRODUCT_APP", "\"${productApp}\""
@@ -70,8 +75,14 @@ android {
     productFlavors {
         sideload {
             dimension 'distribution'
-            // Sideload APKs for guardr.co/download — debug-signed (CI has no upload keystore).
-            signingConfig signingConfigs.debug
+            // Release-sign when the existing upload keystore is configured so
+            // installed phones can take the update. Debug-sign only for local
+            // builds that do not have that keystore. Never generate a new one here.
+            if (hasReleaseKeystore) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
         }
         play {
             dimension 'distribution'

@@ -16,6 +16,7 @@ import { GRADLE, prepareAndroidWebBuild, ROOT, run } from './build-android-commo
 import { isReleaseKeystoreConfigured, writeKeystoreFromEnv } from './write-keystore.mjs';
 import {
   ANDROID_ROLES,
+  androidGradleVersionArgs,
   generateAndroidIcons,
   rolePackage,
   withRoleBuildPatches,
@@ -49,13 +50,14 @@ const playAab = path.join(
 const distDir = path.join(ROOT, 'dist/play-store');
 await mkdir(distDir, { recursive: true });
 
+const versionArgs = androidGradleVersionArgs();
 const aabPaths = [];
 
 try {
   for (const role of ANDROID_ROLES) {
     console.log(`\n→ Bundling ${role.id} Play AAB (${rolePackage(role.id)})…`);
     await withRoleBuildPatches(role.id, async () => {
-      run(GRADLE, ['bundlePlayRelease', `-PguardrProductApp=${role.id}`], {
+      run(GRADLE, ['bundlePlayRelease', `-PguardrProductApp=${role.id}`, ...versionArgs], {
         cwd: path.join(ROOT, 'android'),
       });
     });

@@ -3,14 +3,20 @@ name: Cloudflare Android Release
 on:
   workflow_dispatch:
   push:
-    branches: [cloudflare-neon-migration]
+    branches: [main]
     paths:
       - '.github/workflows/cf-android-release.yml'
       - 'android/**'
       - 'capacitor.config.ts'
+      - 'scripts/android-role-build.mjs'
+      - 'scripts/android-version-code.mjs'
       - 'scripts/build-android-apk*.mjs'
+      - 'scripts/generate-download-version.mjs'
+      - 'scripts/verify-apk-signing.mjs'
+      - 'scripts/write-keystore.mjs'
       - 'src/**'
       - 'package.json'
+      - 'package-lock.json'
 
 permissions:
   contents: write
@@ -36,6 +42,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Require existing release signing secrets
+        env:
+          HAS_KEYSTORE: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 != '' }}
+          HAS_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD != '' }}
+        run: |
+          if [ "$HAS_KEYSTORE" != "true" ] || [ "$HAS_STORE_PASSWORD" != "true" ]; then
+            echo "::error::ANDROID_UPLOAD_KEYSTORE_BASE64 or ANDROID_KEYSTORE_PASSWORD is missing. Refusing to create a new keystore, because a new key cannot update phones that already have Guardr installed."
+            exit 1
+          fi
+          echo "Release signing secrets are present."
+
+      - name: Write release keystore from existing secrets
+        run: node scripts/write-keystore.mjs
+        env:
+          REQUIRE_RELEASE_SIGNING: '1'
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+
       - name: Sync version manifests
         run: npm run generate:download-version
 
@@ -45,11 +71,72 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         continue-on-error: true
 
-      - name: Build APKs (Worker backend)
+      - name: Build signed APKs (Worker backend)
         run: npm run android:apk:all
         env:
           VITE_APP_URL: https://guardr.themarkkbrandoncollective-2d9.workers.dev
           ALLOW_APK_WITHOUT_FCM: '1'
+          REQUIRE_RELEASE_SIGNING: '1'
+
+      - name: Verify signatures and version codes
+        id: apks
+        run: |
+          set -euo pipefail
+          AAPT=$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}/build-tools" -name aapt -type f | sort | tail -1)
+          if [ -z "${AAPT}" ]; then
+            echo "::error::aapt was not found under the Android SDK"
+            exit 1
+          fi
+          NOTES="cf-release-notes.md"
+          {
+            echo "Neon Postgres + Cloudflare Worker beta APKs, signed with the existing upload keystore."
+            echo
+            echo "API: https://guardr.themarkkbrandoncollective-2d9.workers.dev"
+            echo
+            echo "versionCode is the same for every role and is above the installed customer beta (231)."
+            echo
+            echo "- [Guardr-All-APKs.zip](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-All-APKs.zip) — Customer, Guard, and Staff"
+            echo "- [Guardr-Client.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Client.apk) — Customer (client)"
+            echo "- [Guardr-Guard.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Guard.apk) — Guard"
+            echo "- [Guardr-Staff.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Staff.apk) — Staff (operations and administration; no separate admin APK)"
+            echo "- [Guardr-Messenger.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Messenger.apk) — Messenger"
+            echo
+          } > "$NOTES"
+
+          expected=""
+          for spec in \
+            "Guardr-Client.apk|Customer (client)" \
+            "Guardr-Guard.apk|Guard" \
+            "Guardr-Staff.apk|Staff" \
+            "Guardr-Messenger.apk|Messenger"
+          do
+            file="${spec%%|*}"
+            role="${spec#*|}"
+            apk="public/download/${file}"
+            node scripts/verify-apk-signing.mjs "$apk"
+            badging=$("$AAPT" dump badging "$apk")
+            code=$(printf '%s\n' "$badging" | sed -n "s/.*versionCode='\\([0-9]*\\)'.*/\\1/p" | head -1)
+            name=$(printf '%s\n' "$badging" | sed -n "s/.*versionName='\\([^']*\\)'.*/\\1/p" | head -1)
+            pkg=$(printf '%s\n' "$badging" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -1)
+            size=$(stat -c %s "$apk")
+            if [ -z "$code" ] || [ "$code" -le 231 ]; then
+              echo "::error::${file} versionCode '${code}' is not above the installed customer beta (231)"
+              exit 1
+            fi
+            if [ "$name" != "1.1.0-cf-beta" ]; then
+              echo "::error::${file} versionName '${name}' is not 1.1.0-cf-beta"
+              exit 1
+            fi
+            if [ -z "$expected" ]; then
+              expected="$code"
+            elif [ "$code" != "$expected" ]; then
+              echo "::error::${file} versionCode ${code} does not match ${expected}"
+              exit 1
+            fi
+            echo "${role}: ${file} package=${pkg} versionName=${name} versionCode=${code} bytes=${size}"
+            echo "- ${role}: \`${file}\` — versionName ${name}, versionCode ${code}, ${size} bytes" >> "$NOTES"
+          done
+          echo "version_code=${expected}" >> "$GITHUB_OUTPUT"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -58,19 +145,10 @@ jobs:
           name: Guardr 1.1.0 Cloudflare beta
           make_latest: false
           fail_on_unmatched_files: true
+          body_path: cf-release-notes.md
           files: |
             public/download/Guardr-All-APKs.zip
             public/download/Guardr-Client.apk
             public/download/Guardr-Guard.apk
             public/download/Guardr-Staff.apk
             public/download/Guardr-Messenger.apk
-          body: |
-            Neon Postgres + Cloudflare Worker beta APKs.
-
-            API: https://guardr.themarkkbrandoncollective-2d9.workers.dev
-
-            - [Guardr-All-APKs.zip](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-All-APKs.zip)
-            - [Guardr-Guard.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Guard.apk)
-            - [Guardr-Client.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Client.apk)
-            - [Guardr-Staff.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Staff.apk)
-            - [Guardr-Messenger.apk](https://github.com/TheMarkkBradonCollective/Guardr/releases/download/v1.1.0-cf-beta/Guardr-Messenger.apk)

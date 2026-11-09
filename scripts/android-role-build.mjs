@@ -1,8 +1,12 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { nativeChromeForProductApp } from './branded-icon.mjs';
 import { ROOT, run } from './build-android-common.mjs';
+import {
+  INSTALLED_CUSTOMER_BETA_VERSION_CODE,
+  androidVersionCode,
+} from './android-version-code.mjs';
 
 export const ANDROID_ROLES = [
   { id: 'client', apk: 'Guardr-Client.apk', aab: 'Guardr-Client.aab', sideload: 'guardr-client.apk' },
@@ -21,6 +25,21 @@ const CAPACITOR_CONFIG_PATH = path.join(ROOT, 'android/app/src/main/assets/capac
 
 export function rolePackage(role) {
   return `com.tmbcworks.guardr.${role}`;
+}
+
+/** Same versionCode for Customer, Guard, Staff, Messenger, and the combined APK. */
+export function androidGradleVersionArgs() {
+  const pkg = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  const code = androidVersionCode(pkg.version);
+  if (code <= INSTALLED_CUSTOMER_BETA_VERSION_CODE) {
+    throw new Error(
+      `Refusing versionCode ${code}. Installed Guardr customer beta 1.0.131 is versionCode ${INSTALLED_CUSTOMER_BETA_VERSION_CODE}; Android will not install a lower code as an update.`,
+    );
+  }
+  console.log(
+    `Android versionCode ${code} (versionName ${pkg.version}) for client, guard, staff, and messenger`,
+  );
+  return [`-PguardrVersionCode=${code}`];
 }
 
 export async function writeNativeProductAppJs(role) {

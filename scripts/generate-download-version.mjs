@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { copyFile, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import QRCode from 'qrcode';
+import { androidVersionCode } from './android-version-code.mjs';
 
 const ROOT = process.cwd();
 const WORKER_ORIGIN = 'https://guardr.themarkkbrandoncollective-2d9.workers.dev';
@@ -88,8 +89,7 @@ async function sha256File(relPath) {
 const pkg = JSON.parse(await readFile(path.join(ROOT, 'package.json'), 'utf8'));
 const version = pkg.version || '1.0.0';
 const numericVersion = version.split('-')[0];
-const parts = numericVersion.split('.').map((part) => Number.parseInt(part, 10) || 0);
-const versionCode = parts[0] * 100 + (parts[1] || 0) * 10 + (parts[2] || 0);
+const versionCode = androidVersionCode(version);
 const apkCacheQuery = `?v=${versionCode}`;
 
 const cacheSlug = version.replace(/\./g, '-');
@@ -162,7 +162,10 @@ await writeFile(
 
 const gradlePath = path.join(ROOT, 'android/app/build.gradle');
 let gradle = await readFile(gradlePath, 'utf8');
-gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`);
+gradle = gradle.replace(
+  /guardrVersionCodeFallback\s*=\s*\d+/,
+  `guardrVersionCodeFallback = ${versionCode}`,
+);
 gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "${version}"`);
 await writeFile(gradlePath, gradle);
 

@@ -3,12 +3,12 @@
   "apk": {
     "ready": false,
     "version": "1.1.0",
-    "versionCode": 110,
+    "versionCode": 1100,
     "url": "/guardr.apk",
     "downloadName": "guardr-v1.1.0.apk",
     "fileSize": 0,
     "sha256": "",
     "releaseNotes": "Neon Postgres + Cloudflare Worker backend, JWT auth, R2 uploads, GitHub Release APKs (v1.1.0-cf-beta). API at guardr.themarkkbrandoncollective-2d9.workers.dev."
   },
-  "updatedAt": "2026-10-31T11:34:00.195Z"
+  "updatedAt": "2026-11-09T11:56:04.165Z"
 }

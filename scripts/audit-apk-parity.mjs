@@ -5,6 +5,10 @@
  */
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
+import {
+  INSTALLED_CUSTOMER_BETA_VERSION_CODE,
+  androidVersionCode,
+} from './android-version-code.mjs';
 
 const ROOT = process.cwd();
 const errors = [];
@@ -79,19 +83,24 @@ try {
 
 const gradle = await readText('android/app/build.gradle').catch(() => '');
 const versionNameMatch = gradle.match(/versionName\s+"([^"]+)"/);
-const versionCodeMatch = gradle.match(/versionCode\s+(\d+)/);
+const versionCodeMatch = gradle.match(/guardrVersionCodeFallback\s*=\s*(\d+)/);
 if (!versionNameMatch) {
   fail('android/app/build.gradle missing versionName');
 } else if (versionNameMatch[1] !== webVersion) {
   fail(`build.gradle versionName ${versionNameMatch[1]} !== package.json ${webVersion}`);
 }
 
-const expectedCode =
-  webVersion.split('.').map((p) => Number.parseInt(p, 10) || 0)[0] * 100 +
-  (Number.parseInt(webVersion.split('.')[1], 10) || 0) * 10 +
-  (Number.parseInt(webVersion.split('.')[2], 10) || 0);
+const expectedCode = androidVersionCode(webVersion);
 
-if (versionCodeMatch && Number.parseInt(versionCodeMatch[1], 10) !== expectedCode) {
+if (expectedCode <= INSTALLED_CUSTOMER_BETA_VERSION_CODE) {
+  fail(
+    `versionCode ${expectedCode} is not above installed customer beta ${INSTALLED_CUSTOMER_BETA_VERSION_CODE}`,
+  );
+}
+
+if (!versionCodeMatch) {
+  fail('android/app/build.gradle missing guardrVersionCodeFallback');
+} else if (Number.parseInt(versionCodeMatch[1], 10) !== expectedCode) {
   fail(`build.gradle versionCode ${versionCodeMatch[1]} !== expected ${expectedCode}`);
 }
 
