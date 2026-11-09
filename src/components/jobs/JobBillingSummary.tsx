@@ -56,8 +56,8 @@ export function JobBillingSummary({
     return (
       <div className="space-y-2">
         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-          <BillingMetric label="Your rate" value={`${guardRate.toFixed(2)}/hr`} />
-          <BillingMetric label="Your estimated earnings" value={`${guardEarns.toFixed(2)}`} accent />
+          <BillingMetric label="Your rate" value={`$${guardRate.toFixed(2)}/hr`} />
+          <BillingMetric label="Your estimated earnings" value={`$${guardEarns.toFixed(2)}`} accent />
         </div>
         {hourlyRate != null && (
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-brand-text-muted border-t border-brand-border pt-2">
@@ -73,8 +73,8 @@ export function JobBillingSummary({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
-        <BillingMetric label="Client rate" value={`${(hourlyRate ?? 0).toFixed(2)}/hr`} />
-        <BillingMetric label="Client bill" value={`${(estimatedPayout ?? 0).toFixed(2)}`} />
+        <BillingMetric label="Client rate" value={`$${(hourlyRate ?? 0).toFixed(2)}/hr`} />
+        <BillingMetric label="Client bill" value={`$${(estimatedPayout ?? 0).toFixed(2)}`} />
         <BillingMetric label="Guard rate" value={`${guardRate.toFixed(2)}/hr`} />
         <BillingMetric label="Total guard earnings" value={`${guardEarns.toFixed(2)}`} accent />
       </div>
