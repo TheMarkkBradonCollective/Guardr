@@ -518,6 +518,7 @@ export function DirectGuardRequestFlow({
                 estimatedPayout={estimatedTotal}
                 guardPay={guardPay}
                 platformFeeTotal={platformFeeTotal}
+                guardsNeeded={1}
               />
             </div>
           </div>

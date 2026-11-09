@@ -119,7 +119,7 @@ The client pays a **posted hourly rate** for the job. Guardr keeps a **platform 
 
 On open-contract / negotiated jobs, the fee may be a flat dollar amount or a percentage of the client rate — the app shows **your rate and earnings** before you accept.
 
-You do **not** see the client's full billing breakdown in guard views. Your **Pay** and job cards show **guard rate** and **guard earns**.
+Job details show your **guard rate**, your estimated earnings, the agreed client hourly rate, and the platform fee per hour. This lets you verify the agreed split before accepting. Client payment status, invoice details, and the platform's internal payment ledger remain private.
 
 ### 5.2 When earnings become available
 
