@@ -167,7 +167,22 @@ function isGuardNavUnlocked(
   return isGuardUserStatusActive(guard);
 }
 
-/** Inactive guards may only use settings; all other tabs route to activation. */
+/** Tabs an inactive guard can open. The dashboard and the router share this list. */
+export function inactiveGuardMayOpen(
+  tab: GuardTab,
+  guard: Partial<SecurityGuard>,
+): boolean {
+  if (tab === 'settings' || tab === 'guide') return true;
+  if (tab === 'support' && isGuardAccountApproved(guard)) return true;
+  const credentialUpdate =
+    Boolean(guard.insurancePolicy?.updateRequestedAt) ||
+    Boolean(guard.idUpdateRequestedAt) ||
+    (guard.certifications ?? []).some((cert) => Boolean(cert.updateRequestedAt) && !cert.pendingUpdate);
+  if (tab === 'profile' && (guard.applicationRevisionRequestedAt || credentialUpdate)) return true;
+  return false;
+}
+
+/** Inactive guards stay on activation except the tabs `inactiveGuardMayOpen` allows. */
 export function normalizeGuardTabForAccount(
   tab: GuardTab | undefined,
   guard: Pick<SecurityGuard, 'userStatus' | 'isStaff'> & Partial<SecurityGuard> | null | undefined
@@ -181,8 +196,7 @@ export function normalizeGuardTabForAccount(
   if (isGuardNavUnlocked(guard)) {
     return resolved === 'activation' ? 'map' : resolved;
   }
-  if (resolved === 'settings') return 'settings';
-  if (resolved === 'support' && isGuardAccountApproved(guard)) return 'support';
+  if (inactiveGuardMayOpen(resolved, guard)) return resolved;
   return 'activation';
 }
 

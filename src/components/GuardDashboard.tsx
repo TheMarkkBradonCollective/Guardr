@@ -39,6 +39,7 @@ import { GuardPreShiftBriefing } from './guard/GuardPreShiftBriefing';
 import { GuardNextShiftCard } from './guard/GuardNextShiftCard';
 import { ReplacementOfferCard } from './guard/ReplacementOfferCard';
 import { activeReplacementOffers } from '../lib/emergencyReplacement';
+import { inactiveGuardMayOpen } from '../lib/appNavigation';
 import { useGuardLiveLocation } from '../lib/useGuardLiveLocation';
 import { midShiftCheckInDue } from './guard/MidShiftCheckInPanel';
 import { shiftDutyStartedAt } from '../lib/shiftWindow';
@@ -277,24 +278,9 @@ interface GuardDashboardProps {
 export type GuardTab = 'map' | 'activation' | 'earnings' | 'myJobs' | 'messages' | 'guardChat' | 'support' | 'profile' | 'settings' | 'guide' | 'preferences' | 'performance' | 'availability' | 'vehicle';
 export type GuardSupportMode = 'compose' | 'report';
 
-function guardHasCredentialUpdateRequest(guard: SecurityGuard): boolean {
-  // COI has no pendingUpdate blob — updateRequestedAt alone means staff asked for a new upload.
-  if (guard.insurancePolicy?.updateRequestedAt) return true;
-  if (guard.idUpdateRequestedAt) return true;
-  return (guard.certifications ?? []).some(
-    (cert) => Boolean(cert.updateRequestedAt) && !cert.pendingUpdate
-  );
-}
-
 function guardActivationAllowedTabs(guard: SecurityGuard): GuardTab[] {
-  const tabs: GuardTab[] = ['settings', 'guide'];
-  if (guard.applicationRevisionRequestedAt || guardHasCredentialUpdateRequest(guard)) {
-    tabs.push('profile');
-  }
-  if (isGuardAccountApproved(guard)) {
-    tabs.push('support');
-  }
-  return tabs;
+  const candidates: GuardTab[] = ['settings', 'guide', 'support', 'profile'];
+  return candidates.filter((tab) => inactiveGuardMayOpen(tab, guard));
 }
 const GUARD_SIDE_NAV_TABS = new Set<GuardTab>([
   'map',

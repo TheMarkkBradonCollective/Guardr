@@ -9,6 +9,12 @@ export interface StaffNavAccessFlags {
   showCities: boolean;
   /** Manager+ executive roster */
   showManagement?: boolean;
+  showApplications?: boolean;
+  showCredentials?: boolean;
+  showStats?: boolean;
+  showAnalytics?: boolean;
+  showViolations?: boolean;
+  showMessages?: boolean;
   /** Finance desk only — hide ops nav; payment tools + overview/profile/help */
   financeDeskOnly?: boolean;
 }
@@ -112,6 +118,12 @@ export interface StaffNavItemAccess {
   citiesOnly?: boolean;
   disputesOnly?: boolean;
   managementOnly?: boolean;
+  applicationsOnly?: boolean;
+  credentialsOnly?: boolean;
+  statsOnly?: boolean;
+  analyticsOnly?: boolean;
+  violationsOnly?: boolean;
+  messagesOnly?: boolean;
 }
 
 /** Hide nav items the current role cannot use (desktop already did this; mobile menu did not). */
@@ -129,6 +141,12 @@ export function isStaffNavItemVisible(
   if (item.citiesOnly && !flags.showCities) return false;
   if (item.disputesOnly && !flags.showDisputes) return false;
   if (item.managementOnly && !flags.showManagement) return false;
+  if (item.applicationsOnly && !flags.showApplications) return false;
+  if (item.credentialsOnly && !flags.showCredentials) return false;
+  if (item.statsOnly && !flags.showStats) return false;
+  if (item.analyticsOnly && !flags.showAnalytics) return false;
+  if (item.violationsOnly && !flags.showViolations) return false;
+  if (item.messagesOnly && flags.showMessages === false) return false;
   return true;
 }
 

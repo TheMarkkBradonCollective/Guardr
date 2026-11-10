@@ -267,19 +267,31 @@ describe('normalizeGuardTabForAccount', () => {
     assert.equal(normalizeGuardTabForAccount('map', guard), 'map');
   });
 
-  it('routes inactive guards to activation except settings', () => {
+  it('routes inactive guards to activation except settings and the guide', () => {
     const guard = { userStatus: 'pending' as const, isStaff: false };
     assert.equal(normalizeGuardTabForAccount('map', guard), 'activation');
     assert.equal(normalizeGuardTabForAccount('myJobs', guard), 'activation');
     assert.equal(normalizeGuardTabForAccount('messages', guard), 'activation');
+    assert.equal(normalizeGuardTabForAccount('profile', guard), 'activation');
     assert.equal(normalizeGuardTabForAccount('settings', guard), 'settings');
+    assert.equal(normalizeGuardTabForAccount('guide', guard), 'guide');
   });
 
-  it('routes approved-but-not-active guards to activation except settings and support', () => {
+  it('keeps profile open when an inactive guard has a revision request', () => {
+    const guard = {
+      userStatus: 'pending' as const,
+      isStaff: false,
+      applicationRevisionRequestedAt: '2026-01-01T00:00:00.000Z',
+    };
+    assert.equal(normalizeGuardTabForAccount('profile', guard), 'profile');
+  });
+
+  it('routes approved-but-not-active guards to activation except settings, support, and the guide', () => {
     const guard = { userStatus: 'approved' as const, isStaff: false };
     assert.equal(normalizeGuardTabForAccount('map', guard), 'activation');
     assert.equal(normalizeGuardTabForAccount('settings', guard), 'settings');
     assert.equal(normalizeGuardTabForAccount('support', guard), 'support');
+    assert.equal(normalizeGuardTabForAccount('guide', guard), 'guide');
   });
 
   it('allows user_status active guards to use the app even when credentials are still loading', () => {
