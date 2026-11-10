@@ -19,7 +19,8 @@ const SERVER_CONTROLLED = new Set([
   'is_staff', 'staff_role', 'side_role', 'user_status', 'verified', 'background_checked',
   'id_verification_status', 'stripe_connect_account_id', 'migrated_to_staff_at',
   'approved', 'account_status', 'rating', 'jobs_completed', 'total_requests',
-  'personal_email', 'managed_cities', 'created_at', 'updated_at',
+  'personal_email', 'managed_cities', 'created_at', 'updated_at', 'trusted', 'failed_audits',
+  'credential_expiry_restricted', 'id_verification_reviewed_at',
 ]);
 
 export function buildSignupProfileRow(

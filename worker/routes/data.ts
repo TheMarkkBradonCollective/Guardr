@@ -14,7 +14,10 @@ import {
 import { authorizeJobUpdate, clientInitialJobStatus } from '../security/jobPolicy.ts';
 import {
   buildServerInvoice,
+  invoicedJobIds,
+  MARKETPLACE_JOB_COLUMNS,
   needsSelfOnlyFilter,
+  scopeJobRows,
   scopeProfileRows,
   stampAuditRows,
   type JobForInvoice,
@@ -30,6 +33,13 @@ type QueryBody = {
 };
 
 export { ALLOWED_TABLES };
+
+/** Constraint / bad-value errors are the caller's fault: answer 400, not 500. */
+export function isDataError(err: { message?: string; code?: unknown }): boolean {
+  const code = String(err.code ?? '');
+  if (code.startsWith('23') || code.startsWith('22')) return true;
+  return /violates|invalid input|null value in column|duplicate key|out of range|malformed|invalid .*syntax/i.test(err.message ?? '');
+}
 
 export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
   app.post('/api/data/query', async (c) => {
@@ -79,12 +89,26 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
 
     const db = createNeonDatabase(c.env.DATABASE_URL);
     const failed = (err?: { message?: string; code?: unknown } | null) => {
+      if (err) console.warn('data query failed', table, operation, err.code, err.message);
+      if (err && isDataError(err)) return c.json({ data: null, error: { message: 'Invalid or duplicate data' } }, 400);
       if (err) console.error('data query failed', table, operation, err.code, err.message);
       return c.json({ data: null, error: { message: 'Query failed' } }, 500);
     };
 
     if (operation === 'select' && needsSelfOnlyFilter(table, identity, filters.map((f) => f.col))) {
       plan.ownerOr = `id.eq.${identity.profileId}`;
+    }
+    // Jobs: filtering on a private column only matches your own jobs.
+    const jobRead = !staff && table === 'security_requests' && operation === 'select';
+    if (jobRead && filters.some((f) => !MARKETPLACE_JOB_COLUMNS.has(f.col))) {
+      plan.ownerOr = `client_id.eq.${identity.profileId},assigned_guard_id.eq.${identity.profileId}`;
+    }
+    // Scoping needs the ownership columns, so read whole rows and project afterwards.
+    let projectCols: string[] | null = null;
+    if (jobRead && body.columns && body.columns.trim() !== '*') {
+      const cols = body.columns.split(',').map((c) => c.trim());
+      if (cols.every((c) => /^[a-z_][a-z0-9_]*$/.test(c))) projectCols = cols;
+      body.columns = '*';
     }
 
     // Guards' payout invoices: lines and total come from the stored jobs, never from the app.
@@ -109,8 +133,18 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
             .in('id', jobIds)
         : { data: [], error: null };
       if (jobs.error) return failed(jobs.error);
+      const me = await db.from('guards').select('name').eq('id', identity.profileId);
+      const myName = ((me.data ?? [])[0] as Record<string, unknown> | undefined)?.name;
+      requested.guard_name = typeof myName === 'string' && myName ? myName : identity.email;
       const built = buildServerInvoice(identity, requested, (jobs.data ?? []) as unknown as JobForInvoice[]);
       if (built.ok === false) return deny(built.error, 400);
+      // One active invoice per job.
+      const mine = await db.from('guard_payout_invoices').select('job_ids, status').eq('guard_id', identity.profileId);
+      if (mine.error) return failed(mine.error);
+      const already = invoicedJobIds((mine.data ?? []) as Array<{ job_ids?: unknown; status?: unknown }>);
+      if ((built.row.job_ids as string[]).some((j) => already.has(j))) {
+        return c.json({ data: null, error: { message: 'A payout invoice already exists for one of these jobs' } }, 409);
+      }
       const ins = await db.from('guard_payout_invoices').insert(built.row).select('*');
       if (ins.error) return failed(ins.error);
       return c.json({ data: ins.data, error: null });
@@ -210,13 +244,29 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       if (result.error.message?.startsWith('Invalid identifier') || code === '42703' || code === '42P01') {
         return c.json({ data: null, error: { message: 'Invalid column', code: '42703' } }, 400);
       }
-      if (code.startsWith('23') || code.startsWith('22')) {
+      if (isDataError(result.error)) {
         // Constraint or data-format problem: say so without echoing database internals.
         return c.json({ data: null, error: { message: 'Invalid or duplicate data', code } }, 400);
       }
       console.error('data query failed', table, operation, code, result.error.message);
       return c.json({ data: null, error: { message: 'Query failed' } }, 500);
     }
-    return c.json({ ...result, data: scopeProfileRows(table, identity, redactRows(result.data)) });
+    let data = scopeProfileRows(table, identity, redactRows(result.data));
+    if (!staff && table === 'security_requests') {
+      const slots = identity.profileKind === 'guard'
+        ? await db.from('job_guard_slots').select('job_id, status').eq('guard_id', identity.profileId)
+        : { data: [], error: null };
+      const slotJobIds = new Set(
+        ((slots.data ?? []) as Record<string, unknown>[])
+          .filter((r) => !['declined', 'removed', 'expired', 'cancelled'].includes(String(r.status ?? '')))
+          .map((r) => String(r.job_id))
+      );
+      data = scopeJobRows(identity, data, { slotJobIds });
+      if (projectCols && Array.isArray(data)) {
+        const keep = projectCols;
+        data = (data as Record<string, unknown>[]).map((r) => Object.fromEntries(keep.filter((k) => k in r).map((k) => [k, r[k]])));
+      }
+    }
+    return c.json({ ...result, data });
   });
 }

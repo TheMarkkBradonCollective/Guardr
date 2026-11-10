@@ -161,7 +161,8 @@ describe('sign-up profile', () => {
 });
 
 // ---- Retest gaps: job transitions, profile scoping, audit stamping, invoices ----
-import { authorizeJobUpdate, clientInitialJobStatus } from './jobPolicy.ts';
+import { authorizeJobUpdate, clientInitialJobStatus, serverOvertime, guardNegotiationOk } from './jobPolicy.ts';
+import { scopeJobRows, approximateArea, invoicedJobIds } from './rowRules.ts';
 import { buildServerInvoice, scopeProfileRows, stampAuditRows, needsSelfOnlyFilter } from './rowRules.ts';
 
 const asClient = { profileId: 'c1', profileKind: 'client', email: 'c@x.co', platformRole: 'client', sideRole: null, staffRole: null } as const;
@@ -213,8 +214,8 @@ it('other people see only public profile columns', () => {
   const out = scopeProfileRows('guards', asGuard as never, rows) as Record<string, unknown>[];
   assert.equal(out[0].email, 'me@x');
   assert.deepEqual(out[1], { id: 'g2', name: 'B' });
-  const staffOut = scopeProfileRows('staff', asClient as never, [{ id: 's', name: 'F', email: 'f@x', id_number: '1' }]);
-  assert.deepEqual(staffOut, [{ id: 's', name: 'F' }]);
+  const staffOut = scopeProfileRows('staff', asClient as never, [{ id: 's', name: 'Fred Founder', first_name: 'Fred', email: 'f@x', id_number: '1', staff_role: 'Founder', badge_number: 'B1', user_status: 'active' }]);
+  assert.deepEqual(staffOut, [{ id: 's', first_name: 'Fred', name: 'Fred' }]);
   assert.equal(needsSelfOnlyFilter('guards', asClient as never, ['email']), true);
   assert.equal(needsSelfOnlyFilter('guards', asClient as never, ['id']), false);
 });
@@ -240,4 +241,56 @@ it('payout invoice total comes from stored jobs', () => {
   }
   assert.equal(buildServerInvoice(asGuard as never, { job_ids: ['j1'] }, [{ ...job, assigned_guard_id: 'g2' }]).ok, false);
   assert.equal(buildServerInvoice(asGuard as never, { job_ids: ['j1'] }, [{ ...job, guard_payout_available: false }]).ok, false);
+});
+
+
+// ---- Round 3 ----
+it('overtime is computed from the stored job, not the guard', () => {
+  const now = Date.parse('2026-12-01T14:00:00Z');
+  const old = { duration_hours: 4, hourly_rate: 30, guards_needed: 1, estimated_payout: 120, check_in_audit: { checkedAt: '2026-12-01T08:00:00Z' }, overtime_status: 'none' };
+  const ot = serverOvertime(old, { checkedAt: '2026-12-01T13:30:00Z', overtimeClaimed: true }, now)!;
+  assert.equal(ot.overtime_hours, 1.5);
+  assert.equal(ot.overtime_amount, 45);
+  const capped = serverOvertime(old, { checkedAt: '2027-12-01T00:00:00Z', overtimeClaimed: true }, now)!;
+  assert.equal(capped.overtime_hours, 2); // check-out clamped to now
+  const r = authorizeJobUpdate(asGuard as never, { ...old, id: 'j', status: 'accepted', assigned_guard_id: 'g1' }, { overtime_amount: 99999, overtime_hours: 500, scheduled_estimated_payout: 1 });
+  assert.equal(r.ok, false);
+});
+
+it('guards edit only their own negotiation entry', () => {
+  const old = [{ guardId: 'g2', offers: [1] }];
+  assert.equal(guardNegotiationOk(old, [{ guardId: 'g2', offers: [1] }, { guardId: 'g1', offers: [] }], 'g1'), true);
+  assert.equal(guardNegotiationOk(old, [{ guardId: 'g1', offers: [] }], 'g1'), false);
+  assert.equal(guardNegotiationOk(old, [{ guardId: 'g2', offers: [9] }], 'g1'), false);
+});
+
+it('client cancels only unpaid active jobs', () => {
+  assert.equal(authorizeJobUpdate(asClient as never, { client_id: 'c1', status: 'completed' }, { status: 'closed' }).ok, false);
+  assert.equal(authorizeJobUpdate(asClient as never, { client_id: 'c1', status: 'open', payment_status: 'paid' }, { status: 'closed' }).ok, false);
+  assert.equal(authorizeJobUpdate(asClient as never, { client_id: 'c1', status: 'in-progress', payment_status: 'unpaid' }, { status: 'closed' }).ok, true);
+});
+
+it('job rows are scoped for non-participants', () => {
+  const rows = [
+    { id: 'a', status: 'open', client_id: 'c9', address: '123 Main St, Sacramento, CA 95814', contact_phone: '555', site_instructions: 'x', stripe_payment_intent_id: 'pi', latitude: 38.581234, applicants: ['g1', 'g7'], price_negotiations: [{ guardId: 'g7' }] },
+    { id: 'b', status: 'accepted', client_id: 'c9', assigned_guard_id: 'g7', address: 'x' },
+    { id: 'c', status: 'accepted', client_id: 'c9', assigned_guard_id: 'g1', address: 'full', contact_phone: '1' },
+    { id: 'd', status: 'in-progress', client_id: 'c9', address: 'team', contact_phone: '2' },
+  ];
+  const out = scopeJobRows(asGuard as never, rows, { slotJobIds: new Set(['d']) }) as Record<string, unknown>[];
+  assert.deepEqual(out.map((r) => r.id), ['a', 'c', 'd']);
+  assert.equal(out[0].address, 'Sacramento, CA');
+  assert.equal(out[0].contact_phone, undefined);
+  assert.equal(out[0].stripe_payment_intent_id, undefined);
+  assert.equal(out[0].latitude, 38.58);
+  assert.deepEqual(out[0].applicants, ['g1']);
+  assert.deepEqual(out[0].price_negotiations, []);
+  assert.equal(out[1].contact_phone, '1');
+  assert.equal(out[2].contact_phone, '2');
+  assert.equal(approximateArea('Acme HQ — 9 Elm Rd, Elk Grove, CA 95624, USA'), 'Elk Grove, CA');
+});
+
+it('one active invoice per job', () => {
+  const ids = invoicedJobIds([{ job_ids: ['j1'], status: 'open' }, { job_ids: '["j2"]', status: 'completed' }, { job_ids: ['j3'], status: 'cancelled' }]);
+  assert.ok(ids.has('j1') && ids.has('j2') && !ids.has('j3'));
 });

@@ -18,8 +18,7 @@ const GUARD_ASSIGNED_COLS = new Set([
   'en_route_at', 'arrived_at', 'guard_live_location', 'check_in_audit', 'mid_shift_audits',
   'check_out_audit', 'shift_breaks', 'shift_audit_violations', 'self_audit',
   'briefing_acknowledgments', 'post_orders_acknowledgments', 'overtime_guard_approved_at',
-  'overtime_status', 'overtime_hours', 'overtime_amount', 'scheduled_duration_hours',
-  'scheduled_estimated_payout', 'early_clock_out_actual_hours', 'replacement_request',
+  'early_clock_out_actual_hours', 'replacement_request',
   'activity_log', 'reports', 'spot_checks', 'client_violation_reports', 'price_negotiations',
   'status',
 ]);
@@ -31,8 +30,96 @@ const CLIENT_LOCKED_COLS = new Set([
   'overtime_guard_approved_at', 'overtime_hours', 'overtime_amount', 'guard_payout_available',
   'guard_payout_available_at', 'overtime_guard_payout_available', 'overtime_guard_payout_available_at',
   'scheduled_duration_hours', 'scheduled_estimated_payout', 'early_clock_out_actual_hours',
-  'applicants', 'pending_guard_id', 'location_risk_level', 'trusted',
+  'applicants', 'pending_guard_id', 'location_risk_level', 'trusted', 'overtime_original_hours',
+  'overtime_original_amount', 'overtime_dispute_resolved_at', 'overtime_dispute_resolution',
 ]);
+/** Overtime states a client may move to from pending_client (approve or dispute). */
+const CLIENT_OVERTIME_MOVES: Record<string, string[]> = {
+  pending_client: ['awaiting_payment', 'disputed'],
+};
+const CLIENT_CANCEL_FROM = new Set(['draft', 'pending-review', 'open', 'accepted', 'in-progress']);
+const MAX_OVERTIME_HOURS = 12;
+
+function roundMoney(v: number): number {
+  return Math.round(v * 100) / 100;
+}
+
+function checkedAt(audit: unknown): string | null {
+  let a = audit;
+  if (typeof a === 'string') {
+    try {
+      a = JSON.parse(a);
+    } catch {
+      return null;
+    }
+  }
+  const v = a && typeof a === 'object' ? (a as Record<string, unknown>).checkedAt : null;
+  return typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? v : null;
+}
+
+function overtimeClaimed(audit: unknown): boolean {
+  let a = audit;
+  if (typeof a === 'string') {
+    try {
+      a = JSON.parse(a);
+    } catch {
+      return false;
+    }
+  }
+  return !!a && typeof a === 'object' && (a as Record<string, unknown>).overtimeClaimed === true;
+}
+
+/**
+ * Overtime at clock-out, computed from the stored job: worked time (check-in to
+ * check-out, check-out no later than now) minus scheduled hours, capped at 12h.
+ */
+export function serverOvertime(old: Row, checkOutAudit: unknown, now = Date.now()): Row | null {
+  if (!overtimeClaimed(checkOutAudit)) return null;
+  if (old.overtime_status && old.overtime_status !== 'none') return null;
+  const outRaw = checkedAt(checkOutAudit);
+  if (!outRaw) return null;
+  const out = Math.min(Date.parse(outRaw), now);
+  const scheduled = Number(old.duration_hours ?? 0);
+  const inAt = checkedAt(old.check_in_audit);
+  let hours = 0;
+  if (inAt) {
+    hours = (out - Date.parse(inAt)) / 3_600_000 - scheduled;
+  } else if (old.end_date) {
+    hours = (out - Date.parse(String(old.end_date))) / 3_600_000;
+  }
+  hours = Math.min(MAX_OVERTIME_HOURS, Math.round(Math.max(0, hours) * 100) / 100);
+  if (hours <= 0) return null;
+  const guards = Number(old.guards_needed ?? 1) || 1;
+  return {
+    scheduled_duration_hours: old.duration_hours ?? null,
+    scheduled_estimated_payout: old.estimated_payout ?? null,
+    overtime_hours: hours,
+    overtime_amount: roundMoney(hours * Number(old.hourly_rate ?? 0) * guards),
+    overtime_status: 'pending_client',
+  };
+}
+
+type Negotiation = { guardId?: unknown };
+function negotiationList(v: unknown): Negotiation[] {
+  if (Array.isArray(v)) return v as Negotiation[];
+  if (typeof v === 'string') {
+    try {
+      const parsed = JSON.parse(v);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/** A guard may add or change only its own negotiation entry; everyone else's must be unchanged. */
+export function guardNegotiationOk(oldValue: unknown, newValue: unknown, self: string): boolean {
+  const before = negotiationList(oldValue).filter((n) => n && n.guardId !== self);
+  const after = negotiationList(newValue).filter((n) => n && n.guardId !== self);
+  const key = (list: Negotiation[]) => list.map((n) => JSON.stringify(n)).sort().join('\n');
+  return before.length === after.length && key(before) === key(after);
+}
 const CLIENT_PRICING_COLS = new Set(['hourly_rate', 'guard_pay', 'estimated_payout', 'guards_needed', 'pricing_mode']);
 
 function asList(v: unknown): string[] {
@@ -76,12 +163,17 @@ export function authorizeJobUpdate(identity: RequestIdentity, old: Row, input: R
         continue;
       }
       if (k === 'target_guard_id' && !PRE_ACCEPT.has(oldStatus)) continue;
+      if (k === 'overtime_status') {
+        if (v === old.overtime_status) continue;
+        if (!(CLIENT_OVERTIME_MOVES[String(old.overtime_status ?? '')] ?? []).includes(String(v))) continue;
+      }
       patch[k] = v;
     }
     if ('status' in input && input.status !== oldStatus) {
       const next = String(input.status);
       const assigning = typeof patch.assigned_guard_id === 'string' && candidates.has(patch.assigned_guard_id);
-      if (next === 'closed' && oldStatus !== 'completed' && oldStatus !== 'in-progress') {
+      const unpaid = !old.payment_status || old.payment_status === 'unpaid';
+      if (next === 'closed' && CLIENT_CANCEL_FROM.has(oldStatus) && unpaid) {
         patch.status = next;
       } else if (next === 'accepted' && oldStatus === 'open' && assigning) {
         patch.status = next;
@@ -93,7 +185,12 @@ export function authorizeJobUpdate(identity: RequestIdentity, old: Row, input: R
     const assigned = old.assigned_guard_id === self;
     if (assigned) {
       for (const [k, v] of Object.entries(input)) {
+        if (k === 'price_negotiations' && !guardNegotiationOk(old.price_negotiations, v, self)) continue;
         if (k !== 'status' && GUARD_ASSIGNED_COLS.has(k)) patch[k] = v;
+      }
+      // Guard approving overtime the system proposed to them.
+      if (input.overtime_status === 'pending_client' && old.overtime_status === 'pending_guard') {
+        patch.overtime_status = 'pending_client';
       }
       if ('status' in input && input.status !== oldStatus) {
         const next = String(input.status);
@@ -102,6 +199,10 @@ export function authorizeJobUpdate(identity: RequestIdentity, old: Row, input: R
           (oldStatus === 'in-progress' && next === 'completed');
         if (!okMove) return { ok: false, error: 'Only staff can change this job’s status' };
         patch.status = next;
+        if (next === 'completed') {
+          const ot = serverOvertime(old, input.check_out_audit ?? old.check_out_audit);
+          if (ot) Object.assign(patch, ot, { overtime_guard_approved_at: new Date().toISOString() });
+        }
       }
     } else {
       // Not this guard's job: apply, decline a direct offer, negotiate, or accept a direct/replacement offer.
@@ -117,7 +218,7 @@ export function authorizeJobUpdate(identity: RequestIdentity, old: Row, input: R
           const removed = [...before].filter((x) => !after.has(x));
           if (added.every((x) => x === self) && removed.every((x) => x === self)) patch[k] = v;
         } else if (k === 'price_negotiations') {
-          patch[k] = v;
+          if (guardNegotiationOk(old.price_negotiations, v, self)) patch[k] = v;
         } else if (k === 'pending_guard_id') {
           if (v === self && (old.pending_guard_id == null || old.pending_guard_id === self)) patch[k] = v;
           else if (v === null && old.pending_guard_id === self) patch[k] = v;

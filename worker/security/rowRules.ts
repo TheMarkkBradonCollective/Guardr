@@ -23,10 +23,8 @@ export const PUBLIC_PROFILE_COLUMNS: Record<string, Set<string>> = {
     'approved', 'rating', 'trusted', 'client_type', 'business_type', 'industries', 'website',
     'service_city', 'service_state', 'total_requests', 'account_status',
   ]),
-  staff: new Set([
-    'id', 'name', 'first_name', 'middle_name', 'last_name', 'badge_number', 'avatar', 'bio',
-    'staff_role', 'user_status', 'headline', 'summary', 'about', 'specialties', 'managed_cities',
-  ]),
+  // Non-staff only need a support display name for staff (chat and support threads).
+  staff: new Set(['id', 'first_name', 'avatar']),
 };
 
 export function isStaffIdentity(identity: RequestIdentity): boolean {
@@ -43,6 +41,7 @@ export function scopeProfileRows(table: string, identity: RequestIdentity, data:
     if (table !== 'staff' && r.id === identity.profileId) return r;
     const out: Row = {};
     for (const [k, v] of Object.entries(r)) if (allowed.has(k)) out[k] = v;
+    if (table === 'staff' && 'name' in r) out.name = typeof r.first_name === 'string' && r.first_name ? r.first_name : 'Guardr Support';
     return out;
   };
   return Array.isArray(data) ? data.map(scope) : scope(data);
@@ -125,4 +124,107 @@ export function buildServerInvoice(
   };
   if (typeof requested.id === 'string' && /^[A-Za-z0-9_.:-]{1,128}$/.test(requested.id)) row.id = requested.id;
   return { ok: true, row };
+}
+
+
+// ---------------------------------------------------------------- jobs
+
+/** Job columns any signed-in user may see on an open job they are not part of. */
+export const MARKETPLACE_JOB_COLUMNS = new Set([
+  'id', 'title', 'description', 'client_id', 'client_name', 'client_logo', 'client_rating', 'state',
+  'type', 'armed_required', 'guards_needed', 'uniform_requirements', 'equipment_requirements',
+  'start_date', 'end_date', 'duration_hours', 'hourly_rate', 'guard_pay', 'estimated_payout', 'status',
+  'required_certifications', 'created_at', 'schedule_type', 'recurring_end_date', 'recurring_days',
+  'assignment_mode', 'min_years_experience', 'location_risk_level', 'tier_pay_rates', 'request_type',
+  'target_guard_id', 'pending_guard_id', 'min_guard_qualification', 'break_minutes', 'break_paid',
+  'opened_at', 'pricing_mode', 'opening_price_offer', 'agreement_fee_config', 'job_location_id',
+  'assigned_guard_id', 'applicants', 'price_negotiations', 'latitude', 'longitude', 'location',
+  'address', 'platform_fee_per_hour', 'replacement_request',
+]);
+
+/** "123 Main St, Sacramento, CA 95814" -> "Sacramento, CA". */
+export function approximateArea(address: unknown): string {
+  if (typeof address !== 'string') return '';
+  const text = address.includes(' — ') ? address.split(' — ').pop()! : address;
+  const parts = text.split(',').map((p) => p.trim()).filter(Boolean);
+  const kept = parts
+    .filter((p, i) => !(i === 0 && parts.length > 1 && /\d/.test(p)))
+    .map((p) => p.replace(/\b\d{5}(-\d{4})?\b/g, '').trim())
+    .filter((p) => p && !/^(usa|united states)$/i.test(p));
+  return kept.slice(-2).join(', ');
+}
+
+function mentionsId(value: unknown, id: string): boolean {
+  if (value == null) return false;
+  const text = typeof value === 'string' ? value : JSON.stringify(value);
+  return text.includes(`"${id}"`);
+}
+
+export interface JobViewContext {
+  /** Jobs where this guard holds a team slot (full access). */
+  slotJobIds: Set<string>;
+}
+
+/**
+ * Full job rows only for the owner client, assigned guard, team-slot guards and staff.
+ * Everyone else sees open jobs (and replacement offers made to them) with marketplace
+ * fields: area instead of address, rounded coordinates, only their own applicant and
+ * negotiation entries. Other jobs are dropped.
+ */
+export function scopeJobRows(identity: RequestIdentity, data: unknown, ctx: JobViewContext): unknown {
+  if (isStaffIdentity(identity) || !Array.isArray(data)) return data;
+  const self = identity.profileId;
+  const out: Row[] = [];
+  for (const raw of data as Row[]) {
+    if (!raw || typeof raw !== 'object') continue;
+    const id = String(raw.id ?? '');
+    const full =
+      raw.client_id === self ||
+      raw.assigned_guard_id === self ||
+      (identity.profileKind === 'guard' && ctx.slotJobIds.has(id));
+    if (full) {
+      out.push(raw);
+      continue;
+    }
+    const replacementOffer = identity.profileKind === 'guard' && mentionsId(raw.replacement_request, self);
+    if (raw.status !== 'open' && !replacementOffer) continue;
+    const row: Row = {};
+    for (const [k, v] of Object.entries(raw)) if (MARKETPLACE_JOB_COLUMNS.has(k)) row[k] = v;
+    if ('address' in row) row.address = approximateArea(raw.address);
+    if ('location' in row) row.location = approximateArea(raw.address ?? raw.location);
+    for (const k of ['latitude', 'longitude']) {
+      if (typeof row[k] === 'number') row[k] = Math.round((row[k] as number) * 100) / 100;
+    }
+    if ('applicants' in row) {
+      const list = Array.isArray(raw.applicants) ? (raw.applicants as unknown[]) : [];
+      row.applicants = list.filter((a) => a === self);
+    }
+    if ('price_negotiations' in row) {
+      const list = Array.isArray(raw.price_negotiations) ? (raw.price_negotiations as Row[]) : [];
+      row.price_negotiations = list.filter((n) => n && n.guardId === self);
+    }
+    if ('replacement_request' in row && !replacementOffer) row.replacement_request = null;
+    if ('target_guard_id' in row && raw.target_guard_id !== self && raw.target_guard_id != null) row.target_guard_id = 'other';
+    if ('pending_guard_id' in row && raw.pending_guard_id !== self && raw.pending_guard_id != null) row.pending_guard_id = 'other';
+    out.push(row);
+  }
+  return out;
+}
+
+/** Job ids already on an open or completed payout invoice. */
+export function invoicedJobIds(invoices: Array<{ job_ids?: unknown; status?: unknown }>): Set<string> {
+  const ids = new Set<string>();
+  for (const inv of invoices) {
+    if (inv.status === 'cancelled') continue;
+    let list = inv.job_ids;
+    if (typeof list === 'string') {
+      try {
+        list = JSON.parse(list);
+      } catch {
+        list = [];
+      }
+    }
+    if (Array.isArray(list)) for (const j of list) ids.add(String(j));
+  }
+  return ids;
 }

@@ -6,7 +6,7 @@ import { verifyAccountPassword } from '../../src/lib/accountPasswords.ts';
 import { createNeonDatabase } from '../../lib/db/neonServerless.ts';
 import { resolvePlatformRole } from '../../lib/accountSessionAuth.ts';
 import { currentRequestIdentity } from '../../lib/auth/requestIdentity.ts';
-import { buildSignupProfileRow, EMAIL_RE, SAFE_ID_RE, type SignupBody } from '../security/signupProfile.ts';
+import { buildSignupProfileRow, EMAIL_RE, type SignupBody } from '../security/signupProfile.ts';
 
 function readBearer(header: string | undefined): string | null {
   if (!header?.startsWith('Bearer ')) return null;
@@ -111,8 +111,9 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
     }
 
     const row = buildSignupProfileRow(profileKind, body.profile);
-    const requestedId = typeof body.profile?.id === 'string' ? body.profile.id : '';
-    const profileId = SAFE_ID_RE.test(requestedId) ? requestedId : `${profileKind}-${crypto.randomUUID()}`;
+    // Account ids are always minted here (never taken from the app), prefixed by kind so a
+    // guard, client, and staff id can never be the same string.
+    const profileId = `${profileKind}-${crypto.randomUUID()}`;
     const passwordHash = await hashPassword(password);
     row.id = profileId;
     row.email = email;
