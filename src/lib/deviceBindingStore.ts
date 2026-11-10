@@ -63,7 +63,7 @@ export async function upsertDeviceAccountBinding(input: {
   };
   if (input.roleAppClaim) payload.role_app_claim = input.roleAppClaim;
 
-  const { error } = await supabase.from('device_account_bindings').upsert(payload);
+  const { error } = await supabase.from('device_account_bindings').upsert(payload, { onConflict: 'device_id' });
   if (error && error.code !== '42P01') {
     console.warn('device_account_bindings upsert:', error.message);
   }

@@ -42,6 +42,9 @@ import cronPlacard from '../lib/http/routes/_push/entries/company-placard-expiry
 import cronBriefings from '../lib/http/routes/_push/entries/pre-shift-briefings.ts';
 import { describeNeonConfig } from '../lib/db/databaseUrl.ts';
 import { getSiteUrl } from '../lib/siteConfig.ts';
+import { createNeonDatabase } from '../lib/db/neonServerless.ts';
+import { resolveRequestIdentity, runWithRequestIdentity } from '../lib/auth/requestIdentity.ts';
+import { registerMoneyRouteGuards } from './security/moneyGuards.ts';
 
 export type WorkerEnv = {
   DATABASE_URL: string;
@@ -67,6 +70,28 @@ export function createWorkerApp() {
   const app = new Hono<{ Bindings: WorkerEnv }>();
 
   app.use('/api/*', cors({ origin: (origin) => origin ?? '*', credentials: true }));
+
+  // Verify the signed JWT once per request and load the account (role from DB).
+  // Everything downstream reads identity from here, never from client-sent fields.
+  app.use('/api/*', async (c, next) => {
+    const header = c.req.header('authorization');
+    let identity = null;
+    if (header && c.env.DATABASE_URL && c.env.JWT_SECRET) {
+      try {
+        identity = await resolveRequestIdentity(
+          createNeonDatabase(c.env.DATABASE_URL),
+          header,
+          c.env.JWT_SECRET
+        );
+      } catch (err) {
+        console.error('identity resolution failed', err instanceof Error ? err.message : err);
+        identity = null;
+      }
+    }
+    await runWithRequestIdentity(identity, () => next());
+  });
+
+  registerMoneyRouteGuards(app);
 
   app.get('/api/health', createVercelAdapter(healthHandler));
   app.get('/api/config', createVercelAdapter(publicConfig));

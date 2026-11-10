@@ -1,5 +1,30 @@
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import { currentRequestIdentity, type RequestIdentity } from '../auth/requestIdentity.ts';
+
+const CREDENTIAL_KEYS = ['userId', 'email', 'role'] as const;
+
+/**
+ * Legacy routes read session credentials ({ userId, email, role }) from the query
+ * string or JSON body. Replace any client-sent values with the verified identity so
+ * a caller can never claim to be someone else. Without a verified identity the
+ * credential fields are removed and the route sees an anonymous request.
+ */
+export function bindSessionCredentials(
+  target: Record<string, unknown> | null | undefined,
+  identity: RequestIdentity | null
+): void {
+  if (!target || typeof target !== 'object' || Array.isArray(target)) return;
+  const hasAll = CREDENTIAL_KEYS.every((k) => k in target);
+  if (!hasAll) return;
+  if (!identity) {
+    for (const k of CREDENTIAL_KEYS) delete target[k];
+    return;
+  }
+  target.userId = identity.profileId;
+  target.email = identity.email;
+  target.role = identity.platformRole;
+}
 
 type VercelRequest = {
   method?: string;
@@ -35,11 +60,19 @@ export function createVercelAdapter(
       rawBody = await c.req.text().catch(() => undefined);
       const contentType = c.req.header('content-type') ?? '';
       if (rawBody !== undefined && contentType.includes('application/json')) {
-        body = JSON.parse(rawBody);
+        try {
+          body = rawBody ? JSON.parse(rawBody) : undefined;
+        } catch {
+          return c.json({ error: 'Invalid JSON body' }, 400);
+        }
       } else {
         body = rawBody;
       }
     }
+
+    const identity = currentRequestIdentity();
+    bindSessionCredentials(query, identity);
+    bindSessionCredentials(body as Record<string, unknown> | undefined, identity);
 
     const req: VercelRequest = {
       method: c.req.method,
@@ -78,7 +111,12 @@ export function createVercelAdapter(
       },
     };
 
-    await handler(req, res);
+    try {
+      await handler(req, res);
+    } catch (err) {
+      console.error('Route handler error:', err instanceof Error ? err.message : err);
+      return c.json({ error: 'Internal error' }, 500);
+    }
     headerStore.forEach((value, key) => {
       if (key === 'set-cookie' && Array.isArray(value)) {
         for (const cookie of value) headers.append('Set-Cookie', cookie);

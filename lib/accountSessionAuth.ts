@@ -1,4 +1,5 @@
 import type { AppDb } from './db/adminClient.ts';
+import { currentRequestIdentity } from './auth/requestIdentity.ts';
 
 export type PlatformRole =
   | 'client'
@@ -94,96 +95,6 @@ export function hasFinancePlatformAccess(
   return role === 'manager' || role === 'director' || role === 'owner';
 }
 
-async function verifyStaffSession(
-  db: AppDb,
-  userId: string,
-  email: string
-): Promise<VerifiedSession | null> {
-  const emailLower = email.trim().toLowerCase();
-  let { data, error } = await db
-    .from('staff')
-    .select('id, email, personal_email, staff_role, side_role')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (!data && !error) {
-    const byEmail = await db
-      .from('staff')
-      .select('id, email, personal_email, staff_role, side_role')
-      .or(`email.eq.${emailLower},personal_email.eq.${emailLower}`)
-      .maybeSingle();
-    data = byEmail.data ?? null;
-    error = byEmail.error ?? null;
-  }
-
-  if (!data && error?.code === '42P01') return null;
-  const row = data as Record<string, unknown> | null;
-  const matchesWork = typeof row?.email === 'string' && row.email.toLowerCase() === emailLower;
-  const matchesPersonal =
-    typeof row?.personal_email === 'string' && row.personal_email.toLowerCase() === emailLower;
-  if (!row || (!matchesWork && !matchesPersonal)) return null;
-
-  const sideRole = row.side_role === 'Finance' ? ('Finance' as const) : null;
-  const platformRole = resolvePlatformRole({
-    isStaff: true,
-    staffRole: row.staff_role as StaffDbRole | undefined,
-    sideRole,
-    legacyRole: 'staff',
-  });
-
-  return {
-    userId: String(row.id),
-    email: emailLower,
-    role: platformRole,
-    platformRole,
-    sideRole,
-  };
-}
-
-async function verifyFieldGuardSession(
-  db: AppDb,
-  userId: string,
-  email: string,
-  credentialsRole: string
-): Promise<VerifiedSession | null> {
-  let { data, error } = await db
-    .from('guards')
-    .select('id, email, is_staff, staff_role, side_role, migrated_to_staff_at')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (!data && !error) {
-    const byEmail = await db
-      .from('guards')
-      .select('id, email, is_staff, staff_role, side_role, migrated_to_staff_at')
-      .eq('email', email)
-      .maybeSingle();
-    data = byEmail.data ?? null;
-    error = byEmail.error ?? null;
-  }
-
-  if (!data && error?.code === '42P01') return null;
-  const row = data as Record<string, unknown> | null;
-  if (!row || typeof row.email !== 'string' || row.email.toLowerCase() !== email) return null;
-  if (row.migrated_to_staff_at) return null;
-
-  const sideRole = row.side_role === 'Finance' ? ('Finance' as const) : null;
-  const platformRole = resolvePlatformRole({
-    isStaff: row.is_staff === true,
-    staffRole: row.staff_role as StaffDbRole | undefined,
-    sideRole,
-    legacyRole: row.is_staff === true ? 'staff' : 'guard',
-  });
-
-  if (platformRole !== credentialsRole && credentialsRole !== 'staff' && credentialsRole !== 'auditor') {
-    console.warn(
-      `Session role mismatch for ${email}: client sent ${credentialsRole}, db has ${platformRole}`
-    );
-  }
-
-  return { userId: String(row.id), email, role: platformRole, platformRole, sideRole };
-}
-
 /** True when the verified session is allowed to use this product app. */
 export function sessionOwnsProductApp(
   session: Pick<VerifiedSession, 'platformRole'>,
@@ -194,35 +105,31 @@ export function sessionOwnsProductApp(
   return isStaffPlatformRole(session.platformRole);
 }
 
+/**
+ * Returns the signed-in account for this request.
+ *
+ * SECURITY: identity comes only from the verified JWT (see lib/auth/requestIdentity.ts),
+ * with the role re-read from the database. Client-supplied userId/email/role are
+ * never trusted; when they are sent they must match the verified identity.
+ */
 export async function verifyAccountSession(
-  db: AppDb,
+  _db: AppDb,
   credentials: SessionCredentials | null | undefined
 ): Promise<VerifiedSession | null> {
-  if (!credentials?.userId || !credentials?.email || !credentials?.role) {
-    return null;
+  const identity = currentRequestIdentity();
+  if (!identity) return null;
+  if (credentials) {
+    const claimedEmail = String(credentials.email ?? '').trim().toLowerCase();
+    if (claimedEmail && claimedEmail !== identity.email) return null;
+    if (credentials.userId && String(credentials.userId) !== identity.profileId) return null;
   }
-
-  const email = credentials.email.trim().toLowerCase();
-  const { userId, role } = credentials;
-
-  if (role === 'client') {
-    let { data } = await db.from('clients').select('id, email').eq('id', userId).maybeSingle();
-    if (!data) {
-      const byEmail = await db.from('clients').select('id, email').eq('email', email).maybeSingle();
-      data = byEmail.data ?? null;
-    }
-    const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | null | undefined;
-    if (!row || typeof row.email !== 'string') return null;
-    if (row.email.toLowerCase() !== email) return null;
-    return { userId: String(row.id), email, role: 'client', platformRole: 'client' };
-  }
-
-  if (STAFF_PLATFORM_ROLES.has(role)) {
-    const staffSession = await verifyStaffSession(db, userId, email);
-    if (staffSession) return staffSession;
-  }
-
-  return verifyFieldGuardSession(db, userId, email, role);
+  return {
+    userId: identity.profileId,
+    email: identity.email,
+    role: identity.platformRole,
+    platformRole: identity.platformRole,
+    sideRole: identity.sideRole,
+  };
 }
 
 export async function verifyFinanceStaffSession(

@@ -16,6 +16,41 @@ function apiUrl(path: string): string {
   return `${apiOrigin()}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+/**
+ * Attach the signed-in JWT to every same-origin /api/ request. The server only
+ * trusts this token (never userId/email/role sent in a body or query string).
+ */
+function installApiAuthFetch(): void {
+  if (typeof window === 'undefined' || typeof window.fetch !== 'function') return;
+  const marker = '__guardrApiAuthFetch';
+  const w = window as unknown as Record<string, unknown>;
+  if (w[marker]) return;
+  w[marker] = true;
+  const original = window.fetch.bind(window);
+  window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    try {
+      const rawUrl = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      const url = new URL(rawUrl, window.location.href);
+      const sameApi =
+        url.pathname.startsWith('/api/') &&
+        (url.origin === window.location.origin || url.origin === apiOrigin());
+      const token = sameApi ? localStorage.getItem(TOKEN_KEY) : null;
+      if (token) {
+        const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+        if (!headers.has('authorization')) {
+          headers.set('authorization', `Bearer ${token}`);
+          return original(input, { ...init, headers });
+        }
+      }
+    } catch {
+      /* fall through */
+    }
+    return original(input, init);
+  };
+}
+
+installApiAuthFetch();
+
 type Filter =
   | { col: string; op: 'eq'; val: unknown }
   | { col: string; op: 'neq'; val: unknown }
@@ -248,23 +283,41 @@ export function createGuardrClient() {
         error: null,
       };
     },
-    async signUp(input: { email: string; password: string; options?: { data?: Record<string, unknown> } }) {
+    /** Server-side sign-up: creates a new guard or client profile and its login. */
+    async signUp(input: {
+      email: string;
+      password: string;
+      profileKind: 'guard' | 'client';
+      profile: Record<string, unknown>;
+    }) {
       const res = await fetch(apiUrl('/api/auth/signup'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          email: input.email,
-          password: input.password,
-          profileKind: input.options?.data?.profileKind,
-          profileId: input.options?.data?.profileId,
-        }),
+        body: JSON.stringify(input),
       });
-      const json = (await res.json()) as { token?: string; error?: string };
+      const json = (await res.json().catch(() => ({}))) as {
+        token?: string;
+        error?: string;
+        user?: { id: string; email: string; role: string };
+      };
       if (!res.ok || !json.token) {
         return { data: { session: null, user: null }, error: { message: json.error ?? 'Signup failed' } };
       }
       localStorage.setItem(TOKEN_KEY, json.token);
-      return { data: { session: { access_token: json.token }, user: null }, error: null };
+      return {
+        data: { session: { access_token: json.token, user: json.user ?? null }, user: json.user ?? null },
+        error: null,
+      };
+    },
+    async changePassword(newPassword: string) {
+      const res = await fetch(apiUrl('/api/auth/change-password'), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ newPassword }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!res.ok || !json.ok) return { error: { message: json.error ?? 'Could not change password' } };
+      return { error: null };
     },
     async getSession() {
       const token = localStorage.getItem(TOKEN_KEY);
