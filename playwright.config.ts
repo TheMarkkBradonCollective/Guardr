@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const authenticated = process.env.QA_E2E_AUTH === '1';
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -16,18 +18,27 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'npm run build && npm run preview -- --port 4173',
+    command: 'node scripts/qa-e2e-preview.mjs',
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 180_000,
     env: {
-      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL ?? 'https://example.supabase.co',
-      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY ?? 'placeholder',
+      // Same-origin Worker. Do not bake a remote API or a Supabase host into the preview.
+      VITE_APP_URL: '',
+      VITE_SUPABASE_URL: '',
+      VITE_SUPABASE_ANON_KEY: '',
+      ...(authenticated ? { QA_E2E_AUTH: '1' } : {}),
     },
   },
   projects: [
     {
       name: 'chromium',
+      testIgnore: /authenticated\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'authenticated',
+      testMatch: /authenticated\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
   ],

@@ -4,7 +4,7 @@
  *
  * Staff: uses field-test operator (staff@guardr.co) by default.
  * Client/guard: set VIEWPORT_AUDIT_CLIENT_EMAIL / VIEWPORT_AUDIT_GUARD_EMAIL,
- * or run `supabase/investor_demo_accounts.sql` and use testc@test.com / testg@test.com.
+ * or seed the QA Neon branch with `npm run db:seed:qa` (qa.client.personal@guardr.test / qa.guard@guardr.test).
  *
  * Run: npm run viewport:audit
  */
@@ -221,7 +221,7 @@ async function run() {
     '',
     `**Pass:** ${report.summary.pass} | **Fail:** ${report.summary.fail} | **Layout issues:** ${report.summary.layoutIssues}`,
     '',
-    'Client/guard paths require demo accounts — see `supabase/investor_demo_accounts.sql` or env overrides.',
+    'Client/guard paths require demo accounts — run `npm run db:seed:qa` or set VIEWPORT_AUDIT_*_EMAIL.',
     '',
   ];
 
