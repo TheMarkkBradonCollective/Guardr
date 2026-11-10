@@ -3,6 +3,8 @@
  * Compatible enough for Guardr server routes and the browser API shim.
  */
 
+import { encodeColumnValue } from './jsonbColumns.ts';
+
 export type SqlQueryFn = (
   sql: string,
   params?: unknown[]
@@ -196,11 +198,15 @@ class QueryBuilder {
     try {
       if (this.operation === 'select') {
         const { sql: where, params } = this.whereClause(1);
-        let sql = `SELECT ${this.columns === '*' ? '*' : this.columns} FROM ${quoteIdent(this.table)}${where}`;
+        let sql = `SELECT ${selectList(this.columns)} FROM ${quoteIdent(this.table)}${where}`;
         if (this.orderCol) {
           sql += ` ORDER BY ${quoteIdent(this.orderCol)} ${this.orderAsc ? 'ASC' : 'DESC'}`;
         }
-        if (this.limitN != null) sql += ` LIMIT ${this.limitN}`;
+        if (this.limitN != null) {
+          const n = Number(this.limitN);
+          if (!Number.isInteger(n) || n < 0) throw new Error('Invalid limit');
+          sql += ` LIMIT ${n}`;
+        }
         const result = await this.run(sql, params);
         if (this.singleRow || this.maybeSingleRow) {
           const row = result.rows[0] ?? null;
@@ -221,7 +227,7 @@ class QueryBuilder {
         let p = 1;
         for (const row of rows) {
           const ph = keys.map(() => `$${p++}`);
-          keys.forEach((k) => allParams.push(row[k]));
+          keys.forEach((k) => allParams.push(encodeColumnValue(this.table, k, row[k])));
           valueGroups.push(`(${ph.join(', ')})`);
         }
         const conflict = this.upsertConflict ?? (this.operation === 'upsert' ? 'id' : null);
@@ -246,11 +252,7 @@ class QueryBuilder {
             sql += ` ON CONFLICT (${conflictSql}) DO UPDATE SET ${updates.join(', ')}`;
           }
         }
-        if (this.columns !== '*') {
-          sql += ` RETURNING ${this.columns}`;
-        } else {
-          sql += ' RETURNING *';
-        }
+        sql += ` RETURNING ${selectList(this.columns)}`;
         const result = await this.run(sql, allParams);
         return { data: result.rows, error: null };
       }
@@ -259,7 +261,7 @@ class QueryBuilder {
         const row = this.payload as Record<string, unknown>;
         const keys = Object.keys(row);
         const setParts = keys.map((k, i) => `${quoteIdent(k)} = $${i + 1}`);
-        const params = [...keys.map((k) => row[k])];
+        const params = [...keys.map((k) => encodeColumnValue(this.table, k, row[k]))];
         const { sql: where, params: wParams } = this.whereClause(keys.length + 1);
         params.push(...wParams);
         const sql = `UPDATE ${quoteIdent(this.table)} SET ${setParts.join(', ')}${where} RETURNING *`;
@@ -283,7 +285,23 @@ class QueryBuilder {
   }
 }
 
-function quoteIdent(name: string): string {
+/**
+ * Validated column list for SELECT / RETURNING. Only `*` or plain identifiers
+ * (optionally separated by commas) are accepted; everything is quoted so a caller
+ * can never inject SQL through the column list.
+ */
+export function selectList(columns: string | null | undefined): string {
+  const raw = (columns ?? '*').trim();
+  if (raw === '' || raw === '*') return '*';
+  const parts = raw
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!parts.length) return '*';
+  return parts.map((part) => (part === '*' ? '*' : quoteIdent(part))).join(', ');
+}
+
+export function quoteIdent(name: string): string {
   if (!/^[a-z_][a-z0-9_]*$/i.test(name)) {
     throw new Error(`Invalid identifier: ${name}`);
   }
