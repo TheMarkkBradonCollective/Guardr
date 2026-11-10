@@ -74,7 +74,7 @@ export const TABLE_POLICIES: Record<string, TablePolicy> = {
   payments: { read: 'none', write: 'none' },
   guard_payout_invoices: {
     read: 'own', write: 'own', owner: G('guard_id'), protectedCols: ['status', 'resolved_at'],
-    initialValues: { status: ['pending'] },
+    initialValues: { status: ['open'] },
   },
   support_tickets: { read: 'own', write: 'own', owner: { guard: ['user_id'], client: ['user_id'] } },
   support_messages: { read: 'all', write: 'own', owner: { guard: ['sender_id'], client: ['sender_id'] } },

@@ -159,3 +159,85 @@ describe('sign-up profile', () => {
     assert.equal(c.account_status, 'pending');
   });
 });
+
+// ---- Retest gaps: job transitions, profile scoping, audit stamping, invoices ----
+import { authorizeJobUpdate, clientInitialJobStatus } from './jobPolicy.ts';
+import { buildServerInvoice, scopeProfileRows, stampAuditRows, needsSelfOnlyFilter } from './rowRules.ts';
+
+const asClient = { profileId: 'c1', profileKind: 'client', email: 'c@x.co', platformRole: 'client', sideRole: null, staffRole: null } as const;
+const asGuard = { profileId: 'g1', profileKind: 'guard', email: 'g@x.co', platformRole: 'guard', sideRole: null, staffRole: null } as const;
+
+it('client cannot push its own job past staff review', () => {
+  const old = { id: 'j', client_id: 'c1', status: 'pending-review' };
+  assert.equal(authorizeJobUpdate(asClient as never, old, { status: 'open' }).ok, false);
+  assert.equal(authorizeJobUpdate(asClient as never, old, { status: 'completed' }).ok, false);
+  assert.equal(authorizeJobUpdate(asClient as never, old, { status: 'closed' }).ok, true);
+  assert.equal(authorizeJobUpdate(asClient as never, { ...old, client_id: 'c2' }, { title: 'x' }).ok, false);
+});
+
+it('client may accept an applicant but not an arbitrary guard', () => {
+  const old = { id: 'j', client_id: 'c1', status: 'open', applicants: ['g1'] };
+  assert.equal(authorizeJobUpdate(asClient as never, old, { status: 'accepted', assigned_guard_id: 'g1' }).ok, true);
+  assert.equal(authorizeJobUpdate(asClient as never, old, { status: 'accepted', assigned_guard_id: 'g9' }).ok, false);
+});
+
+it('guard cannot edit an open job it does not own', () => {
+  const old = { id: 'j', client_id: 'c1', status: 'open', applicants: [] };
+  assert.equal(authorizeJobUpdate(asGuard as never, old, { hourly_rate: 999 }).ok, false);
+  assert.equal(authorizeJobUpdate(asGuard as never, old, { title: 'pwn' }).ok, false);
+  assert.equal(authorizeJobUpdate(asGuard as never, old, { assigned_guard_id: 'g1', status: 'accepted' }).ok, false);
+  const apply = authorizeJobUpdate(asGuard as never, old, { applicants: ['g1'], hourly_rate: 999 });
+  assert.ok(apply.ok && !('hourly_rate' in apply.patch) && 'applicants' in apply.patch);
+  assert.equal(authorizeJobUpdate(asGuard as never, { ...old, applicants: ['g2'] }, { applicants: [] }).ok, false);
+});
+
+it('assigned guard moves only along accepted -> in-progress -> completed', () => {
+  const old = { id: 'j', client_id: 'c1', status: 'accepted', assigned_guard_id: 'g1' };
+  assert.equal(authorizeJobUpdate(asGuard as never, old, { status: 'in-progress' }).ok, true);
+  assert.equal(authorizeJobUpdate(asGuard as never, old, { status: 'completed' }).ok, false);
+  const r = authorizeJobUpdate(asGuard as never, old, { arrived_at: 'now', hourly_rate: 1 });
+  assert.ok(r.ok && !('hourly_rate' in r.patch));
+});
+
+it('new client jobs start in staff review unless auto-publish applies', () => {
+  assert.equal(clientInitialJobStatus('open', { trustedClient: false, reviewMode: null, trustedAutoPublish: null }), 'pending-review');
+  assert.equal(clientInitialJobStatus('open', { trustedClient: true, reviewMode: 'trusted-auto', trustedAutoPublish: true }), 'open');
+  assert.equal(clientInitialJobStatus('completed', { trustedClient: true, reviewMode: 'none', trustedAutoPublish: true }), 'pending-review');
+});
+
+it('other people see only public profile columns', () => {
+  const rows = [
+    { id: 'g1', email: 'me@x', phone: '1' },
+    { id: 'g2', name: 'B', email: 'b@x', phone: '2', id_number: 'D123', id_front_url: 'u', stripe_connect_account_id: 'acct' },
+  ];
+  const out = scopeProfileRows('guards', asGuard as never, rows) as Record<string, unknown>[];
+  assert.equal(out[0].email, 'me@x');
+  assert.deepEqual(out[1], { id: 'g2', name: 'B' });
+  const staffOut = scopeProfileRows('staff', asClient as never, [{ id: 's', name: 'F', email: 'f@x', id_number: '1' }]);
+  assert.deepEqual(staffOut, [{ id: 's', name: 'F' }]);
+  assert.equal(needsSelfOnlyFilter('guards', asClient as never, ['email']), true);
+  assert.equal(needsSelfOnlyFilter('guards', asClient as never, ['id']), false);
+});
+
+it('audit rows carry the real actor', () => {
+  const [row] = stampAuditRows(asGuard as never, [{ action: 'x', actor_email: 'founder@x', actor_role: 'Founder', actor_id: 'f' }]);
+  assert.equal(row.actor_id, 'g1');
+  assert.equal(row.actor_email, 'g@x.co');
+  assert.equal(row.actor_role, 'guard');
+});
+
+it('payout invoice total comes from stored jobs', () => {
+  const job = {
+    id: 'j1', title: 'T', client_name: 'C', assigned_guard_id: 'g1', status: 'completed', payment_status: 'paid',
+    guard_payout_method: null, guard_payout_available: true, duration_hours: '4', hourly_rate: 30, start_date: null, end_date: null,
+  };
+  const r = buildServerInvoice(asGuard as never, { job_ids: ['j1'], total: 99999 }, [job]);
+  assert.ok(r.ok);
+  if (r.ok) {
+    assert.notEqual(r.row.total, 99999);
+    assert.equal(r.row.status, 'open');
+    assert.ok(Number(r.row.total) > 0 && Number(r.row.total) <= 120);
+  }
+  assert.equal(buildServerInvoice(asGuard as never, { job_ids: ['j1'] }, [{ ...job, assigned_guard_id: 'g2' }]).ok, false);
+  assert.equal(buildServerInvoice(asGuard as never, { job_ids: ['j1'] }, [{ ...job, guard_payout_available: false }]).ok, false);
+});

@@ -184,7 +184,9 @@ export function registerMoneyRouteGuards(app: Hono<{ Bindings: WorkerEnv }>) {
   }
 
   app.get('/api/stripe/payments', async (c, next) => {
-    if (!isFinanceIdentity(currentRequestIdentity())) return unauthorized(c);
+    const who = currentRequestIdentity();
+    if (!who) return unauthorized(c);
+    if (!isFinanceIdentity(who)) return forbidden(c);
     return next();
   });
 }
