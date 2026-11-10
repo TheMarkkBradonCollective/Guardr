@@ -1,5 +1,5 @@
-import { verifyJwtWeb } from '../auth/jwt.ts';
 import { isDirectorTierPlatformRole } from '../accountSessionAuth.ts';
+import { currentRequestIdentity, readBearer } from '../auth/requestIdentity.ts';
 import type { VercelRequest } from './types.ts';
 
 function headerValue(value: string | string[] | undefined): string | undefined {
@@ -8,17 +8,12 @@ function headerValue(value: string | string[] | undefined): string | undefined {
 }
 
 export function readBearerToken(req: VercelRequest): string | null {
-  const raw = headerValue(req.headers.authorization) ?? headerValue(req.headers.Authorization);
-  if (!raw?.startsWith('Bearer ')) return null;
-  return raw.slice('Bearer '.length).trim() || null;
+  return readBearer(headerValue(req.headers.authorization) ?? headerValue(req.headers.Authorization));
 }
 
-export async function readRequestPlatformRole(req: VercelRequest): Promise<string | null> {
-  const token = readBearerToken(req);
-  const secret = process.env.JWT_SECRET?.trim();
-  if (!token || !secret) return null;
-  const payload = await verifyJwtWeb(token, secret);
-  return payload?.role ?? null;
+/** Platform role of the verified signed-in account (re-read from the database), or null. */
+export async function readRequestPlatformRole(_req: VercelRequest): Promise<string | null> {
+  return currentRequestIdentity()?.platformRole ?? null;
 }
 
 export async function requestIsDirectorTier(req: VercelRequest): Promise<boolean> {
