@@ -1,13 +1,7 @@
 import { getSupabaseAdmin } from '../../../../db/adminClient.ts';
 import type { VercelRequest, VercelResponse } from '../../../types.ts';
-
-async function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || key === 'sk_test_placeholder') return null;
-  const { default: StripeSdk } = await import('stripe');
-  return new StripeSdk(key);
-}
-
+import { getStripe } from '../../../../stripeClient.ts';
+import { PAYMENTS_NOT_CONFIGURED_BODY, readStripeSecretKey } from '../../../../stripeEnv.ts';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -16,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const stripe = await getStripe();
   if (!stripe) {
-    return res.status(503).json({ error: 'Stripe is not configured' });
+    return res.status(503).json(PAYMENTS_NOT_CONFIGURED_BODY);
   }
 
   const { guardId, staffId, email, name } = (req.body ?? {}) as {
@@ -71,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Connect account error:', message);
 
     if (message.includes("signed up for Connect")) {
-      const isLive = process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_');
+      const isLive = readStripeSecretKey()?.startsWith('sk_live_');
       return res.status(503).json({
         error: isLive
           ? 'Guardr’s Stripe account must finish Connect platform setup before payouts can onboard. In Stripe Dashboard go to Connect → Get started and complete your platform profile (this is separate from webhooks).'

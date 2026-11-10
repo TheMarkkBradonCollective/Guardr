@@ -14,7 +14,12 @@ binding = "FILES"
 bucket_name = "guardr-files"
 
 [vars]
-# Non-secret defaults only. Set secrets with `wrangler secret put`.
+# Non-secret defaults only. Set secrets with `wrangler secret put`:
+#   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY
+#   DATABASE_URL, JWT_SECRET, VAPID_* , CRON_SECRET, PUSH_INTERNAL_SECRET
+# Stripe webhook (canonical): https://guardr.co/api/stripe/webhook
+# Alternate: https://guardr.themarkkbrandoncollective-2d9.workers.dev/api/stripe/webhook
+# See docs/STRIPE.md for subscribed event types.
 APP_URL = "https://www.guardr.co"
 VITE_APP_URL = "https://www.guardr.co"
 

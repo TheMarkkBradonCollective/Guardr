@@ -27,6 +27,7 @@ import payoutRelease from '../lib/http/routes/stripe/payout/release.ts';
 import paymentHold from '../lib/http/routes/stripe/payment/hold.ts';
 import paymentRefund from '../lib/http/routes/stripe/payment/refund.ts';
 import stripePayments from '../lib/http/routes/stripe/payments.ts';
+import publicConfig from '../lib/http/routes/config/public.ts';
 import squareCreatePayment from '../lib/http/routes/square/checkout/create-payment.ts';
 import pushVapid from '../lib/http/routes/_push/entries/vapid-public-key.ts';
 import pushSubscribe from '../lib/http/routes/_push/entries/subscribe.ts';
@@ -45,6 +46,7 @@ export type WorkerEnv = {
   JWT_SECRET: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PUBLISHABLE_KEY?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
   FCM_SERVICE_ACCOUNT_JSON?: string;
@@ -62,6 +64,7 @@ export function createWorkerApp() {
   app.use('/api/*', cors({ origin: (origin) => origin ?? '*', credentials: true }));
 
   app.get('/api/health', createVercelAdapter(healthHandler));
+  app.get('/api/config', createVercelAdapter(publicConfig));
   app.all('/api/install/register', createVercelAdapter(installRegister));
 
   registerWorkerAuthRoutes(app);

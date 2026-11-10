@@ -1,9 +1,5 @@
 import type { VercelRequest, VercelResponse } from '../../types.ts';
-
-function stripeConfigured(): boolean {
-  const key = process.env.STRIPE_SECRET_KEY;
-  return !!key && key !== 'sk_test_placeholder';
-}
+import { isStripePaymentsConfigured, readStripePublishableKey } from '../../../stripeEnv.ts';
 
 function squareConfigured(): boolean {
   const token = process.env.SQUARE_ACCESS_TOKEN?.trim();
@@ -14,8 +10,8 @@ function squareConfigured(): boolean {
 export default function handler(_req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({
     stripe: {
-      configured: stripeConfigured(),
-      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null,
+      configured: isStripePaymentsConfigured(),
+      publishableKey: readStripePublishableKey() ?? null,
     },
     square: {
       configured: squareConfigured(),

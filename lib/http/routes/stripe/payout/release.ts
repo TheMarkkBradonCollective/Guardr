@@ -5,13 +5,8 @@ import {
   LEGACY_PLATFORM_FEE_PER_HOUR,
 } from '../../../../platformFees';
 
-async function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || key === 'sk_test_placeholder') return null;
-  const { default: StripeSdk } = await import('stripe');
-  return new StripeSdk(key);
-}
-
+import { getStripe } from '../../../../stripeClient.ts';
+import { PAYMENTS_NOT_CONFIGURED_BODY } from '../../../../stripeEnv.ts';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -20,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const stripe = await getStripe();
   if (!stripe) {
-    return res.status(503).json({ error: 'Stripe is not configured' });
+    return res.status(503).json(PAYMENTS_NOT_CONFIGURED_BODY);
   }
 
   const { jobId, guardConnectAccountId, hourlyRate, durationHours, force } = (req.body ?? {}) as {

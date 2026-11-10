@@ -9,6 +9,7 @@ function applyEnv(env: WorkerEnv): void {
   process.env.JWT_SECRET = env.JWT_SECRET;
   if (env.STRIPE_SECRET_KEY) process.env.STRIPE_SECRET_KEY = env.STRIPE_SECRET_KEY;
   if (env.STRIPE_WEBHOOK_SECRET) process.env.STRIPE_WEBHOOK_SECRET = env.STRIPE_WEBHOOK_SECRET;
+  if (env.STRIPE_PUBLISHABLE_KEY) process.env.STRIPE_PUBLISHABLE_KEY = env.STRIPE_PUBLISHABLE_KEY;
   if (env.VAPID_PUBLIC_KEY) process.env.VAPID_PUBLIC_KEY = env.VAPID_PUBLIC_KEY;
   if (env.VAPID_PRIVATE_KEY) process.env.VAPID_PRIVATE_KEY = env.VAPID_PRIVATE_KEY;
   if (env.FCM_SERVICE_ACCOUNT_JSON) {

@@ -1,19 +1,18 @@
 import { getSupabaseAdmin } from '../../../db/adminClient.ts';
 import type { VercelRequest, VercelResponse } from '../../types.ts';
 import type Stripe from 'stripe';
+import { getStripe } from '../../../stripeClient.ts';
+import {
+  PAYMENTS_NOT_CONFIGURED_BODY,
+  readStripeWebhookSecret,
+} from '../../../stripeEnv.ts';
+import { verifyStripeWebhookEvent } from '../../../stripe/verifyWebhookEvent.ts';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-
-async function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || key === 'sk_test_placeholder') return null;
-  const { default: StripeSdk } = await import('stripe');
-  return new StripeSdk(key);
-}
 
 
 async function readRawBody(req: VercelRequest): Promise<Buffer> {
@@ -803,10 +802,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const stripe = await getStripe();
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = readStripeWebhookSecret();
 
   if (!stripe || !webhookSecret) {
-    return res.status(503).json({ error: 'Stripe webhooks not configured' });
+    return res.status(503).json(PAYMENTS_NOT_CONFIGURED_BODY);
   }
 
   const signature = req.headers['stripe-signature'];
@@ -817,7 +816,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let event: Stripe.Event;
   try {
     const rawBody = await readRawBody(req);
-    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+    event = await verifyStripeWebhookEvent(stripe, rawBody, signature, webhookSecret);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Invalid signature';
     return res.status(400).json({ error: `Webhook Error: ${message}` });
