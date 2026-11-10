@@ -34,7 +34,7 @@ import {
 import { ListDetailLayout } from '../ui/app/ListDetailLayout';
 import { WfBadge } from '../ui/wireframe';
 import { formatShiftRange } from '../../lib/dates';
-import { useLayoutFormFactor } from '../../surfaces';
+import { useSurfaceKind } from '../../surfaces';
 
 interface ClientInvoiceScreenProps {
   client: Client;
@@ -77,7 +77,7 @@ export function ClientInvoiceScreen({
   onSelectRequestId,
   onBack,
 }: ClientInvoiceScreenProps) {
-  const formFactor = useLayoutFormFactor();
+  const surface = useSurfaceKind();
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
   const [payingSquareJobId, setPayingSquareJobId] = useState<string | null>(null);
   const caps = useClientCapabilities();
@@ -292,7 +292,73 @@ export function ClientInvoiceScreen({
     );
   };
 
-  if (formFactor === 'tablet') {
+  if (surface === 'desktop') {
+    return (
+      <div className="invoice-desktop h-full min-h-0">
+        <div className="invoice-desktop-ledger">
+          <header className="invoice-desktop-bar">
+            <h2>{invoicesTitle}</h2>
+            <p>
+              {unpaid.length === 0
+                ? 'Nothing waiting on payment'
+                : `${unpaid.length} awaiting payment`}
+            </p>
+          </header>
+          {clientInvoices.length === 0 ? (
+            <AppEmptyState icon={<FileText className="w-5 h-5" />} title={caps.isPersonal ? 'No payments yet' : 'No invoices yet'}>
+              {caps.isPersonal
+                ? 'Invoices and payment history for your services will appear here.'
+                : 'When Guardr approves your job, an invoice will appear here for payment.'}
+            </AppEmptyState>
+          ) : (
+            <table className="invoice-desktop-table">
+              <caption className="sr-only">{invoicesTitle}</caption>
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Job</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clientInvoices.map((invoice) => {
+                  const request = invoice.requestId ? requestById.get(invoice.requestId) : undefined;
+                  const selected = invoice.requestId != null && invoice.requestId === selectedRequestId;
+                  return (
+                    <tr
+                      key={invoice.id}
+                      data-selected={selected ? 'true' : undefined}
+                      onClick={
+                        invoice.requestId ? () => onSelectRequestId?.(invoice.requestId!) : undefined
+                      }
+                    >
+                      <td>{invoice.invoiceNumber}</td>
+                      <td>{request?.title ?? 'Security services'}</td>
+                      <td>{invoiceStatusLabel(invoice, request)}</td>
+                      <td>{formatInvoiceCurrency(invoice.total)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <aside className="invoice-desktop-checkout" aria-label="Checkout">
+          {selectedInvoice ? (
+            renderInvoiceDetail(selectedInvoice)
+          ) : (
+            <div className="invoice-desktop-checkout-empty">
+              <p>Select an invoice</p>
+              <p>Line items and payment stay in this column.</p>
+            </div>
+          )}
+        </aside>
+      </div>
+    );
+  }
+
+  if (surface === 'tablet') {
     const unpaidBanner = unpaid.length > 0 ? (
       <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
         <p className="text-sm font-semibold text-amber-200">

@@ -24,7 +24,7 @@ import { sortedGuardMessages, canPostToGuardChat } from '../../lib/guardMessenge
 import { canDeleteChatMessage } from '../../lib/chatPermissions';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ChatThreadPanel, type ChatBubbleMessage } from '../messaging/ChatThreadPanel';
-import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
+import { MessagesConversationFacts, MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { MessagesQuickActions } from '../messaging/MessagesQuickActions';
 import { useLayoutFormFactor } from '../../surfaces';
@@ -511,6 +511,22 @@ export function GuardMessagesPanel({
           isSupportScope
             ? 'Select a support chat or report from the inbox'
             : 'Select guard chat or a job thread from the inbox'
+        }
+        context={
+          activeView.kind === 'job' ? (
+            <MessagesConversationFacts
+              title={jobById.get(activeView.requestId)?.title ?? 'Job thread'}
+              meta={jobById.get(activeView.requestId)?.location}
+              detail="Job thread"
+            />
+          ) : activeView.kind === 'guard-channel' ? (
+            <MessagesConversationFacts title="Guard chat" meta="Team channel" />
+          ) : activeView.kind === 'support' ? (
+            <MessagesConversationFacts
+              title={myTickets.find((ticket) => ticket.id === activeView.ticketId)?.subject ?? 'Support'}
+              meta="Support"
+            />
+          ) : undefined
         }
       />
     </div>

@@ -4,7 +4,6 @@ import { SecurityGuard, SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
 import { MapRouteSummary } from '../../lib/mapRouting';
 import { useMapBottomOverlayInset } from '../../lib/mapViewportInsets';
-import { prefersMobileGestureUi, useDevice } from '../../lib/platform';
 import { useSurfaceKind } from '../../surfaces';
 import { GuardrButton } from '../baseui/GuardrButton';
 import { JobListingProfile } from '../jobs/JobListingProfile';
@@ -50,12 +49,10 @@ export function MapSelectionExperience({
   detailActions,
   staffActions,
 }: MapSelectionExperienceProps) {
-  const { viewSurface } = useDevice();
   const surface = useSurfaceKind();
-  // Side inspector on website desktop and on the tablet app. Mobile keeps the
-  // slide-up offer card so one-handed map use is unchanged.
-  const websiteDesktop = !prefersMobileGestureUi(viewSurface);
-  const sideInspector = websiteDesktop || surface === 'tablet';
+  // Desktop keeps a right-hand inspector. Tablet uses a bottom sheet over the
+  // map so the job rail can stay put. Phones keep the one-handed offer card.
+  const sideInspector = surface === 'desktop';
   const [expanded, setExpanded] = useState(sideInspector);
   const cardInsetRef = useMapBottomOverlayInset(!sideInspector);
   const selected = useMemo(() => job, [job?.id]);
@@ -107,7 +104,7 @@ export function MapSelectionExperience({
   if (sideInspector) {
     return (
       <aside
-        className={`desktop-map-inspector dsk-map-inspector map-selection-layer map-selection-layer--desktop${surface === 'tablet' ? ' sft-map-inspector' : ''}`}
+        className="desktop-map-inspector dsk-map-inspector map-selection-layer map-selection-layer--desktop"
         aria-label="Job details"
       >
         <div className="desktop-map-inspector-header">
@@ -139,7 +136,7 @@ export function MapSelectionExperience({
   }
 
   return (
-    <div className={`map-selection-layer ${bottomOffsetClass}`}>
+    <div className={`map-selection-layer${surface === 'tablet' ? ' map-selection-layer--tablet' : ''} ${bottomOffsetClass}`}>
       <MapOfferCard
         ref={cardInsetRef}
         summary={

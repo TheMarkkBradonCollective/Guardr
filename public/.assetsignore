@@ -1,0 +1,3 @@
+# Workers static assets cannot exceed 25 MiB. The sideload APK is stored in
+# Git LFS (about 104 MiB) and is published from GitHub releases.
+*.apk

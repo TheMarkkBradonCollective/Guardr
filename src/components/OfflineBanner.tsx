@@ -10,6 +10,17 @@ export function OfflineBanner() {
 
   React.useEffect(() => subscribeDataLoadIssue(setLoadIssue), []);
 
+  React.useEffect(() => {
+    if (online && !loadIssue) {
+      delete document.documentElement.dataset.offlineBanner;
+      return;
+    }
+    document.documentElement.dataset.offlineBanner = '1';
+    return () => {
+      delete document.documentElement.dataset.offlineBanner;
+    };
+  }, [online, loadIssue]);
+
   if (online && !loadIssue) return null;
 
   const message = !online

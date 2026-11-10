@@ -20,7 +20,7 @@ import { sortedClientMessages, canPostToClientChat } from '../../lib/clientMesse
 import { canDeleteChatMessage } from '../../lib/chatPermissions';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ChatThreadPanel, type ChatBubbleMessage } from '../messaging/ChatThreadPanel';
-import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
+import { MessagesConversationFacts, MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { MessagesQuickActions } from '../messaging/MessagesQuickActions';
 import {
@@ -549,6 +549,21 @@ export function ClientMessagesPanel({
           isSupportScope
             ? 'Select a support chat or report from the inbox'
             : 'Select client chat, a job thread, or support from the inbox'
+        }
+        context={
+          activeView.kind === 'job' ? (
+            <MessagesConversationFacts
+              title={requests.find((request) => request.id === activeView.requestId)?.title ?? 'Job thread'}
+              meta="Job thread"
+            />
+          ) : activeView.kind === 'client-channel' ? (
+            <MessagesConversationFacts title="Client chat" meta="Your company channel" />
+          ) : activeView.kind === 'support' ? (
+            <MessagesConversationFacts
+              title={myTickets.find((ticket) => ticket.id === activeView.ticketId)?.subject ?? 'Support'}
+              meta="Support"
+            />
+          ) : undefined
         }
       />
     </div>

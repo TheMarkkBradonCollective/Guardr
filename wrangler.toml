@@ -23,3 +23,13 @@ crons = ["*/5 * * * *", "0 14 * * *"]
 
 [build]
 command = "npm run build"
+
+# Branch previews do not inherit production settings. Keep file storage and
+# absolute links off the live site and the production R2 bucket.
+[previews.vars]
+APP_URL = "https://cursor-visual-refresh-895e-guardr.themarkkbrandoncollective-2d9.workers.dev"
+VITE_APP_URL = "https://cursor-visual-refresh-895e-guardr.themarkkbrandoncollective-2d9.workers.dev"
+
+[[previews.r2_buckets]]
+binding = "FILES"
+bucket_name = "guardr-files-preview"

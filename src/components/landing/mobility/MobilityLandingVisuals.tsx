@@ -8,24 +8,26 @@ import { FONT_DISPLAY } from '../../../theme/typography';
  * Hero illustration — mimics Base Web mobile app screenshot:
  * map background with white bottom sheet showing a guard profile card.
  */
-export function MobilityLandingHeroVisual() {
+export function MobilityLandingHeroVisual({ layout = 'sheet' }: { layout?: 'sheet' | 'board' } = {}) {
   const [, theme] = useStyletron();
   const isDark = theme.colors.backgroundPrimary !== '#FFFFFF' && theme.colors.backgroundPrimary !== 'white';
+  const board = layout === 'board';
 
   return (
     <Block
-      className="uber-landing-hero-art"
+      className={`uber-landing-hero-art${board ? ' uber-landing-hero-art--board' : ''}`}
       position="relative"
       overrides={{
         Block: {
           style: {
-            borderRadius: '16px',
+            borderRadius: board ? '20px' : '28px',
             overflow: 'hidden',
             background: isDark
               ? 'linear-gradient(160deg, #1a1a1a 0%, #000000 100%)'
               : 'linear-gradient(160deg, #f5f5f5 0%, #e8e8e8 40%, #d4d4d4 100%)',
-            aspectRatio: '9/16',
-            maxHeight: '520px',
+            aspectRatio: board ? '16 / 10' : '9 / 16',
+            maxHeight: board ? '380px' : '520px',
+            width: '100%',
           },
         },
       }}
@@ -134,17 +136,21 @@ export function MobilityLandingHeroVisual() {
 
       {/* White bottom sheet panel */}
       <Block
+        className="uber-landing-hero-sheet"
         position="absolute"
-        left={0}
+        left={board ? 'auto' : 0}
         right={0}
+        top={board ? 0 : 'auto'}
         bottom={0}
+        width={board ? '52%' : '100%'}
         overrides={{
           Block: {
             style: {
               background: isDark ? '#000' : '#fff',
-              borderRadius: '16px 16px 0 0',
-              boxShadow: '0 -4px 24px rgba(0,0,0,0.12)',
+              borderRadius: board ? '0' : '16px 16px 0 0',
+              boxShadow: board ? '-8px 0 24px rgba(0,0,0,0.12)' : '0 -4px 24px rgba(0,0,0,0.12)',
               padding: '0 0 16px',
+              overflow: 'auto',
             },
           },
         }}

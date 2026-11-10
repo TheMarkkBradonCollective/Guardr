@@ -61,4 +61,5 @@ export const PREVIEW_JOB = {
   platformFeePerHour: 5,
   estimatedPayout: 224,
   requiredCertifications: [],
+  applicants: [],
 } as SecurityRequest;

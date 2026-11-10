@@ -1,6 +1,7 @@
 import React from 'react';
 import { Block } from 'baseui/block';
 import { useStyletron } from 'baseui';
+import { ChevronRight } from 'lucide-react';
 import type { FormFactor } from '../../../lib/platform/device';
 import { GuardrButton } from '../../baseui/GuardrButton';
 import { EXPLORE_SERVICES } from './mobilityLandingData';
@@ -15,7 +16,8 @@ interface MobilityExploreGridProps {
 export function MobilityExploreGrid({ formFactor, onNavigateToAuth }: MobilityExploreGridProps) {
   const [, theme] = useStyletron();
   const isMobile = formFactor === 'mobile';
-  const columns  = isMobile ? 'repeat(2, 1fr)' : formFactor === 'tablet' ? 'repeat(3, 1fr)' : 'repeat(3, 1fr)';
+  const isTablet = formFactor === 'tablet';
+  const layout = isMobile ? 'list' : isTablet ? 'mosaic' : 'bento';
 
   return (
     <Block
@@ -31,28 +33,35 @@ export function MobilityExploreGrid({ formFactor, onNavigateToAuth }: MobilityEx
         {/* Section heading */}
         <Block
           as="h2"
-          marginTop={0} marginBottom="scale800" marginLeft={0} marginRight={0}
+          marginTop={0} marginBottom={isMobile ? 'scale500' : 'scale800'} marginLeft={0} marginRight={0}
           $style={{
             fontFamily: FONT_DISPLAY,
-            fontWeight: 700,
-            fontSize: isMobile ? '1.375rem' : '1.75rem',
-            letterSpacing: '-0.025em',
+            fontWeight: 800,
+            fontSize: isMobile ? '1.75rem' : isTablet ? '2rem' : '2.25rem',
+            letterSpacing: '-0.035em',
             color: theme.colors.contentPrimary,
           }}
         >
-          Explore Guardr
+          {isMobile ? 'What you can do' : isTablet ? 'Pick a lane' : 'Explore Guardr'}
         </Block>
 
-        <Block display="grid" className="uber-landing-explore-grid" gridTemplateColumns={columns} gridGap="scale500" minWidth={0} width="100%">
-          {EXPLORE_SERVICES.map((service) => {
+        <Block
+          display="grid"
+          className={`uber-landing-explore-grid uber-landing-explore-grid--${layout}`}
+          gridGap={isMobile ? 'scale300' : 'scale500'}
+          minWidth={0}
+          width="100%"
+        >
+          {EXPLORE_SERVICES.map((service, index) => {
             const Icon = service.icon;
+            const featured = !isMobile && index === 0;
             const go = () => onNavigateToAuth(service.role ?? 'client', 'sign-up');
 
             return (
               <Block
                 key={service.id}
                 as="button"
-                className="uber-landing-explore-card"
+                className={`uber-landing-explore-card${featured ? ' uber-landing-explore-card--feature' : ''}`}
                 onClick={go}
                 role="button"
                 tabIndex={0}
@@ -60,14 +69,18 @@ export function MobilityExploreGrid({ formFactor, onNavigateToAuth }: MobilityEx
                   Block: {
                     style: {
                       display: 'flex',
-                      flexDirection: 'column',
+                      flexDirection: isMobile || (isTablet && featured) ? 'row' : 'column',
+                      alignItems: isMobile || (isTablet && featured) ? 'center' : 'stretch',
                       justifyContent: 'space-between',
-                      minHeight: isMobile ? '160px' : '180px',
-                      padding: '20px',
+                      gap: isMobile ? '14px' : '12px',
+                      minHeight: isMobile ? '0' : featured ? '220px' : '168px',
+                      padding: isMobile ? '14px 16px' : '20px',
                       cursor: 'pointer',
                       border: 'none',
                       textAlign: 'left',
                       fontFamily: 'inherit',
+                      width: '100%',
+                      minWidth: 0,
                     },
                   },
                 }}
@@ -77,26 +90,26 @@ export function MobilityExploreGrid({ formFactor, onNavigateToAuth }: MobilityEx
               >
                 {/* Top row: icon */}
                 <Block
-                  width="52px"
-                  height="52px"
+                  width={isMobile ? '44px' : '52px'}
+                  height={isMobile ? '44px' : '52px'}
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
                   overrides={{
                     Block: {
                       style: {
-                        borderRadius: '12px',
+                        borderRadius: isMobile ? '14px' : '12px',
                         background: theme.colors.backgroundPrimary,
-                        marginBottom: '16px',
+                        marginBottom: isMobile ? 0 : '16px',
+                        flexShrink: 0,
                       },
                     },
                   }}
                 >
-                  <Icon size={26} strokeWidth={1.75} color={theme.colors.contentPrimary} aria-hidden />
+                  <Icon size={isMobile ? 22 : 26} strokeWidth={1.75} color={theme.colors.contentPrimary} aria-hidden />
                 </Block>
 
-                {/* Text */}
-                <Block>
+                <Block flex="1" minWidth={0}>
                   <Block
                     as="h3"
                     margin="0 0 6px"
@@ -122,6 +135,7 @@ export function MobilityExploreGrid({ formFactor, onNavigateToAuth }: MobilityEx
                     {service.body}
                   </Block>
                 </Block>
+                {isMobile ? <ChevronRight size={18} color={theme.colors.contentSecondary} aria-hidden /> : null}
               </Block>
             );
           })}
@@ -146,7 +160,7 @@ export function MobilityLoginBand({ formFactor, onNavigateToAuth, visual }: Mobi
     <Block
       as="section"
       aria-label="Sign in to your account"
-      className="uber-landing-login-band"
+      className={`uber-landing-login-band uber-landing-login-band--${formFactor}`}
       paddingTop={isMobile ? 'scale800' : 'scale1200'}
       paddingBottom={isMobile ? 'scale800' : 'scale1200'}
       paddingLeft={isMobile ? 'scale600' : 'scale800'}

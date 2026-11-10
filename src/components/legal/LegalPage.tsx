@@ -21,12 +21,30 @@ export function LegalPage({ page, onBack, onOpenLegal, headerRight }: LegalPageP
   const siblings = (LEGAL_PAGE_SIBLINGS[page] ?? (page === 'terms' ? ['privacy'] : ['terms'])).filter(
     (id) => id !== page
   );
-  const compactBack = useSurfaceKind() === 'mobile';
+  const surface = useSurfaceKind();
+  const compactBack = surface === 'mobile';
+  const documentIds = Object.keys(LEGAL_DOCUMENTS) as LegalPageId[];
+
+  const documentNav = onOpenLegal ? (
+    <nav className="legal-document-nav" aria-label="Legal documents">
+      {documentIds.map((id) => (
+        <button
+          key={id}
+          type="button"
+          className="legal-document-nav-item"
+          aria-current={id === page ? 'page' : undefined}
+          onClick={() => onOpenLegal(id)}
+        >
+          {LEGAL_DOCUMENTS[id].title}
+        </button>
+      ))}
+    </nav>
+  ) : null;
 
   return (
-    <div className="page-shell min-h-screen legal-document-page">
-      <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-brand-bg/95 backdrop-blur-xl">
-        <div className="max-w-3xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
+    <div className={`page-shell min-h-screen legal-document-page legal-document-page--${surface}`}>
+      <header className="legal-document-header">
+        <div className="legal-document-header-inner">
           <button
             type="button"
             onClick={onBack}
@@ -44,9 +62,26 @@ export function LegalPage({ page, onBack, onOpenLegal, headerRight }: LegalPageP
             </div>
           </div>
         </div>
+        {surface === 'tablet' ? documentNav : null}
       </header>
 
-      <main className="max-w-3xl mx-auto px-5 py-10 pb-16">
+      <div className="legal-document-frame">
+        {surface === 'desktop' ? (
+          <aside className="legal-document-rail">
+            <p className="legal-document-rail-label">Documents</p>
+            {documentNav}
+            <p className="legal-document-rail-label">On this page</p>
+            <nav className="legal-document-nav" aria-label="Sections">
+              {doc.sections.map((section) => (
+                <a key={section.title} className="legal-document-nav-item" href={`#${legalAnchor(section.title)}`}>
+                  {section.title}
+                </a>
+              ))}
+            </nav>
+          </aside>
+        ) : null}
+
+      <main className="legal-document-main">
         <p className="text-xs font-medium uppercase tracking-wide text-brand-text-muted mb-2">
           <LegalEntityName />
         </p>
@@ -66,7 +101,7 @@ export function LegalPage({ page, onBack, onOpenLegal, headerRight }: LegalPageP
 
         <div className="mt-10 space-y-8">
           {doc.sections.map((section) => (
-            <section key={section.title}>
+            <section key={section.title} id={legalAnchor(section.title)}>
               <h2 className="text-lg font-semibold text-brand-text">{section.title}</h2>
               <div className="mt-3 space-y-3 text-sm leading-relaxed text-brand-text-muted">
                 {section.paragraphs.map((paragraph) => (
@@ -109,6 +144,11 @@ export function LegalPage({ page, onBack, onOpenLegal, headerRight }: LegalPageP
           qualified counsel before operating or relying on the Platform.
         </p>
       </main>
+      </div>
     </div>
   );
+}
+
+function legalAnchor(title: string): string {
+  return `legal-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`;
 }

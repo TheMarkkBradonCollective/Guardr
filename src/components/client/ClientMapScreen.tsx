@@ -28,6 +28,7 @@ import {
 } from '../../lib/jobEditRules';
 import { EditRequestSheet } from '../jobs/EditRequestSheet';
 import { MapViewportInsetsProvider } from '../../lib/mapViewportInsets';
+import { useSurfaceKind } from '../../surfaces';
 
 interface ClientMapScreenProps extends ClientJobActionsBindings {
   requests: SecurityRequest[];
@@ -58,6 +59,7 @@ export function ClientMapScreen({
   ...jobActions
 }: ClientMapScreenProps) {
   const billingSettings = crewSettings ?? teamLeadSettings;
+  const surface = useSurfaceKind();
   const clockedInJobs = useMemo(() => getClientLiveJobs(requests), [requests]);
   const trackableJobs = useMemo(() => getClientTrackableJobs(requests), [requests]);
   const primaryLiveJob = useMemo(() => getPrimaryClientLiveJob(requests), [requests]);
@@ -238,7 +240,7 @@ export function ClientMapScreen({
         />
       )}
 
-      {!showShiftOverlay && !selectedBrowseJobId && (
+      {!showShiftOverlay && (surface === 'tablet' || !selectedBrowseJobId) && (
         <MapBrowseDock
           items={clientMapBrowseItems(filteredBrowseJobs)}
           selectedId={selectedBrowseJobId}

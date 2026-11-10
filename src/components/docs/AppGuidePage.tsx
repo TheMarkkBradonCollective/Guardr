@@ -463,10 +463,10 @@ function GuideHub({
           tutorialActive={tutorialActive}
           onStartTutorial={onStartTutorial}
         />
-        {stakeholderPanel}
-        {manualsPanel}
         {filterTabs}
         {sectionList}
+        {stakeholderPanel}
+        {manualsPanel}
       </div>
     );
   }
@@ -486,10 +486,10 @@ function GuideHub({
         onStartTutorial={onStartTutorial}
       />
 
-      {stakeholderPanel}
-      {manualsPanel}
       {filterTabs}
       {sectionList}
+      {stakeholderPanel}
+      {manualsPanel}
     </AppScreen>
   );
 }
