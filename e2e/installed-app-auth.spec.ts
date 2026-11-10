@@ -44,6 +44,11 @@ test.describe('installed Guard / Customer / Staff apps', () => {
     await expect(page.locator('.app-welcome-sub')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+      await Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+    });
+
     const sub = page.locator('.app-welcome-sub');
     const dock = page.locator('.app-welcome-dock');
     const subBox = await sub.boundingBox();

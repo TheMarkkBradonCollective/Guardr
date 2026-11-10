@@ -114,6 +114,31 @@ async function blackMarkFromIcon(iconMaster, size) {
   }).png();
 }
 
+/** PNG-in-ICO container (supported by every browser that still requests /favicon.ico). */
+function encodeIco(pngsBySize) {
+  const sizes = Object.keys(pngsBySize).map(Number).sort((a, b) => a - b);
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0);
+  header.writeUInt16LE(1, 2);
+  header.writeUInt16LE(sizes.length, 4);
+  const dir = Buffer.alloc(16 * sizes.length);
+  let offset = header.length + dir.length;
+  sizes.forEach((size, i) => {
+    const png = pngsBySize[size];
+    const at = i * 16;
+    dir.writeUInt8(size >= 256 ? 0 : size, at);
+    dir.writeUInt8(size >= 256 ? 0 : size, at + 1);
+    dir.writeUInt8(0, at + 2);
+    dir.writeUInt8(0, at + 3);
+    dir.writeUInt16LE(1, at + 4);
+    dir.writeUInt16LE(32, at + 6);
+    dir.writeUInt32LE(png.length, at + 8);
+    dir.writeUInt32LE(offset, at + 12);
+    offset += png.length;
+  });
+  return Buffer.concat([header, dir, ...sizes.map((size) => pngsBySize[size])]);
+}
+
 async function prepareIconMaster() {
   const squared = await trimAndSquare(await removeBlackBackground(ICON_SOURCE));
   return sharp(await squared.png().toBuffer());
@@ -225,11 +250,10 @@ async function main() {
     await writeWordmarkPng(wordmarkMaster, height, path.join(PUBLIC, `logo-wordmark-${height}.png`));
   }
 
-  // Opaque JPG on black — social previews, email, contexts without alpha
-  await iconMaster
-    .clone()
-    .resize(512, 512)
-    .flatten({ background: '#000000' })
+  // Opaque JPG — social previews, email, contexts without alpha. Same black field + white
+  // shield as the install icon (never the raw brand-colored master).
+  await sharp(await renderIconOnBackground(iconMaster, 512, INSTALL_ICON_BACKGROUND))
+    .flatten({ background: INSTALL_ICON_BACKGROUND })
     .jpeg({ quality: 92 })
     .toFile(path.join(PUBLIC, 'logo.jpg'));
 
@@ -238,12 +262,25 @@ async function main() {
   // Android notification badges are expected to be simple monochrome marks.
   await (await whiteMarkFromIcon(iconMaster, 72)).toFile(path.join(PUBLIC, 'badge-72.png'));
 
-  // Keep a simple SVG favicon derived from the 512px mark for crisp scaling.
-  const icon512 = await iconMaster.clone().resize(512, 512).png().toBuffer();
-  const iconDataUri = `data:image/png;base64,${icon512.toString('base64')}`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><image href="${iconDataUri}" width="512" height="512"/></svg>`;
+  // SVG favicon: approved mark in solid black on a transparent field. Browser tabs in a dark
+  // color scheme would swallow a black mark, so it flips to white under prefers-color-scheme.
+  const blackMark512 = await (await blackMarkFromIcon(iconMaster, 512)).toBuffer();
+  const markDataUri = `data:image/png;base64,${blackMark512.toString('base64')}`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><style>image{filter:none}@media (prefers-color-scheme:dark){image{filter:invert(1)}}</style><image href="${markDataUri}" width="512" height="512"/></svg>\n`;
+  await writeFile(path.join(PUBLIC, 'favicon.svg'), svg);
   await writeFile(path.join(PUBLIC, 'logo.svg'), svg);
   await writeFile(path.join(ROOT, 'logo.svg'), svg);
+
+  // Small PNG favicons + multi-size .ico: black field, white shield, larger mark for legibility.
+  const smallIcons = {};
+  for (const size of [16, 32, 48]) {
+    smallIcons[size] = await renderIconOnBackground(iconMaster, size, INSTALL_ICON_BACKGROUND, {
+      markRatio: 0.88,
+    });
+  }
+  await sharp(smallIcons[16]).toFile(path.join(PUBLIC, 'favicon-16x16.png'));
+  await sharp(smallIcons[32]).toFile(path.join(PUBLIC, 'favicon-32x32.png'));
+  await writeFile(path.join(PUBLIC, 'favicon.ico'), encodeIco(smallIcons));
 
   // Role download icons: Guard unlabeled on white; Staff unlabeled on grey; Customer unlabeled on black.
   for (const [productApp, label] of Object.entries(PRODUCT_ICON_LABELS)) {
@@ -261,7 +298,7 @@ async function main() {
   console.log('Generated public logo assets from real transparent uploads');
   console.log(`  icon: ${path.relative(ROOT, ICON_SOURCE)}`);
   console.log(`  wordmark: ${path.relative(ROOT, WORDMARK_SOURCE)}`);
-  console.log('Website icons: black (#000000) + white shield');
+  console.log('Website icons: black (#000000) + white shield; SVG favicon: black mark (white in dark color scheme)');
   console.log('Role icons: Guard unlabeled white+black, Staff unlabeled grey+white, Customer unlabeled black, Messenger black + solid white bubble + black shield, in /icons/{client,guard,staff,messenger}-*.png');
 }
 
