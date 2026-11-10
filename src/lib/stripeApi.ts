@@ -1,6 +1,6 @@
 /** Client-side helpers for Guardr Stripe API routes (secrets stay server-side). */
 
-import { apiUrl } from './siteConfig';
+import { apiUrl } from './api/guardrClient';
 
 async function parseApiResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -13,7 +13,7 @@ async function parseApiResponse<T>(res: Response): Promise<T> {
     const preview = text.slice(0, 120).replace(/\s+/g, ' ');
     if (preview.toLowerCase().includes('server error')) {
       throw new Error(
-        'API server is down. Check Vercel env vars (STRIPE_SECRET_KEY, SUPABASE_URL) and redeploy.'
+        'API server is down. Check Worker secrets (STRIPE_SECRET_KEY, DATABASE_URL) and redeploy.'
       );
     }
     throw new Error(`Server returned invalid response: ${preview}`);

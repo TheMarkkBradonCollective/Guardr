@@ -1,11 +1,6 @@
 import type { VercelRequest, VercelResponse } from '../../../../types.ts';
-
-async function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || key === 'sk_test_placeholder') return null;
-  const { default: StripeSdk } = await import('stripe');
-  return new StripeSdk(key);
-}
+import { getStripe } from '../../../../../stripeClient.ts';
+import { PAYMENTS_NOT_CONFIGURED_BODY } from '../../../../../stripeEnv.ts';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -14,7 +9,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const stripe = await getStripe();
   if (!stripe) {
-    return res.status(503).json({ error: 'Stripe is not configured' });
+    return res.status(503).json(PAYMENTS_NOT_CONFIGURED_BODY);
   }
 
   const accountId = req.query.accountId as string;

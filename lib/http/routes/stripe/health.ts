@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from '../../types.ts';
+import { isStripePaymentsConfigured, readStripePublishableKey } from '../../../stripeEnv.ts';
 
 export default function handler(_req: VercelRequest, res: VercelResponse) {
-  const configured = !!process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_placeholder';
+  const configured = isStripePaymentsConfigured();
   return res.status(200).json({
     configured,
-    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null,
+    publishableKey: configured ? readStripePublishableKey() ?? null : null,
   });
 }
