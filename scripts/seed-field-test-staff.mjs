@@ -4,6 +4,8 @@
  * Creates staff@guardr.co with Director-level ops access for automated QA.
  * Platform login path: staff. Display name: Guardr (branded in Staff chat — not Founder).
  *
+ * Supabase REST is gone. For Neon QA accounts use `npm run db:seed:qa`.
+ *
  * Usage:
  *   node scripts/seed-field-test-staff.mjs
  *   SUPABASE_CONFIG=/tmp/supabase-prod.json node scripts/seed-field-test-staff.mjs
