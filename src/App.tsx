@@ -321,7 +321,8 @@ import {
 } from './lib/guardQualification';
 import { findGuardProfileForUser, getBrowsableGuards, guardHasWorkedWithClient } from './lib/guardDirectory';
 import { isInactiveGuardSession } from './lib/guardActivationSync';
-import { holdJobPayment, releasePayout, refundPayment, createTipCheckoutSession } from './lib/stripeApi';
+import { holdJobPayment, releasePayout, refundPayment } from './lib/stripeApi';
+import type { ClientReviewSubmitResult } from './lib/stripe/stripeEmbeddedTypes';
 import { ThemeMode, applyThemeToDocument, hasPerUserThemePreference, loadTheme, normalizeThemeMode, saveTheme } from './lib/platform/theme';
 import { isAppExperience, isMessengerExperience } from './lib/platform/appExperience';
 import { shouldUseSiteMessageApiFallback } from './lib/platform/nativeSiteIndependence';
@@ -9702,7 +9703,7 @@ export default function App() {
     rating: number,
     reviewText: string,
     tipCents?: number
-  ): Promise<string | void> => {
+  ): Promise<ClientReviewSubmitResult | void> => {
     setRequests(prev => prev.map(r => r.id === requestId ? { ...r, ratingGiven: rating, reviewText } : r));
     const req = requests.find(r => r.id === requestId);
     if (req?.assignedGuardId) {
@@ -9728,13 +9729,13 @@ export default function App() {
     if (tipCents && tipCents >= 100 && req && currentUser?.email && clientPaymentGatesMemo.allowStripe) {
       const guard = guards.find((g) => g.id === req.assignedGuardId);
       if (guard?.stripeConnectAccountId) {
-        const { url } = await createTipCheckoutSession({
-          jobId: requestId,
-          clientEmail: currentUser.email,
-          jobTitle: req.title,
-          amountCents: tipCents,
-        });
-        return url;
+        return {
+          tipPayment: {
+            jobId: requestId,
+            amountCents: tipCents,
+            jobTitle: req.title,
+          },
+        };
       }
     }
   };

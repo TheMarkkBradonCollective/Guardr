@@ -12,7 +12,7 @@ import {
   type IdentityVerificationSubmitResult,
 } from '../profile/GuardIdentityVerificationPanel';
 import { GuardStripeConnectSheet } from '../guard/GuardStripeConnectSheet';
-import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../../lib/stripeApi';
+import { createConnectAccount, getConnectAccountStatus } from '../../lib/stripeApi';
 import { WfBadge } from '../ui/wireframe';
 import { UserManualDownloads } from '../docs/UserManualDownloads';
 import { userFacingError } from '../../lib/userFacingError';
@@ -32,6 +32,7 @@ export function StaffActivationUploadChecklist({
 }: StaffActivationUploadChecklistProps) {
   const [stripePayoutsEnabled, setStripePayoutsEnabled] = useState(false);
   const [connectSheetOpen, setConnectSheetOpen] = useState(false);
+  const [connectEmbedAccountId, setConnectEmbedAccountId] = useState<string | null>(null);
   const [connectPending, setConnectPending] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
 
@@ -70,9 +71,7 @@ export function StaffActivationUploadChecklist({
         accountId = result.accountId;
         await onUpdateStripeAccount(member.id, accountId);
       }
-      const { url } = await createConnectAccountLink(accountId);
-      setConnectSheetOpen(false);
-      window.location.assign(url);
+      setConnectEmbedAccountId(accountId);
     } catch (e: unknown) {
       setConnectError(userFacingError(e, 'Failed to start Stripe onboarding'));
     } finally {
@@ -134,11 +133,16 @@ export function StaffActivationUploadChecklist({
 
       <GuardStripeConnectSheet
         open={connectSheetOpen}
-        onClose={() => setConnectSheetOpen(false)}
+        onClose={() => {
+          setConnectSheetOpen(false);
+          setConnectEmbedAccountId(null);
+        }}
         onContinue={handleConnectStripeContinue}
         pending={connectPending}
         error={connectError}
         resumeSetup={!!member.stripeConnectAccountId}
+        connectAccountId={connectEmbedAccountId}
+        onConnectComplete={() => setConnectEmbedAccountId(null)}
       />
     </div>
   );

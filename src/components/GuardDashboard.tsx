@@ -101,7 +101,7 @@ import {
   createStartSkipViolations,
   mergeShiftAuditViolations,
 } from '../lib/shiftAuditViolations';
-import { createConnectAccount, createConnectAccountLink, getConnectAccountStatus } from '../lib/stripeApi';
+import { createConnectAccount, getConnectAccountStatus } from '../lib/stripeApi';
 import { GUARD_STATUS_LABELS, guardWorkBlockedMessage } from '../lib/guardQualification';
 import {
   getGuardUserStatus,
@@ -510,6 +510,7 @@ export function GuardDashboard({
   const [stripeRequestPending, setStripeRequestPending] = useState(false);
   const [connectPending, setConnectPending] = useState(false);
   const [connectSheetOpen, setConnectSheetOpen] = useState(false);
+  const [connectEmbedAccountId, setConnectEmbedAccountId] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [connectReady, setConnectReady] = useState(false);
   const [shiftPhases, setShiftPhases] = useState<Record<string, ShiftPhase>>({});
@@ -1210,6 +1211,7 @@ export function GuardDashboard({
 
   const handleConnectStripeClick = () => {
     setConnectError(null);
+    setConnectEmbedAccountId(null);
     setConnectSheetOpen(true);
   };
 
@@ -1227,9 +1229,7 @@ export function GuardDashboard({
         accountId = result.accountId;
         onUpdateStripeAccount?.(guard.id, accountId);
       }
-      const { url } = await createConnectAccountLink(accountId);
-      setConnectSheetOpen(false);
-      window.location.assign(url);
+      setConnectEmbedAccountId(accountId);
     } catch (e: unknown) {
       const message = userFacingError(e, 'Failed to start Stripe onboarding');
       if (message.includes('Connect platform setup') || message.includes('signed up for Connect')) {
@@ -1497,12 +1497,15 @@ export function GuardDashboard({
         onClose={() => {
           if (connectPending) return;
           setConnectSheetOpen(false);
+          setConnectEmbedAccountId(null);
           setConnectError(null);
         }}
         onContinue={handleConnectStripeContinue}
         pending={connectPending}
         error={connectError}
         resumeSetup={!!guard.stripeConnectAccountId}
+        connectAccountId={connectEmbedAccountId}
+        onConnectComplete={() => setConnectEmbedAccountId(null)}
       />
 
       <GuardSelfAuditModal

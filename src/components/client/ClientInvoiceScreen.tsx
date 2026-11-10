@@ -19,7 +19,7 @@ import {
 } from '../../lib/clientInvoiceStorage';
 import { canClientPayWithSquare, canClientPayWithStripe } from '../../lib/jobEditRules';
 import { clientPaymentStatusLabel } from '../../lib/paymentDisplay';
-import { createCheckoutSession } from '../../lib/stripeApi';
+import { GuardrStripePaymentSheet } from '../payments/GuardrStripePaymentSheet';
 import { createSquareCheckoutSession } from '../../lib/paymentProcessorApi';
 import { showAppToast } from '../ui/AppToast';
 import { userFacingError } from '../../lib/userFacingError';
@@ -80,6 +80,11 @@ export function ClientInvoiceScreen({
   const surface = useSurfaceKind();
   const [payingJobId, setPayingJobId] = useState<string | null>(null);
   const [payingSquareJobId, setPayingSquareJobId] = useState<string | null>(null);
+  const [stripePayRequest, setStripePayRequest] = useState<{
+    jobId: string;
+    jobTitle: string;
+    amountCents: number;
+  } | null>(null);
   const caps = useClientCapabilities();
   const invoicesTitle = caps.isPersonal ? 'Payments' : 'Billing';
 
@@ -94,22 +99,13 @@ export function ClientInvoiceScreen({
     : null;
   const selectedRequest = selectedRequestId ? requestById.get(selectedRequestId) : undefined;
 
-  const handlePayWithStripe = async (request: SecurityRequest) => {
-    setPayingJobId(request.id);
-    try {
-      const amountCents = Math.round(request.estimatedPayout * 100);
-      const { url } = await createCheckoutSession({
-        jobId: request.id,
-        clientEmail,
-        jobTitle: request.title,
-        amountCents,
-      });
-      if (url) window.location.href = url;
-    } catch (error: unknown) {
-      showAppToast(userFacingError(error, 'Unable to start checkout'), { tone: 'error' });
-    } finally {
-      setPayingJobId(null);
-    }
+  const handlePayWithStripe = (request: SecurityRequest) => {
+    const amountCents = Math.round(request.estimatedPayout * 100);
+    setStripePayRequest({
+      jobId: request.id,
+      jobTitle: request.title,
+      amountCents,
+    });
   };
 
   const handlePayWithSquare = async (request: SecurityRequest) => {
@@ -668,6 +664,19 @@ export function ClientInvoiceScreen({
             );
           })}
         </AppList>
+      )}
+      {stripePayRequest && (
+        <GuardrStripePaymentSheet
+          open
+          onClose={() => setStripePayRequest(null)}
+          kind="job_payment"
+          jobId={stripePayRequest.jobId}
+          clientEmail={clientEmail}
+          jobTitle={stripePayRequest.jobTitle}
+          amountCents={stripePayRequest.amountCents}
+          title="Pay invoice"
+          subtitle={stripePayRequest.jobTitle}
+        />
       )}
     </AppScreen>
   );

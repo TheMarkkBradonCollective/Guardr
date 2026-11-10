@@ -47,7 +47,7 @@ interface ClientRequestsListProps {
     rating: number,
     reviewText: string,
     tipCents?: number
-  ) => Promise<string | void> | void;
+  ) => Promise<import('../../lib/stripe/stripeEmbeddedTypes').ClientReviewSubmitResult | void> | void;
   onReportViolation?: (requestId: string, input: import('./ClientViolationReportSheet').ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onVerifyStartCheckpoint?: (requestId: string) => void | Promise<void>;
