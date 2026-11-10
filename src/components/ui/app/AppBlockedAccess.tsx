@@ -1,6 +1,8 @@
 import React from 'react';
-import { ChevronRight, Info, Lock } from 'lucide-react';
+import { ChevronRight, Info } from 'lucide-react';
 import { showAppAlert, type AppAlertTone } from '../AppConfirm';
+import { RestrictedState } from '../../states/StateViews';
+import '../../states/states.css';
 
 export function openAppNotice(title: string, message: string, tone: AppAlertTone = 'default'): void {
   void showAppAlert({ title, message, tone });
@@ -13,28 +15,13 @@ interface AppBlockedAccessScreenProps {
   placeholders?: string[];
 }
 
-/** Full-section placeholder — tap any row to open the access notice popup. */
+/** Real restricted state. Audience names are text, not tappable stand-ins. */
 export function AppBlockedAccessScreen({
   title,
   message,
-  tone = 'default',
-  placeholders = ['Open section'],
+  placeholders = [],
 }: AppBlockedAccessScreenProps) {
-  const open = () => openAppNotice(title, message, tone);
-
-  return (
-    <div className="app-screen animate-fade-in max-w-lg space-y-3">
-      {placeholders.map((label) => (
-        <button key={label} type="button" onClick={open} className="app-blocked-access-row">
-          <span className="app-blocked-access-row-icon" aria-hidden>
-            <Lock className="w-4 h-4" />
-          </span>
-          <span className="app-blocked-access-row-label">{label}</span>
-          <ChevronRight className="w-4 h-4 shrink-0 opacity-50" aria-hidden />
-        </button>
-      ))}
-    </div>
-  );
+  return <RestrictedState title={title} message={message} audience={placeholders} />;
 }
 
 interface AppNoticeChipProps {
@@ -45,7 +32,7 @@ interface AppNoticeChipProps {
   className?: string;
 }
 
-/** Compact clickable warning / empty notice — details live in the popup. */
+/** Compact notice. The button opens the real alert; it is not a stand-in row. */
 export function AppNoticeChip({ label, title, message, tone = 'warning', className = '' }: AppNoticeChipProps) {
   return (
     <button

@@ -27,8 +27,9 @@ import { PaymentsPreviewScreen } from './surfaces/PaymentsPreviewScreen';
 import { MapPreviewScreen } from './surfaces/MapPreviewScreen';
 import { MessagesPreviewScreen } from './surfaces/MessagesPreviewScreen';
 import { InvoicePreviewScreen } from './surfaces/InvoicePreviewScreen';
+import { FoundationKitScreen } from './FoundationKitScreen';
 import { AccountMenu } from '../components/layouts/AccountMenu';
-import type { ThemeMode } from '../lib/platform/theme';
+import { applyThemeToDocument, type ThemeMode } from '../lib/platform/theme';
 import './surfacePreview.css';
 
 const PROFILE_DEST: SurfaceDestination = {
@@ -82,6 +83,7 @@ function previewPageId(page: string | null, surface: SurfaceKind | null): string
   if (page === 'map') return 'map-preview';
   if (page === 'messages') return 'messages-preview';
   if (page === 'invoices') return 'invoices-preview';
+  if (page === 'kit') return 'kit';
   return surface === 'desktop' ? 'jobs' : 'myJobs';
 }
 
@@ -141,7 +143,10 @@ function PreviewApp() {
   const previewPage =
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') : null;
   const [activeId, setActiveId] = useState(previewPageId(previewPage, desktopSurface ? 'desktop' : null));
-  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    if (typeof window === 'undefined') return 'light';
+    return new URLSearchParams(window.location.search).get('theme') === 'dark' ? 'dark' : 'light';
+  });
   const staffWorkspace =
     desktopSurface ||
     activeId === 'profiles' ||
@@ -158,6 +163,10 @@ function PreviewApp() {
     PAYMENTS_DEST,
     ...(staffWorkspace ? STAFF_DESTINATIONS : GUARD_DESTINATIONS),
   ];
+
+  useEffect(() => {
+    applyThemeToDocument(themeMode);
+  }, [themeMode]);
 
   useEffect(() => {
     const page =
@@ -180,7 +189,9 @@ function PreviewApp() {
                   ? 'Messages'
                   : activeId === 'invoices-preview'
                     ? 'Billing'
-                    : staffWorkspace
+          : activeId === 'kit'
+          ? 'Kit'
+          : staffWorkspace
                     ? 'Jobs'
                     : 'Shifts'
       }
@@ -224,7 +235,9 @@ function PreviewApp() {
       navFooter={<p className="sfp-nav-footer">Guardr preview build</p>}
       hideChrome={false}
     >
-      {activeId === 'profiles' ? (
+      {activeId === 'kit' ? (
+        <FoundationKitScreen />
+      ) : activeId === 'profiles' ? (
         <StaffProfilePreviewScreen />
       ) : activeId === 'job-detail' ? (
         <JobPreviewScreen />
