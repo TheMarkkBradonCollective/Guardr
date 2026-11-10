@@ -4313,6 +4313,12 @@ export default function App() {
     const emailLower = currentUser.email.toLowerCase();
     const isClient = currentUser.role === 'client';
 
+    if (isDbConnected) {
+      // Server updates the login hash; plaintext passwords are never stored.
+      const changed = await supabase.auth.changePassword(newPassword);
+      if (changed.error) throw new Error(changed.error.message);
+    }
+
     if (isClient) {
       setClients((prev) =>
         prev.map((c) =>
@@ -4321,12 +4327,7 @@ export default function App() {
             : c
         )
       );
-      if (isDbConnected) {
-        await supabase
-          .from('clients')
-          .update({ password: newPassword, must_change_password: false })
-          .eq('id', currentUser.id);
-      }
+
       setStoredPassword(emailLower, { password: newPassword, mustChangePassword: false, role: 'client' });
     } else {
       setGuards((prev) =>
@@ -4336,13 +4337,7 @@ export default function App() {
             : g
         )
       );
-      if (isDbConnected) {
-        const table = isStaffRole(currentUser.role) ? 'staff' : 'guards';
-        await supabase
-          .from(table)
-          .update({ password: newPassword, must_change_password: false })
-          .eq('id', currentUser.id);
-      }
+
       setStoredPassword(emailLower, { password: newPassword, mustChangePassword: false, role: 'guard' });
     }
 
@@ -4926,26 +4921,28 @@ export default function App() {
     if (role === 'client') {
       const client = profile as Client;
       const accountStatus = client.accountStatus ?? 'pending';
-      const { error: insertError } = await supabase.from('clients').insert({
+      // Server-side sign-up creates the profile and login (password is only stored hashed).
+      const signup = await supabase.auth.signUp({
+        email: emailLower,
+        password,
+        profileKind: 'client',
+        profile: {
           id: client.id,
           name: client.name,
           first_name: client.firstName,
           middle_name: client.middleName ?? null,
           last_name: client.lastName,
-          email: emailLower,
           company_name: client.companyName,
           phone: client.phone,
           avatar: client.avatar,
-          total_requests: 0,
-          approved: accountStatus === 'active',
-          account_status: accountStatus,
-          password,
-          must_change_password: false,
-        });
-      if (insertError) {
-        console.error('Client DB insert error:', insertError);
-        throw new Error('Could not create customer. This email may already be registered.');
+        },
+      });
+      if (signup.error) {
+        console.error('Client sign-up error:', signup.error);
+        throw new Error(signup.error.message || 'Could not create customer. This email may already be registered.');
       }
+      const createdClientId = signup.data?.user?.id;
+      if (createdClientId && createdClientId !== client.id) client.id = createdClientId;
 
       // Intake fields — written in a separate update so a missing migration
       // column never breaks the core sign-up flow
@@ -5009,6 +5006,8 @@ export default function App() {
     const userStatus = guard.userStatus || 'pending';
 
     if (role === 'staff' || (guard.isStaff && guard.staffRole)) {
+      // Staff accounts are never self-created; a Director adds them in the Staff app.
+      throw new Error('Staff accounts are created by a Director. Ask your manager for an invite.');
       const staffRole = guard.staffRole ?? 'Support';
       enforceStaffCityCapacityForMember({
         staffRole,
@@ -5062,28 +5061,30 @@ export default function App() {
     }
 
     try {
-      await supabase.from('guards').insert({
-        id: guard.id,
-        name: guard.name,
-        first_name: guard.firstName,
-        middle_name: guard.middleName ?? null,
-        last_name: guard.lastName,
+      // Server-side sign-up creates the profile and login (password is only stored hashed).
+      const signup = await supabase.auth.signUp({
         email: emailLower,
-        badge_number: guard.badgeNumber,
-        avatar: guard.avatar,
-        phone: guard.phone,
-        bio: guard.bio,
-        is_armed: guard.isArmed,
-        background_checked: guard.backgroundChecked,
-        verified: guard.verified,
-        rating: guard.rating,
-        jobs_completed: guard.jobsCompleted,
-        hourly_rate_requirement: guard.hourlyRateRequirement,
-        is_staff: false,
-        user_status: userStatus,
         password,
-        must_change_password: false,
+        profileKind: 'guard',
+        profile: {
+          id: guard.id,
+          name: guard.name,
+          first_name: guard.firstName,
+          middle_name: guard.middleName ?? null,
+          last_name: guard.lastName,
+          badge_number: guard.badgeNumber,
+          avatar: guard.avatar,
+          phone: guard.phone,
+          bio: guard.bio,
+          is_armed: guard.isArmed,
+          hourly_rate_requirement: guard.hourlyRateRequirement,
+        },
       });
+      if (signup.error) {
+        throw new Error(signup.error.message || 'Could not create guard account. This email may already be registered.');
+      }
+      const createdGuardId = signup.data?.user?.id;
+      if (createdGuardId && createdGuardId !== guard.id) guard.id = createdGuardId;
       if (guard.certifications.length > 0) {
         const seenNumbers = new Set<string>();
         for (const cert of guard.certifications) {
