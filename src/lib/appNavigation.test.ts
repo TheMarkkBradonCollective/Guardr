@@ -334,6 +334,33 @@ describe('unified payments routes', () => {
   });
 });
 
+describe('frozen route grammar', () => {
+  it('keeps canonical paths and query keys stable', () => {
+    const cases: Array<[AppRoute, string]> = [
+      [{ role: 'guard', guardTab: 'map' }, '/guard/map'],
+      [{ role: 'guard', guardTab: 'myJobs' }, '/guard/my-jobs'],
+      [{ role: 'guard', guardTab: 'earnings' }, '/guard/payments'],
+      [{ role: 'guard', guardTab: 'messages' }, '/guard/messages'],
+      [{ role: 'client', clientView: 'home' }, '/client/home'],
+      [{ role: 'client', clientView: 'requests', clientJobsTab: 'open', clientJobId: 'j1' }, '/client/requests?jt=open&cj=j1'],
+      [{ role: 'client', clientView: 'invoices', clientInvoiceRequestId: 'r1' }, '/client/payments?inv=r1'],
+      [{ role: 'staff', staffSection: 'overview' }, '/staff/overview'],
+      [{ role: 'staff', staffSection: 'team', staffTeamId: 's1' }, '/staff/team?t=s1'],
+      [{ role: 'staff', staffSection: 'guards', staffGuardId: 'g1', staffGuardTab: 'certs' }, '/staff/guards?g=g1&gtab=certs'],
+      [{ role: 'client', authView: 'sign-in', authRole: 'guard' }, '/?auth=sign-in&ar=guard'],
+      [{ role: 'client', authView: 'sign-up', authRole: 'client', authClientType: 'personal' }, '/?auth=sign-up&ar=client&ct=personal'],
+      [{ role: 'client', websiteAccount: true, accountView: 'billing' }, '/account/billing'],
+      [{ role: 'guard', messengerCompanion: true, supportTicketId: 't1' }, '/messenger?st=t1&role=guard'],
+    ];
+    for (const [route, expected] of cases) {
+      assert.equal(buildAppPath(route), expected);
+      const parsed = parseAppRoute(expected);
+      assert.ok(parsed);
+      assert.equal(buildAppPath(parsed), expected);
+    }
+  });
+});
+
 describe('legal page URLs', () => {
   it('maps equal opportunity to a public legal page', () => {
     assert.equal(readLegalPageFromUrl('/legal/equal-opportunity'), 'equal-opportunity');

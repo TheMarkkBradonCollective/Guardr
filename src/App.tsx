@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
+import { mountAppRoutes } from './app/mountAppRoutes';
 import {
   SecurityGuard,
   SecurityRequest,
@@ -13794,1136 +13795,284 @@ export default function App() {
       {node}
     </MessengerCompanionProvider>
   );
+  return mountAppRoutes({
+    accountMenuExtras,
+    accountNotificationMenuProps,
+    activationSupportChat,
+    activeGuard,
+    activeGuardId,
+    appRoleForUser,
+    applyAppRoute,
+    authChoiceMode,
+    authSignupPick,
+    backToAuthRoleChoice,
+    buildAppRoute,
+    canDownloadApks,
+    changeThemeMode,
+    clientDirectGuardId,
+    clientGuardId,
+    clientInvoiceRequestId,
+    clientInvoices,
+    clientLocations,
+    clientMessages,
+    clientMessagesChrome,
+    clientPaymentGatesMemo,
+    clientRequestsJobTab,
+    clientRequestsSelectedId,
+    clientTeamDetailOpen,
+    clientView,
+    clients,
+    closeAuthChoice,
+    closeAuthView,
+    closeClientSupportForm,
+    closeDownloadPage,
+    closeGuardSupportForm,
+    closeLegalPage,
+    closePublicGuide,
+    companyPlacardPublicDocuments,
+    companyPublicDocuments,
+    currentUser,
+    displayRequests,
+    downloadPageOpen,
+    guardBrowseTab,
+    guardMessages,
+    guardPayoutInvoices,
+    guardSelectedJobId,
+    guards,
+    handleAcceptPriceOffer,
+    handleAcceptReplacementOffer,
+    handleAcceptTeamInvite,
+    handleAckBriefing,
+    handleAckPostOrders,
+    handleAddCertification,
+    handleAddClientProfile,
+    handleAddEducation,
+    handleAddExperience,
+    handleAddGuardProfile,
+    handleAddReview,
+    handleAddStaffProfile,
+    handleAddToCompanyRoster,
+    handleApplyToJob,
+    handleApproveCert,
+    handleApproveClient,
+    handleApproveClientCredential,
+    handleApproveGuardAccount,
+    handleApproveGuardIdentityVerification,
+    handleApproveRequest,
+    handleApproveScheduleChange,
+    handleApproveScheduleChangeBilling,
+    handleApproveStaffAccount,
+    handleAssignCityManager,
+    handleAttachCertificationImage,
+    handleBlockOneRoleCase,
+    handleCancelRequest,
+    handleClientApproveOvertime,
+    handleClientApprovePendingGuard,
+    handleClientApproveScheduleChange,
+    handleClientApproveTeamSlot,
+    handleClientConfirmSelfAudit,
+    handleClientDenyPendingGuard,
+    handleClientDenyTeamSlot,
+    handleClientDisputeOvertime,
+    handleClientFlagEndCheckpoint,
+    handleClientFlagStartCheckpoint,
+    handleClientRejectScheduleChange,
+    handleClientRequestSuggestedGuard,
+    handleClientVerifyEndCheckpoint,
+    handleClientVerifyStartCheckpoint,
+    handleCompleteGuardJobTypeOnboarding,
+    handleCompletePayoutInvoice,
+    handleCreateSupportTicket,
+    handleDeclineTeamInvite,
+    handleDeleteCertification,
+    handleDeleteClientAccount,
+    handleDeleteClientMessage,
+    handleDeleteGuardAccount,
+    handleDeleteGuardMessage,
+    handleDeleteJobChatMessage,
+    handleDeleteStaffMessage,
+    handleDeleteSupportMessage,
+    handleDeleteSupportTicket,
+    handleDenyRequest,
+    handleDismissGuardSuggestion,
+    handleEditRequest,
+    handleGuardApproveOvertime,
+    handleGuardArrived,
+    handleGuardDeclineDirectJob,
+    handleGuardDisputeShiftAuditViolation,
+    handleGuardRequestStripePayout,
+    handleIgnoreOneRoleCase,
+    handleInviteTeamGuard,
+    handleMakeGuardPayoutAvailable,
+    handleMakeOvertimeGuardPayoutAvailable,
+    handlePostRequest,
+    handleRecordAuditViolation,
+    handleRefundPayment,
+    handleRejectCert,
+    handleRejectClient,
+    handleRejectClientCredential,
+    handleRejectGuardIdentityVerification,
+    handleRejectScheduleChange,
+    handleRejectStaffAccount,
+    handleReleasePayout,
+    handleRemoveFromCompanyRoster,
+    handleRemoveTeamGuard,
+    handleReportClientViolation,
+    handleRequestCertImageResubmit,
+    handleRequestCertUpdate,
+    handleRequestClientApplicationRevision,
+    handleRequestCoiUpdate,
+    handleRequestGuardApplicationRevision,
+    handleRequestGuardIdResubmit,
+    handleRequestReplacement,
+    handleResetAuditFailures,
+    handleResolveDispute,
+    handleReviewGuardInsurance,
+    handleReviewGuardVehicle,
+    handleRevokeGuardIdentityVerification,
+    handleSaveClientLocation,
+    handleSaveCompanyPublicDocument,
+    handleSaveGuardInsurance,
+    handleSaveGuardJobPreferences,
+    handleSaveGuardVehicle,
+    handleSaveGuardVehicleInsurance,
+    handleSaveJobLocation,
+    handleSendClientMessage,
+    handleSendGuardMessage,
+    handleSendJobChatMessage,
+    handleSendStaffMessage,
+    handleSendSupportMessage,
+    handleSetClientTrusted,
+    handleSetCompanyPlacardPublicEnabled,
+    handleSetGuardTrusted,
+    handleSignIn,
+    handleSignOut,
+    handleSignUp,
+    handleStaffApproveGuardApplication,
+    handleStaffCreateJob,
+    handleStaffDenyGuardApplication,
+    handleStaffEditJobListing,
+    handleStaffResolveAuditViolation,
+    handleStaffResolveOvertimeDispute,
+    handleStaffUpdateGuardIdImages,
+    handleStartEnRoute,
+    handleSubmitClientCredential,
+    handleSubmitGuardIdentityVerification,
+    handleSubmitGuardVehicle,
+    handleSubmitIncidentReport,
+    handleSubmitPriceOffer,
+    handleSuggestTeamGuard,
+    handleToggleFavoriteGuard,
+    handleUpdateBackgroundChecked,
+    handleUpdateCertification,
+    handleUpdateClientCredentialRules,
+    handleUpdateClientProfile,
+    handleUpdateGuardLiveLocation,
+    handleUpdateGuardProfile,
+    handleUpdateGuardStripeAccount,
+    handleUpdateGuardUserStatus,
+    handleUpdateJobAudit,
+    handleUpdatePlatformCity,
+    handleUpdatePlatformSettings,
+    handleUpdatePublicInformation,
+    handleUpdateStaffCityAccess,
+    handleUpdateStaffIntegrations,
+    handleUpdateStaffPermissions,
+    handleUpdateStaffRole,
+    handleUpdateStatus,
+    handleUpdateSupportTicketStatus,
+    initialAuthMode,
+    initialAuthRole,
+    initialClientType,
+    installedAuthRole,
+    isAuthView,
+    isDbConnected,
+    jobChatMessages,
+    jobChatRequestId,
+    jobChatThreads,
+    jobLocations,
+    legalAcceptanceRecords,
+    legalPage,
+    loading,
+    marketplaceLegalGate,
+    messengerAvailable,
+    navigateToAuth,
+    oneRoleCases,
+    openAuthChoice,
+    openAuthView,
+    openClientSupportCompose,
+    openClientSupportReport,
+    openDownloadPage,
+    openGuardActivationSupport,
+    openGuardSupportCompose,
+    openGuardSupportReport,
+    openJobChat,
+    openLegalPage,
+    openPublicGuide,
+    passwordChangeOverlay,
+    payments,
+    performanceFactorId,
+    platformCities,
+    platformSettings,
+    productApp,
+    publicGuideOpen,
+    refreshClientMessages,
+    refreshGuardMessages,
+    refreshStaffMessages,
+    rememberOneRoleHold,
+    requests,
+    resolveWebsiteAccess,
+    resolvedGuardTab,
+    sessionGuard,
+    setAuthViewMode,
+    setAuthViewRole,
+    setClientDirectGuardId,
+    setClientGuardId,
+    setClientInvoiceRequestIdState,
+    setClientMessagesChrome,
+    setClientMessagesDetailOpen,
+    setClientRequestsJobTabState,
+    setClientRequestsSelectedIdState,
+    setClientView,
+    setGuardBrowseTab,
+    setGuardSelectedJobId,
+    setGuardTab,
+    setJobChatRequestId,
+    setLoading,
+    setOpenJobChatState,
+    setPerformanceFactorId,
+    setStaffClientId,
+    setStaffCredentialItemId,
+    setStaffEdit,
+    setStaffGuardId,
+    setStaffGuardTab,
+    setStaffJobId,
+    setStaffPerformanceFactorId,
+    setStaffSection,
+    setStaffTeamId,
+    setSupportTicketId,
+    setWebsiteAccountView,
+    staffClientId,
+    staffCredentialItemId,
+    staffEdit,
+    staffGuardId,
+    staffGuardTab,
+    staffJobId,
+    staffMessages,
+    staffMessagesTab,
+    staffSection,
+    staffTeamId,
+    supportMode,
+    supportSection,
+    supportTicketId,
+    supportTickets,
+    themeMode,
+    tutorialOverlay,
+    tutorialSettingsProps,
+    userNotifications,
+    verifiedGuards,
+    websiteAccountView,
+    wrapMessengerCompanion,
+  });
 
-  if (loading) {
-    return (
-      <LoadingScreen
-        onRetry={() => {
-          setLoading(true);
-          setDataLoadIssue(null);
-          window.location.reload();
-        }}
-      />
-    );
-  }
-
-  if (downloadPageOpen && isAppExperience()) {
-    return (
-      <>
-        <AppDownloadScreen
-          onBack={closeDownloadPage}
-          headerRight={
-            currentUser ? (
-              <AccountMenu
-                userName={currentUser.name}
-                userSubtitle={currentUser.email}
-                avatarUrl={currentUser.avatar}
-                onOpenProfile={() => undefined}
-                onOpenSettings={() => undefined}
-                onSignOut={handleSignOut}
-                hideProfile
-                {...accountMenuExtras}
-              />
-            ) : undefined
-          }
-        />
-        <InstallPrompt />
-      </>
-    );
-  }
-
-  if (legalPage) {
-    return (
-      <>
-        <LegalPage
-          page={legalPage}
-          onBack={closeLegalPage}
-          onOpenLegal={openLegalPage}
-          headerRight={
-            currentUser ? (
-              <AccountMenu
-                userName={currentUser.name}
-                userSubtitle={currentUser.email}
-                avatarUrl={currentUser.avatar}
-                onOpenProfile={() => undefined}
-                onOpenSettings={() => undefined}
-                onSignOut={handleSignOut}
-                hideProfile
-                {...accountMenuExtras}
-              />
-            ) : undefined
-          }
-        />
-        <InstallPrompt />
-      </>
-    );
-  }
-
-  if (!currentUser) {
-    if (publicGuideOpen && !isAppExperience()) {
-      return (
-        <>
-          <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
-            <AppGuidePage audience="all" onBack={closePublicGuide} />
-          </div>
-          <InstallPrompt />
-        </>
-      );
-    }
-    if (authChoiceMode && !isAppExperience()) {
-      return (
-        <>
-          <AuthRoleChoicePage
-            mode={authChoiceMode}
-            signupStep={authSignupPick ?? 'path'}
-            themeMode={themeMode}
-            onChangeTheme={changeThemeMode}
-            onNavigateToAuth={navigateToAuth}
-            onSelectRole={(role) => navigateToAuth(role, authChoiceMode ?? 'sign-in')}
-            onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
-            onSelectClientType={(kind) => openAuthView('client', authChoiceMode ?? 'sign-in', kind)}
-            onOpenGuide={openPublicGuide}
-            onBack={closeAuthChoice}
-          />
-          <InstallPrompt />
-        </>
-      );
-    }
-    if (isAuthView && !isAppExperience()) {
-      return (
-        <>
-          <AuthPage
-            onSignIn={handleSignIn}
-            onSignUp={handleSignUp}
-            guardsList={guards}
-            clientsList={clients}
-            isDbConnected={isDbConnected}
-            isAppLoading={loading}
-            onBackToHome={closeAuthView}
-            onBackToRoleChoice={backToAuthRoleChoice}
-            onOpenLegal={openLegalPage}
-            onOpenGuide={openPublicGuide}
-            onAuthModeChange={setAuthViewMode}
-            onAuthRoleChange={setAuthViewRole}
-            initialRole={initialAuthRole}
-            initialMode={initialAuthMode}
-            initialClientType={initialClientType}
-            themeMode={themeMode}
-            onChangeTheme={changeThemeMode}
-            presentation="page"
-            oneRoleCases={oneRoleCases}
-            onOneRoleHold={rememberOneRoleHold}
-          />
-          <InstallPrompt />
-        </>
-      );
-    }
-    if (isAppExperience()) {
-      if (authChoiceMode) {
-        const entry = installedAuthEntry(productApp, authChoiceMode);
-        const showInstalledChoice = entry.type === 'role-picker' || entry.type === 'client-kind';
-        if (showInstalledChoice) {
-          return (
-            <>
-              <AuthRoleChoicePage
-                mode={authChoiceMode}
-                signupStep={entry.type === 'client-kind' ? 'client' : (authSignupPick ?? 'path')}
-                themeMode={themeMode}
-                onChangeTheme={changeThemeMode}
-                onNavigateToAuth={navigateToAuth}
-                onSelectRole={(role) => navigateToAuth(role, authChoiceMode ?? 'sign-in')}
-                onSelectSignupPath={(path) => openAuthChoice('sign-up', path)}
-                onSelectClientType={(kind) => openAuthView('client', authChoiceMode ?? 'sign-in', kind)}
-                onOpenGuide={openPublicGuide}
-                onBack={closeAuthChoice}
-              />
-              <InstallPrompt />
-            </>
-          );
-        }
-      }
-      // PWA/APK: full-page auth (not bottom sheets / floating cards).
-      if (isAuthView) {
-        const lockToInstalledApp = Boolean(installedAuthRole);
-        const clientKindStep = initialAuthRole === 'client';
-        return (
-          <>
-            <AuthPage
-              onSignIn={handleSignIn}
-              onSignUp={handleSignUp}
-              guardsList={guards}
-              clientsList={clients}
-              isDbConnected={isDbConnected}
-              isAppLoading={loading}
-              onBackToHome={closeAuthView}
-              onBackToRoleChoice={
-                lockToInstalledApp && !clientKindStep ? undefined : backToAuthRoleChoice
-              }
-              onOpenLegal={openLegalPage}
-              onOpenGuide={openPublicGuide}
-              onAuthModeChange={setAuthViewMode}
-              onAuthRoleChange={lockToInstalledApp ? undefined : setAuthViewRole}
-              initialRole={initialAuthRole}
-              initialMode={initialAuthMode}
-              initialClientType={initialClientType}
-              themeMode={themeMode}
-              onChangeTheme={changeThemeMode}
-              presentation="page"
-              oneRoleCases={oneRoleCases}
-              onOneRoleHold={rememberOneRoleHold}
-            />
-            <InstallPrompt />
-          </>
-        );
-      }
-      return (
-        <>
-          <AppHomeScreen
-            themeMode={themeMode}
-            onChangeTheme={changeThemeMode}
-            onNavigateToAuth={navigateToAuth}
-            onOpenLegal={openLegalPage}
-          />
-          <InstallPrompt />
-        </>
-      );
-    }
-    return (
-      <>
-        <HomePage
-          themeMode={themeMode}
-          onChangeTheme={changeThemeMode}
-          ownerMessage={platformSettings.ownerMessage}
-          directorMessage={platformSettings.directorMessage}
-          companyPlacardDocuments={companyPlacardPublicDocuments}
-          onNavigateToAuth={navigateToAuth}
-          onOpenLegal={openLegalPage}
-          onOpenGuide={openPublicGuide}
-        />
-        <InstallPrompt />
-      </>
-    );
-  }
-
-  const signedInRole = appRoleForUser(currentUser);
-  const productRole: ProductRole = signedInRole ?? 'client';
-  const openSignedInApp = () => {
-    const access = resolveWebsiteAccess(currentUser);
-    if (access === 'operations' || access === 'activation') {
-      const fallback =
-        access === 'activation' && productRole === 'guard'
-          ? { role: 'guard' as const, guardTab: 'activation' as const }
-          : productRole === 'guard'
-            ? defaultRouteForRole('guard', findGuardProfileForUser(currentUser, guards))
-            : defaultRouteForRole(productRole);
-      setWebsiteAccountView(null);
-      applyAppRoute(fallback);
-      syncAppRoute(fallback);
-      return;
-    }
-    const downloads = websiteAccountRoute(productRole, 'downloads');
-    applyAppRoute(downloads);
-    syncAppRoute(downloads);
-  };
-  const goWebsiteAccount = (view: WebsiteAccountView) => {
-    const route = websiteAccountRoute(productRole, view);
-    applyAppRoute(route);
-    syncAppRoute(route);
-  };
-
-  const signedInWebsiteAccess = resolveWebsiteAccess(currentUser);
-  const browserAccountShellOnly =
-    !isAppExperience() &&
-    signedInRole !== 'staff' &&
-    signedInWebsiteAccess === 'account';
-  const accountShellView: WebsiteAccountView | null =
-    websiteAccountView ?? (browserAccountShellOnly ? 'home' : null);
-
-  if (accountShellView) {
-    const clientRecord = clients.find((c) => c.id === currentUser.id);
-    const unreadCount = countUnreadForMainApp(userNotifications, messengerAvailable);
-    const accountStatusLabel =
-      currentUser.role === 'client'
-        ? clientRecord?.accountStatus === 'active' || clientRecord?.approved
-          ? 'Active'
-          : 'Pending review'
-        : currentUser.role === 'guard'
-          ? sessionGuard?.userStatus === 'active'
-            ? 'Active'
-            : 'Activation required'
-          : 'Staff';
-
-    let accountBody: React.ReactNode = (
-      <WebsiteAccountHome
-        currentUser={currentUser}
-        role={productRole}
-        statusLabel={accountStatusLabel}
-        statusDetail={currentUser.email}
-        billingSummary={
-          productRole === 'client'
-            ? `${unpaidClientInvoices(clientInvoices, currentUser.id).length} open invoice${unpaidClientInvoices(clientInvoices, currentUser.id).length === 1 ? '' : 's'}`
-            : productRole === 'guard'
-              ? sessionGuard?.stripeConnectAccountId
-                ? 'Payouts connected'
-                : 'Connect payouts in the Guard app'
-              : 'Operations run in the browser'
-        }
-        notificationCount={unreadCount}
-        onboardingOpen={resolveWebsiteAccess(currentUser) === 'activation'}
-        onOpenApp={openSignedInApp}
-        onOpenBilling={() => goWebsiteAccount(productRole === 'guard' ? 'payouts' : 'billing')}
-        onOpenProfile={() => goWebsiteAccount('profile')}
-      />
-    );
-
-    if (accountShellView === 'profile') {
-      accountBody = (
-        <div className="website-account-panel">
-          <UserProfileScreen
-            currentUser={currentUser}
-            client={clientRecord ?? null}
-            guard={
-              currentUser.role === 'client'
-                ? null
-                : guards.find((g) => g.id === currentUser.id) ?? null
-            }
-            onSave={(payload) => {
-              if (currentUser.role === 'client') return handleUpdateClientProfile(currentUser.id, payload);
-              return handleUpdateGuardProfile(currentUser.id, payload);
-            }}
-            onSubmitClientCredential={
-              currentUser.role === 'client'
-                ? (credential) => handleSubmitClientCredential(currentUser.id, credential)
-                : undefined
-            }
-            platformSettings={platformSettings}
-          />
-        </div>
-      );
-    } else if (accountShellView === 'settings') {
-      accountBody = (
-        <div className="website-account-panel">
-          <UserSettingsScreen
-            currentUser={currentUser}
-            isDbConnected={isDbConnected}
-            onOpenLegal={openLegalPage}
-            onOpenDownload={canDownloadApks ? () => goWebsiteAccount('downloads') : undefined}
-          />
-        </div>
-      );
-    } else if (accountShellView === 'support') {
-      accountBody = (
-        <div className="website-account-panel">
-          <SupportScreen
-            currentUser={currentUser}
-            tickets={supportTickets}
-            onSendMessage={handleSendSupportMessage}
-            initialTicketId={supportTicketId}
-            onActiveTicketIdChange={setSupportTicketId}
-            initialSection={supportSection}
-          />
-        </div>
-      );
-    } else if (accountShellView === 'documents') {
-      accountBody = (
-        <WebsiteAccountDocuments currentUser={currentUser} onOpenLegal={openLegalPage} />
-      );
-    } else if (accountShellView === 'downloads') {
-      accountBody = (
-        <WebsiteAccountDownloads role={productRole} canDownloadApks={canDownloadApks} />
-      );
-    } else if (accountShellView === 'billing' || accountShellView === 'payouts') {
-      if (productRole === 'client' && clientRecord) {
-        accountBody = (
-          <ClientCapabilitiesProvider clientType={clientRecord.clientType}>
-            <div className="website-account-panel" style={{ minHeight: 420 }}>
-              <PaymentsPage role="client">
-                <ClientInvoiceScreen
-                  client={clientRecord}
-                  clientEmail={currentUser.email}
-                  requests={displayRequests.filter(
-                    (r) =>
-                      r.clientId === currentUser.id ||
-                      r.clientName === currentUser.clientName ||
-                      r.clientName === currentUser.name
-                  )}
-                  invoices={clientInvoices}
-                  paymentGates={clientPaymentGatesMemo}
-                  selectedRequestId={clientInvoiceRequestId}
-                  onSelectRequestId={(id) => setClientInvoiceRequestIdState(id)}
-                />
-              </PaymentsPage>
-            </div>
-          </ClientCapabilitiesProvider>
-        );
-      } else {
-        accountBody = (
-          <div className="website-account-panel" style={{ padding: 24 }}>
-            <h1 style={{ fontSize: '1.5rem', letterSpacing: '-0.03em', fontWeight: 750, marginBottom: 8 }}>
-              {productRole === 'guard' ? 'Payouts' : 'Billing'}
-            </h1>
-            <p className="website-account-lead">
-              {productRole === 'guard'
-                ? 'Connect Stripe, request payouts, and review shift pay in the Guard app.'
-                : 'Platform billing and payout administration live in operations.'}
-            </p>
-            <OpenAppCta
-              role={productRole}
-              destination={productRole === 'guard' ? '/guard/payments' : '/staff/payments'}
-              onOpenWebApp={() => {
-                const dest =
-                  productRole === 'guard'
-                    ? { role: 'guard' as const, guardTab: 'earnings' as const }
-                    : { role: 'staff' as const, staffSection: 'payments' as const };
-                setWebsiteAccountView(null);
-                applyAppRoute(dest);
-                syncAppRoute(dest);
-              }}
-            />
-          </div>
-        );
-      }
-    }
-
-    return (
-      <>
-        <WebsiteAccountShell
-          role={productRole}
-          userName={currentUser.name}
-          userEmail={currentUser.email}
-          avatarUrl={currentUser.avatar}
-          activeView={accountShellView}
-          onNavigate={goWebsiteAccount}
-          onOpenApp={openSignedInApp}
-          onboardingOpen={resolveWebsiteAccess(currentUser) === 'activation'}
-          canDownloadApks={canDownloadApks}
-          onSignOut={handleSignOut}
-          accountMenu={{
-            userName: currentUser.name,
-            userSubtitle: currentUser.email,
-            avatarUrl: currentUser.avatar,
-            onOpenProfile: () => goWebsiteAccount('profile'),
-            onOpenSettings: () => goWebsiteAccount('settings'),
-            onSignOut: handleSignOut,
-            ...accountMenuExtras,
-          }}
-        >
-          {accountBody}
-        </WebsiteAccountShell>
-        <InstallPrompt />
-      </>
-    );
-  }
-
-  // ── Guard view ─────────────────────────────────────────────
-  if (currentUser.role === 'guard') {
-    if (!activeGuard?.id) {
-      return (
-        <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
-          <header className="flex justify-end items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))] shrink-0">
-            <AccountMenu
-              userName={currentUser.name}
-              userSubtitle={currentUser.email}
-              avatarUrl={currentUser.avatar}
-              onOpenProfile={() => setGuardTab('settings')}
-              onOpenSettings={() => setGuardTab('settings')}
-              onSignOut={handleSignOut}
-              hideProfile
-              {...accountMenuExtras}
-            />
-          </header>
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
-            <p className="text-brand-text font-semibold">We could not load your guard profile.</p>
-            <p className="text-brand-text-muted text-sm max-w-sm">
-              Your sign-in may be out of date after a database change. Sign out and sign in again with your guard email.
-            </p>
-          </div>
-        </div>
-      );
-    }
-    const inactiveGuard = isInactiveGuardSession(currentUser, verifiedGuards);
-
-    if (
-      inactiveGuard &&
-      resolvedGuardTab !== 'settings' &&
-      resolvedGuardTab !== 'support' &&
-      resolvedGuardTab !== 'guide'
-    ) {
-      return (
-        <>
-          {marketplaceLegalGate}
-          {passwordChangeOverlay}
-          <div className="page-shell h-[100dvh] flex flex-col overflow-hidden bg-brand-bg">
-            <header className="flex justify-end items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))] shrink-0">
-              <AccountMenu
-                userName={currentUser.name}
-                userSubtitle={currentUser.email}
-                avatarUrl={currentUser.avatar}
-                onOpenProfile={() => setGuardTab('settings')}
-                onOpenSettings={() => setGuardTab('settings')}
-                onSignOut={handleSignOut}
-                hideProfile
-                {...accountMenuExtras}
-              />
-            </header>
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-              <AccountPendingScreen
-              role="guard"
-              guard={activeGuard}
-              onOpenProfile={() => setGuardTab('settings')}
-              onContactSupport={isGuardAccountApproved(activeGuard) ? openGuardActivationSupport : undefined}
-              hasActivationSupportChat={Boolean(activationSupportChat)}
-              onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert, 'guard')}
-              onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
-              onAttachCertificationImage={(certId, imageUrl) =>
-                handleAttachCertificationImage(activeGuard.id, certId, imageUrl)
-              }
-              onUpdateCertification={(certId, payload) =>
-                handleUpdateCertification(activeGuard.id, certId, payload, 'guard')
-              }
-              onSubmitIdentityVerification={(payload) =>
-                handleSubmitGuardIdentityVerification(activeGuard.id, payload)
-              }
-              onSaveInsurance={(policy) => handleSaveGuardInsurance(policy)}
-              />
-            </div>
-          </div>
-          <InstallPrompt />
-        </>
-      );
-    }
-
-    const guardJobs = getGuardVisibleJobs(activeGuard, displayRequests);
-    const guardPayouts = getGuardPayoutHistory(activeGuard.id, requests, payments);
-
-    return wrapMessengerCompanion(
-      <>
-        {marketplaceLegalGate}
-        <GuardDashboard
-          guard={activeGuard}
-          tab={resolvedGuardTab}
-          onTabChange={setGuardTab}
-          messagesOnly={isMessengerExperience()}
-          selectedJobId={guardSelectedJobId}
-          onSelectedJobIdChange={setGuardSelectedJobId}
-          browseTab={guardBrowseTab}
-          onBrowseTabChange={setGuardBrowseTab}
-          accountNotifications={accountNotificationMenuProps}
-          requests={guardJobs}
-          allRequests={requests}
-          payments={guardPayouts}
-          onAddCertification={(cert) => handleAddCertification(activeGuard.id, cert, 'guard')}
-          onDeleteCertification={(certId) => handleDeleteCertification(activeGuard.id, certId)}
-          onAttachCertificationImage={(certId, imageUrl) =>
-            handleAttachCertificationImage(activeGuard.id, certId, imageUrl)
-          }
-          onUpdateCertification={(certId, payload) =>
-            handleUpdateCertification(activeGuard.id, certId, payload, 'guard')
-          }
-          onAddExperience={(exp) => handleAddExperience(activeGuard.id, exp)}
-          onAddEducation={(edu) => handleAddEducation(activeGuard.id, edu)}
-          onSubmitIdentityVerification={(payload) =>
-            handleSubmitGuardIdentityVerification(activeGuard.id, payload)
-          }
-          onSaveInsurance={(policy) => handleSaveGuardInsurance(policy)}
-          onSaveVehicleInsurance={(policy) => handleSaveGuardVehicleInsurance(policy)}
-          onSaveVehicle={(profile) => handleSaveGuardVehicle(profile)}
-          onSubmitVehicle={(profile) => handleSubmitGuardVehicle(profile)}
-          onAcceptJob={handleApplyToJob}
-          onDeclineDirectJob={handleGuardDeclineDirectJob}
-          onInviteTeamGuard={handleInviteTeamGuard}
-          onSuggestTeamGuard={handleSuggestTeamGuard}
-          onAcceptTeamInvite={handleAcceptTeamInvite}
-          onDeclineTeamInvite={handleDeclineTeamInvite}
-          onRemoveTeamGuard={handleRemoveTeamGuard}
-          feeConfig={platformSettings.feeConfig}
-          onSubmitPriceOffer={(requestId, input) =>
-            void handleSubmitPriceOffer(requestId, activeGuardId, input, 'guard')
-          }
-          onAcceptPriceOffer={(requestId, offerId) =>
-            void handleAcceptPriceOffer(requestId, activeGuardId, offerId)
-          }
-          coworkerGuards={getBrowsableGuards(verifiedGuards)}
-          companyClients={clients.filter((c) => c.clientType === 'security-company')}
-          onUpdateJobAudit={handleUpdateJobAudit}
-          onAckPostOrders={handleAckPostOrders}
-          onSaveJobPreferences={(prefs) => handleSaveGuardJobPreferences(activeGuardId, prefs)}
-          onCompleteJobTypeOnboarding={(jobType) =>
-            handleCompleteGuardJobTypeOnboarding(activeGuardId, jobType)
-          }
-          onStartEnRoute={handleStartEnRoute}
-          onUpdateGuardLiveLocation={handleUpdateGuardLiveLocation}
-          onAcceptReplacementOffer={(requestId) =>
-            void handleAcceptReplacementOffer(requestId, activeGuardId)
-          }
-          onGuardArrived={(requestId) => {
-            void handleGuardArrived(requestId);
-          }}
-          onAckBriefing={handleAckBriefing}
-          onGeofenceLeave={(requestId) => {
-            if (!currentUser) return;
-            const req = requests.find((r) => r.id === requestId);
-            const guard = guards.find((g) => g.id === req?.assignedGuardId) ?? activeGuard;
-            void reportPushEvent(currentUser, {
-              type: 'guard_left_site',
-              guardId: guard?.id,
-              guardName: guard?.name,
-              requestId,
-              location: req?.location,
-              priority: 'high',
-            });
-          }}
-          onApproveOvertime={handleGuardApproveOvertime}
-          onRecordAuditViolation={handleRecordAuditViolation}
-          onDisputeShiftAuditViolation={handleGuardDisputeShiftAuditViolation}
-          onUpdateStripeAccount={handleUpdateGuardStripeAccount}
-          onSignOut={handleSignOut}
-          themeMode={themeMode}
-          onChangeTheme={changeThemeMode}
-          onUpdateProfile={(payload) => handleUpdateGuardProfile(activeGuard.id, payload)}
-          currentUser={currentUser}
-          supportTickets={supportTickets}
-          relatedRequests={guardJobs.filter((r) => r.assignedGuardId === activeGuard.id)}
-          onCreateSupportTicket={handleCreateSupportTicket}
-          onSendSupportMessage={handleSendSupportMessage}
-          jobChatThreads={jobChatThreads}
-          jobChatMessages={jobChatMessages}
-          onSendJobChatMessage={handleSendJobChatMessage}
-          guardMessages={guardMessages}
-          onSendGuardMessage={handleSendGuardMessage}
-          onDeleteGuardMessage={handleDeleteGuardMessage}
-          onDeleteJobChatMessage={handleDeleteJobChatMessage}
-          onDeleteSupportMessage={handleDeleteSupportMessage}
-          onRefreshGuardMessages={refreshGuardMessages}
-          jobChatRequestId={jobChatRequestId}
-          openJobChat={openJobChat}
-          initialSelectedJobId={jobChatRequestId && !openJobChat ? jobChatRequestId : null}
-          onJobChatRequestIdChange={(id) => setJobChatRequestId(id, { openChat: false })}
-          onJobChatOpenChange={(open) => {
-            setOpenJobChatState(open);
-            if (!open) setJobChatRequestId(null);
-            else if (jobChatRequestId) setJobChatRequestId(jobChatRequestId, { openChat: true });
-          }}
-          supportTicketId={supportTicketId}
-          onSupportTicketIdChange={setSupportTicketId}
-          supportMode={supportMode}
-          supportSection={supportSection}
-          onOpenSupportCompose={openGuardSupportCompose}
-          onOpenActivationSupport={openGuardActivationSupport}
-          onOpenSupportReport={openGuardSupportReport}
-          onCloseSupportForm={closeGuardSupportForm}
-          performanceFactorId={performanceFactorId}
-          onPerformanceFactorChange={setPerformanceFactorId}
-          onSubmitIncidentReport={handleSubmitIncidentReport}
-          guardPayoutInvoices={guardPayoutInvoices}
-          onRequestStripePayout={() => handleGuardRequestStripePayout(activeGuard.id)}
-          onOpenLegal={openLegalPage}
-          onOpenDownload={openDownloadPage}
-          isDbConnected={isDbConnected}
-          {...tutorialSettingsProps}
-        />
-        {passwordChangeOverlay}
-        {tutorialOverlay}
-        <InstallPrompt />
-      </>
-    );
-  }
-
-  // ── Client view ────────────────────────────────────────────
-  if (currentUser.role === 'client') {
-    const clientRecord = clients.find(c => c.id === currentUser.id);
-    // Show only THIS client's requests
-    const myRequests = displayRequests.filter(r =>
-      r.clientId === currentUser.id ||
-      r.clientName === currentUser.clientName ||
-      r.clientName === currentUser.name
-    );
-    const hireableGuards = getBrowsableGuards(verifiedGuards);
-    // Pending applicants must remain visible for Approve even if directory filters change.
-    const clientGuardsForJobs = (() => {
-      const byId = new Map(hireableGuards.map((g) => [g.id, g]));
-      for (const req of myRequests) {
-        const pendingId = req.pendingGuardId;
-        if (pendingId && !byId.has(pendingId)) {
-          const pending = verifiedGuards.find((g) => g.id === pendingId);
-          if (pending) byId.set(pending.id, pending);
-        }
-        for (const applicantId of req.applicants ?? []) {
-          if (!byId.has(applicantId)) {
-            const applicant = verifiedGuards.find((g) => g.id === applicantId);
-            if (applicant) byId.set(applicant.id, applicant);
-          }
-        }
-      }
-      return [...byId.values()];
-    })();
-    const clientAccountPending = isClientAccountPending({
-      accountStatus: clientRecord?.accountStatus,
-      approved: clientRecord?.approved,
-    });
-    const handleClientNavigate = (view: ClientView) => {
-      const allowedView = resolveAllowedClientView(view, clientRecord?.clientType) as ClientView;
-      if (
-        !isMessengerExperience() &&
-        clientAccountPending &&
-        allowedView !== 'home' &&
-        allowedView !== 'profile' &&
-        allowedView !== 'settings' &&
-        allowedView !== 'messages' &&
-        allowedView !== 'support' &&
-        allowedView !== 'guide' &&
-        allowedView !== 'support-compose' &&
-        allowedView !== 'support-report' &&
-        allowedView !== 'invoices'
-      ) {
-        setClientView('home');
-        return;
-      }
-      setClientView(allowedView);
-    };
-
-    const clientInvoicesBadge = unpaidClientInvoices(clientInvoices, currentUser.id).length;
-
-    const setClientInvoiceRequestId = (requestId: string | null) => {
-      setClientInvoiceRequestIdState(requestId);
-      syncAppRoute(
-        buildAppRoute({
-          role: 'client',
-          clientView: 'invoices',
-          clientInvoiceRequestId: requestId ?? undefined,
-        })
-      );
-    };
-
-    const setClientRequestsSelectedId = (jobId: string | null) => {
-      setClientRequestsSelectedIdState(jobId);
-      syncAppRoute(
-        buildAppRoute({
-          role: 'client',
-          clientView: 'requests',
-          clientJobId: jobId ?? undefined,
-          clientJobsTab: clientRequestsJobTab,
-          jobChatRequestId: undefined,
-          openJobChat: undefined,
-        })
-      );
-    };
-
-    const setClientRequestsJobTab = (tab: ClientJobsTab) => {
-      setClientRequestsJobTabState(tab);
-      syncAppRoute(
-        buildAppRoute({
-          role: 'client',
-          clientView: 'requests',
-          clientJobsTab: tab,
-          clientJobId: clientRequestsSelectedId ?? undefined,
-        })
-      );
-    };
-
-    const clientHideHeader =
-      clientView === 'support-compose' ||
-      clientView === 'support-report' ||
-      (clientView === 'guards' && (!!clientGuardId || clientTeamDetailOpen)) ||
-      (clientView === 'requests' && !!clientRequestsSelectedId) ||
-      (clientView === 'invoices' && !!clientInvoiceRequestId);
-
-    const clientMessagesShellHeaderTrailing =
-      clientView === 'messages' || clientView === 'support' ? (
-        <div className="shrink-0 flex items-center gap-2">
-          <AccountMenu
-            userName={currentUser.name}
-            userSubtitle={currentUser.email}
-            avatarUrl={currentUser.avatar}
-            onOpenProfile={() => handleClientNavigate('profile')}
-            onOpenSettings={() => handleClientNavigate('settings')}
-            onSignOut={handleSignOut}
-            active={false}
-            {...accountMenuExtras}
-          />
-        </div>
-      ) : null;
-
-    return wrapMessengerCompanion(
-      <>
-        {marketplaceLegalGate}
-        <ClientCapabilitiesProvider clientType={clientRecord?.clientType}>
-        <ClientAppLayout
-          currentUser={currentUser}
-          companyName={
-            clientRecord
-              ? clientWorkspaceLabel(clientRecord)
-              : currentUser.clientName || currentUser.name || 'Your company'
-          }
-          onSignOut={handleSignOut}
-          messagesOnly={isMessengerExperience()}
-          activeView={clientView}
-          requestsJobTab={clientRequestsJobTab}
-          onRequestsJobTabChange={setClientRequestsJobTab}
-          onNavigate={handleClientNavigate}
-          accountPending={clientAccountPending}
-          onOpenLegal={openLegalPage}
-          onOpenDownload={openDownloadPage}
-          messagesBadge={clientMessagesBadge(jobChatThreads, supportTickets, currentUser)}
-          supportBadge={clientSupportBadge(supportTickets, currentUser)}
-          invoicesBadge={clientInvoicesBadge}
-          hideHeader={clientHideHeader}
-          accountNotifications={accountNotificationMenuProps}
-          messagesChrome={clientMessagesChrome}
-          themeMode={themeMode}
-          onChangeTheme={changeThemeMode}
-        >
-          {clientView === 'profile' ? (
-            <UserProfileScreen
-              currentUser={currentUser}
-              client={clientRecord ?? null}
-              onSave={(payload) => handleUpdateClientProfile(currentUser.id, payload)}
-              onSubmitClientCredential={(credential) =>
-                handleSubmitClientCredential(currentUser.id, credential)
-              }
-              platformSettings={platformSettings}
-            />
-          ) : clientView === 'settings' ? (
-            <div data-tour="client-settings">
-            <UserSettingsScreen
-              currentUser={currentUser}
-              isDbConnected={isDbConnected}
-              onOpenLegal={openLegalPage}
-              onOpenDownload={openDownloadPage}
-            />
-            </div>
-          ) : clientView === 'support-compose' ? (
-            <SupportComposePage
-              onBack={() => closeClientSupportForm('support')}
-              onCreateTicket={handleCreateSupportTicket}
-              onCreated={(ticketId) => setSupportTicketId(ticketId)}
-            />
-          ) : clientView === 'support-report' ? (
-            <SupportReportPage
-              relatedRequests={myRequests}
-              onBack={() => closeClientSupportForm('reports')}
-              onCreateTicket={handleCreateSupportTicket}
-              onSubmitted={() => closeClientSupportForm('reports')}
-            />
-          ) : (
-            <ClientDashboard
-              companyName={
-                clientRecord
-                  ? clientWorkspaceLabel(clientRecord)
-                  : currentUser.clientName || currentUser.name || 'Your Company'
-              }
-              messagesOnly={isMessengerExperience()}
-              clientId={currentUser.id}
-              accountStatus={clientRecord?.accountStatus}
-              approved={clientRecord?.approved}
-              requests={myRequests}
-              platformRequests={requests}
-              guards={clientGuardsForJobs}
-                  clientEmail={currentUser.email}
-              avatarUrl={currentUser.avatar}
-              activeView={clientView}
-              onViewChange={handleClientNavigate}
-              profileGuardId={clientGuardId}
-              onProfileGuardIdChange={setClientGuardId}
-              directRequestGuardId={clientDirectGuardId}
-              onDirectRequestGuardIdChange={setClientDirectGuardId}
-              onPostRequest={handlePostRequest}
-              onEditRequest={handleEditRequest}
-              onUpdateStatus={handleUpdateStatus}
-              onCancelRequest={handleCancelRequest}
-              onAddReview={handleAddReview}
-              onReportViolation={handleReportClientViolation}
-              onConfirmSelfAudit={handleClientConfirmSelfAudit}
-              onVerifyStartCheckpoint={handleClientVerifyStartCheckpoint}
-              onFlagStartCheckpoint={handleClientFlagStartCheckpoint}
-              onVerifyEndCheckpoint={handleClientVerifyEndCheckpoint}
-              onFlagEndCheckpoint={handleClientFlagEndCheckpoint}
-              onApproveOvertime={handleClientApproveOvertime}
-              onDisputeOvertime={handleClientDisputeOvertime}
-              onApproveScheduleChange={handleClientApproveScheduleChange}
-              onRejectScheduleChange={handleClientRejectScheduleChange}
-              onApprovePendingGuard={handleClientApprovePendingGuard}
-              onDenyPendingGuard={handleClientDenyPendingGuard}
-              onApproveTeamSlot={handleClientApproveTeamSlot}
-              onDenyTeamSlot={handleClientDenyTeamSlot}
-              onRequestSuggestedGuard={handleClientRequestSuggestedGuard}
-              onDismissGuardSuggestion={handleDismissGuardSuggestion}
-              onAddToCompanyRoster={handleAddToCompanyRoster}
-              onRemoveFromCompanyRoster={handleRemoveFromCompanyRoster}
-              onRequestReplacement={handleRequestReplacement}
-              onSubmitPriceOffer={(requestId, guardId, input) =>
-                void handleSubmitPriceOffer(requestId, guardId, input, 'client')
-              }
-              onAcceptPriceOffer={(requestId, guardId, offerId) =>
-                void handleAcceptPriceOffer(requestId, guardId, offerId)
-              }
-              crewSettings={platformSettings}
-              favoriteGuardIds={clientRecord?.favoriteGuardIds ?? []}
-              onToggleFavoriteGuard={handleToggleFavoriteGuard}
-              clientLocations={clientLocations}
-              jobLocations={jobLocations}
-              onSaveClientLocation={handleSaveClientLocation}
-              clientRecord={clientRecord}
-              paymentGates={clientPaymentGatesMemo}
-              feeConfig={platformSettings.feeConfig}
-              currentUser={currentUser}
-              jobChatThreads={jobChatThreads}
-              jobChatMessages={jobChatMessages}
-              clientMessages={clientMessages}
-              onSendJobChatMessage={handleSendJobChatMessage}
-              onSendClientMessage={handleSendClientMessage}
-              onDeleteClientMessage={handleDeleteClientMessage}
-              onDeleteJobChatMessage={handleDeleteJobChatMessage}
-              onDeleteSupportMessage={handleDeleteSupportMessage}
-              onRefreshClientMessages={refreshClientMessages}
-              jobChatRequestId={jobChatRequestId}
-              openJobChat={openJobChat}
-              onJobChatRequestIdChange={(id) => setJobChatRequestId(id, { openChat: false })}
-              onJobChatOpenChange={(open) => {
-                setOpenJobChatState(open);
-                if (!open) setJobChatRequestId(null);
-                else if (jobChatRequestId) setJobChatRequestId(jobChatRequestId, { openChat: true });
-              }}
-              onOpenJobChat={(requestId) => {
-                setJobChatRequestId(requestId, { openChat: true });
-              }}
-              supportTickets={supportTickets}
-              onSendSupportMessage={handleSendSupportMessage}
-              supportTicketId={supportTicketId}
-              onSupportTicketIdChange={setSupportTicketId}
-              onOpenSupportCompose={openClientSupportCompose}
-              onOpenSupportReport={openClientSupportReport}
-              onRequestsSelectedIdChange={setClientRequestsSelectedId}
-              requestsSelectedId={clientRequestsSelectedId}
-              requestsJobTab={clientRequestsJobTab}
-              onRequestsJobTabChange={setClientRequestsJobTab}
-              clientInvoices={clientInvoices}
-              invoiceRequestId={clientInvoiceRequestId}
-              onInvoiceRequestIdChange={setClientInvoiceRequestId}
-              onMessagesDetailOpenChange={setClientMessagesDetailOpen}
-              onMessagesChromeChange={setClientMessagesChrome}
-              messagesShellHeaderTrailing={clientMessagesShellHeaderTrailing}
-              {...tutorialSettingsProps}
-            />
-          )}
-        </ClientAppLayout>
-        </ClientCapabilitiesProvider>
-        {passwordChangeOverlay}
-        {tutorialOverlay}
-        <InstallPrompt />
-      </>
-    );
-  }
-
-  // ── Staff Operations Command Center ─────────────────────────
-  if (isStaffRole(currentUser.role)) {
-    const activeStaffProfile = guards.find((g) => g.id === currentUser.id && g.isStaff);
-    if (
-      activeStaffProfile &&
-      staffNeedsCredentialCompletion(activeStaffProfile) &&
-      !isManagementStaffMember(activeStaffProfile)
-    ) {
-      return (
-        <>
-          {marketplaceLegalGate}
-          {passwordChangeOverlay}
-          <div className="page-shell flex h-[100dvh] flex-col overflow-hidden bg-brand-bg">
-            <header className="flex shrink-0 items-center justify-end gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))]">
-              <AccountMenu
-                userName={currentUser.name}
-                userSubtitle={currentUser.email}
-                avatarUrl={currentUser.avatar}
-                onOpenProfile={() => {}}
-                onOpenSettings={() => {}}
-                onSignOut={handleSignOut}
-                hideProfile
-                {...accountMenuExtras}
-              />
-            </header>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <StaffAccountPendingScreen
-                member={activeStaffProfile}
-                onSubmitIdentityVerification={(payload) =>
-                  handleSubmitGuardIdentityVerification(activeStaffProfile.id, payload)
-                }
-                onUpdateStripeAccount={handleUpdateGuardStripeAccount}
-              />
-            </div>
-          </div>
-          <InstallPrompt />
-        </>
-      );
-    }
-    return wrapMessengerCompanion(
-      <>
-        {marketplaceLegalGate}
-        <StaffDashboard
-          section={staffSection}
-          onSectionChange={setStaffSection}
-          messagesOnly={isMessengerExperience()}
-          accountNotifications={accountNotificationMenuProps}
-          selectedGuardId={staffGuardId}
-          onSelectedGuardIdChange={setStaffGuardId}
-          selectedClientId={staffClientId}
-          onSelectedClientIdChange={setStaffClientId}
-          selectedJobId={staffJobId}
-          onSelectedJobIdChange={setStaffJobId}
-          selectedCredentialItemId={staffCredentialItemId}
-          onSelectedCredentialItemIdChange={setStaffCredentialItemId}
-          selectedTeamId={staffTeamId}
-          onSelectedTeamIdChange={setStaffTeamId}
-          staffGuardEdit={staffEdit}
-          onStaffGuardEditChange={setStaffEdit}
-          staffGuardTab={staffGuardTab}
-          onStaffGuardTabChange={setStaffGuardTab}
-          performanceFactorId={performanceFactorId}
-          onPerformanceFactorChange={setStaffPerformanceFactorId}
-          selectedSupportTicketId={supportTicketId}
-          onSelectedSupportTicketIdChange={setSupportTicketId}
-          selectedJobChatRequestId={jobChatRequestId}
-          onSelectedJobChatRequestIdChange={(id) => setJobChatRequestId(id)}
-          initialStaffMessagesTab={staffMessagesTab}
-          guards={verifiedGuards}
-          clients={clients}
-          oneRoleCases={oneRoleCases}
-          onIgnoreOneRoleCase={handleIgnoreOneRoleCase}
-          onBlockOneRoleCase={handleBlockOneRoleCase}
-          requests={displayRequests}
-          supportTickets={supportTickets}
-          payments={payments}
-          guardPayoutInvoices={guardPayoutInvoices}
-          onUpdateGuardUserStatus={handleUpdateGuardUserStatus}
-          onApproveRequest={handleApproveRequest}
-          onDenyRequest={handleDenyRequest}
-          onApproveScheduleChange={handleApproveScheduleChange}
-          onRejectScheduleChange={handleRejectScheduleChange}
-          onApproveScheduleChangeBilling={handleApproveScheduleChangeBilling}
-          onApproveClient={handleApproveClient}
-          onRejectClient={handleRejectClient}
-          onApproveGuardAccount={handleApproveGuardAccount}
-          onRequestGuardApplicationRevision={handleRequestGuardApplicationRevision}
-          onRequestClientApplicationRevision={handleRequestClientApplicationRevision}
-          onSetGuardTrusted={handleSetGuardTrusted}
-          onSetClientTrusted={handleSetClientTrusted}
-          onSubmitGuardIdentityVerification={handleSubmitGuardIdentityVerification}
-          onApproveGuardIdentityVerification={handleApproveGuardIdentityVerification}
-          onRejectGuardIdentityVerification={handleRejectGuardIdentityVerification}
-          onRequestGuardIdResubmit={handleRequestGuardIdResubmit}
-          onUpdateGuardIdImages={handleStaffUpdateGuardIdImages}
-          onRequestCertImageResubmit={handleRequestCertImageResubmit}
-          onReviewGuardInsurance={handleReviewGuardInsurance}
-          onApproveVehicle={(guardId) => handleReviewGuardVehicle(guardId, 'verified')}
-          onRejectVehicle={(guardId, reason) => handleReviewGuardVehicle(guardId, 'rejected', reason)}
-          onRequestCoiUpdate={handleRequestCoiUpdate}
-          onRequestCertUpdate={handleRequestCertUpdate}
-          onRevokeGuardIdentityVerification={handleRevokeGuardIdentityVerification}
-          onApproveClientCredential={handleApproveClientCredential}
-          onRejectClientCredential={handleRejectClientCredential}
-          onUpdateClientCredentialRules={handleUpdateClientCredentialRules}
-          onDeleteGuardAccount={handleDeleteGuardAccount}
-          onDeleteClientAccount={handleDeleteClientAccount}
-          onApproveCert={handleApproveCert}
-          onRejectCert={handleRejectCert}
-          onUpdateBackgroundChecked={handleUpdateBackgroundChecked}
-          onRecordAuditViolation={handleRecordAuditViolation}
-          onResetAuditFailures={handleResetAuditFailures}
-          onMakeGuardPayoutAvailable={handleMakeGuardPayoutAvailable}
-          onReleasePayout={handleReleasePayout}
-          onRefundPayment={handleRefundPayment}
-          onResolveOvertimeDispute={handleStaffResolveOvertimeDispute}
-          onResolveAuditViolation={handleStaffResolveAuditViolation}
-          onMakeOvertimeGuardPayoutAvailable={handleMakeOvertimeGuardPayoutAvailable}
-          onCompletePayoutInvoice={handleCompletePayoutInvoice}
-          platformSettings={platformSettings}
-          platformCities={platformCities}
-          jobLocations={jobLocations}
-          clientLocations={clientLocations}
-          onSaveJobLocation={handleSaveJobLocation}
-          onUpdatePlatformCity={handleUpdatePlatformCity}
-          onUpdateStaffCityAccess={handleUpdateStaffCityAccess}
-          onAssignCityManager={handleAssignCityManager}
-          onUpdatePlatformSettings={handleUpdatePlatformSettings}
-          onUpdatePublicInformation={handleUpdatePublicInformation}
-          onUpdateStaffIntegrations={handleUpdateStaffIntegrations}
-          onUpdateStaffPermissions={handleUpdateStaffPermissions}
-          isDbConnected={isDbConnected}
-          currentUser={currentUser}
-          onAddStaffProfile={handleAddStaffProfile}
-          onApproveStaffAccount={handleApproveStaffAccount}
-          onRejectStaffAccount={handleRejectStaffAccount}
-          onUpdateStaffRole={handleUpdateStaffRole}
-          onAddGuardProfile={handleAddGuardProfile}
-          onAddClientProfile={handleAddClientProfile}
-          onStaffCreateJob={handleStaffCreateJob}
-          onEditJobListing={handleStaffEditJobListing}
-          onApproveGuardApplication={handleStaffApproveGuardApplication}
-          onDenyGuardApplication={handleStaffDenyGuardApplication}
-          themeMode={themeMode}
-          onChangeTheme={changeThemeMode}
-          onSignOut={handleSignOut}
-          onUpdateGuardProfile={handleUpdateGuardProfile}
-          onAddCertification={(guardId, cert) => handleAddCertification(guardId, cert, 'staff')}
-          onDeleteCertification={handleDeleteCertification}
-          onAttachCertificationImage={handleAttachCertificationImage}
-          onUpdateCertification={(guardId, certId, payload) =>
-            handleUpdateCertification(guardId, certId, payload, 'staff')
-          }
-          onAddExperience={handleAddExperience}
-          onAddEducation={handleAddEducation}
-          onSendSupportMessage={handleSendSupportMessage}
-          onUpdateSupportStatus={handleUpdateSupportTicketStatus}
-          onDeleteSupportTicket={handleDeleteSupportTicket}
-          onResolveDispute={handleResolveDispute}
-          jobChatThreads={jobChatThreads}
-          jobChatMessages={jobChatMessages}
-          staffMessages={staffMessages}
-          guardMessages={guardMessages}
-          clientMessages={clientMessages}
-          onSendStaffMessage={handleSendStaffMessage}
-          onDeleteStaffMessage={handleDeleteStaffMessage}
-          onSendGuardMessage={handleSendGuardMessage}
-          onDeleteGuardMessage={handleDeleteGuardMessage}
-          onSendClientMessage={handleSendClientMessage}
-          onDeleteClientMessage={handleDeleteClientMessage}
-          onDeleteJobChatMessage={handleDeleteJobChatMessage}
-          onDeleteSupportMessage={handleDeleteSupportMessage}
-          onRefreshStaffMessages={refreshStaffMessages}
-          onSendJobChat={handleSendJobChatMessage}
-          onOpenLegal={openLegalPage}
-          onOpenDownload={openDownloadPage}
-          legalAcceptances={legalAcceptanceRecords}
-          companyPublicDocuments={companyPublicDocuments}
-          onSaveCompanyPublicDocument={handleSaveCompanyPublicDocument}
-          onSetCompanyPlacardPublicEnabled={handleSetCompanyPlacardPublicEnabled}
-          {...tutorialSettingsProps}
-        />
-        {passwordChangeOverlay}
-        {tutorialOverlay}
-        <InstallPrompt />
-      </>
-    );
-  }
-
-  return (
-    <div className="page-shell min-h-screen flex flex-col bg-brand-bg">
-      <header className="flex justify-end items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))] shrink-0">
-        <AccountMenu
-          userName={currentUser.name}
-          userSubtitle={currentUser.email}
-          avatarUrl={currentUser.avatar}
-          onOpenProfile={() => undefined}
-          onOpenSettings={() => undefined}
-          onSignOut={handleSignOut}
-          hideProfile
-          {...accountMenuExtras}
-        />
-      </header>
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
-        <p className="text-brand-text font-semibold">This account role is not supported.</p>
-        <p className="text-brand-text-muted text-sm max-w-sm">
-          Sign out and sign in again with a Guardr client, guard, or staff account.
-        </p>
-      </div>
-    </div>
-  );
 }

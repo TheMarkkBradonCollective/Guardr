@@ -1,3 +1,8 @@
+/**
+ * Frozen route grammar. Only the foundation workstream (WS-FND) may change
+ * path shapes, query keys, or AppRoute fields. Page workstreams file a request
+ * instead of editing this module.
+ */
 import type { ClientView } from '../components/ClientDashboard';
 import type { GuardTab } from '../components/GuardDashboard';
 import type { ClientType, SecurityGuard } from '../types';
