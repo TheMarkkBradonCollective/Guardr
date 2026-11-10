@@ -57,6 +57,8 @@ body[data-surface='mobile'] {
   --gr-radius-card: 16px;
   --gr-target-min: 48px;
   --gr-motion-page: 300ms;
+  --gr-canvas: #ffffff;
+  --gr-tile: var(--gr-paper-sunken);
 }
 
 /* Charcoal dark theme: raised surfaces step up from the paper, status hues
@@ -93,6 +95,12 @@ html[data-theme='dark'] {
   --gr-shadow-nav: 0 -1px 0 rgba(255, 255, 255, 0.08);
 }
 
+html.theme-dark body[data-surface='mobile'],
+html[data-theme='dark'] body[data-surface='mobile'] {
+  --gr-canvas: #0a0a0a;
+  --gr-tile: #161616;
+}
+
 body[data-surface='tablet'] {
   --gr-type-display: 30px;
   --gr-type-title: 24px;
@@ -108,6 +116,14 @@ body[data-surface='tablet'] {
   --gr-radius-card: 14px;
   --gr-target-min: 44px;
   --gr-motion-page: 260ms;
+  --gr-canvas: #f0f0f0;
+  --gr-tile: var(--gr-paper);
+}
+
+html.theme-dark body[data-surface='tablet'],
+html[data-theme='dark'] body[data-surface='tablet'] {
+  --gr-canvas: #111111;
+  --gr-tile: #161616;
 }
 
 body[data-surface='desktop'] {
@@ -125,4 +141,12 @@ body[data-surface='desktop'] {
   --gr-radius-card: 8px;
   --gr-target-min: 32px;
   --gr-motion-page: 160ms;
+  --gr-canvas: #e8e8e8;
+  --gr-tile: var(--gr-paper);
+}
+
+html.theme-dark body[data-surface='desktop'],
+html[data-theme='dark'] body[data-surface='desktop'] {
+  --gr-canvas: #000000;
+  --gr-tile: #0a0a0a;
 }
