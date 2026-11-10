@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { renderClientViews } from '../app/client/ViewRoutes';
 import { Client, ClientMessage, JobChatMessage, JobChatThread, SecurityGuard, SecurityRequest, SessionUser, SupportTicket } from '../types';
 import {
   buildRecentReports,
@@ -424,530 +425,111 @@ export function ClientDashboard({
       {wrap(node, dataTour)}
     </AppPageTransition>
   );
-
-  if (
-    accountPending &&
-    view !== 'profile' &&
-    view !== 'settings' &&
-    view !== 'messages' &&
-    view !== 'home' &&
-    view !== 'guide' &&
-    view !== 'invoices' &&
-    view !== 'support' &&
-    view !== 'support-compose' &&
-    view !== 'support-report'
-  ) {
-    return page(
-      'pending',
-      <AccountPendingScreen
-        role="client"
-        client={clientRecord ?? { accountStatus, approved }}
-        onOpenProfile={() => navigate('profile')}
-      />
-    );
-  }
-
-  if (view === 'map') {
-    return page(
-      'map',
-      <ClientMapScreen
-        requests={requests}
-        guards={guards}
-        currentUser={currentUser}
-        clientEmail={clientEmail}
-        paymentGates={paymentGates}
-        crewSettings={crewSettings ?? teamLeadSettings}
-        jobChatThreads={jobChatThreads}
-        onOpenJobChat={openMessages}
-        onPostJob={() => {
-          setFlowPreset('default');
-          navigate('request');
-        }}
-        onRequestGuard={() => navigate('guards')}
-        initialLiveJobId={jobChatRequestId}
-        onLiveJobIdChange={onJobChatRequestIdChange}
-        onConfirmSelfAudit={onConfirmSelfAudit}
-        onVerifyStartCheckpoint={onVerifyStartCheckpoint}
-        onFlagStartCheckpoint={onFlagStartCheckpoint}
-        onVerifyEndCheckpoint={onVerifyEndCheckpoint}
-        onFlagEndCheckpoint={onFlagEndCheckpoint}
-        onApproveOvertime={onApproveOvertime}
-        onDisputeOvertime={onDisputeOvertime}
-        onApproveScheduleChange={onApproveScheduleChange}
-        onRejectScheduleChange={onRejectScheduleChange}
-        onApprovePendingGuard={onApprovePendingGuard}
-        onDenyPendingGuard={onDenyPendingGuard}
-        onApproveTeamSlot={onApproveTeamSlot}
-        onDenyTeamSlot={onDenyTeamSlot}
-        onRequestSuggestedGuard={onRequestSuggestedGuard}
-        onDismissGuardSuggestion={onDismissGuardSuggestion}
-        onApproveFullTeam={onApproveFullTeam}
-        onDenyFullTeam={onDenyFullTeam}
-        onRequestReplacement={onRequestReplacement}
-        feeConfig={feeConfig}
-        onSubmitPriceOffer={onSubmitPriceOffer}
-        onAcceptPriceOffer={onAcceptPriceOffer}
-        onAddReview={onAddReview}
-        onReportViolation={onReportViolation}
-        onCancelRequest={onCancelRequest}
-        onEditRequest={onEditRequest}
-        onUpdateStatus={onUpdateStatus}
-      />,
-      'client-map'
-    );
-  }
-
-  if (view === 'request') {
-    return page(
-      'request',
-      <RequestSecurityFlow
-        preset={flowPreset}
-        feeConfig={feeConfig}
-        feeSchedules={crewSettings?.clientFeeSchedules}
-        clientType={clientRecord?.clientType}
-        guards={guards}
-        favoriteGuardIds={favoriteGuardIds}
-        clientLocations={clientLocations}
-        jobLocations={jobLocations}
-        clientId={clientId}
-        defaultAssignmentMode={clientRecord?.defaultAssignmentMode}
-        clientRecord={clientRecord}
-        clientCredentialRules={crewSettings?.clientCredentialRules}
-        onBack={() => navigate('home')}
-        onSubmit={(req) => {
-          onPostRequest(req);
-          navigate('home');
-        }}
-      />
-    );
-  }
-
-  if (view === 'locations' && clientRecord && onSaveClientLocation) {
-    return page(
-      'locations',
-      <ResponsivePage>
-        <ClientLocationsPanel
-          client={clientRecord}
-          locations={clientLocations}
-          sharedLocations={jobLocations}
-          onSave={onSaveClientLocation}
-        />
-      </ResponsivePage>
-    );
-  }
-
-  if (view === 'direct-request' && requestTargetGuard) {
-    return page(
-      `direct-request-${requestTargetGuard.id}`,
-      <DirectGuardRequestFlow
-        guard={requestTargetGuard}
-        feeConfig={feeConfig}
-        feeSchedules={crewSettings?.clientFeeSchedules}
-        clientType={clientRecord?.clientType}
-        clientRecord={clientRecord}
-        clientCredentialRules={crewSettings?.clientCredentialRules}
-        onBack={() => {
-          setRequestTargetGuard(null);
-          navigate('guards');
-        }}
-        onSubmit={(req) => {
-          onPostRequest(req);
-          setRequestTargetGuard(null);
-          navigate('requests');
-        }}
-      />
-    );
-  }
-
-  if (view === 'guards') {
-    if (formFactor === 'desktop') {
-      return page(
-        'guards',
-        <>
-          {tutorialDemoBanner}
-          <WorkbenchFlatSplit
-            list={
-              <GuardDirectoryScreen
-                guards={guards}
-                onSelectGuard={setSelectedGuard}
-                favoriteGuardIds={favoriteGuardIds}
-                onToggleFavorite={onToggleFavoriteGuard}
-                clientId={clientId}
-                requests={requests}
-                        onRequestGuard={startDirectGuardRequest}
-              />
-            }
-            detail={
-              selectedGuard ? (
-                <GuardProfileScreen
-                  guard={selectedGuard}
-                  clientId={clientId}
-                  requests={requests}
-                  platformRequests={platformRequests}
-                  onBack={() => setSelectedGuard(null)}
-                  onRequestGuard={startDirectGuardRequest}
-                  jobChatThreads={jobChatThreads}
-                  currentUser={currentUser}
-                  onSendJobChatMessage={onSendJobChatMessage}
-                  onOpenJobChat={onOpenJobChat ?? openMessages}
-                  isFavorite={favoriteGuardIds.includes(selectedGuard.id)}
-                  onToggleFavorite={
-                    onToggleFavoriteGuard ? () => onToggleFavoriteGuard(selectedGuard.id) : undefined
-                  }
-                />
-              ) : (
-                <WorkbenchEmpty message="Select a guard or team to view profile and hire options" variant="detail" />
-              )
-            }
-          />
-        </>,
-        'client-guards',
-      );
-    }
-    if (formFactor === 'tablet') {
-      return page(
-        'guards',
-        <>
-          {tutorialDemoBanner}
-          <div
-            className="tablet-split-panel"
-            data-selected={selectedGuard ? 'true' : undefined}
-            data-orientation={tabletPortrait ? 'portrait' : 'landscape'}
-          >
-            <div className="split-list-pane">
-              <GuardDirectoryScreen
-                guards={guards}
-                onSelectGuard={setSelectedGuard}
-                favoriteGuardIds={favoriteGuardIds}
-                onToggleFavorite={onToggleFavoriteGuard}
-                clientId={clientId}
-                requests={requests}
-                onRequestGuard={startDirectGuardRequest}
-              />
-            </div>
-            <div className="split-detail-pane">
-              {selectedGuard ? (
-                <GuardProfileScreen
-                  guard={selectedGuard}
-                  clientId={clientId}
-                  requests={requests}
-                  platformRequests={platformRequests}
-                  onBack={() => setSelectedGuard(null)}
-                  onRequestGuard={startDirectGuardRequest}
-                  jobChatThreads={jobChatThreads}
-                  currentUser={currentUser}
-                  onSendJobChatMessage={onSendJobChatMessage}
-                  onOpenJobChat={onOpenJobChat ?? openMessages}
-                  isFavorite={favoriteGuardIds.includes(selectedGuard.id)}
-                  onToggleFavorite={
-                    onToggleFavoriteGuard ? () => onToggleFavoriteGuard(selectedGuard.id) : undefined
-                  }
-                />
-              ) : (
-                <p className="sft-split-empty">Select a guard or team to view profile and hire options</p>
-              )}
-            </div>
-          </div>
-        </>,
-        'client-guards',
-      );
-    }
-    if (selectedGuard) {
-      return page(
-        `guards-${selectedGuard.id}`,
-        <GuardProfileScreen
-          guard={selectedGuard}
-          clientId={clientId}
-          requests={requests}
-          platformRequests={platformRequests}
-          onBack={() => setSelectedGuard(null)}
-          onRequestGuard={startDirectGuardRequest}
-          jobChatThreads={jobChatThreads}
-          currentUser={currentUser}
-          onSendJobChatMessage={onSendJobChatMessage}
-          onOpenJobChat={onOpenJobChat ?? openMessages}
-          isFavorite={favoriteGuardIds.includes(selectedGuard.id)}
-          onToggleFavorite={onToggleFavoriteGuard ? () => onToggleFavoriteGuard(selectedGuard.id) : undefined}
-        />
-      );
-    }
-    return page(
-      'guards',
-      <>
-        {tutorialDemoBanner}
-        <GuardDirectoryScreen
-        guards={guards}
-        onSelectGuard={setSelectedGuard}
-        favoriteGuardIds={favoriteGuardIds}
-        onToggleFavorite={onToggleFavoriteGuard}
-        clientId={clientId}
-        requests={requests}
-        onRequestGuard={startDirectGuardRequest}
-      />
-      </>,
-      'client-guards'
-    );
-  }
-
-  if (view === 'messages' && currentUser && onSendJobChatMessage && onSendSupportMessage) {
-    return page(
-      'messages',
-      <>
-        {tutorialDemoBanner}
-        <ClientMessagesPanel
-        scope="messages"
-        requests={requests}
-        guards={guards}
-        currentUser={currentUser}
-        accountStatus={accountStatus}
-        approved={approved}
-        jobChatThreads={jobChatThreads}
-        jobChatMessages={jobChatMessages}
-        clientMessages={clientMessages}
-        supportTickets={supportTickets}
-        onSendJobChatMessage={onSendJobChatMessage}
-        onSendClientMessage={onSendClientMessage}
-        onDeleteClientMessage={onDeleteClientMessage}
-        onDeleteJobChatMessage={onDeleteJobChatMessage}
-        onDeleteSupportMessage={onDeleteSupportMessage}
-        onRefreshClientMessages={onRefreshClientMessages}
-        onSendSupportMessage={onSendSupportMessage}
-        initialChatRequestId={jobChatRequestId}
-        initialChatOpen={openJobChat}
-        onChatRequestIdChange={onJobChatRequestIdChange}
-        onChatOpenChange={onJobChatOpenChange}
-        initialSupportTicketId={supportTicketId}
-        onSupportTicketIdChange={onSupportTicketIdChange}
-        onOpenCompose={onOpenSupportCompose}
-        onOpenReport={onOpenSupportReport}
-        onDetailOpenChange={onMessagesDetailOpenChange}
-        onMessagesChromeChange={onMessagesChromeChange}
-        shellHeaderTrailing={messagesShellHeaderTrailing}
-      />
-      </>,
-      'client-messages'
-    );
-  }
-
-  if (view === 'support' && currentUser && onSendSupportMessage) {
-    return page(
-      'support',
-      <>
-        {tutorialDemoBanner}
-        <ClientMessagesPanel
-          scope="support"
-          requests={requests}
-          guards={guards}
-          currentUser={currentUser}
-          accountStatus={accountStatus}
-          approved={approved}
-          jobChatThreads={jobChatThreads}
-          jobChatMessages={jobChatMessages}
-          clientMessages={clientMessages}
-          supportTickets={supportTickets}
-          onSendJobChatMessage={onSendJobChatMessage!}
-          onSendClientMessage={onSendClientMessage}
-          onDeleteClientMessage={onDeleteClientMessage}
-          onDeleteJobChatMessage={onDeleteJobChatMessage}
-          onDeleteSupportMessage={onDeleteSupportMessage}
-          onRefreshClientMessages={onRefreshClientMessages}
-          onSendSupportMessage={onSendSupportMessage}
-          initialSupportTicketId={supportTicketId}
-          onSupportTicketIdChange={onSupportTicketIdChange}
-          onOpenCompose={onOpenSupportCompose}
-          onOpenReport={onOpenSupportReport}
-          onDetailOpenChange={onMessagesDetailOpenChange}
-          onMessagesChromeChange={onMessagesChromeChange}
-          shellHeaderTrailing={messagesShellHeaderTrailing}
-        />
-      </>,
-      'client-support'
-    );
-  }
-
-  if (view === 'messages') {
-    return page(
-      'messages-unavailable',
-      <AppScreen className="p-5">
-        <AppStatusBanner title="Messages are temporarily unavailable">
-          <p className="text-sm text-brand-text-muted leading-relaxed">
-            We could not initialize job chat or support messaging for this session. Refresh the app or
-            contact Guardr support if this keeps happening.
-          </p>
-        </AppStatusBanner>
-      </AppScreen>
-    );
-  }
-
-  if (view === 'reports' && caps.has('reporting')) {
-    const clientRecord: Client = {
-      id: clientId,
-      name: companyName,
-      companyName,
-      email: clientEmail,
-      phone: '',
-      avatar: avatarUrl ?? '',
-      totalRequests: requests.length,
-    };
-    return page(
-      'reports',
-      <ClientReportsScreen
-        reports={recentReports}
-        incidentDetails={incidentDetails}
-        selectedIncidentId={selectedIncidentId}
-        onSelectIncident={setSelectedIncidentId}
-        onBack={() => {
-          setSelectedIncidentId(null);
-          navigate('home');
-        }}
-        client={clientRecord}
-        requests={requests}
-      />
-    );
-  }
-
-  if (view === 'invoices' && clientRecord) {
-    return page(
-      'invoices',
-      <PaymentsPage role="client">
-        <ClientInvoiceScreen
-          client={clientRecord}
-          clientEmail={clientEmail}
-          requests={requests}
-          invoices={clientInvoices}
-          paymentGates={paymentGates}
-          selectedRequestId={invoiceRequestId}
-          onSelectRequestId={onInvoiceRequestIdChange}
-        />
-      </PaymentsPage>
-    );
-  }
-
-  if (view === 'requests') {
-    return page(
-      'requests',
-      <>
-        {tutorialDemoBanner}
-        <ClientRequestsList
-        requests={requests}
-        guards={guards}
-        clientEmail={clientEmail}
-        paymentGates={paymentGates}
-        onCancelRequest={onCancelRequest}
-        onEditRequest={onEditRequest}
-        onUpdateStatus={onUpdateStatus}
-        onAddReview={onAddReview}
-        onReportViolation={onReportViolation}
-        onConfirmSelfAudit={onConfirmSelfAudit}
-        onVerifyStartCheckpoint={onVerifyStartCheckpoint}
-        onFlagStartCheckpoint={onFlagStartCheckpoint}
-        onVerifyEndCheckpoint={onVerifyEndCheckpoint}
-        onFlagEndCheckpoint={onFlagEndCheckpoint}
-        onApproveOvertime={onApproveOvertime}
-        onDisputeOvertime={onDisputeOvertime}
-        onApproveScheduleChange={onApproveScheduleChange}
-        onRejectScheduleChange={onRejectScheduleChange}
-        onApprovePendingGuard={onApprovePendingGuard}
-        onDenyPendingGuard={onDenyPendingGuard}
-        onApproveTeamSlot={onApproveTeamSlot}
-        onDenyTeamSlot={onDenyTeamSlot}
-        onRequestSuggestedGuard={onRequestSuggestedGuard}
-        onDismissGuardSuggestion={onDismissGuardSuggestion}
-        onApproveFullTeam={onApproveFullTeam}
-        onDenyFullTeam={onDenyFullTeam}
-        onRequestReplacement={onRequestReplacement}
-        feeConfig={feeConfig}
-        onSubmitPriceOffer={onSubmitPriceOffer}
-        onAcceptPriceOffer={onAcceptPriceOffer}
-        crewSettings={crewSettings ?? teamLeadSettings}
-        onRequestNew={() => {
-          setFlowPreset('default');
-          navigate('request');
-        }}
-        currentUser={currentUser}
-        jobChatThreads={jobChatThreads}
-        onOpenJobChat={openMessages}
-        onSelectedJobIdChange={onRequestsSelectedIdChange}
-        initialSelectedId={requestsSelectedId}
-        initialJobTab={requestsJobTab}
-        onJobTabChange={onRequestsJobTabChange}
-      />
-      </>,
-      'client-request'
-    );
-  }
-
-  if (view === 'roster' && clientRecord && caps.has('roster-management')) {
-    return page(
-      'roster',
-      <SecurityCompanyRosterScreen
-        client={clientRecord}
-        guards={guards}
-        marketplaceGuards={guards}
-        onAddToRoster={(guardId) => void onAddToCompanyRoster?.(guardId)}
-        onRemoveFromRoster={(guardId) => void onRemoveFromCompanyRoster?.(guardId)}
-        onRequestGuard={startDirectGuardRequest}
-        onBack={() => navigate('home')}
-      />,
-      'client-roster'
-    );
-  }
-
-  if (view === 'operations' && clientRecord && caps.has('shift-operations')) {
-    return page(
-      'operations',
-      <SecurityCompanyOperationsScreen
-        clientId={clientId}
-        companyName={companyName}
-        requests={requests}
-        guards={guards}
-        onOpenJob={(jobId) => {
-          onRequestsSelectedIdChange?.(jobId);
-          navigate('requests');
-        }}
-        onBack={() => navigate('home')}
-      />,
-      'client-operations'
-    );
-  }
-
-  if (view === 'guide') {
-    return page(
-      'guide',
-      <AppGuidePage
-        audience="client"
-        tutorialAvailable={tutorialAvailable}
-        tutorialCompleted={tutorialCompleted}
-        tutorialActive={tutorialActive}
-        onStartTutorial={onStartTutorial}
-      />
-    );
-  }
-
-  const homeProps = {
+  return renderClientViews({
+    accountPending,
+    accountStatus,
+    approved,
+    avatarUrl,
+    caps,
+    clientEmail,
+    clientId,
+    clientInvoices,
+    clientLocations,
+    clientMessages,
+    clientRecord,
     companyName,
     coverage,
-    requests,
-    recentReports,
-    accountPending,
-    onOpenProfile: () => navigate('profile'),
-    onAction: handleHomeAction,
-    onOpenRequest: (jobId: string) => {
-      onRequestsSelectedIdChange?.(jobId);
-      navigate('requests');
-    },
-    recentGuards: getClientRehireableGuards(clientId, requests, guards).slice(0, 5),
-    onHireGuard: startDirectGuardRequest,
-    onViewGuard: (guard: SecurityGuard) => {
-      setSelectedGuard(guard);
-      navigate('guards');
-    },
+    crewSettings,
+    currentUser,
+    favoriteGuardIds,
+    feeConfig,
+    flowPreset,
+    formFactor,
     guards,
-  };
+    handleHomeAction,
+    incidentDetails,
+    invoiceRequestId,
+    jobChatMessages,
+    jobChatRequestId,
+    jobChatThreads,
+    jobLocations,
+    messagesShellHeaderTrailing,
+    navigate,
+    onAcceptPriceOffer,
+    onAddReview,
+    onAddToCompanyRoster,
+    onApproveFullTeam,
+    onApproveOvertime,
+    onApprovePendingGuard,
+    onApproveScheduleChange,
+    onApproveTeamSlot,
+    onCancelRequest,
+    onConfirmSelfAudit,
+    onDeleteClientMessage,
+    onDeleteJobChatMessage,
+    onDeleteSupportMessage,
+    onDenyFullTeam,
+    onDenyPendingGuard,
+    onDenyTeamSlot,
+    onDismissGuardSuggestion,
+    onDisputeOvertime,
+    onEditRequest,
+    onFlagEndCheckpoint,
+    onFlagStartCheckpoint,
+    onInvoiceRequestIdChange,
+    onJobChatOpenChange,
+    onJobChatRequestIdChange,
+    onMessagesChromeChange,
+    onMessagesDetailOpenChange,
+    onOpenJobChat,
+    onOpenSupportCompose,
+    onOpenSupportReport,
+    onPostRequest,
+    onRefreshClientMessages,
+    onRejectScheduleChange,
+    onRemoveFromCompanyRoster,
+    onReportViolation,
+    onRequestReplacement,
+    onRequestSuggestedGuard,
+    onRequestsJobTabChange,
+    onRequestsSelectedIdChange,
+    onSaveClientLocation,
+    onSendClientMessage,
+    onSendJobChatMessage,
+    onSendSupportMessage,
+    onStartTutorial,
+    onSubmitPriceOffer,
+    onSupportTicketIdChange,
+    onToggleFavoriteGuard,
+    onUpdateStatus,
+    onVerifyEndCheckpoint,
+    onVerifyStartCheckpoint,
+    openJobChat,
+    openMessages,
+    page,
+    paymentGates,
+    platformRequests,
+    recentReports,
+    requestTargetGuard,
+    requests,
+    requestsJobTab,
+    requestsSelectedId,
+    selectedGuard,
+    selectedIncidentId,
+    setFlowPreset,
+    setRequestTargetGuard,
+    setSelectedGuard,
+    setSelectedIncidentId,
+    startDirectGuardRequest,
+    supportTicketId,
+    supportTickets,
+    tabletPortrait,
+    teamLeadSettings,
+    tutorialActive,
+    tutorialAvailable,
+    tutorialCompleted,
+    tutorialDemoBanner,
+    view,
+  });
 
-  if (formFactor === 'desktop') {
-    return page('home', <ClientHomeDesktop {...homeProps} />, 'client-home');
-  }
-
-  return page('home', <ClientHomeScreen {...homeProps} />, 'client-home');
 }
