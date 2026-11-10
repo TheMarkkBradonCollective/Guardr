@@ -10,29 +10,32 @@ import {
   GITHUB_STAFF_APK,
   GITHUB_MESSENGER_APP,
   GITHUB_ROLE_APKS,
+  R2_APK_LATEST_URL,
 } from './githubApkRelease.ts';
 
-describe('GitHub APK release URLs', () => {
-  it('points the all-apps zip at GitHub Releases', () => {
-    assert.match(
-      GITHUB_ALL_APKS_ZIP,
-      /github\.com\/TheMarkkBradonCollective\/Guardr\/releases\/download\/v1\.1\.0-cf-beta\/Guardr-All-APKs\.zip$/
-    );
+const R2_APK = 'https://pub-07d688bf950545ddba9025a723c0798e.r2.dev/guardr/latest.apk';
+
+describe('APK download URLs', () => {
+  it('points every APK asset at the public R2 latest.apk', () => {
+    assert.equal(R2_APK_LATEST_URL, R2_APK);
+    assert.equal(GITHUB_ALL_APKS_ZIP, R2_APK);
+    assert.equal(GITHUB_CLIENT_APK, R2_APK);
+    assert.equal(GITHUB_GUARD_APK, R2_APK);
+    assert.equal(GITHUB_STAFF_APK, R2_APK);
+    assert.equal(GITHUB_MESSENGER_APP.url, R2_APK);
   });
 
-  it('lists Client, Guard, and Staff APK assets', () => {
+  it('lists Client, Guard, and Staff download cards', () => {
     assert.equal(GITHUB_ROLE_APKS.map((app) => app.label).join(' '), 'Guard Customer Staff');
-    assert.equal(GITHUB_CLIENT_APK.endsWith('Guardr-Client.apk'), true);
-    assert.equal(GITHUB_GUARD_APK.endsWith('Guardr-Guard.apk'), true);
-    assert.equal(GITHUB_STAFF_APK.endsWith('Guardr-Staff.apk'), true);
+    assert.equal(GITHUB_ROLE_APKS.length, 3);
+    assert.ok(GITHUB_ROLE_APKS.every((app) => app.url === R2_APK));
+    assert.ok(!GITHUB_ROLE_APKS.map((app) => app.label).includes('Messenger'));
   });
 
-  it('offers Messenger via GitHub release asset', () => {
-    assert.equal(GITHUB_MESSENGER_APP.file, 'Guardr-Messenger.apk');
-    assert.match(GITHUB_MESSENGER_APP.url, /v1\.1\.0-cf-beta\/Guardr-Messenger\.apk$/);
+  it('offers Messenger at the same R2 latest.apk', () => {
+    assert.equal(GITHUB_MESSENGER_APP.file, 'latest.apk');
+    assert.equal(GITHUB_MESSENGER_APP.url, R2_APK);
     assert.match(GITHUB_MESSENGER_APP.tagline, /Messages, support, and team chat/);
-    assert.equal(GITHUB_ROLE_APKS.length, 3);
-    assert.ok(!GITHUB_ROLE_APKS.map((app) => app.label).includes('Messenger'));
   });
 
   it('does not publish APK hrefs on the public /download page', () => {

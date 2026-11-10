@@ -23,7 +23,7 @@ import {
   downloadScreenTitle,
 } from '../../lib/installSurfaceCopy';
 import { formatAppVersion } from '../../lib/appVersion';
-import { GITHUB_ALL_APKS_ZIP, GITHUB_MESSENGER_APP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
+import { GITHUB_MESSENGER_APP, GITHUB_ROLE_APKS } from '../../lib/githubApkRelease';
 import {
   productAppForRole,
   productAppHasGreyLauncher,
@@ -264,11 +264,6 @@ export function AppDownloadScreen({
                 </article>
               );
               })}
-              {!accountRole && downloadPolicy.canDownloadAllApksZip() ? (
-                <a href={GITHUB_ALL_APKS_ZIP} className="install-cta install-cta--ghost" style={{ textDecoration: 'none' }}>
-                  Download all APKs (GitHub zip)
-                </a>
-              ) : null}
               {!accountRole && downloadPolicy.roleAppClaim ? (
                 <p className="install-product-card-copy" role="status">
                   {downloadPolicy.blockedReason}
