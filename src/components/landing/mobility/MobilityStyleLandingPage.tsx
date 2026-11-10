@@ -33,18 +33,19 @@ const TRUST_ITEMS = [
   { icon: Lock,       label: 'Shift tracking' },
 ] as const;
 
-function TrustStrip({ isMobile }: { isMobile: boolean }) {
+function TrustStrip({ formFactor }: { formFactor: MobilityFormFactor }) {
   const [, theme] = useStyletron();
+  const isMobile = formFactor === 'mobile';
   return (
     <Block
       as="section"
       aria-label="Platform features"
-      className="uber-landing-trust-strip"
-      paddingTop={isMobile ? 'scale500' : 'scale600'}
-      paddingBottom={isMobile ? 'scale500' : 'scale600'}
+      className={`uber-landing-trust-strip uber-landing-trust-strip--${formFactor}`}
+      paddingTop={isMobile ? 'scale500' : formFactor === 'tablet' ? 'scale800' : 'scale300'}
+      paddingBottom={isMobile ? 'scale500' : formFactor === 'tablet' ? 'scale800' : 'scale600'}
       paddingLeft={isMobile ? 'scale600' : 'scale800'}
       paddingRight={isMobile ? 'scale600' : 'scale800'}
-      backgroundColor="backgroundSecondary"
+      backgroundColor={formFactor === 'desktop' ? 'backgroundPrimary' : 'backgroundSecondary'}
     >
         <Block
         maxWidth="1280px"
@@ -95,7 +96,6 @@ export function MobilityStyleLandingPage({
 }: MobilityStyleLandingProps) {
   const factor = toMobilityFactor(formFactor);
   const isMobile = factor === 'mobile';
-  const showHeroVisual = factor !== 'mobile';
 
   return (
     <Block
@@ -115,10 +115,16 @@ export function MobilityStyleLandingPage({
       <MobilityLandingHero
         formFactor={factor}
         onNavigateToAuth={onNavigateToAuth}
-        heroVisual={showHeroVisual ? <MobilityLandingHeroVisual /> : undefined}
+        heroVisual={
+          factor === 'tablet'
+            ? <MobilityLandingHeroVisual layout="board" />
+            : factor === 'desktop'
+              ? <MobilityLandingHeroVisual layout="sheet" />
+              : undefined
+        }
       />
 
-      <TrustStrip isMobile={isMobile} />
+      <TrustStrip formFactor={factor} />
 
       <MobilityExploreGrid formFactor={formFactor} onNavigateToAuth={onNavigateToAuth} />
 
