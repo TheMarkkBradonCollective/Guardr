@@ -13,6 +13,27 @@ interface MessagesHubLayoutProps {
   emptyDetailHint?: string;
   /** When true, inbox tabs are rendered in the app shell header instead. */
   shellInboxHeader?: boolean;
+  /** Desktop-only facts column. Tablet stays a two-pane split. */
+  context?: React.ReactNode;
+}
+
+export function MessagesConversationFacts({
+  title,
+  meta,
+  detail,
+}: {
+  title: string;
+  meta?: string;
+  detail?: string;
+}) {
+  return (
+    <div className="desktop-messages-context-card">
+      <p className="desktop-messages-context-kicker">This thread</p>
+      <p className="desktop-messages-context-title">{title}</p>
+      {meta ? <p className="desktop-messages-context-meta">{meta}</p> : null}
+      {detail ? <p className="desktop-messages-context-detail">{detail}</p> : null}
+    </div>
+  );
 }
 
 export function MessagesHubEmptyDetail({
@@ -39,6 +60,7 @@ export function MessagesHubLayout({
   emptyDetailTitle = 'Select a conversation',
   emptyDetailHint = 'Choose a chat from your inbox to view messages',
   shellInboxHeader = false,
+  context,
 }: MessagesHubLayoutProps) {
   const surface = useSurfaceKind();
   const splitView = surface === 'tablet';
@@ -70,6 +92,21 @@ export function MessagesHubLayout({
             </div>
           )}
         </div>
+        <aside className="desktop-messages-context" aria-label="Conversation details">
+          {context ?? (
+            <div className="desktop-messages-context-card">
+              <p className="desktop-messages-context-kicker">Conversation</p>
+              <p className="desktop-messages-context-title">
+                {hasSelection ? 'Thread details' : 'Nothing selected'}
+              </p>
+              <p className="desktop-messages-context-detail">
+                {hasSelection
+                  ? 'Who this thread is with stays beside the messages.'
+                  : 'Select a conversation to see who it is with.'}
+              </p>
+            </div>
+          )}
+        </aside>
       </div>
     );
   }

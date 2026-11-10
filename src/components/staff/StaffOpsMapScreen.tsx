@@ -17,6 +17,7 @@ import {
   type StaffMapStatusFilter,
 } from '../../lib/mapJobVisibility';
 import { MapViewportInsetsProvider } from '../../lib/mapViewportInsets';
+import { useSurfaceKind } from '../../surfaces';
 import { StaffJobDetailPanel } from './StaffJobDetailPanel';
 
 interface StaffOpsMapScreenProps {
@@ -50,6 +51,7 @@ export function StaffOpsMapScreen({
   onRejectScheduleChange,
   onApproveScheduleChangeBilling,
 }: StaffOpsMapScreenProps) {
+  const surface = useSurfaceKind();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [mapStatusFilter, setMapStatusFilter] = useState<StaffMapStatusFilter>('all');
   const [route, setRoute] = useState<MapRouteSummary | null>(null);
@@ -129,7 +131,7 @@ export function StaffOpsMapScreen({
           routeFitResetKey={selectedJobId ?? ''}
         />
 
-        {!selectedJobId ? (
+        {surface === 'tablet' || !selectedJobId ? (
           <MapBrowseDock
             items={browseItems}
             selectedId={selectedJobId}

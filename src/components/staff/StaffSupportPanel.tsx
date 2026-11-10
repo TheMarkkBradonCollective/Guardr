@@ -16,7 +16,7 @@ import {
   AppInboxRow,
 } from '../ui/app/AppPrimitives';
 import { ChatThreadPanel, type ChatBubbleMessage } from '../messaging/ChatThreadPanel';
-import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
+import { MessagesConversationFacts, MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { WfBadge } from '../ui/wireframe';
 import { FileText, LifeBuoy, Trash2 } from 'lucide-react';
@@ -335,6 +335,15 @@ export function StaffSupportPanel({
         section === 'support'
           ? 'Choose a conversation from the list to reply.'
           : 'Choose a submitted report to review.'
+      }
+      context={
+        selected ? (
+          <MessagesConversationFacts
+            title={selected.subject}
+            meta={selected.userName}
+            detail={selected.status}
+          />
+        ) : undefined
       }
     />
   );

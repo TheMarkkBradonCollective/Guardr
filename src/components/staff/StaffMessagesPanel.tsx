@@ -24,7 +24,7 @@ import { sortedStaffMessages } from '../../lib/staffMessenger';
 import { canDeleteChatMessage } from '../../lib/chatPermissions';
 import { JobChatPanel } from '../messaging/JobChatPanel';
 import { ChatThreadPanel, type ChatBubbleMessage } from '../messaging/ChatThreadPanel';
-import { MessagesHubLayout } from '../messaging/MessagesHubLayout';
+import { MessagesConversationFacts, MessagesHubLayout } from '../messaging/MessagesHubLayout';
 import { MessagesInboxTabs } from '../messaging/MessagesInboxTabs';
 import { AppChatHeader, AppEmptyState, AppInboxList, AppInboxRow } from '../ui/app/AppPrimitives';
 import { WfBadge } from '../ui/wireframe';
@@ -456,6 +456,20 @@ r.channel === 'guard-community' ||
       shellInboxHeader
       emptyDetailTitle="Select a conversation"
       emptyDetailHint="Staff channel and job threads"
+      context={
+        effectiveSelection?.kind === 'job' ? (
+          <MessagesConversationFacts
+            title={requests.find((request) => request.id === effectiveSelection.requestId)?.title ?? 'Job thread'}
+            meta="Job thread"
+          />
+        ) : effectiveSelection?.kind === 'staff-channel' ? (
+          <MessagesConversationFacts title="Staff channel" meta="Team" />
+        ) : effectiveSelection?.kind === 'guard-channel' ? (
+          <MessagesConversationFacts title="Guard channel" meta="Guards" />
+        ) : effectiveSelection?.kind === 'client-channel' ? (
+          <MessagesConversationFacts title="Client channel" meta="Clients" />
+        ) : undefined
+      }
     />
   );
 }

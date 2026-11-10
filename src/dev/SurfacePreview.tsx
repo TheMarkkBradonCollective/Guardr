@@ -12,7 +12,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Bell, Briefcase, CreditCard, Monitor, Smartphone, Tablet, UserCheck } from 'lucide-react';
+import { Bell, Briefcase, CreditCard, Map, MessagesSquare, Monitor, Smartphone, Tablet, UserCheck } from 'lucide-react';
 import { useSurface } from '../surfaces/SurfaceProvider';
 import { SurfaceAppShell } from '../surfaces/SurfaceAppShell';
 import { SURFACE_KINDS, surfaceLabel, type SurfaceKind } from '../surfaces/surfaceKind';
@@ -24,6 +24,9 @@ import { DesktopOperationsScreen } from './surfaces/DesktopOperationsScreen';
 import { StaffProfilePreviewScreen } from './surfaces/StaffProfilePreviewScreen';
 import { JobPreviewScreen } from './surfaces/JobPreviewScreen';
 import { PaymentsPreviewScreen } from './surfaces/PaymentsPreviewScreen';
+import { MapPreviewScreen } from './surfaces/MapPreviewScreen';
+import { MessagesPreviewScreen } from './surfaces/MessagesPreviewScreen';
+import { InvoicePreviewScreen } from './surfaces/InvoicePreviewScreen';
 import { AccountMenu } from '../components/layouts/AccountMenu';
 import type { ThemeMode } from '../lib/platform/theme';
 import './surfacePreview.css';
@@ -54,6 +57,43 @@ const PAYMENTS_DEST: SurfaceDestination = {
   mobileRank: 0,
 };
 
+const MAP_DEST: SurfaceDestination = {
+  id: 'map-preview',
+  label: 'Map',
+  icon: Map,
+  section: 'Operations',
+  mobileRank: 0,
+  tabletQuick: true,
+};
+
+const MESSAGES_DEST: SurfaceDestination = {
+  id: 'messages-preview',
+  label: 'Messages',
+  icon: MessagesSquare,
+  section: 'Operations',
+  mobileRank: 0,
+  tabletQuick: true,
+};
+
+function previewPageId(page: string | null, surface: SurfaceKind | null): string {
+  if (page === 'profiles') return 'profiles';
+  if (page === 'jobs') return 'job-detail';
+  if (page === 'payments') return 'payments-preview';
+  if (page === 'map') return 'map-preview';
+  if (page === 'messages') return 'messages-preview';
+  if (page === 'invoices') return 'invoices-preview';
+  return surface === 'desktop' ? 'jobs' : 'myJobs';
+}
+
+function initialPreviewSurface(): SurfaceKind {
+  if (typeof window === 'undefined') return 'mobile';
+  const ui = new URLSearchParams(window.location.search).get('ui');
+  if (ui === 'mobile' || ui === 'tablet' || ui === 'desktop') return ui;
+  if (window.innerWidth >= 1180) return 'desktop';
+  if (window.innerWidth >= 744) return 'tablet';
+  return 'mobile';
+}
+
 const SURFACE_ICON: Record<SurfaceKind, typeof Monitor> = {
   mobile: Smartphone,
   tablet: Tablet,
@@ -62,7 +102,7 @@ const SURFACE_ICON: Record<SurfaceKind, typeof Monitor> = {
 
 export default function SurfacePreview() {
   const { setSurface } = useSurface();
-  const [surface, setLocalSurface] = useState<SurfaceKind>('mobile');
+  const [surface, setLocalSurface] = useState<SurfaceKind>(initialPreviewSurface);
 
   useEffect(() => {
     setSurface(surface);
@@ -100,26 +140,21 @@ function PreviewApp() {
   const tabletSurface = surface === 'tablet';
   const previewPage =
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') : null;
-  const [activeId, setActiveId] = useState(
-    previewPage === 'profiles'
-      ? 'profiles'
-      : previewPage === 'jobs'
-        ? 'job-detail'
-        : previewPage === 'payments'
-          ? 'payments-preview'
-          : desktopSurface
-            ? 'jobs'
-            : 'myJobs'
-  );
+  const [activeId, setActiveId] = useState(previewPageId(previewPage, desktopSurface ? 'desktop' : null));
   const [themeMode, setThemeMode] = useState<ThemeMode>('light');
   const staffWorkspace =
     desktopSurface ||
     activeId === 'profiles' ||
     activeId === 'job-detail' ||
-    activeId === 'payments-preview';
+    activeId === 'payments-preview' ||
+    activeId === 'map-preview' ||
+    activeId === 'messages-preview' ||
+    activeId === 'invoices-preview';
   const destinations = [
     PROFILE_DEST,
     JOB_DEST,
+    MAP_DEST,
+    MESSAGES_DEST,
     PAYMENTS_DEST,
     ...(staffWorkspace ? STAFF_DESTINATIONS : GUARD_DESTINATIONS),
   ];
@@ -127,17 +162,7 @@ function PreviewApp() {
   useEffect(() => {
     const page =
       typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') : null;
-    setActiveId(
-      page === 'profiles'
-        ? 'profiles'
-        : page === 'jobs'
-          ? 'job-detail'
-          : page === 'payments'
-            ? 'payments-preview'
-            : surface === 'desktop'
-              ? 'jobs'
-              : 'myJobs'
-    );
+    setActiveId(previewPageId(page, surface));
   }, [surface]);
 
   return (
@@ -145,13 +170,19 @@ function PreviewApp() {
       title={
         activeId === 'profiles'
           ? 'Staff'
-          : activeId === 'job-detail'
+          :         activeId === 'job-detail'
             ? 'Jobs'
             : activeId === 'payments-preview'
               ? 'Payments'
-              : staffWorkspace
-                ? 'Jobs'
-                : 'Shifts'
+              : activeId === 'map-preview'
+                ? 'Map'
+                : activeId === 'messages-preview'
+                  ? 'Messages'
+                  : activeId === 'invoices-preview'
+                    ? 'Billing'
+                    : staffWorkspace
+                    ? 'Jobs'
+                    : 'Shifts'
       }
       breadcrumb={staffWorkspace ? 'Operations' : undefined}
       workspaceLabel={staffWorkspace ? 'Staff operations' : 'Guard workspace'}
@@ -199,6 +230,12 @@ function PreviewApp() {
         <JobPreviewScreen />
       ) : activeId === 'payments-preview' ? (
         <PaymentsPreviewScreen />
+      ) : activeId === 'map-preview' ? (
+        <MapPreviewScreen />
+      ) : activeId === 'messages-preview' ? (
+        <MessagesPreviewScreen />
+      ) : activeId === 'invoices-preview' ? (
+        <InvoicePreviewScreen />
       ) : surface === 'mobile' ? (
         <MobileShiftsScreen />
       ) : surface === 'tablet' ? (

@@ -1,5 +1,4 @@
 import React from 'react';
-import { prefersMobileGestureUi, useDevice } from '../../lib/platform';
 import { useSurfaceKind } from '../../surfaces';
 
 export type MapBrowseChipVariant =
@@ -86,20 +85,53 @@ export function MapBrowseDock({
   bottomOffsetClass = '',
   leading,
 }: MapBrowseDockProps) {
-  const { viewSurface } = useDevice();
+  void bottomOffsetClass;
   const surface = useSurfaceKind();
-  const gestureUi = prefersMobileGestureUi(viewSurface);
-  const tabletDock = surface === 'tablet';
+
+  // Tablet keeps a touch rail beside the map, including while a job is selected.
+  if (surface === 'tablet') {
+    return (
+      <aside className="map-tablet-rail" aria-label="Jobs on map">
+        <p className="map-tablet-rail-label">Jobs</p>
+        {leading ? <div className="map-tablet-rail-leading">{leading}</div> : null}
+        {items.length === 0 ? (
+          <p className="map-browse-empty">{emptyMessage}</p>
+        ) : (
+          <div className="map-tablet-rail-list">
+            {items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onSelect(item.id)}
+                data-selected={item.id === selectedId ? 'true' : undefined}
+                className="map-tablet-rail-row"
+              >
+                <span className="map-tablet-rail-title">{item.title}</span>
+                <span className="map-tablet-rail-meta">
+                  {item.location} · {item.schedule}
+                </span>
+                <span className={`map-tablet-rail-chip map-tablet-rail-chip--${item.chipVariant}`}>{item.chip}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </aside>
+    );
+  }
 
   if (selectedId) return null;
 
-  // Map-first on phones: full-bleed canvas; jobs via pins + offer sheet only.
-  if (gestureUi && !tabletDock) return null;
+  // Phones stay map-first: pins and the offer sheet. An empty map still says so.
+  if (surface === 'mobile') {
+    if (items.length === 0) {
+      return <p className="map-mobile-empty">{emptyMessage}</p>;
+    }
+    return null;
+  }
 
-  // Website desktop and tablet: persistent job list beside the map.
   return (
     <aside
-      className={`desktop-map-inspector dsk-map-inspector map-browse-dock--desktop${tabletDock ? ' sft-map-inspector' : ''}`}
+      className="desktop-map-inspector dsk-map-inspector map-browse-dock--desktop"
       aria-label="Jobs on map"
     >
       <div className="desktop-map-inspector-header">

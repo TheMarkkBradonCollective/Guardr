@@ -28,6 +28,7 @@ import {
 } from '../lib/guardJobsBrowse';
 import { MapPinFilterStepper } from './map/MapPinFilterStepper';
 import { MapBrowseDock } from './map/MapBrowseDock';
+import { useSurfaceKind } from '../surfaces';
 import { guardMapBrowseItems } from '../lib/mapBrowseItems';
 import { GUARD_MAP_BROWSE_EMPTY_MESSAGE } from '../lib/mapEmptyMessages';
 import { getGuardNextShift } from '../lib/guardNextShift';
@@ -435,6 +436,7 @@ export function GuardDashboard({
       agreementFeeConfig: job.agreementFeeConfig,
     });
   const isControlled = controlledTab !== undefined;
+  const surface = useSurfaceKind();
   const [standaloneTab, setStandaloneTab] = useState<GuardTab>(controlledTab ?? initialTab);
   const activeTab = isEmbedded ? shiftTab : (isControlled ? controlledTab : standaloneTab);
   const tab: GuardTab = activeTab === 'guardChat' ? 'messages' : activeTab;
@@ -1425,7 +1427,7 @@ export function GuardDashboard({
         />
       )}
 
-      {activeTab === 'map' && !showShiftOverlay && !guardSelectedJobId ? (
+      {activeTab === 'map' && !showShiftOverlay && (surface === 'tablet' || !guardSelectedJobId) ? (
         <div data-tour="guard-map-browse">
         <MapBrowseDock
           items={mapBrowseItems}
