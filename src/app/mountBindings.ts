@@ -55,7 +55,12 @@ export interface AppMountBindings {
   handleAddEducation: (guardId: string, edu: Omit<import("../types").GuardEducation, "id">) => Promise<void>;
   handleAddExperience: (guardId: string, exp: Omit<import("../types").Experience, "id">) => Promise<void>;
   handleAddGuardProfile: (input: { name?: string; firstName?: string; middleName?: string; lastName?: string; email: string; phone?: string; badgeNumber?: string; hourlyRate?: number; }) => Promise<string>;
-  handleAddReview: (requestId: string, rating: number, reviewText: string, tipCents?: number) => Promise<string | void>;
+  handleAddReview: (
+    requestId: string,
+    rating: number,
+    reviewText: string,
+    tipCents?: number
+  ) => Promise<import('../lib/stripe/stripeEmbeddedTypes').ClientReviewSubmitResult | void>;
   handleAddStaffProfile: (input: { email: string; personalEmail?: string; badgeNumber: string; staffRole: import("../types").StaffRole; sideRole?: "Finance"; firstName: string; middleName?: string; lastName: string; managedCities?: string[]; assignedManagerIds?: string[]; }) => Promise<string>;
   handleAddToCompanyRoster: (guardId: string) => Promise<void>;
   handleApplyToJob: (requestId: string) => Promise<void>;

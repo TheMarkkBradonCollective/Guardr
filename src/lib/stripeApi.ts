@@ -1,6 +1,7 @@
 /** Client-side helpers for Guardr Stripe API routes (secrets stay server-side). */
 
 import { apiUrl } from './api/guardrClient';
+import type { ClientEmbeddedPaymentKind } from './stripe/stripeEmbeddedTypes';
 
 async function parseApiResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -20,17 +21,25 @@ async function parseApiResponse<T>(res: Response): Promise<T> {
   }
 }
 
-export async function createCashDepositCheckoutSession(_params: {
+/** Embedded Payment Element flow (preferred). */
+export async function createClientPaymentIntent(params: {
+  kind: ClientEmbeddedPaymentKind;
   jobId: string;
-  directorEmail: string;
-  jobTitle: string;
+  clientEmail: string;
+  jobTitle?: string;
   amountCents: number;
-}): Promise<{ url: string; sessionId: string }> {
-  throw new Error(
-    'Cash deposits are no longer supported. Client payments and guard payouts use Stripe only.'
-  );
+}): Promise<{ clientSecret: string; paymentIntentId: string }> {
+  const res = await fetch(apiUrl('/api/stripe/payment-intent/create'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  const data = await parseApiResponse<{ clientSecret: string; paymentIntentId: string; error?: string }>(res);
+  if (!res.ok) throw new Error(data.error || 'Failed to create payment');
+  return data;
 }
 
+/** @deprecated Redirect Checkout — kept for compatibility; UI uses PaymentIntents. */
 export async function createCheckoutSession(params: {
   jobId: string;
   clientEmail: string;
@@ -47,6 +56,7 @@ export async function createCheckoutSession(params: {
   return data;
 }
 
+/** @deprecated */
 export async function createOvertimeCheckoutSession(params: {
   jobId: string;
   clientEmail: string;
@@ -63,6 +73,7 @@ export async function createOvertimeCheckoutSession(params: {
   return data;
 }
 
+/** @deprecated */
 export async function createScheduleChangeCheckoutSession(params: {
   jobId: string;
   clientEmail: string;
@@ -79,6 +90,7 @@ export async function createScheduleChangeCheckoutSession(params: {
   return data;
 }
 
+/** @deprecated */
 export async function createTipCheckoutSession(params: {
   jobId: string;
   clientEmail: string;
@@ -93,6 +105,17 @@ export async function createTipCheckoutSession(params: {
   const data = await parseApiResponse<{ url: string; sessionId: string; error?: string }>(res);
   if (!res.ok) throw new Error(data.error || 'Failed to create tip checkout session');
   return data;
+}
+
+export async function createCashDepositCheckoutSession(_params: {
+  jobId: string;
+  directorEmail: string;
+  jobTitle: string;
+  amountCents: number;
+}): Promise<{ url: string; sessionId: string }> {
+  throw new Error(
+    'Cash deposits are no longer supported. Client payments and guard payouts use Stripe only.'
+  );
 }
 
 export async function createConnectAccount(params: {
@@ -111,6 +134,21 @@ export async function createConnectAccount(params: {
   return data;
 }
 
+export async function createConnectAccountSession(
+  accountId: string,
+  component: 'account_onboarding' | 'account_management' = 'account_onboarding'
+): Promise<{ clientSecret: string }> {
+  const res = await fetch(apiUrl('/api/stripe/connect/account-session'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accountId, component }),
+  });
+  const data = await parseApiResponse<{ clientSecret: string; error?: string }>(res);
+  if (!res.ok) throw new Error(data.error || 'Failed to start Connect onboarding');
+  return data;
+}
+
+/** @deprecated Hosted Connect onboarding link — UI uses embedded Connect. */
 export async function createConnectAccountLink(accountId: string): Promise<{ url: string }> {
   const res = await fetch(apiUrl('/api/stripe/connect/account-link'), {
     method: 'POST',

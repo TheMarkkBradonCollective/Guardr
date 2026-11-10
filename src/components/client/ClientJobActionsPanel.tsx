@@ -10,7 +10,8 @@ import type { PlatformFeeConfig } from '../../lib/payments';
 import { feeConfigFromJobSnapshot } from '../../lib/payments';
 import { isOpenContractPricing } from '../../lib/agreementPricing';
 import { PriceNegotiationPanel } from '../jobs/PriceNegotiationPanel';
-import { createCheckoutSession, createOvertimeCheckoutSession, createScheduleChangeCheckoutSession, createTipCheckoutSession } from '../../lib/stripeApi';
+import { GuardrStripePaymentSheet } from '../payments/GuardrStripePaymentSheet';
+import type { ClientEmbeddedPaymentKind, ClientReviewSubmitResult } from '../../lib/stripe/stripeEmbeddedTypes';
 import { createSquareCheckoutSession } from '../../lib/paymentProcessorApi';
 import {
   canClientApproveOvertime,
@@ -108,7 +109,7 @@ export interface ClientJobActionsPanelProps {
     rating: number,
     reviewText: string,
     tipCents?: number
-  ) => Promise<string | void> | void;
+  ) => Promise<ClientReviewSubmitResult | void> | void;
   onReportViolation?: (requestId: string, input: ClientViolationReportInput) => void | Promise<void>;
   onConfirmSelfAudit?: (requestId: string) => void | Promise<void>;
   onVerifyStartCheckpoint?: (requestId: string) => void | Promise<void>;
@@ -212,6 +213,12 @@ export function ClientJobActionsPanel({
   const [customTip, setCustomTip] = useState('');
   const [violationOpen, setViolationOpen] = useState(false);
   const [replacementBusy, setReplacementBusy] = useState(false);
+  const [stripePay, setStripePay] = useState<{
+    kind: ClientEmbeddedPaymentKind;
+    amountCents: number;
+    title: string;
+    subtitle?: string;
+  } | null>(null);
 
   const rankedApplicants = useMemo(
     () =>
@@ -255,22 +262,13 @@ export function ClientJobActionsPanel({
     setReviewOpen(true);
   };
 
-  const handlePayNow = async () => {
-    setPayingJobId(req.id);
-    try {
-      const amountCents = Math.round(req.estimatedPayout * 100);
-      const { url } = await createCheckoutSession({
-        jobId: req.id,
-        clientEmail,
-        jobTitle: req.title,
-        amountCents,
-      });
-      if (url) window.location.href = url;
-    } catch (e: unknown) {
-      showAppToast(userFacingError(e, 'Unable to start checkout'), { tone: 'error' });
-    } finally {
-      setPayingJobId(null);
-    }
+  const openStripePay = (kind: ClientEmbeddedPaymentKind, amountCents: number, title: string, subtitle?: string) => {
+    setStripePay({ kind, amountCents, title, subtitle });
+  };
+
+  const handlePayNow = () => {
+    const amountCents = Math.round(req.estimatedPayout * 100);
+    openStripePay('job_payment', amountCents, 'Pay for security services', req.title);
   };
 
   const handlePayWithSquare = async () => {
@@ -291,22 +289,9 @@ export function ClientJobActionsPanel({
     }
   };
 
-  const handlePayOvertime = async () => {
-    setPayingOvertimeJobId(req.id);
-    try {
-      const amountCents = Math.round((req.overtimeAmount ?? 0) * 100);
-      const { url } = await createOvertimeCheckoutSession({
-        jobId: req.id,
-        clientEmail,
-        jobTitle: req.title,
-        amountCents,
-      });
-      if (url) window.location.href = url;
-    } catch (e: unknown) {
-      showAppToast(userFacingError(e, 'Unable to start overtime checkout'), { tone: 'error' });
-    } finally {
-      setPayingOvertimeJobId(null);
-    }
+  const handlePayOvertime = () => {
+    const amountCents = Math.round((req.overtimeAmount ?? 0) * 100);
+    openStripePay('overtime', amountCents, 'Pay overtime', req.title);
   };
 
   const handlePayOvertimeWithSquare = async () => {
@@ -327,22 +312,9 @@ export function ClientJobActionsPanel({
     }
   };
 
-  const handlePayScheduleExtension = async () => {
-    setPayingScheduleJobId(req.id);
-    try {
-      const amountCents = Math.round((req.scheduleChangeExtraAmount ?? 0) * 100);
-      const { url } = await createScheduleChangeCheckoutSession({
-        jobId: req.id,
-        clientEmail,
-        jobTitle: req.title,
-        amountCents,
-      });
-      if (url) window.location.href = url;
-    } catch (e: unknown) {
-      showAppToast(userFacingError(e, 'Unable to start schedule payment'), { tone: 'error' });
-    } finally {
-      setPayingScheduleJobId(null);
-    }
+  const handlePayScheduleExtension = () => {
+    const amountCents = Math.round((req.scheduleChangeExtraAmount ?? 0) * 100);
+    openStripePay('schedule_change', amountCents, 'Pay schedule extension', req.title);
   };
 
   const openDispute = () => {
@@ -1110,23 +1082,24 @@ export function ClientJobActionsPanel({
               setReviewSubmitting(true);
               try {
                 const tipCents = resolvedTipCents > 0 ? resolvedTipCents : undefined;
-                const redirectUrl = await onAddReview?.(
+                const reviewResult = await onAddReview?.(
                   req.id,
                   reviewRating || 5,
                   reviewNote || 'Good work.',
                   tipCents
                 );
                 setReviewOpen(false);
-                if (redirectUrl) {
-                  window.location.href = redirectUrl;
+                if (reviewResult && 'tipPayment' in reviewResult && reviewResult.tipPayment) {
+                  openStripePay(
+                    'tip',
+                    reviewResult.tipPayment.amountCents,
+                    'Send a tip',
+                    reviewResult.tipPayment.jobTitle ?? req.title
+                  );
+                  showAppToast('Review saved. Complete payment to send your tip.', { tone: 'success' });
                   return;
                 }
-                showAppToast(
-                  tipCents
-                    ? 'Review saved. Complete card checkout to send your tip.'
-                    : 'Review submitted. Thank you!',
-                  { tone: 'success' }
-                );
+                showAppToast(tipCents ? 'Review saved.' : 'Review submitted. Thank you!', { tone: 'success' });
               } catch (e: unknown) {
                 showAppToast(userFacingError(e, 'Could not submit review'), { tone: 'error' });
               } finally {
@@ -1142,6 +1115,20 @@ export function ClientJobActionsPanel({
           </AppButton>
         </div>
       </AppFormSheet>
+
+      {stripePay && (
+        <GuardrStripePaymentSheet
+          open
+          onClose={() => setStripePay(null)}
+          kind={stripePay.kind}
+          jobId={req.id}
+          clientEmail={clientEmail}
+          jobTitle={req.title}
+          amountCents={stripePay.amountCents}
+          title={stripePay.title}
+          subtitle={stripePay.subtitle}
+        />
+      )}
 
       {onReportViolation && (
         <ClientViolationReportSheet

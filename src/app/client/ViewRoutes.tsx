@@ -54,7 +54,12 @@ export interface RenderClientViewsBindings {
   messagesShellHeaderTrailing: React.ReactNode;
   navigate: (next: import("../../components/ClientDashboard").ClientView) => void;
   onAcceptPriceOffer: (requestId: string, guardId: string, offerId: string) => void | Promise<void>;
-  onAddReview: (requestId: string, rating: number, reviewText: string, tipCents?: number) => void | Promise<string | void>;
+  onAddReview: (
+    requestId: string,
+    rating: number,
+    reviewText: string,
+    tipCents?: number
+  ) => void | Promise<import('../../lib/stripe/stripeEmbeddedTypes').ClientReviewSubmitResult | void>;
   onAddToCompanyRoster: (guardId: string) => void | Promise<void>;
   onApproveFullTeam: (requestId: string) => void | Promise<void>;
   onApproveOvertime: (requestId: string) => void | Promise<void>;

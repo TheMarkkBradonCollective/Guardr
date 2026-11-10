@@ -1,8 +1,8 @@
-# Stripe on Guardr (Cloudflare Worker + Neon)
+# Stripe on Guardr (embedded UI)
 
-Client bookings and guard payouts use **Stripe Checkout** and **Stripe Connect Express**, integrated with Guardr’s billing ledger (`lib/platformBilling.ts`, `stripe_webhook_events`, and related migrations). Secrets live only on the Worker.
+Guardr uses **in-app** Stripe Elements and Connect embedded components — not hosted Checkout or Account Link redirects.
 
-## Worker secrets
+## Secrets (Worker)
 
 ```bash
 wrangler secret put STRIPE_SECRET_KEY
@@ -10,17 +10,41 @@ wrangler secret put STRIPE_WEBHOOK_SECRET
 wrangler secret put STRIPE_PUBLISHABLE_KEY
 ```
 
-| Secret | Purpose |
-|--------|---------|
-| `STRIPE_SECRET_KEY` | Server API |
-| `STRIPE_WEBHOOK_SECRET` | Verify webhook signatures |
-| `STRIPE_PUBLISHABLE_KEY` | Client via `GET /api/config` and `GET /api/stripe/health` |
+The SPA loads the publishable key from **`GET /api/config`**.
 
-Non-secret app origin: `APP_URL` / `VITE_APP_URL` (production: `https://guardr.co` in `wrangler.toml`).
+## Client payments (Payment Element)
 
-Missing payment configuration returns **503** `{ "error": "payments not configured" }`.
+| Method | Path |
+|--------|------|
+| POST | `/api/stripe/payment-intent/create` |
 
-## Webhook endpoint
+Body: `{ "kind": "job_payment" | "overtime" | "schedule_change" | "tip", "jobId", "clientEmail", "amountCents", "jobTitle?" }`
+
+Returns: `{ clientSecret, paymentIntentId }`
+
+The browser confirms with `@stripe/react-stripe-js` (`redirect: 'if_required'` for 3DS inside WebView). **Webhooks** (`payment_intent.succeeded`, etc.) remain the source of truth for marking jobs paid.
+
+Legacy redirect Checkout routes under `/api/stripe/checkout/*` remain for compatibility but are unused by the UI.
+
+## Guard Connect (embedded)
+
+| Method | Path |
+|--------|------|
+| POST | `/api/stripe/connect/create-account` |
+| POST | `/api/stripe/connect/account-session` |
+| GET | `/api/stripe/connect/status/:accountId` |
+
+`account-session` returns a Connect.js `clientSecret` for embedded onboarding/management.
+
+## Webhook
+
+**`https://guardr.co/api/stripe/webhook`** (workers.dev URL also works)
+
+Configure the same event set as before (`checkout.session.completed`, `payment_intent.*`, `charge.refunded`, transfers, payouts, `account.updated`).
+
+## Reference (Worker routes and webhook events)
+
+### Webhook endpoint
 
 **Canonical URL:** `https://guardr.co/api/stripe/webhook`
 
