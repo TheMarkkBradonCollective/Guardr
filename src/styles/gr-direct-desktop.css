@@ -379,7 +379,7 @@ body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-dire
 }
 
 body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-wordmark {
-  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -411,7 +411,7 @@ body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-dire
   border-radius: 999px;
   background: #000000;
   color: #ffffff;
-  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
@@ -596,7 +596,7 @@ body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-dire
 }
 
 body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-direct-page-title {
-  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -1061,7 +1061,7 @@ body[data-surface="desktop"] .uber-app-shell[data-uber-direct="true"] .uber-dire
   border-radius: 999px;
   background: #000000;
   color: #ffffff;
-  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
@@ -1142,7 +1142,7 @@ html.theme-dark .uber-direct-page-cta {
 }
 
 .uber-direct-top-header-wordmark {
-  font-family: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: -0.03em;

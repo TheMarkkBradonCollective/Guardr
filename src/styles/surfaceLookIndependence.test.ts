@@ -25,17 +25,21 @@ describe('surface look layer', () => {
   });
 
   it('gives each surface its own canvas, radius, and paper language', () => {
-    assert.match(css, /body\[data-surface='mobile'\][\s\S]{0,400}--look-canvas: #ffffff/);
-    assert.match(css, /body\[data-surface='tablet'\][\s\S]{0,400}--look-canvas: #f0f0f0/);
-    assert.match(css, /body\[data-surface='desktop'\][\s\S]{0,400}--look-canvas: #e8e8e8/);
-
-    assert.match(css, /body\[data-surface='mobile'\][\s\S]{0,800}--look-card-radius: 18px/);
-    assert.match(css, /body\[data-surface='tablet'\][\s\S]{0,800}--look-card-radius: 16px/);
-    assert.match(css, /body\[data-surface='desktop'\][\s\S]{0,800}--look-card-radius: 6px/);
-
+    for (const surface of ['mobile', 'tablet', 'desktop']) {
+      assert.match(css, new RegExp(`body\\[data-surface='${surface}'\\][\\s\\S]{0,400}--look-canvas: var\\(--gr-canvas\\)`));
+      assert.match(css, new RegExp(`body\\[data-surface='${surface}'\\][\\s\\S]{0,800}--look-card-radius: var\\(--gr-radius-card\\)`));
+    }
     assert.match(css, /body\[data-surface='mobile'\][\s\S]{0,1200}--look-card-border: none/);
     assert.match(css, /body\[data-surface='tablet'\][\s\S]{0,1200}--look-card-border: 1px solid/);
-    assert.match(css, /body\[data-surface='desktop'\][\s\S]{0,1200}--look-input-radius: 4px/);
+    assert.match(css, /body\[data-surface='desktop'\][\s\S]{0,1400}--look-input-radius: var\(--gr-radius-control\)/);
+
+    const authored = readFileSync(join(here, 'redesign/tokens.css'), 'utf8');
+    assert.match(authored, /body\[data-surface='mobile'\][\s\S]{0,500}--gr-canvas: #ffffff/);
+    assert.match(authored, /body\[data-surface='tablet'\][\s\S]{0,500}--gr-canvas: #f0f0f0/);
+    assert.match(authored, /body\[data-surface='desktop'\][\s\S]{0,500}--gr-canvas: #e8e8e8/);
+    assert.match(authored, /theme-dark body\[data-surface='mobile'\][\s\S]{0,200}--gr-canvas: #0a0a0a/);
+    assert.match(authored, /theme-dark body\[data-surface='tablet'\][\s\S]{0,200}--gr-canvas: #111111/);
+    assert.match(authored, /theme-dark body\[data-surface='desktop'\][\s\S]{0,200}--gr-canvas: #000000/);
   });
 
   it('does not introduce filled traffic-light action colours', () => {

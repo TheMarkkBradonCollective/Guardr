@@ -8,7 +8,7 @@
 @import "./styles/app-pwa.css";
 @import "./styles/app-native.css";
 
-@theme {--font-sans: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+@theme {--font-sans: "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 
   --color-brand-primary: var(--brand-primary);
@@ -23489,7 +23489,7 @@ body.capacitor-native .landing-app-download-btn:active {
   position: relative;
   background: var(--uber-bg, var(--brand-bg));
   transition: filter 0.28s ease, opacity 0.28s ease;
-  font-family: var(--uber-font-text, "Uber Move Text", "Helvetica Neue", Helvetica, sans-serif);
+  font-family: var(--uber-font-text, "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, sans-serif);
 }
 
 .app-welcome--dimmed {
@@ -23574,7 +23574,7 @@ html.theme-dark .app-welcome-backdrop-band {
 .app-welcome-shell-status,
 .app-welcome-kicker {
   margin: 0;
-  font-family: var(--uber-font-text, "Uber Move Text", sans-serif);
+  font-family: var(--uber-font-text, "Inter Variable", "Guardr Sans", sans-serif);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -23615,7 +23615,7 @@ html.theme-dark .app-welcome-backdrop-band {
 
 .app-welcome-brand {
   margin: 0;
-  font-family: var(--uber-font-display, "Uber Move", "Helvetica Neue", Helvetica, sans-serif);
+  font-family: var(--uber-font-display, "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, sans-serif);
   font-size: clamp(2.5rem, 11vw, 3.75rem);
   font-weight: 900;
   letter-spacing: -0.06em;
@@ -23632,7 +23632,7 @@ html.theme-dark .app-welcome-backdrop-band {
 
 .app-welcome-headline {
   margin: 0;
-  font-family: var(--uber-font-display, "Uber Move", "Helvetica Neue", Helvetica, sans-serif);
+  font-family: var(--uber-font-display, "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, sans-serif);
   font-size: clamp(1.5rem, 5.8vw, 1.875rem);
   font-weight: 700;
   letter-spacing: -0.035em;
@@ -23896,7 +23896,7 @@ body.capacitor-native .app-welcome .landing-path-grid {
 
 /* /platform-ui — unified drawer shell (all roles, all breakpoints) */
 .uber-app-shell {
-  font-family: "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .uber-app-shell .uber-shell-content {

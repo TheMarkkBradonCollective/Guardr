@@ -14,7 +14,7 @@ body[data-surface="desktop"] .page-shell.auth-experience.dsk-auth {
   overflow: hidden !important;
   background: var(--uber-bg, #ffffff);
   color: var(--uber-text, #000000);
-  font-family: var(--uber-font-text, "Uber Move Text", system-ui, sans-serif);
+  font-family: var(--uber-font-text, "Inter Variable", "Guardr Sans", system-ui, sans-serif);
 }
 
 body[data-surface="desktop"] .dsk-auth-split {
@@ -57,7 +57,7 @@ body[data-surface="desktop"] .dsk-auth-brand {
 /* dsk-auth-logo inversion is handled by .guardr-logo rules in Base Web-global.css */
 
 body[data-surface="desktop"] .dsk-auth-wordmark {
-  font-family: var(--uber-font-display, "Uber Move", sans-serif);
+  font-family: var(--uber-font-display, "Inter Variable", "Guardr Sans", sans-serif);
   font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -166,7 +166,7 @@ body[data-surface="desktop"] .dsk-auth-headline {
   margin: 0 0 12px;
   max-width: 16ch;
   color: #ffffff;
-  font-family: var(--uber-font-display, "Uber Move", sans-serif);
+  font-family: var(--uber-font-display, "Inter Variable", "Guardr Sans", sans-serif);
   font-size: clamp(2rem, 3.2vw, 2.75rem);
   font-weight: 800;
   letter-spacing: -0.035em;

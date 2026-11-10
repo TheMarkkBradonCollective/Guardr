@@ -52,7 +52,7 @@ import './styles/gr-text-case.css';
 import './styles/legal-accept.css';
 import './styles/surface-look.css';
 import './styles/product-apps.css';
-import './styles/visual-refresh.css';
+import '@fontsource-variable/inter/wght.css';
 import './styles/redesign/index.css';
 import { pathFromDeepLink } from './lib/productApps';
 

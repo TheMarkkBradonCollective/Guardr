@@ -16,10 +16,11 @@ const baseTheme = {
 
 describe('withDisplayTypeScale', () => {
   it('ships a font stack that names a family the app actually loads', () => {
-    // "Guardr Sans" is declared in styles/gr-typography.css from
-    // /public/fonts, so the stack resolves without Guardr Sans installed.
+    // Inter Variable is loaded from @fontsource-variable/inter. Guardr Sans
+    // is the self-hosted copy in styles/gr-typography.css (/public/fonts).
     for (const stack of [FONT_TEXT, FONT_DISPLAY]) {
-      assert.ok(stack.includes('Uber Move'), 'keeps Uber Move first when present');
+      assert.ok(stack.startsWith('"Inter Variable"'), 'leads with the bundled face');
+      assert.equal(stack.includes('Uber Move'), false);
       assert.ok(stack.includes('Guardr Sans'), 'falls back to the self-hosted family');
       assert.ok(stack.endsWith('sans-serif'), 'ends with a generic family');
     }

@@ -1,0 +1,152 @@
+/*
+ * One authored palette and type scale for light, dark, phone, tablet, and desktop.
+ * --uber-* and --brand-* in gr-tokens.css, and --sf-* brand colours in
+ * surface-foundation.css, are aliases of these roles. Per-surface canvases
+ * stay in surface-look.css. Phone numbers match surfaceDesign.ts MOBILE;
+ * tablet and desktop override them.
+ */
+
+:root {
+  --gr-ink: #000000;
+  --gr-ink-muted: #5c5c5c;
+  --gr-ink-faint: #8a8a8a;
+  --gr-paper: #ffffff;
+  --gr-paper-raised: #ffffff;
+  --gr-paper-sunken: #f6f6f6;
+  --gr-paper-muted: #eeeeee;
+  --gr-line: #e6e6e6;
+  --gr-line-strong: #c4c4c4;
+  --gr-accent: #000000;
+  --gr-accent-hover: #333333;
+  --gr-accent-ink: #ffffff;
+  --gr-danger: #b3261e;
+  --gr-danger-soft: #fbeae9;
+  --gr-warn: #9a5b00;
+  --gr-warn-soft: #fdf1e0;
+  --gr-success: #0e7a4a;
+  --gr-success-soft: #e6f4ec;
+  --gr-info: #1a4fd1;
+  --gr-info-soft: #eaf0fe;
+  --gr-overlay: rgba(255, 255, 255, 0.96);
+  --gr-focus: #1a4fd1;
+  --gr-focus-ring: 0 0 0 3px rgba(0, 0, 0, 0.20);
+  --gr-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --gr-shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --gr-shadow-float: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --gr-shadow-panel: 0 -4px 20px rgba(0, 0, 0, 0.10);
+  --gr-shadow-nav: 0 -1px 0 rgba(0, 0, 0, 0.06);
+  --gr-font-text: "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --gr-font-display: "Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --gr-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Phone scale. Matches surfaceDesign.ts MOBILE. */
+:root,
+body[data-surface='mobile'] {
+  --gr-type-display: 40px;
+  --gr-type-title: 28px;
+  --gr-type-heading: 22px;
+  --gr-type-subheading: 17px;
+  --gr-type-body: 16px;
+  --gr-type-label: 14px;
+  --gr-type-caption: 12px;
+  --gr-space-gutter: 16px;
+  --gr-space-section: 24px;
+  --gr-space-grid: 12px;
+  --gr-radius-control: 12px;
+  --gr-radius-card: 16px;
+  --gr-target-min: 48px;
+  --gr-motion-page: 300ms;
+  --gr-canvas: #ffffff;
+  --gr-tile: var(--gr-paper-sunken);
+}
+
+/* Charcoal dark theme: raised surfaces step up from the paper, status hues
+   stay quiet, and the accent stays monochrome. */
+html.theme-dark,
+html[data-theme='dark'] {
+  --gr-ink: #f5f5f5;
+  --gr-ink-muted: #a3a3a3;
+  --gr-ink-faint: #737373;
+  --gr-paper: #141414;
+  --gr-paper-raised: #1c1c1c;
+  --gr-paper-sunken: #0e0e0e;
+  --gr-paper-muted: #242424;
+  --gr-line: #2e2e2e;
+  --gr-line-strong: #3d3d3d;
+  --gr-accent: #f5f5f5;
+  --gr-accent-hover: #e2e2e2;
+  --gr-accent-ink: #141414;
+  --gr-danger: #f0b4ac;
+  --gr-danger-soft: #2c1512;
+  --gr-warn: #e6c98a;
+  --gr-warn-soft: #2a220f;
+  --gr-success: #9dccb2;
+  --gr-success-soft: #12241c;
+  --gr-info: #c5d2f7;
+  --gr-info-soft: #141a2e;
+  --gr-overlay: rgba(20, 20, 20, 0.94);
+  --gr-focus: #c5d2f7;
+  --gr-focus-ring: 0 0 0 3px rgba(255, 255, 255, 0.18);
+  --gr-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --gr-shadow-card: none;
+  --gr-shadow-float: 0 8px 32px rgba(0, 0, 0, 0.55);
+  --gr-shadow-panel: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  --gr-shadow-nav: 0 -1px 0 rgba(255, 255, 255, 0.08);
+}
+
+html.theme-dark body[data-surface='mobile'],
+html[data-theme='dark'] body[data-surface='mobile'] {
+  --gr-canvas: #0a0a0a;
+  --gr-tile: #161616;
+}
+
+body[data-surface='tablet'] {
+  --gr-type-display: 30px;
+  --gr-type-title: 24px;
+  --gr-type-heading: 19px;
+  --gr-type-subheading: 16px;
+  --gr-type-body: 15px;
+  --gr-type-label: 13px;
+  --gr-type-caption: 12px;
+  --gr-space-gutter: 24px;
+  --gr-space-section: 20px;
+  --gr-space-grid: 16px;
+  --gr-radius-control: 10px;
+  --gr-radius-card: 14px;
+  --gr-target-min: 44px;
+  --gr-motion-page: 260ms;
+  --gr-canvas: #f0f0f0;
+  --gr-tile: var(--gr-paper);
+}
+
+html.theme-dark body[data-surface='tablet'],
+html[data-theme='dark'] body[data-surface='tablet'] {
+  --gr-canvas: #111111;
+  --gr-tile: #161616;
+}
+
+body[data-surface='desktop'] {
+  --gr-type-display: 28px;
+  --gr-type-title: 21px;
+  --gr-type-heading: 17px;
+  --gr-type-subheading: 15px;
+  --gr-type-body: 14px;
+  --gr-type-label: 12px;
+  --gr-type-caption: 11px;
+  --gr-space-gutter: 24px;
+  --gr-space-section: 16px;
+  --gr-space-grid: 16px;
+  --gr-radius-control: 6px;
+  --gr-radius-card: 8px;
+  --gr-target-min: 32px;
+  --gr-motion-page: 160ms;
+  --gr-canvas: #e8e8e8;
+  --gr-tile: var(--gr-paper);
+}
+
+html.theme-dark body[data-surface='desktop'],
+html[data-theme='dark'] body[data-surface='desktop'] {
+  --gr-canvas: #000000;
+  --gr-tile: #0a0a0a;
+}
