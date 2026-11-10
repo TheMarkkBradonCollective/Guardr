@@ -30,11 +30,11 @@
   --space-touch-native: 48px; /* Native APK: larger target */
 
   /* ──────────────────────────────────────────────────────────────────────────
-     TYPOGRAPHY — Uber Move font stack
+     TYPOGRAPHY — aliases of redesign/tokens.css
   ────────────────────────────────────────────────────────────────────────── */
-  --font-display: "Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-text:    "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-mono:    ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --font-display: var(--gr-font-display);
+  --font-text:    var(--gr-font-text);
+  --font-mono:    var(--gr-font-mono);
 
   /* Type scale — Base Web type ramp */
   --text-xs:   11px;

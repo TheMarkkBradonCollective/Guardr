@@ -1,21 +1,18 @@
 /**
- * Base Web typography — single source of truth for font stacks and the
- * Base Web type scale.
+ * Base Web typography — font stacks and the Base Web type scale.
  *
- * Guardr Sans / Guardr Sans are proprietary. `Guardr Sans` is the
- * self-hosted variable grotesque declared in `styles/gr-typography.css`
- * (Inter subsets in /public/fonts); it carries the tall x-height and
- * neutral skeleton of Guardr Sans so the product renders with Base Web
- * type colour on every platform, including offline PWA and APK shells.
+ * Inter Variable is bundled from @fontsource-variable/inter. Guardr Sans is
+ * the same family self-hosted in styles/gr-typography.css (/public/fonts)
+ * so the PWA and APK still have a face when the bundle face is unavailable.
  */
 
 import type { Theme } from 'baseui';
 
 export const FONT_TEXT =
-  '"Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif';
+  '"Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif';
 
 export const FONT_DISPLAY =
-  '"Uber Move", "Uber Move Text", "Guardr Sans", "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif';
+  '"Inter Variable", "Guardr Sans", "Helvetica Neue", Helvetica, Arial, sans-serif';
 
 export const FONT_MONO =
   'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace';

@@ -6,8 +6,8 @@
  *   - Black (#000) CTAs, nav, map pins
  *   - White (#FFF) cards, sheets, backgrounds
  *   - #F6F6F6 secondary surfaces and inputs
- *   - #767676 muted text, captions
- *   - No colored accent — everything is black / white / gray
+ *   - Charcoal muted text
+ *   - No colored accent — black, white, and charcoal
  */
 
 import { createLightTheme, createDarkTheme, LightTheme, DarkTheme } from 'baseui';
@@ -53,7 +53,7 @@ export const guardrLightTheme: Theme = withDisplayTypeScale(createLightTheme({
     backgroundSecondary: '#F6F6F6',
     backgroundTertiary: '#F6F6F6',
     contentPrimary: '#000000',
-    contentSecondary: '#767676',
+    contentSecondary: '#5c5c5c',
     borderOpaque: '#EEEEEE',
     // Primary button: solid black → white text
     buttonPrimaryFill:   '#000000',
@@ -73,14 +73,14 @@ export const guardrDarkTheme: Theme = withDisplayTypeScale(createDarkTheme({
   primaryFontFamily: FONT_FAMILY,
   colors: {
     ...GUARDR_ACCENT_DARK,
-    backgroundPrimary: '#000000',
-    backgroundSecondary: '#1A1A1A',
-    backgroundTertiary: '#2B2B2B',
-    contentPrimary: '#FFFFFF',
-    contentSecondary: '#9E9E9E',
-    borderOpaque: '#2B2B2B',
-    buttonPrimaryFill:   '#FFFFFF',
-    buttonPrimaryText:   '#000000',
+    backgroundPrimary: '#141414',
+    backgroundSecondary: '#0e0e0e',
+    backgroundTertiary: '#1c1c1c',
+    contentPrimary: '#f5f5f5',
+    contentSecondary: '#a3a3a3',
+    borderOpaque: '#2e2e2e',
+    buttonPrimaryFill:   '#f5f5f5',
+    buttonPrimaryText:   '#141414',
     buttonPrimaryHover:  '#E2E2E2',
     buttonPrimaryActive: '#CCCCCC',
     linkText:    '#FFFFFF',

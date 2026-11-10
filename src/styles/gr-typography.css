@@ -1,11 +1,10 @@
 /* ─────────────────────────────────────────────────────────────
-   Uber Base — typography foundation
+   Typography foundation
 
-   Uber Move / Uber Move Text are proprietary. When they are not
-   installed locally we fall back to a self-hosted variable
-   grotesque (Inter) that matches Uber Move Text's tall x-height
-   and neutral grotesque skeleton, so the product renders with the
-   intended type colour instead of Arial.
+   Guardr Sans is a self-hosted variable grotesque (Inter subsets in
+   /public/fonts). The product stack leads with Inter Variable from
+   @fontsource-variable/inter, then this face, so type still renders
+   in the PWA and APK when the bundled face is unavailable.
 
    Files live in /public/fonts (latin + latin-ext subsets only) so
    the PWA and APK ship the type system offline.
