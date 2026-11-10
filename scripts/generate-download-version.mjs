@@ -10,15 +10,8 @@ import QRCode from 'qrcode';
 
 const ROOT = process.cwd();
 const WORKER_ORIGIN = 'https://guardr.themarkkbrandoncollective-2d9.workers.dev';
-const RELEASE_TAG = 'v1.1.0-cf-beta';
-const GITHUB_REPO = 'TheMarkkBradonCollective/Guardr';
-const assetUrl = (name) =>
-  `https://github.com/${GITHUB_REPO}/releases/download/${RELEASE_TAG}/${name}`;
-const GITHUB_ALL_APKS_ZIP = assetUrl('Guardr-All-APKs.zip');
-const GITHUB_CLIENT_APK = assetUrl('Guardr-Client.apk');
-const GITHUB_GUARD_APK = assetUrl('Guardr-Guard.apk');
-const GITHUB_STAFF_APK = assetUrl('Guardr-Staff.apk');
-const APK_DIRECT_URL = GITHUB_GUARD_APK;
+const R2_APK_URL = 'https://pub-07d688bf950545ddba9025a723c0798e.r2.dev/guardr/latest.apk';
+const APK_DIRECT_URL = R2_APK_URL;
 const APK_SLUG = 'guardr';
 const MBC_APK_PATH = `public/${APK_SLUG}.apk`;
 const DOWNLOAD_APK_PATH = 'public/download/guardr.apk';
@@ -92,7 +85,6 @@ const version = pkg.version || '1.0.0';
 const numericVersion = version.split('-')[0];
 const parts = numericVersion.split('.').map((part) => Number.parseInt(part, 10) || 0);
 const versionCode = parts[0] * 100 + (parts[1] || 0) * 10 + (parts[2] || 0);
-const apkCacheQuery = `?v=${versionCode}`;
 
 const cacheSlug = version.replace(/\./g, '-');
 // Bump when precached brand assets change without an app version bump (the SW cache is
@@ -104,14 +96,14 @@ const downloadManifest = {
   webVersion: version,
   apkVersion: version,
   apkVersionCode: versionCode,
-  apkUrl: `/download/guardr.apk${apkCacheQuery}`,
-  apkDirectUrl: `${APK_DIRECT_URL}${apkCacheQuery}`,
-  appsZipUrl: GITHUB_ALL_APKS_ZIP,
-  appsZipDirectUrl: GITHUB_ALL_APKS_ZIP,
+  apkUrl: R2_APK_URL,
+  apkDirectUrl: R2_APK_URL,
+  appsZipUrl: R2_APK_URL,
+  appsZipDirectUrl: R2_APK_URL,
   apkApps: {
-    client: GITHUB_CLIENT_APK,
-    guard: GITHUB_GUARD_APK,
-    staff: GITHUB_STAFF_APK,
+    client: R2_APK_URL,
+    guard: R2_APK_URL,
+    staff: R2_APK_URL,
   },
   updatedAt: new Date().toISOString(),
 };
@@ -122,7 +114,7 @@ await writeFile(
 );
 
 const qrPath = path.join(ROOT, 'public/download/apk-qr.png');
-await QRCode.toFile(qrPath, `${APK_DIRECT_URL}${apkCacheQuery}`, {
+await QRCode.toFile(qrPath, APK_DIRECT_URL, {
   type: 'png',
   width: 320,
   margin: 2,
@@ -151,7 +143,7 @@ const catalogManifest = {
     ready: apkReady,
     version: numericVersion,
     versionCode,
-    url: `/${APK_SLUG}.apk`,
+    url: R2_APK_URL,
     downloadName: `${APK_SLUG}-v${numericVersion}.apk`,
     fileSize: apkFileSize,
     sha256: apkSha256,

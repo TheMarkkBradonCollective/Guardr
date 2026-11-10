@@ -34,6 +34,13 @@ export default {
     applyEnv(env);
     const url = new URL(request.url);
 
+    if (url.pathname === '/download/guardr.apk' || url.pathname === '/guardr.apk') {
+      return Response.redirect(
+        'https://pub-07d688bf950545ddba9025a723c0798e.r2.dev/guardr/latest.apk',
+        302,
+      );
+    }
+
     if (url.pathname.startsWith('/api/')) {
       return app.fetch(request, env);
     }
