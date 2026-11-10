@@ -1,0 +1,15 @@
+/*
+  Redesign stylesheet barrel. Only the foundation workstream edits this file.
+  Page workstreams add rules in their own ws-*.css and do not import those
+  files from main.tsx. Legacy stylesheets under src/styles/ stay in place
+  until the page that owns a selector is replaced; do not edit them across
+  workstream lines.
+*/
+@import './ws-pub.css';
+@import './ws-acc.css';
+@import './ws-grd.css';
+@import './ws-clt.css';
+@import './ws-stf-ops.css';
+@import './ws-stf-comms.css';
+@import './ws-stf-fin.css';
+@import './ws-app.css';
