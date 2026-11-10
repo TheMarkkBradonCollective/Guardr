@@ -68,6 +68,11 @@ export function resolvePlatformRole(input: {
   return 'guard';
 }
 
+/** Director, Owner, and Founder (Founder maps to owner). Manager and below are excluded. */
+export function isDirectorTierPlatformRole(role: string | null | undefined): boolean {
+  return role === 'director' || role === 'owner';
+}
+
 export function isStaffPlatformRole(role: PlatformRole): boolean {
   return (
     role === 'support' ||

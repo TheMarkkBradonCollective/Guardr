@@ -4,7 +4,11 @@ import {
   computeGuardPayoutCents,
   LEGACY_PLATFORM_FEE_PER_HOUR,
 } from './platformFees';
-import { readStripeSecretKey } from './stripeEnv.ts';
+import {
+  readStripeDefaultSecretKey,
+  readStripeSecretKeyForMode,
+  type StripeKeyMode,
+} from './stripeEnv.ts';
 
 let stripe: Stripe | null | undefined;
 let stripePromise: Promise<Stripe | null> | undefined;
@@ -18,7 +22,7 @@ export async function createStripeSdk(secretKey: string): Promise<Stripe> {
 
 export async function getStripe(env?: Record<string, string | undefined>): Promise<Stripe | null> {
   if (stripe !== undefined && !env) return stripe;
-  const key = readStripeSecretKey(env);
+  const key = readStripeDefaultSecretKey(env);
   if (!key) {
     if (!env) stripe = null;
     return null;
@@ -35,9 +39,31 @@ export async function getStripe(env?: Record<string, string | undefined>): Promi
   return createStripeSdk(key);
 }
 
+
+const stripeByMode: Partial<Record<StripeKeyMode, Stripe | null | Promise<Stripe | null>>> = {};
+
+export async function getStripeForMode(
+  mode: StripeKeyMode,
+  env?: Record<string, string | undefined>
+): Promise<Stripe | null> {
+  const key = readStripeSecretKeyForMode(mode, env);
+  if (!key) return null;
+  if (env) return createStripeSdk(key);
+  const cached = stripeByMode[mode];
+  if (cached) return cached;
+  const created = createStripeSdk(key).then((client) => {
+    stripeByMode[mode] = client;
+    return client;
+  });
+  stripeByMode[mode] = created;
+  return created;
+}
+
 export function resetStripeClientCache(): void {
   stripe = undefined;
   stripePromise = undefined;
+  stripeByMode.test = undefined;
+  stripeByMode.live = undefined;
 }
 
 /** @deprecated Use per-job platform_fee_per_hour when available. */

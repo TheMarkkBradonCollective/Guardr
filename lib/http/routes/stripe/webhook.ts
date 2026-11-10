@@ -4,7 +4,7 @@ import type Stripe from 'stripe';
 import { getStripe } from '../../../stripeClient.ts';
 import {
   PAYMENTS_NOT_CONFIGURED_BODY,
-  readStripeWebhookSecret,
+  readStripeWebhookSecrets,
 } from '../../../stripeEnv.ts';
 import { verifyStripeWebhookEvent } from '../../../stripe/verifyWebhookEvent.ts';
 
@@ -802,9 +802,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const stripe = await getStripe();
-  const webhookSecret = readStripeWebhookSecret();
+  const webhookSecrets = readStripeWebhookSecrets();
 
-  if (!stripe || !webhookSecret) {
+  if (!stripe || webhookSecrets.length === 0) {
     return res.status(503).json(PAYMENTS_NOT_CONFIGURED_BODY);
   }
 
@@ -816,7 +816,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let event: Stripe.Event;
   try {
     const rawBody = await readRawBody(req);
-    event = await verifyStripeWebhookEvent(stripe, rawBody, signature, webhookSecret);
+    event = await verifyStripeWebhookEvent(stripe, rawBody, signature, webhookSecrets);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Invalid signature';
     return res.status(400).json({ error: `Webhook Error: ${message}` });

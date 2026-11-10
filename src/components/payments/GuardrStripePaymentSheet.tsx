@@ -5,7 +5,11 @@ import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react'
 import { AppFormSheet } from '../ui/app/AppFormSheet';
 import { AppButton } from '../ui/AppButton';
 import { guardrStripeAppearance } from '../../lib/stripe/stripeAppearance';
-import { fetchStripePublishableKey } from '../../lib/stripe/stripePublicConfig';
+import {
+  fetchStripePublicConfig,
+  fetchStripePublishableKey,
+  resetStripePublicConfigCache,
+} from '../../lib/stripe/stripePublicConfig';
 import { createClientPaymentIntent } from '../../lib/stripeApi';
 import type { ClientEmbeddedPaymentKind } from '../../lib/stripe/stripeEmbeddedTypes';
 import { userFacingError } from '../../lib/userFacingError';
@@ -113,6 +117,8 @@ export function GuardrStripePaymentSheet({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [stripeJs, setStripeJs] = useState<Stripe | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [testMode, setTestMode] = useState(false);
+  const [canRunTestPayments, setCanRunTestPayments] = useState(false);
 
   const themeMode = readThemeFromDocument();
   const appearance = useMemo(() => guardrStripeAppearance(themeMode), [themeMode, open]);
@@ -123,10 +129,17 @@ export function GuardrStripePaymentSheet({
     setError(null);
     setClientSecret(null);
     try {
+      resetStripePublicConfigCache();
+      const config = await fetchStripePublicConfig();
+      setCanRunTestPayments(config.canRunTestPayments);
       const { loadStripe } = await import('@stripe/stripe-js');
-      const publishableKey = await fetchStripePublishableKey();
+      const publishableKey = await fetchStripePublishableKey({ testMode });
       if (!publishableKey) {
-        throw new Error('Card payments are not available right now.');
+        throw new Error(
+          testMode
+            ? 'Test-mode card payments are not available until a test publishable key is configured.'
+            : 'Card payments are not available right now.'
+        );
       }
       const stripe = await loadStripe(publishableKey);
       if (!stripe) throw new Error('Unable to load Stripe');
@@ -138,6 +151,7 @@ export function GuardrStripePaymentSheet({
         clientEmail,
         jobTitle,
         amountCents,
+        testMode: testMode || undefined,
       });
       setClientSecret(secret);
       setPhase('ready');
@@ -145,7 +159,7 @@ export function GuardrStripePaymentSheet({
       setError(userFacingError(err, 'Unable to start payment'));
       setPhase('error');
     }
-  }, [open, kind, jobId, clientEmail, jobTitle, amountCents]);
+  }, [open, kind, jobId, clientEmail, jobTitle, amountCents, testMode]);
 
   useEffect(() => {
   if (open) void bootstrap();
@@ -165,6 +179,30 @@ export function GuardrStripePaymentSheet({
   return (
     <AppFormSheet open={open} onClose={onClose} title={title} subtitle={subtitle ?? 'Pay securely in Guardr'}>
       <div className="space-y-4">
+        {canRunTestPayments && (
+          <label className="flex items-start gap-3 rounded-xl border border-dashed border-brand-border bg-brand-surface/40 p-3 text-sm text-brand-text">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={testMode}
+              onChange={(event) => {
+                setTestMode(event.target.checked);
+                setAttempt((n) => n + 1);
+              }}
+            />
+            <span>
+              <span className="font-medium">Run test payment</span>
+              <span className="block text-brand-text-muted text-xs leading-relaxed mt-0.5">
+                Director and above only. Uses Stripe test mode — no live charges.
+              </span>
+            </span>
+          </label>
+        )}
+        {testMode && phase !== 'error' && (
+          <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
+            Test mode is on. This payment will use Stripe test keys.
+          </p>
+        )}
         {phase === 'loading' && <PaymentSheetLoading label="Preparing secure checkout" />}
 
         {phase === 'error' && (

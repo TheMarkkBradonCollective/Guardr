@@ -1,7 +1,8 @@
 import { getSupabaseAdmin } from '../../../../db/adminClient.ts';
 import type { VercelRequest, VercelResponse } from '../../../types.ts';
-import { getStripe } from '../../../../stripeClient.ts';
+import { getStripe, getStripeForMode } from '../../../../stripeClient.ts';
 import { PAYMENTS_NOT_CONFIGURED_BODY } from '../../../../stripeEnv.ts';
+import { requestIsDirectorTier } from '../../../readPlatformRole.ts';
 import { isClientPaymentIntentKind } from '../../../../stripe/clientPaymentKinds.ts';
 import { createClientPaymentIntent } from '../../../../stripe/createClientPaymentIntent.ts';
 
@@ -10,18 +11,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const stripe = await getStripe();
-  if (!stripe) {
-    return res.status(503).json(PAYMENTS_NOT_CONFIGURED_BODY);
-  }
-
   const body = (req.body ?? {}) as {
     kind?: string;
     jobId?: string;
     clientEmail?: string;
     jobTitle?: string;
     amountCents?: number;
+    testMode?: boolean;
   };
+
+  const testMode = body.testMode === true;
+  if (testMode) {
+    const allowed = await requestIsDirectorTier(req);
+    if (!allowed) {
+      return res.status(403).json({ error: 'Test-mode payments are limited to Director and above' });
+    }
+  }
+
+  const stripe = testMode ? await getStripeForMode('test') : await getStripe();
+  if (!stripe) {
+    return res.status(503).json(PAYMENTS_NOT_CONFIGURED_BODY);
+  }
 
   if (!isClientPaymentIntentKind(body.kind)) {
     return res.status(400).json({ error: 'kind must be job_payment, overtime, schedule_change, or tip' });

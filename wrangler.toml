@@ -16,6 +16,7 @@ bucket_name = "guardr-files"
 [vars]
 # Non-secret defaults only. Set secrets with `wrangler secret put`:
 #   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY
+#   STRIPE_TEST_SECRET_KEY, STRIPE_TEST_WEBHOOK_SECRET, STRIPE_TEST_PUBLISHABLE_KEY
 #   DATABASE_URL, JWT_SECRET, VAPID_* , CRON_SECRET, PUSH_INTERNAL_SECRET
 # Stripe webhook (canonical): https://guardr.co/api/stripe/webhook
 # Alternate: https://guardr.themarkkbrandoncollective-2d9.workers.dev/api/stripe/webhook

@@ -22,16 +22,25 @@ async function parseApiResponse<T>(res: Response): Promise<T> {
 }
 
 /** Embedded Payment Element flow (preferred). */
+function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (typeof localStorage === 'undefined') return headers;
+  const token = localStorage.getItem('guardr_api_jwt');
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
 export async function createClientPaymentIntent(params: {
   kind: ClientEmbeddedPaymentKind;
   jobId: string;
   clientEmail: string;
   jobTitle?: string;
   amountCents: number;
+  testMode?: boolean;
 }): Promise<{ clientSecret: string; paymentIntentId: string }> {
   const res = await fetch(apiUrl('/api/stripe/payment-intent/create'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body: JSON.stringify(params),
   });
   const data = await parseApiResponse<{ clientSecret: string; paymentIntentId: string; error?: string }>(res);

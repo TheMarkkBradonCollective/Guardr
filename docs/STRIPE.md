@@ -87,3 +87,12 @@ The SPA calls these via `src/lib/stripeApi.ts` (`apiUrl` from `src/lib/api/guard
 ## SDK on Workers
 
 `lib/stripeClient.ts` constructs the official `stripe` package with `Stripe.createFetchHttpClient()` for Cloudflare Workers.
+
+## Director+ test-mode payments
+
+Test-mode Stripe keys stay configured permanently, including after live keys go on. Staff at **Director, Owner, or Founder** can run in-app test payments.
+
+* Secrets: `STRIPE_TEST_SECRET_KEY`, `STRIPE_TEST_PUBLISHABLE_KEY`, `STRIPE_TEST_WEBHOOK_SECRET`. If `STRIPE_SECRET_KEY` is still an `sk_test_` key, it is used as the test secret until live keys are added.
+* `POST /api/stripe/payment-intent/create` with `{ testMode: true }` is rejected unless the request Bearer token is Director+.
+* `GET /api/config` returns `canRunTestPayments` and `stripeTestPublishableKey` only to Director+.
+* The webhook verifies signatures against both the live and test signing secrets.
