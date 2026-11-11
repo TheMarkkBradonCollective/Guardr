@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { SessionUser } from '../../types';
-import { canAccessFinancialControls, canAccessStaffPermissions, canHandleDisputes, canViewCityMarkets, canViewManagementRoster, isFinanceDeskOnly } from '../../lib/permissions';
+import { canAccessFinancialControls, canAccessStaffMessages, canAccessStaffPermissions, canApproveGuards, canApproveStaffAccounts, canHandleDisputes, canManageClients, canManageGuards, canVerifyCredentials, canViewAnalytics, canViewCityMarkets, canViewManagementRoster, canViewStats, canViewViolations, isFinanceDeskOnly } from '../../lib/permissions';
 import { isStaffMessagesHubSection, StaffSection } from '../../lib/staffOps';
-import { StaffNavItem } from './StaffSidebarNav';
+import { StaffNavItem } from './staffNavItems';
 import type { LegalPageId } from '../../lib/legalContent';
 import type { ThemeMode } from '../../lib/platform/theme';
-import { DesktopStaffAdminShell } from '../layouts/desktop/DesktopStaffAdminShell';
+import { StaffAppShell } from '../layouts/desktop/DesktopStaffAdminShell';
 import { StaffShellCreateProvider } from './StaffShellCreateContext';
 import { useMessengerCompanion } from '../messenger/MessengerCompanionContext';
 import { MessengerCompanionBar } from '../messenger/MessengerCompanionBar';
@@ -124,6 +124,16 @@ export function StaffOpsLayout({
   const showCities = canViewCityMarkets(currentUser);
   const showManagement = canViewManagementRoster(currentUser);
   const financeDeskOnly = isFinanceDeskOnly(currentUser);
+  const showApplications =
+    canApproveGuards(currentUser) ||
+    canManageGuards(currentUser) ||
+    canManageClients(currentUser) ||
+    canApproveStaffAccounts(currentUser);
+  const showCredentials = canVerifyCredentials(currentUser);
+  const showStats = canViewStats(currentUser);
+  const showAnalytics = canViewAnalytics(currentUser);
+  const showViolations = canViewViolations(currentUser);
+  const showMessages = canAccessStaffMessages(currentUser);
 
   const navItems: StaffNavItem[] = useMemo(
     () => {
@@ -132,13 +142,13 @@ export function StaffOpsLayout({
       { id: 'map', label: 'Map', icon: Map },
       { id: 'jobs', label: 'Jobs', icon: Briefcase },
       { id: 'locations', label: 'Locations', icon: MapPin },
-      { id: 'applications', label: 'Applications', icon: UserCheck },
-      { id: 'credentials', label: 'Credentials', icon: ShieldCheck },
+      { id: 'applications', label: 'Applications', icon: UserCheck, applicationsOnly: true },
+      { id: 'credentials', label: 'Credentials', icon: ShieldCheck, credentialsOnly: true },
       { id: 'guards', label: 'Guards', icon: Shield },
       { id: 'clients', label: 'Customers', icon: Building2 },
       { id: 'team', label: 'Staff', icon: Users },
       { id: 'management', label: 'Management', icon: UsersRound, managementOnly: true },
-      { id: 'messages', label: 'Messages', icon: MessagesSquare },
+      { id: 'messages', label: 'Messages', icon: MessagesSquare, messagesOnly: true },
       { id: 'support', label: 'Support', icon: LifeBuoy },
       { id: 'payments', label: 'Payments & invoices', icon: DollarSign, financeOnly: true },
       { id: 'platform-fees', label: 'Platform fees', icon: Percent, financeOnly: true },
@@ -146,10 +156,10 @@ export function StaffOpsLayout({
       { id: 'agreements', label: 'Agreements', icon: FileText, financeOnly: true },
       { id: 'audit-log', label: 'Audit log', icon: ScrollText, financeOnly: true },
       { id: 'incidents', label: 'Incidents', icon: AlertTriangle },
-      { id: 'violations', label: 'Violations', icon: ShieldAlert },
-      { id: 'stats', label: 'Stats', icon: BarChart3 },
+      { id: 'violations', label: 'Violations', icon: ShieldAlert, violationsOnly: true },
+      { id: 'stats', label: 'Stats', icon: BarChart3, statsOnly: true },
       { id: 'disputes', label: 'Disputes', icon: Scale, disputesOnly: true },
-      { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+      { id: 'analytics', label: 'Analytics', icon: BarChart3, analyticsOnly: true },
       { id: 'cities', label: 'Service Areas', icon: MapPinned, citiesOnly: true },
       { id: 'permissions', label: 'Permissions', icon: KeyRound, permissionsOnly: true },
       { id: 'settings', label: 'Public Information', icon: Settings },
@@ -193,6 +203,12 @@ export function StaffOpsLayout({
         showDisputes={showDisputes}
         showCities={showCities}
         showManagement={showManagement}
+        showApplications={showApplications}
+        showCredentials={showCredentials}
+        showStats={showStats}
+        showAnalytics={showAnalytics}
+        showViolations={showViolations}
+        showMessages={showMessages}
         financeDeskOnly={financeDeskOnly}
         onOpenLegal={onOpenLegal}
         onOpenDownload={onOpenDownload}
@@ -220,6 +236,12 @@ interface StaffOpsLayoutInnerProps
   showDisputes: boolean;
   showCities: boolean;
   showManagement: boolean;
+  showApplications: boolean;
+  showCredentials: boolean;
+  showStats: boolean;
+  showAnalytics: boolean;
+  showViolations: boolean;
+  showMessages: boolean;
   financeDeskOnly?: boolean;
 }
 
@@ -243,6 +265,12 @@ function StaffOpsLayoutInner({
   showDisputes,
   showCities,
   showManagement,
+  showApplications,
+  showCredentials,
+  showStats,
+  showAnalytics,
+  showViolations,
+  showMessages,
   financeDeskOnly = false,
   onOpenLegal,
   onOpenDownload,
@@ -257,7 +285,7 @@ function StaffOpsLayoutInner({
     [navItems],
   );
   return (
-    <DesktopStaffAdminShell
+    <StaffAppShell
       currentUser={currentUser}
       activeSection={activeSection}
       onNavigate={onNavigate}
@@ -276,6 +304,12 @@ function StaffOpsLayoutInner({
       showDisputes={showDisputes}
       showCities={showCities}
       showManagement={showManagement}
+      showApplications={showApplications}
+      showCredentials={showCredentials}
+      showStats={showStats}
+      showAnalytics={showAnalytics}
+      showViolations={showViolations}
+      showMessages={showMessages}
       financeDeskOnly={financeDeskOnly}
       onOpenLegal={onOpenLegal}
       onOpenDownload={onOpenDownload}
@@ -292,7 +326,7 @@ function StaffOpsLayoutInner({
         />
       ) : null}
       {children}
-    </DesktopStaffAdminShell>
+    </StaffAppShell>
   );
 }
 

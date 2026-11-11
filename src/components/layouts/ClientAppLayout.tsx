@@ -101,12 +101,6 @@ function requestsTabTitle(tab: ClientRequestsJobTab): string {
   return "Today's jobs";
 }
 
-function requestsSubNavId(tab: ClientRequestsJobTab): ClientNavId {
-  if (tab === 'scheduled') return 'requests-future';
-  if (tab === 'completed' || tab === 'missed') return 'requests-past';
-  return 'requests-today';
-}
-
 function tabFromSubNavId(id: ClientNavId): ClientRequestsJobTab {
   if (id === 'requests-future') return 'scheduled';
   if (id === 'requests-past') return 'completed';
@@ -166,7 +160,7 @@ export function ClientAppLayout({
       : messagesViews.includes(activeView)
         ? 'messages'
       : activeView === 'requests'
-        ? requestsSubNavId(requestsJobTab)
+        ? 'requests'
         : accountPending && !['home', 'profile', 'settings', 'guide', ...messagesViews].includes(activeView)
           ? 'home'
           : activeView;

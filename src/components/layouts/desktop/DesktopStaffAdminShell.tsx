@@ -8,7 +8,7 @@ import type { ThemeMode } from '../../../lib/platform/theme';
 import { AccountMenu, type AccountMenuNotificationProps } from '../AccountMenu';
 import { SidebarFooterLinks } from '../SidebarFooterLinks';
 import { STAFF_NAV_GROUPS } from '../../../lib/staffNavGroups';
-import { StaffNavItem } from '../../staff/StaffSidebarNav';
+import { StaffNavItem } from '../../staff/staffNavItems';
 import { showAppAlert } from '../../ui/AppConfirm';
 import type { SidebarPrimaryAction } from '../../baseui/layout/GuardrDrawerShell';
 import type { SurfacePrimaryAction } from '../../../surfaces/surfaceShellTypes';
@@ -35,6 +35,12 @@ interface DesktopStaffAdminShellProps {
   showDisputes: boolean;
   showCities: boolean;
   showManagement: boolean;
+  showApplications?: boolean;
+  showCredentials?: boolean;
+  showStats?: boolean;
+  showAnalytics?: boolean;
+  showViolations?: boolean;
+  showMessages?: boolean;
   financeDeskOnly?: boolean;
   onOpenLegal?: (page: LegalPageId) => void;
   onOpenDownload?: () => void;
@@ -61,7 +67,7 @@ const TABLET_QUICK: StaffSection[] = ['overview', 'map', 'jobs'];
  * Mobile, tablet, and desktop each load their own independent shell. Destinations
  * are the same catalog; only the arrangement changes.
  */
-export function DesktopStaffAdminShell({
+export function StaffAppShell({
   children,
   currentUser,
   activeSection,
@@ -78,6 +84,12 @@ export function DesktopStaffAdminShell({
   showDisputes,
   showCities,
   showManagement,
+  showApplications = false,
+  showCredentials = false,
+  showStats = false,
+  showAnalytics = false,
+  showViolations = false,
+  showMessages = true,
   financeDeskOnly = false,
   onOpenLegal,
   onOpenDownload,
@@ -100,6 +112,12 @@ export function DesktopStaffAdminShell({
     showDisputes,
     showCities,
     showManagement,
+    showApplications,
+    showCredentials,
+    showStats,
+    showAnalytics,
+    showViolations,
+    showMessages,
     financeDeskOnly,
   };
   const isMap = isStaffOpsMapSection(activeSection);
@@ -130,6 +148,12 @@ export function DesktopStaffAdminShell({
     showDisputes,
     showCities,
     showManagement,
+    showApplications,
+    showCredentials,
+    showStats,
+    showAnalytics,
+    showViolations,
+    showMessages,
     financeDeskOnly,
   ]);
 
@@ -198,7 +222,7 @@ export function DesktopStaffAdminShell({
             void showAppAlert({
               title: isDbConnected ? 'Database connected' : 'Database offline',
               message: isDbConnected
-                ? 'Live Supabase connection is healthy.'
+                ? 'The database connection is healthy.'
                 : 'Running on cached data. Changes queue locally until the connection returns.',
               tone: isDbConnected ? 'default' : 'warning',
             });
@@ -211,3 +235,6 @@ export function DesktopStaffAdminShell({
     </SurfaceAppShell>
   );
 }
+
+/** @deprecated The old name described only the desktop surface. Use StaffAppShell. */
+export const DesktopStaffAdminShell = StaffAppShell;

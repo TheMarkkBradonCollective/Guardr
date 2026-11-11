@@ -117,10 +117,11 @@ export function clientOverflowNav(
   const items: { id: ClientOverflowNavId; label: string }[] = [
     { id: 'invoices', label: isPersonal ? 'Payments' : 'Billing' },
   ];
-  if (clientHasCapability(type, 'roster-management')) {
+  const primaryIds = new Set(clientPrimaryNav(clientOrType).map((item) => item.id));
+  if (clientHasCapability(type, 'roster-management') && !primaryIds.has('roster')) {
     items.push({ id: 'roster', label: 'Roster' });
   }
-  if (clientHasCapability(type, 'shift-operations')) {
+  if (clientHasCapability(type, 'shift-operations') && !primaryIds.has('operations')) {
     items.push({ id: 'operations', label: 'Live ops' });
   }
   items.push(

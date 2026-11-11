@@ -11,6 +11,7 @@ import {
   clientMaxSavedLocations,
   clientOverflowNav,
   clientPostJobLabel,
+  clientPrimaryNav,
   isClientViewAllowed,
   resolveAllowedClientView,
 } from './clientCapabilities';
@@ -79,8 +80,12 @@ describe('clientCapabilities', () => {
     assert.deepEqual(personalNav, ['invoices', 'guards', 'locations', 'settings']);
     assert.deepEqual(businessNav, ['invoices', 'guards', 'locations', 'reports', 'settings']);
     const securityNav = clientOverflowNav('security-company').map((item) => item.id);
-    assert.ok(securityNav.includes('roster'));
-    assert.ok(securityNav.includes('operations'));
+    assert.equal(securityNav.includes('roster'), false);
+    assert.equal(securityNav.includes('operations'), false);
+    assert.deepEqual(
+      clientPrimaryNav('security-company').map((item) => item.id),
+      ['home', 'requests', 'operations', 'roster'],
+    );
     assert.equal(clientOverflowNav('personal').find((i) => i.id === 'locations')?.label, 'Locations');
     assert.equal(clientOverflowNav('business').find((i) => i.id === 'locations')?.label, 'Sites');
     assert.equal(clientOverflowNav('business').find((i) => i.id === 'invoices')?.label, 'Billing');
