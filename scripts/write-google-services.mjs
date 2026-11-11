@@ -100,7 +100,7 @@ export async function writeGoogleServicesFromEnv() {
       }
       validateGoogleServices(bundledJson);
       await mkdir(path.dirname(servicesPath), { recursive: true });
-      await writeFile(servicesPath, `${JSON.stringify(bundledJson, null, 2)}\\n`);
+      await writeFile(servicesPath, `${JSON.stringify(bundledJson, null, 2)}\n`);
       console.warn(
         `GOOGLE_SERVICES_JSON does not contain ${EXPECTED_PACKAGE}; using the bundled Guardr Firebase project config instead.`,
       );
@@ -110,7 +110,7 @@ export async function writeGoogleServicesFromEnv() {
   }
 
   await mkdir(path.dirname(servicesPath), { recursive: true });
-  await writeFile(servicesPath, `${JSON.stringify(json, null, 2)}\\n`);
+  await writeFile(servicesPath, `${JSON.stringify(json, null, 2)}\n`);
   console.log(`Firebase config OK for ${EXPECTED_PACKAGE}`);
   return true;
 }
