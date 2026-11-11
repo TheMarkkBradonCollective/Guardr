@@ -86,7 +86,29 @@ export async function writeGoogleServicesFromEnv() {
     throw new Error(`GOOGLE_SERVICES_JSON is not valid JSON: ${error.message}`);
   }
 
-  validateGoogleServices(json);
+  if (!hasGuardrAndroidClient(json)) {
+    // A stale repository secret can override the valid, versioned project config.
+    // Prefer the bundled Guardr Firebase config when the secret belongs to a
+    // different Android package; never rewrite another Firebase app's identity.
+    if (existsSync(bundledPath)) {
+      const bundledRaw = readFileSync(bundledPath, 'utf8');
+      let bundledJson;
+      try {
+        bundledJson = JSON.parse(bundledRaw);
+      } catch (error) {
+        throw new Error(`firebase/guardr-tmbc/google-services.json is not valid JSON: ${error.message}`);
+      }
+      validateGoogleServices(bundledJson);
+      await mkdir(path.dirname(servicesPath), { recursive: true });
+      await writeFile(servicesPath, `${JSON.stringify(bundledJson, null, 2)}\n`);
+      console.warn(
+        `GOOGLE_SERVICES_JSON does not contain ${EXPECTED_PACKAGE}; using the bundled Guardr Firebase project config instead.`,
+      );
+      return true;
+    }
+    validateGoogleServices(json);
+  }
+
   await mkdir(path.dirname(servicesPath), { recursive: true });
   await writeFile(servicesPath, `${JSON.stringify(json, null, 2)}\n`);
   console.log(`Firebase config OK for ${EXPECTED_PACKAGE}`);
