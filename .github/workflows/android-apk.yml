@@ -42,7 +42,7 @@ jobs:
           java-version: '21'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           # The legacy `tools` SDK package has been removed from Google's repository.
           # Install only packages required by compileSdk 35.
