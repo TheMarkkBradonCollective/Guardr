@@ -150,7 +150,8 @@ export function MobilityLandingHeroVisual({ layout = 'sheet' }: { layout?: 'shee
               borderRadius: board ? '0' : '16px 16px 0 0',
               boxShadow: board ? '-8px 0 24px rgba(0,0,0,0.12)' : '0 -4px 24px rgba(0,0,0,0.12)',
               padding: '0 0 16px',
-              overflow: 'auto',
+              // Decorative preview: clip instead of an unfocusable scroll region (axe).
+              overflow: 'hidden',
             },
           },
         }}

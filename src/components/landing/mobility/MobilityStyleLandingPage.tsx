@@ -48,6 +48,8 @@ function TrustStrip({ formFactor }: { formFactor: MobilityFormFactor }) {
       backgroundColor={formFactor === 'desktop' ? 'backgroundPrimary' : 'backgroundSecondary'}
     >
         <Block
+        // Phones scroll this strip sideways; make the scroller keyboard-focusable (axe).
+        tabIndex={isMobile ? 0 : undefined}
         maxWidth="1280px"
         margin="0 auto"
         width="100%"
