@@ -2,17 +2,25 @@
   "id": "https://guardr.co/",
   "name": "Guardr",
   "short_name": "Guardr",
-  "description": "Guardr — one app: sign in as Customer, Guard, or Staff. Account, billing, marketplace, and field tools when installed.",
+  "description": "Guardr \u2014 one app: sign in as Customer, Guard, or Staff. Account, billing, marketplace, and field tools when installed.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
   "orientation": "portrait-primary",
   "background_color": "#000000",
   "theme_color": "#000000",
   "lang": "en-US",
   "dir": "ltr",
-  "categories": ["business", "utilities", "productivity"],
+  "categories": [
+    "business",
+    "utilities",
+    "productivity"
+  ],
   "prefer_related_applications": false,
   "launch_handler": {
     "client_mode": "focus-existing"
@@ -35,6 +43,47 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Post coverage",
+      "short_name": "Post",
+      "description": "Sign in as a customer and request guards",
+      "url": "/?auth=sign-in&ar=client",
+      "icons": [
+        {
+          "src": "/icons/client-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Find shifts",
+      "short_name": "Shifts",
+      "description": "Sign in as a guard",
+      "url": "/?auth=sign-in&ar=guard",
+      "icons": [
+        {
+          "src": "/icons/guard-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Staff console",
+      "short_name": "Staff",
+      "description": "Sign in to Guardr operations",
+      "url": "/?auth=sign-in&ar=staff",
+      "icons": [
+        {
+          "src": "/icons/staff-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

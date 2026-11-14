@@ -88,3 +88,33 @@ describe('web branding assets', () => {
     }
   });
 });
+
+describe('social card and install shortcuts (redesign phase 8)', () => {
+  it('ships a black-and-white 1200x630 social card wired into og and twitter tags', async () => {
+    const card = await read('public/og-card.png');
+    const meta = await sharp(card).metadata();
+    assert.equal(meta.width, 1200);
+    assert.equal(meta.height, 630);
+    assert.equal(hasColour(await pixels(card)), false, 'og-card.png must not contain colour');
+    const html = (await read('index.html')).toString('utf8');
+    assert.match(html, /og:image" content="https:\/\/guardr\.co\/og-card\.png"/);
+    assert.match(html, /og:image:width" content="1200"/);
+    assert.match(html, /twitter:image" content="https:\/\/guardr\.co\/og-card\.png"/);
+  });
+
+  it('manifest shortcuts point at existing role icons and sign-in routes', async () => {
+    const manifest = JSON.parse((await read('public/manifest.json')).toString('utf8'));
+    assert.ok(Array.isArray(manifest.shortcuts) && manifest.shortcuts.length >= 3);
+    for (const shortcut of manifest.shortcuts) {
+      assert.match(shortcut.url, /^\/\?auth=sign-in&ar=(client|guard|staff)$/);
+      for (const icon of shortcut.icons) await read(path.join('public', icon.src));
+    }
+  });
+
+  it('service worker precaches only files that exist', async () => {
+    const sw = (await read('public/sw.js')).toString('utf8');
+    const block = sw.match(/OFFLINE_URLS = \[([\s\S]*?)\];/)[1];
+    const urls = [...block.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((u) => u !== '/');
+    for (const url of urls) await read(path.join('public', url === '/index.html' ? '../index.html' : url));
+  });
+});

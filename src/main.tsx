@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import { Capacitor } from '@capacitor/core';
 import { ensureNativePermissions } from './lib/platform/nativePermissions';
 import { initNativeSafeArea } from './lib/platform/nativeSafeArea';
+import { scheduleNativeSplashHide } from './lib/platform/nativeSplash';
 import { registerNativeInstall } from './lib/platform/installRegistry';
 import App from './App.tsx';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -73,6 +74,7 @@ void initSentry();
 
 async function initNativeShell(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
+  scheduleNativeSplashHide();
   initNativeSafeArea();
   initNativePushBridge();
   await ensureNativePermissions();
