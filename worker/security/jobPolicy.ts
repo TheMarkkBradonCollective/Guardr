@@ -208,8 +208,10 @@ export function authorizeJobUpdate(identity: RequestIdentity, old: Row, input: R
       // Not this guard's job: apply, decline a direct offer, negotiate, or accept a direct/replacement offer.
       const isDirectTarget = old.request_type === 'direct' && old.target_guard_id === self;
       const replacementOffer = mentions(old.replacement_request, self);
-      const canTake = (oldStatus === 'open' && isDirectTarget) || replacementOffer;
-      if (oldStatus !== 'open' && !replacementOffer) return { ok: false, error: 'Not your job' };
+      // Replacement hand-offs only before the shift is done (never take over a completed/paid job).
+      const replacementOpen = replacementOffer && ['open', 'accepted', 'in-progress'].includes(oldStatus);
+      const canTake = (oldStatus === 'open' && isDirectTarget) || replacementOpen;
+      if (oldStatus !== 'open' && !replacementOpen) return { ok: false, error: 'Not your job' };
       for (const [k, v] of Object.entries(input)) {
         if (k === 'applicants') {
           const before = new Set(asList(old.applicants));
@@ -228,7 +230,7 @@ export function authorizeJobUpdate(identity: RequestIdentity, old: Row, input: R
           patch[k] = v;
         } else if (canTake && ['en_route_at', 'arrived_at', 'guard_live_location'].includes(k) && v === null) {
           patch[k] = v;
-        } else if (k === 'replacement_request' && replacementOffer) {
+        } else if (k === 'replacement_request' && replacementOpen) {
           patch[k] = v;
         }
       }
@@ -259,4 +261,16 @@ export function clientInitialJobStatus(
     if (mode === 'trusted-auto' && opts.trustedAutoPublish !== false && opts.trustedClient) return 'open';
   }
   return 'pending-review';
+}
+
+/**
+ * Client price of a job: hours x hourly rate x guards (same formula as computeJobBilling).
+ * Returns null when the row does not carry enough data to compute it.
+ */
+export function clientJobEstimatedPayout(row: Row): number | null {
+  const hours = Number(row.duration_hours);
+  const rate = Number(row.hourly_rate);
+  if (!Number.isFinite(hours) || !Number.isFinite(rate) || hours <= 0 || rate <= 0) return null;
+  const guards = Math.max(1, Number(row.guards_needed ?? 1) || 1);
+  return Math.round(hours * rate * guards * 100) / 100;
 }

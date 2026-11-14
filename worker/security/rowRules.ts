@@ -27,6 +27,9 @@ export const PUBLIC_PROFILE_COLUMNS: Record<string, Set<string>> = {
   staff: new Set(['id', 'first_name', 'avatar']),
 };
 
+/** Hidden private string columns are returned as '' (not omitted). */
+const HIDDEN_STRING_PLACEHOLDERS = ['email', 'phone'];
+
 export function isStaffIdentity(identity: RequestIdentity): boolean {
   return identity.profileKind === 'staff';
 }
@@ -42,6 +45,9 @@ export function scopeProfileRows(table: string, identity: RequestIdentity, data:
     const out: Row = {};
     for (const [k, v] of Object.entries(r)) if (allowed.has(k)) out[k] = v;
     if (table === 'staff' && 'name' in r) out.name = typeof r.first_name === 'string' && r.first_name ? r.first_name : 'Guardr Support';
+    // The app maps every profile row and calls string methods on email/phone; keep the
+    // keys as empty strings so hiding them never crashes a screen.
+    for (const k of HIDDEN_STRING_PLACEHOLDERS) if (k in r && !(k in out)) out[k] = '';
     return out;
   };
   return Array.isArray(data) ? data.map(scope) : scope(data);
@@ -228,3 +234,56 @@ export function invoicedJobIds(invoices: Array<{ job_ids?: unknown; status?: unk
   }
   return ids;
 }
+
+// ---------------------------------------------------------------- shared tables
+
+/** Location columns only the owning client (and staff) may read: door codes, alarm notes. */
+const PRIVATE_LOCATION_COLS = ['site_instructions', 'access_instructions', 'parking_instructions', 'notes', 'reviewed_by'];
+/** Credential columns only the guard (and staff) may read: document scans and review notes. */
+const PRIVATE_CERT_COLS = ['image_url', 'pending_update', 'revision_history', 'rejection_reason', 'update_request_note'];
+
+export interface SharedReadContext {
+  /** Job chat threads the caller belongs to. */
+  threadIds?: Set<string>;
+  /** Support tickets the caller opened. */
+  ticketIds?: Set<string>;
+}
+
+/**
+ * Row filtering for tables every signed-in user may query but should only partly see.
+ * Staff are not limited here.
+ */
+export function scopeSharedRows(table: string, identity: RequestIdentity, data: unknown, ctx: SharedReadContext = {}): unknown {
+  if (isStaffIdentity(identity) || !Array.isArray(data)) return data;
+  const self = identity.profileId;
+  const list = data as Row[];
+  switch (table) {
+    case 'job_chat_messages':
+      return list.filter((r) => ctx.threadIds?.has(String(r.thread_id ?? '')));
+    case 'support_messages':
+      return list.filter((r) => ctx.ticketIds?.has(String(r.ticket_id ?? '')));
+    case 'guard_messages':
+      return identity.profileKind === 'guard' ? list : [];
+    case 'client_messages':
+      return identity.profileKind === 'client' ? list : [];
+    case 'job_locations':
+      return list.map((r) => {
+        if (r.created_by_client_id === self) return r;
+        const out = { ...r };
+        for (const k of PRIVATE_LOCATION_COLS) if (k in out) out[k] = null;
+        return out;
+      });
+    case 'certifications':
+      return list.map((r) => {
+        if (r.guard_id === self) return r;
+        const out = { ...r };
+        for (const k of PRIVATE_CERT_COLS) if (k in out) out[k] = null;
+        return out;
+      });
+    default:
+      return data;
+  }
+}
+
+/** Tables whose rows need membership lookups before scopeSharedRows. */
+export const MEMBERSHIP_SCOPED_TABLES = new Set(['job_chat_messages', 'support_messages']);

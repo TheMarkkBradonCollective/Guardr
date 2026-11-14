@@ -1,3 +1,4 @@
+import { jobPriceCents } from './validateClientPaymentIntent.ts';
 import type Stripe from 'stripe';
 import type { AppDb } from '../db/adminClient.ts';
 import { getSiteUrl } from '../siteConfig.ts';
@@ -38,7 +39,7 @@ export async function createBookingCheckoutSession(
 
     const { data: job } = await db
       .from('security_requests')
-      .select('payment_status, status')
+      .select('payment_status, status, duration_hours, hourly_rate, guards_needed')
       .eq('id', jobId)
       .maybeSingle();
 
@@ -52,6 +53,11 @@ export async function createBookingCheckoutSession(
 
     if (job.payment_status && job.payment_status !== 'unpaid') {
       return { ok: false, status: 400, error: 'This job already has a payment on file' };
+    }
+
+    // Charge the job's price, never an app-chosen amount.
+    if (amountCents !== jobPriceCents(job)) {
+      return { ok: false, status: 400, error: 'Amount does not match the job price' };
     }
   }
 

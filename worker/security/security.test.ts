@@ -213,9 +213,9 @@ it('other people see only public profile columns', () => {
   ];
   const out = scopeProfileRows('guards', asGuard as never, rows) as Record<string, unknown>[];
   assert.equal(out[0].email, 'me@x');
-  assert.deepEqual(out[1], { id: 'g2', name: 'B' });
+  assert.deepEqual(out[1], { id: 'g2', name: 'B', email: '', phone: '' });
   const staffOut = scopeProfileRows('staff', asClient as never, [{ id: 's', name: 'Fred Founder', first_name: 'Fred', email: 'f@x', id_number: '1', staff_role: 'Founder', badge_number: 'B1', user_status: 'active' }]);
-  assert.deepEqual(staffOut, [{ id: 's', first_name: 'Fred', name: 'Fred' }]);
+  assert.deepEqual(staffOut, [{ id: 's', first_name: 'Fred', name: 'Fred', email: '' }]);
   assert.equal(needsSelfOnlyFilter('guards', asClient as never, ['email']), true);
   assert.equal(needsSelfOnlyFilter('guards', asClient as never, ['id']), false);
 });
