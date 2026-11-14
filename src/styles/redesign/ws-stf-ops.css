@@ -1,1 +1,43 @@
 /* WS-STF-OPS. Staff operations and dashboard sections. */
+
+/*
+ * Phase 3/4: one page gutter on the phone and tablet staff shells.
+ * The new surface shells (sfm-/sft-) dropped the legacy uber-app-shell
+ * padding, so pages that rendered straight into the shell body touched the
+ * screen edge (overview, analytics, service areas, fees, pay, settings).
+ */
+body[data-surface='mobile'] .staff-overview--mobile,
+body[data-surface='tablet'] .staff-overview--tablet {
+  padding-inline: var(--gr-space-gutter);
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+body[data-surface='mobile'] .staff-ops-mobile-shell.staff-mgmt-panel:not(.sft-legal-compliance):not(.sft-guide) > .staff-ops-mobile-body,
+body[data-surface='tablet'] .staff-ops-tablet-shell.staff-mgmt-panel:not(.sft-legal-compliance):not(.sft-guide) > .staff-ops-tablet-body,
+body[data-surface='mobile'] .staff-ops-mobile-shell.staff-mgmt-panel:not(.sft-legal-compliance):not(.sft-guide) > .staff-ops-mobile-toolbar,
+body[data-surface='tablet'] .staff-ops-tablet-shell.staff-mgmt-panel:not(.sft-legal-compliance):not(.sft-guide) > .staff-ops-tablet-toolbar {
+  padding-inline: var(--gr-space-gutter);
+  box-sizing: border-box;
+}
+
+/* List rows inside padded staff bodies: no extra inset, never wider than the page. */
+body[data-surface='mobile'] .staff-ops-mobile-body .app-item-card-stack .app-list-row,
+body[data-surface='tablet'] .staff-ops-tablet-body .app-item-card-stack .app-list-row {
+  margin-inline: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+body[data-surface='mobile'] .staff-ops-mobile-body .app-list-row > label select {
+  max-width: 42vw;
+}
+body[data-surface='mobile'] .staff-list-filter-tabs {
+  margin-inline: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+body[data-surface='mobile'] .staff-list-filter-tabs > .app-inbox-tab {
+  flex: none;
+  white-space: nowrap;
+}

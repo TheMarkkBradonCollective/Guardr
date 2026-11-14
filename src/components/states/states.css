@@ -274,3 +274,13 @@
   color: var(--gr-ink-muted);
   font-size: var(--gr-type-label, 13px);
 }
+
+.gr-crash-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--gr-space-gutter);
+  background: var(--gr-canvas, var(--gr-paper));
+  color: var(--gr-ink);
+  box-sizing: border-box;
+}
