@@ -315,8 +315,10 @@ export function createGuardrClient() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ newPassword, currentPassword }),
       });
-      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; token?: string };
       if (!res.ok || !json.ok) return { error: { message: json.error ?? 'Could not change password' } };
+      // Older tokens stop working after a password change; keep this device signed in.
+      if (json.token) localStorage.setItem(TOKEN_KEY, json.token);
       return { error: null };
     },
     async getSession() {

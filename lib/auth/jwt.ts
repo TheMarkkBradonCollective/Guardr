@@ -6,6 +6,8 @@ export interface JwtPayload {
   role: string;
   profileKind: 'guard' | 'client' | 'staff';
   profileId: string;
+  /** Fingerprint of the password hash at sign-in (see passwordVersion.ts). */
+  pwv?: string;
   exp: number;
   iat: number;
 }

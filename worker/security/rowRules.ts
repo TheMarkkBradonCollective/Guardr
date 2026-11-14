@@ -242,11 +242,37 @@ const PRIVATE_LOCATION_COLS = ['site_instructions', 'access_instructions', 'park
 /** Credential columns only the guard (and staff) may read: document scans and review notes. */
 const PRIVATE_CERT_COLS = ['image_url', 'pending_update', 'revision_history', 'rejection_reason', 'update_request_note'];
 
+/** Vehicle columns only the guard, staff, and people on the guard's active job may read. */
+const PRIVATE_VEHICLE_STRING_COLS = ['plate_number', 'plate_state'];
+const PRIVATE_VEHICLE_COLS = [
+  'front_photo_url', 'left_side_photo_url', 'right_side_photo_url', 'back_photo_url',
+  'vehicle_insurance_policy_id', 'rejection_reason', 'reviewed_by',
+];
+
+/** Owner column and private columns per shared table (used to stop filter probing). */
+const SHARED_PRIVATE: Record<string, { owner: string; cols: string[] }> = {
+  job_locations: { owner: 'created_by_client_id', cols: PRIVATE_LOCATION_COLS },
+  certifications: { owner: 'guard_id', cols: PRIVATE_CERT_COLS },
+  guard_vehicle_profiles: { owner: 'guard_id', cols: [...PRIVATE_VEHICLE_STRING_COLS, ...PRIVATE_VEHICLE_COLS] },
+};
+
+/**
+ * Filtering a shared table on a private column would reveal it (does plate X exist?).
+ * Such reads only match the caller's own rows: returns the owner OR-group, or null.
+ */
+export function privateFilterOwnerOr(table: string, identity: RequestIdentity, filterCols: string[]): string | null {
+  const spec = SHARED_PRIVATE[table];
+  if (!spec || isStaffIdentity(identity)) return null;
+  return filterCols.some((c) => spec.cols.includes(c)) ? `${spec.owner}.eq.${identity.profileId}` : null;
+}
+
 export interface SharedReadContext {
   /** Job chat threads the caller belongs to. */
   threadIds?: Set<string>;
   /** Support tickets the caller opened. */
   ticketIds?: Set<string>;
+  /** Guards the caller works with on an active job (their client, or crew mates). */
+  vehicleGuardIds?: Set<string>;
 }
 
 /**
@@ -271,6 +297,15 @@ export function scopeSharedRows(table: string, identity: RequestIdentity, data: 
         if (r.created_by_client_id === self) return r;
         const out = { ...r };
         for (const k of PRIVATE_LOCATION_COLS) if (k in out) out[k] = null;
+        return out;
+      });
+    case 'guard_vehicle_profiles':
+      return list.map((r) => {
+        const owner = String(r.guard_id ?? '');
+        if (owner === self || ctx.vehicleGuardIds?.has(owner)) return r;
+        const out = { ...r };
+        for (const k of PRIVATE_VEHICLE_STRING_COLS) if (k in out) out[k] = '';
+        for (const k of PRIVATE_VEHICLE_COLS) if (k in out) out[k] = null;
         return out;
       });
     case 'certifications':
