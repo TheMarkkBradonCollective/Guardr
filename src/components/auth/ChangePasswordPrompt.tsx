@@ -6,7 +6,7 @@ import { userFacingError } from '../../lib/userFacingError';
 interface ChangePasswordPromptProps {
   open: boolean;
   userName: string;
-  onChangePassword: (newPassword: string) => void | Promise<void>;
+  onChangePassword: (newPassword: string, currentPassword: string) => void | Promise<void>;
   onDismiss: () => void;
 }
 
@@ -17,6 +17,7 @@ export function ChangePasswordPrompt({
   onDismiss,
 }: ChangePasswordPromptProps) {
   const [mode, setMode] = useState<'prompt' | 'form'>('prompt');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,6 +25,7 @@ export function ChangePasswordPrompt({
 
   const resetForm = () => {
     setMode('prompt');
+    setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
     setError('');
@@ -37,6 +39,10 @@ export function ChangePasswordPrompt({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!currentPassword) {
+      setError('Enter your current password.');
+      return;
+    }
     if (newPassword.length < 8) {
       setError('New password must be at least 8 characters.');
       return;
@@ -47,7 +53,7 @@ export function ChangePasswordPrompt({
     }
     setBusy(true);
     try {
-      await onChangePassword(newPassword);
+      await onChangePassword(newPassword, currentPassword);
       resetForm();
     } catch (err) {
       setError(userFacingError(err, 'Could not update password.'));
@@ -107,8 +113,21 @@ export function ChangePasswordPrompt({
       ) : (
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           <div>
-            <label className="uber-label block mb-1">New password</label>
+            <label className="uber-label block mb-1" htmlFor="change-password-current">Current password</label>
             <input
+              id="change-password-current"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="uber-input w-full"
+              autoComplete="current-password"
+              required
+            />
+          </div>
+          <div>
+            <label className="uber-label block mb-1" htmlFor="change-password-new">New password</label>
+            <input
+              id="change-password-new"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -119,8 +138,9 @@ export function ChangePasswordPrompt({
             />
           </div>
           <div>
-            <label className="uber-label block mb-1">Confirm new password</label>
+            <label className="uber-label block mb-1" htmlFor="change-password-confirm">Confirm new password</label>
             <input
+              id="change-password-confirm"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

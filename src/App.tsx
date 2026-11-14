@@ -4310,7 +4310,7 @@ export default function App() {
     authSignupPick,
   ]);
 
-  const handleChangeAccountPassword = async (newPassword: string) => {
+  const handleChangeAccountPassword = async (newPassword: string, currentPassword?: string) => {
     if (!currentUser) return;
     if (newPassword === STAFF_PROVISIONED_DEFAULT_PASSWORD) {
       throw new Error('Choose a password different from the default staff-assigned password.');
@@ -4321,7 +4321,7 @@ export default function App() {
 
     if (isDbConnected) {
       // Server updates the login hash; plaintext passwords are never stored.
-      const changed = await supabase.auth.changePassword(newPassword);
+      const changed = await supabase.auth.changePassword(newPassword, currentPassword);
       if (changed.error) throw new Error(changed.error.message);
     }
 
