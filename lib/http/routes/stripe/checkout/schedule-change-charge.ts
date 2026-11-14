@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const expectedCents = Math.round(Number(job.schedule_change_extra_amount ?? 0) * 100);
-      if (expectedCents > 0 && amountCents !== expectedCents) {
+      if (amountCents !== expectedCents) {
         return res.status(400).json({ error: 'Amount does not match the schedule extension due' });
       }
     }

@@ -33,7 +33,7 @@ describe('createBookingCheckoutSession', () => {
               return { data: { payment_stripe_enabled: true }, error: null };
             }
             if (table === 'security_requests') {
-              return { data: { payment_status: 'unpaid', status: 'open' }, error: null };
+              return { data: { payment_status: 'unpaid', status: 'open', duration_hours: 5, hourly_rate: 50, guards_needed: 1 }, error: null };
             }
             return { data: null, error: null };
           },
@@ -61,5 +61,30 @@ describe('createBookingCheckoutSession', () => {
       (createPayload?.metadata as Record<string, string> | undefined)?.checkout_type,
       'job_payment'
     );
+  });
+
+  it('refuses an amount that does not match the stored job price', async () => {
+    const stripe = { checkout: { sessions: { create: async () => ({ id: 'cs_x', url: 'u' }) } } } as unknown as Stripe;
+    const db = {
+      from(table: string) {
+        const chain = {
+          select: () => chain,
+          eq: () => chain,
+          async maybeSingle() {
+            if (table === 'security_requests') {
+              return { data: { payment_status: 'unpaid', status: 'open', duration_hours: 4, hourly_rate: 40, guards_needed: 1 }, error: null };
+            }
+            return { data: null, error: null };
+          },
+          insert: () => Promise.resolve({ data: null, error: null }),
+        };
+        return chain;
+      },
+    } as unknown as AppDb;
+    const result = await createBookingCheckoutSession(stripe, db, {
+      jobId: 'job-1', clientEmail: 'c@example.com', amountCents: 50,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(!result.ok && result.status, 400);
   });
 });

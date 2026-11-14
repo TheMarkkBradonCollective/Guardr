@@ -10,5 +10,5 @@
     "sha256": "",
     "releaseNotes": "Firebase Cloud Messaging enabled for Guardr and Messenger Android builds (guardr-tmbc). Native push registers on launch when permission is granted; Worker reads FCM_SERVICE_ACCOUNT_JSON at runtime."
   },
-  "updatedAt": "2026-11-10T03:11:03.411Z"
+  "updatedAt": "2026-11-14T22:26:04.658Z"
 }

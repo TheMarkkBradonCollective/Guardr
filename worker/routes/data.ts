@@ -11,7 +11,10 @@ import {
   type Filter,
   type Operation,
 } from '../security/dataPolicy.ts';
-import { authorizeJobUpdate, clientInitialJobStatus } from '../security/jobPolicy.ts';
+import { authorizeJobUpdate, clientInitialJobStatus, clientJobEstimatedPayout } from '../security/jobPolicy.ts';
+import { staffWriteDenial, staffRank } from '../security/staffRules.ts';
+import { hashPassword } from '../../src/lib/auth/passwordHash.ts';
+import { EMAIL_RE } from '../security/signupProfile.ts';
 import {
   buildServerInvoice,
   invoicedJobIds,
@@ -19,6 +22,7 @@ import {
   needsSelfOnlyFilter,
   scopeJobRows,
   scopeProfileRows,
+  scopeSharedRows,
   stampAuditRows,
   type JobForInvoice,
 } from '../security/rowRules.ts';
@@ -33,6 +37,22 @@ type QueryBody = {
 };
 
 export { ALLOWED_TABLES };
+
+/** Non-staff reads of these tables are scoped on whole rows, then projected to the asked columns. */
+const SCOPED_PROJECT_TABLES = new Set(['job_chat_messages', 'support_messages', 'job_locations', 'certifications']);
+/** Tables whose staff-created rows get a login (users row) when the app sends a provisioned password. */
+const PROVISION_LOGIN_TABLES: Record<string, 'guard' | 'client' | 'staff'> = { guards: 'guard', clients: 'client', staff: 'staff' };
+
+function projectRows(data: unknown, cols: string[] | null): unknown {
+  if (!cols || !Array.isArray(data)) return data;
+  return (data as Record<string, unknown>[]).map((r) => Object.fromEntries(cols.filter((k) => k in r).map((k) => [k, r[k]])));
+}
+
+function parseColumnList(columns: string | undefined): string[] | null {
+  if (!columns || columns.trim() === '*') return null;
+  const cols = columns.split(',').map((c) => c.trim());
+  return cols.every((c) => /^[a-z_][a-z0-9_]*$/.test(c)) ? cols : null;
+}
 
 /** Constraint / bad-value errors are the caller's fault: answer 400, not 500. */
 export function isDataError(err: { message?: string; code?: unknown }): boolean {
@@ -79,6 +99,18 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       body.payload = Array.isArray(body.payload) ? stamped : stamped[0];
     }
 
+    // Staff creating a guard/client/staff account send the provisioned password; planQuery strips
+    // it from the row, so remember it here and create the login (hash only) after the insert.
+    const provisions: Array<{ id: string; email: string; password: string; mustChange: boolean }> = [];
+    if (staff && operation === 'insert' && PROVISION_LOGIN_TABLES[table] && body.payload) {
+      const rows = (Array.isArray(body.payload) ? body.payload : [body.payload]) as Record<string, unknown>[];
+      for (const r of rows) {
+        if (r && typeof r.password === 'string' && r.password.length >= 8 && typeof r.id === 'string' && typeof r.email === 'string') {
+          provisions.push({ id: r.id, email: r.email.trim().toLowerCase(), password: r.password, mustChange: r.must_change_password !== false });
+        }
+      }
+    }
+
     // Keep the caller's original payload for the job-transition check (planQuery strips some columns).
     const plan = planQuery(identity, table, operation, filters, body.payload, body.upsertConflict);
     if (plan.ok === false) return c.json({ data: null, error: { message: plan.error } }, plan.status);
@@ -87,7 +119,7 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       return c.json({ data: [], error: null });
     }
 
-    const db = createNeonDatabase(c.env.DATABASE_URL);
+    const db = createNeonDatabase(c.env.DATABASE_URL, { numericAsNumber: true });
     const failed = (err?: { message?: string; code?: unknown } | null) => {
       if (err) console.warn('data query failed', table, operation, err.code, err.message);
       if (err && isDataError(err)) return c.json({ data: null, error: { message: 'Invalid or duplicate data' } }, 400);
@@ -105,10 +137,46 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
     }
     // Scoping needs the ownership columns, so read whole rows and project afterwards.
     let projectCols: string[] | null = null;
-    if (jobRead && body.columns && body.columns.trim() !== '*') {
-      const cols = body.columns.split(',').map((c) => c.trim());
-      if (cols.every((c) => /^[a-z_][a-z0-9_]*$/.test(c))) projectCols = cols;
+    const sharedRead = !staff && operation === 'select' && SCOPED_PROJECT_TABLES.has(table);
+    if ((jobRead || sharedRead) && body.columns && body.columns.trim() !== '*') {
+      const cols = parseColumnList(body.columns);
+      if (!cols) return deny('Invalid column', 400);
+      projectCols = cols;
       body.columns = '*';
+    }
+
+    // Job chat and support messages: only members of the thread / owner of the ticket.
+    if (!staff && operation !== 'select' && operation !== 'delete' && (table === 'job_chat_messages' || table === 'support_messages')) {
+      const rows = (Array.isArray(plan.payload) ? plan.payload : [plan.payload ?? {}]) as Record<string, unknown>[];
+      const key = table === 'job_chat_messages' ? 'thread_id' : 'ticket_id';
+      const ids = [...new Set(rows.map((r) => String(r[key] ?? '')))];
+      const allowed = table === 'job_chat_messages' ? await myThreadIds(db, identity.profileId) : await myTicketIds(db, identity.profileId);
+      if (allowed === null) return failed();
+      if (ids.some((id) => !allowed.has(id))) return deny('Not allowed');
+    }
+
+    // Staff: each tier may only make the changes its role allows (see staffRules.ts).
+    if (staff && operation !== 'select') {
+      const rows = (operation === 'delete' ? [] : Array.isArray(plan.payload) ? plan.payload : [plan.payload ?? {}]) as Record<string, unknown>[];
+      let existing: Record<string, unknown>[] | null = null;
+      if (operation === 'update' || operation === 'upsert') {
+        let probe = db.from(table).select('*');
+        if (operation === 'update') {
+          for (const f of filters) {
+            if (f.op === 'eq') probe = probe.eq(f.col, f.val);
+            else if (f.op === 'neq') probe = probe.neq(f.col, f.val);
+            else if (f.op === 'in') probe = probe.in(f.col, Array.isArray(f.vals) ? f.vals : []);
+          }
+        } else {
+          const conflict = (body.upsertConflict ?? 'id').split(',')[0].trim();
+          probe = probe.in(conflict, rows.map((r) => r[conflict]).filter((v) => v != null));
+        }
+        const found = await probe;
+        if (found.error) return failed(found.error);
+        existing = (found.data ?? []) as Record<string, unknown>[];
+      }
+      const denial = staffWriteDenial(identity, table, operation, rows, existing);
+      if (denial) return deny(denial);
     }
 
     // Guards' payout invoices: lines and total come from the stored jobs, never from the app.
@@ -170,6 +238,8 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
         row.assigned_guard_id = null;
         row.pending_guard_id = null;
         row.applicants = [];
+        const price = clientJobEstimatedPayout(row);
+        if (price !== null) row.estimated_payout = price;
       }
       plan.payload = Array.isArray(plan.payload) ? rows : rows[0];
     }
@@ -182,6 +252,10 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       const decision = authorizeJobUpdate(identity, old, (plan.payload ?? {}) as Record<string, unknown>);
       if (decision.ok === false) return deny(decision.error);
       plan.payload = decision.patch;
+      if (['hourly_rate', 'duration_hours', 'guards_needed', 'estimated_payout'].some((k) => k in decision.patch)) {
+        const price = clientJobEstimatedPayout({ ...old, ...decision.patch });
+        if (price !== null && identity.platformRole === 'client') decision.patch.estimated_payout = price;
+      }
       plan.ownerOr = null; // authorizeJobUpdate already checked this row
     }
 
@@ -251,7 +325,19 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       console.error('data query failed', table, operation, code, result.error.message);
       return c.json({ data: null, error: { message: 'Query failed' } }, 500);
     }
+    if (provisions.length && staffRank(identity) >= 3) {
+      await provisionLogins(db, PROVISION_LOGIN_TABLES[table], table, provisions);
+    }
     let data = scopeProfileRows(table, identity, redactRows(result.data));
+    if (sharedRead) {
+      const ctx = {
+        threadIds: table === 'job_chat_messages' ? (await myThreadIds(db, identity.profileId)) ?? new Set<string>() : undefined,
+        ticketIds: table === 'support_messages' ? (await myTicketIds(db, identity.profileId)) ?? new Set<string>() : undefined,
+      };
+      data = projectRows(scopeSharedRows(table, identity, data, ctx), projectCols);
+    } else if (!staff && operation === 'select') {
+      data = scopeSharedRows(table, identity, data);
+    }
     if (!staff && table === 'security_requests') {
       const slots = identity.profileKind === 'guard'
         ? await db.from('job_guard_slots').select('job_id, status').eq('guard_id', identity.profileId)
@@ -262,11 +348,53 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
           .map((r) => String(r.job_id))
       );
       data = scopeJobRows(identity, data, { slotJobIds });
-      if (projectCols && Array.isArray(data)) {
-        const keep = projectCols;
-        data = (data as Record<string, unknown>[]).map((r) => Object.fromEntries(keep.filter((k) => k in r).map((k) => [k, r[k]])));
-      }
+      data = projectRows(data, projectCols);
     }
     return c.json({ ...result, data });
   });
+}
+
+type Db = ReturnType<typeof createNeonDatabase>;
+
+async function myThreadIds(db: Db, profileId: string): Promise<Set<string> | null> {
+  const res = await db.from('job_chat_threads').select('id').or(`client_id.eq.${profileId},guard_id.eq.${profileId}`);
+  if (res.error) return null;
+  return new Set(((res.data ?? []) as Record<string, unknown>[]).map((r) => String(r.id)));
+}
+
+async function myTicketIds(db: Db, profileId: string): Promise<Set<string> | null> {
+  const res = await db.from('support_tickets').select('id').eq('user_id', profileId);
+  if (res.error) return null;
+  return new Set(((res.data ?? []) as Record<string, unknown>[]).map((r) => String(r.id)));
+}
+
+/**
+ * Create the login for accounts staff just created (the app's "default password" flow).
+ * Only a PBKDF2 hash is stored; an existing login for the email is never replaced.
+ */
+async function provisionLogins(
+  db: Db,
+  kind: 'guard' | 'client' | 'staff',
+  table: string,
+  provisions: Array<{ id: string; email: string; password: string; mustChange: boolean }>
+): Promise<void> {
+  for (const p of provisions) {
+    if (!EMAIL_RE.test(p.email)) continue;
+    try {
+      const created = await db.from(table).select('id, email').eq('id', p.id).maybeSingle();
+      const row = created.data as Record<string, unknown> | null;
+      if (!row || String(row.email ?? '').trim().toLowerCase() !== p.email) continue;
+      const taken = await db.from('users').select('id').eq('email', p.email).maybeSingle();
+      if (taken.error || taken.data) continue;
+      const passwordHash = await hashPassword(p.password);
+      const ins = await db.from('users').insert({ email: p.email, password_hash: passwordHash, profile_kind: kind, profile_id: p.id });
+      if (ins.error) {
+        console.warn('provision login failed', table, ins.error.code);
+        continue;
+      }
+      await db.from(table).update({ password_hash: passwordHash, password: null, must_change_password: p.mustChange }).eq('id', p.id);
+    } catch (err) {
+      console.warn('provision login failed', table, err instanceof Error ? err.message : err);
+    }
+  }
 }

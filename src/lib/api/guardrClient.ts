@@ -309,11 +309,11 @@ export function createGuardrClient() {
         error: null,
       };
     },
-    async changePassword(newPassword: string) {
+    async changePassword(newPassword: string, currentPassword?: string) {
       const res = await fetch(apiUrl('/api/auth/change-password'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({ newPassword, currentPassword }),
       });
       const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!res.ok || !json.ok) return { error: { message: json.error ?? 'Could not change password' } };

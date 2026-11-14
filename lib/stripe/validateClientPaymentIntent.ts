@@ -10,6 +10,15 @@ export type ValidatePaymentInput = {
 
 export type ValidatePaymentResult = { ok: true } | { ok: false; status: number; error: string };
 
+/** Job price in cents: duration_hours x hourly_rate x guards_needed (computeJobBilling). */
+export function jobPriceCents(job: { duration_hours?: unknown; hourly_rate?: unknown; guards_needed?: unknown }): number {
+  const hours = Number(job.duration_hours ?? 0);
+  const rate = Number(job.hourly_rate ?? 0);
+  const guards = Math.max(1, Number(job.guards_needed ?? 1) || 1);
+  if (!Number.isFinite(hours) || !Number.isFinite(rate) || hours <= 0 || rate <= 0) return 0;
+  return Math.round(Math.round(hours * rate * guards * 100) / 100 * 100);
+}
+
 async function assertStripeEnabled(db: AppDb): Promise<ValidatePaymentResult | null> {
   const { data: settings } = await db
     .from('platform_settings')
@@ -62,6 +71,9 @@ export async function validateClientPaymentIntent(
         'assigned_guard_id',
         'tip_payment_status',
         'rating_given',
+        'duration_hours',
+        'hourly_rate',
+        'guards_needed',
       ].join(', ')
     )
     .eq('id', jobId)
@@ -79,6 +91,14 @@ export async function validateClientPaymentIntent(
       if (job.payment_status && job.payment_status !== 'unpaid') {
         return { ok: false, status: 400, error: 'This job already has a payment on file' };
       }
+      // The charge is always the job's price (hours x rate x guards), never an app-chosen amount.
+      const expectedCents = jobPriceCents(job);
+      if (expectedCents < 50) {
+        return { ok: false, status: 400, error: 'This job has no payable price yet' };
+      }
+      if (amountCents !== expectedCents) {
+        return { ok: false, status: 400, error: 'Amount does not match the job price' };
+      }
       return { ok: true };
     }
     case 'overtime': {
@@ -92,7 +112,7 @@ export async function validateClientPaymentIntent(
         return { ok: false, status: 400, error: 'Guard and client must approve overtime before payment' };
       }
       const expectedCents = Math.round(Number(job.overtime_amount ?? 0) * 100);
-      if (expectedCents > 0 && amountCents !== expectedCents) {
+      if (amountCents !== expectedCents) {
         return { ok: false, status: 400, error: 'Amount does not match the overtime balance due' };
       }
       return { ok: true };
@@ -105,7 +125,7 @@ export async function validateClientPaymentIntent(
         return { ok: false, status: 400, error: 'Pending schedule change is incomplete' };
       }
       const expectedCents = Math.round(Number(job.schedule_change_extra_amount ?? 0) * 100);
-      if (expectedCents > 0 && amountCents !== expectedCents) {
+      if (amountCents !== expectedCents) {
         return { ok: false, status: 400, error: 'Amount does not match the schedule extension due' };
       }
       return { ok: true };

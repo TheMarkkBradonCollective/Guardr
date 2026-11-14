@@ -6,7 +6,17 @@ import { verifyAccountPassword } from '../../src/lib/accountPasswords.ts';
 import { createNeonDatabase } from '../../lib/db/neonServerless.ts';
 import { resolvePlatformRole } from '../../lib/accountSessionAuth.ts';
 import { currentRequestIdentity } from '../../lib/auth/requestIdentity.ts';
+import { checkRateLimit, AUTH_RATE_LIMIT } from '../../lib/rateLimit.ts';
 import { buildSignupProfileRow, EMAIL_RE, type SignupBody } from '../security/signupProfile.ts';
+
+/** Wrong-password throttle: 10 tries a minute per email and 30 per IP (per Worker isolate). */
+export const LOGIN_IP_RATE_LIMIT = { windowMs: 60_000, maxRequests: 30 };
+
+export function loginThrottled(email: string, ip: string): boolean {
+  const byEmail = checkRateLimit(`login:email:${email}`, AUTH_RATE_LIMIT);
+  const byIp = checkRateLimit(`login:ip:${ip}`, LOGIN_IP_RATE_LIMIT);
+  return !byEmail.allowed || !byIp.allowed;
+}
 
 function readBearer(header: string | undefined): string | null {
   if (!header?.startsWith('Bearer ')) return null;
@@ -30,6 +40,11 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
     const email = body.email?.trim().toLowerCase();
     const password = body.password ?? '';
     if (!email || !password) return c.json({ error: 'Email and password required' }, 400);
+
+    const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || 'unknown';
+    if (loginThrottled(email, ip)) {
+      return c.json({ error: 'Too many sign-in attempts. Wait a minute and try again.' }, 429);
+    }
 
     const db = createNeonDatabase(c.env.DATABASE_URL);
     const userRow = await db
@@ -154,10 +169,32 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
   app.post('/api/auth/change-password', async (c) => {
     const identity = currentRequestIdentity();
     if (!identity) return c.json({ error: 'Sign in required' }, 401);
-    const body = (await c.req.json<{ newPassword?: string }>().catch(() => ({}))) as { newPassword?: string };
+    const body = (await c.req.json<{ newPassword?: string; currentPassword?: string }>().catch(() => ({}))) as {
+      newPassword?: string;
+      currentPassword?: string;
+    };
     const newPassword = typeof body.newPassword === 'string' ? body.newPassword : '';
     if (newPassword.length < 8) return c.json({ error: 'Password must be at least 8 characters' }, 400);
     const db = createNeonDatabase(c.env.DATABASE_URL);
+    const profileTable =
+      identity.profileKind === 'staff' ? 'staff' : identity.profileKind === 'client' ? 'clients' : 'guards';
+
+    // A stolen session must not be enough to take over the account: the current password is
+    // required, except for accounts still on a provisioned password that must be changed.
+    const profile = await db.from(profileTable).select('must_change_password').eq('id', identity.profileId).maybeSingle();
+    const mustChange = (profile.data as Record<string, unknown> | null)?.must_change_password === true;
+    if (!mustChange) {
+      const currentPassword = typeof body.currentPassword === 'string' ? body.currentPassword : '';
+      const login = await db
+        .from('users')
+        .select('password_hash')
+        .eq('profile_id', identity.profileId)
+        .eq('profile_kind', identity.profileKind)
+        .maybeSingle();
+      const hash = (login.data as Record<string, unknown> | null)?.password_hash;
+      const ok = currentPassword && hash ? await verifyPasswordHash(String(hash), currentPassword) : false;
+      if (!ok) return c.json({ error: 'Current password is incorrect' }, 403);
+    }
     const passwordHash = await hashPassword(newPassword);
     const updated = await db
       .from('users')
