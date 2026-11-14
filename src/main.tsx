@@ -6,6 +6,7 @@ import { initNativeSafeArea } from './lib/platform/nativeSafeArea';
 import { registerNativeInstall } from './lib/platform/installRegistry';
 import App from './App.tsx';
 import { OfflineBanner } from './components/OfflineBanner';
+import { AppErrorBoundary } from './components/states/AppErrorBoundary';
 import { AppMotionProvider } from './components/ui/motion/AppMotion';
 import { AppSnackbarProvider } from './components/ui/AppToast';
 import { AppConfirmHost } from './components/ui/AppConfirm';
@@ -119,7 +120,7 @@ function renderApp(children: React.ReactNode) {
           <BaseUIProvider>
             <AppMotionProvider>
               <AppSnackbarProvider>
-                {children}
+                <AppErrorBoundary>{children}</AppErrorBoundary>
                 <OfflineBanner />
                 <AppConfirmHost />
               </AppSnackbarProvider>

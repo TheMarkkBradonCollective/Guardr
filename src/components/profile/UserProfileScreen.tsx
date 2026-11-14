@@ -660,19 +660,26 @@ function Field({
   type?: string;
   min?: number;
 }) {
+  const inputId = React.useId();
+  const editable = editing && !readOnly && !!onChange;
   return (
-    <div>
-      <label className="uber-label">{label}</label>
-      {editing && !readOnly && onChange ? (
+    <div className="gr-field">
+      {editable ? (
+        <label className="uber-label gr-field-label" htmlFor={inputId}>{label}</label>
+      ) : (
+        <span className="uber-label gr-field-label">{label}</span>
+      )}
+      {editable ? (
         <input
+          id={inputId}
           type={type}
           min={min}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange!(e.target.value)}
           className="uber-input w-full mt-1"
         />
       ) : (
-        <p className="text-sm font-medium mt-1">{value || '—'}</p>
+        <p className="text-sm font-medium mt-1 gr-field-value">{value || '—'}</p>
       )}
     </div>
   );

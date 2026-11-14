@@ -1,1 +1,44 @@
 /* WS-ACC. Signed-in account, profile, settings, support, and downloads. */
+
+/*
+ * Initials avatars. The role theme can repaint --brand-accent-text to the
+ * same value as --brand-primary, which left "MB" black on black. Pin both
+ * sides to the authored accent pair so initials always read.
+ */
+.sfm-shell-avatar,
+.sft-shell-avatar,
+.bg-brand-primary.text-brand-accent-text {
+  background-color: var(--gr-accent) !important;
+  color: var(--gr-accent-ink) !important;
+  border-color: color-mix(in srgb, var(--gr-accent) 20%, transparent) !important;
+}
+
+/* Profile on phones: page gutter and readable label/value rows. */
+body[data-surface='mobile'] .app-profile-screen {
+  padding-inline: var(--gr-space-gutter);
+  box-sizing: border-box;
+}
+/* Read-only and editable profile fields share one rhythm on every surface. */
+.gr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-block: 8px;
+}
+.gr-field + .gr-field {
+  border-top: 1px solid var(--gr-line);
+}
+.gr-field-label {
+  font-size: var(--gr-type-caption);
+  font-weight: 600;
+  color: var(--gr-ink-muted);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.gr-field-value {
+  margin: 0;
+  font-size: var(--gr-type-body);
+  color: var(--gr-ink);
+  overflow-wrap: anywhere;
+}

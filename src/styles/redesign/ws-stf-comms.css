@@ -1,1 +1,59 @@
 /* WS-STF-COMMS. Staff communications, issues, and insights. */
+
+/*
+ * SLA metric cards. Legacy styling only applied inside the retired
+ * uber-app-shell, so the phone and tablet shells rendered a bare list.
+ */
+.staff-sla-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gr-space-grid);
+}
+body[data-surface='tablet'] .staff-sla-metric-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+body[data-surface='desktop'] .staff-sla-metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.staff-sla-metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--gr-line);
+  border-radius: var(--gr-radius-card);
+  background: var(--gr-tile, var(--gr-paper-raised));
+  color: var(--gr-ink);
+}
+.staff-sla-metric-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.staff-sla-metric-card-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+.staff-sla-metric-card-label {
+  font-size: var(--gr-type-caption);
+  font-weight: 600;
+  color: var(--gr-ink-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.staff-sla-metric-card-value {
+  font-size: var(--gr-type-heading);
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.staff-sla-metric-card-sub {
+  font-size: var(--gr-type-caption);
+  color: var(--gr-ink-faint);
+}

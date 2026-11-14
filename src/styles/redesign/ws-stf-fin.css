@@ -1,1 +1,42 @@
-/* WS-STF-FIN. Staff finance, platform, and resources. */
+
+
+/* Service areas: keep cards and the filter strip inside the viewport. */
+body[data-surface='mobile'] .adm-cities-page,
+body[data-surface='tablet'] .adm-cities-page {
+  max-width: 100%;
+  overflow-x: clip;
+}
+body[data-surface='mobile'] .adm-cities-page [role='tablist'],
+body[data-surface='mobile'] .adm-cities-page .list-filter-tabs {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+body[data-surface='mobile'] .adm-cities-page .uber-workbench-table-primary,
+body[data-surface='mobile'] .adm-cities-page li,
+body[data-surface='mobile'] .adm-cities-page article {
+  min-width: 0;
+  max-width: 100%;
+}
+body[data-surface='mobile'] .adm-cities-page select {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Staff pay: wide tables scroll inside their card instead of the page. */
+body[data-surface='tablet'] .staff-compensation-panel table,
+body[data-surface='mobile'] .staff-compensation-panel table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+body[data-surface='tablet'] .staff-compensation-panel,
+body[data-surface='mobile'] .staff-compensation-panel {
+  max-width: 100%;
+  overflow-x: clip;
+}
+/* Service areas list rows: status select stays compact beside the city. */
+body[data-surface='mobile'] .staff-ops-mobile-body .app-list-row > label {
+  flex: none;
+  max-width: 44%;
+}
