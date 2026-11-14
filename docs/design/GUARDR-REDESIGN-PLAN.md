@@ -17,8 +17,8 @@ Companion to [`COMPLETE-PAGE-INVENTORY.md`](./COMPLETE-PAGE-INVENTORY.md), which
 | 6 Android app | Web-side done | this PR: splash is hidden after first paint (was only hidden by LoadingScreen); APK not rebuilt (signing key off box). Orientation (D2) and iOS (D3) still open. |
 | 7 Desktop app | Decision D1 = (c) for now | The website manifest is installable as a desktop PWA (Chrome/Edge). A native wrapper needs an owner decision. |
 | 8 Branding | Done for web | this PR: 1200x630 social card, manifest shortcuts, SW precache no longer lists the four missing role manifests (they were served as HTML). Native icons untouched. |
-| 9 Functional | Partial | Security probes (sectest 1-3) on a Neon test branch; signed-in smoke for founder, guard, client with page-error capture; unit tests. Authenticated Playwright per role is still open. |
-| 10 A11y | Baseline | #1104: focus ring, reduced motion, touch targets, crash boundary. Full contrast/screen-reader pass still open. |
+| 9 Functional | Box pass done | Neon test branch: founder, guard, client sign in with no page errors; all 29 staff sections load at 390 / 834 / 1440 px with no blank screen or page overflow; security probes and unit tests green. #1107 fixed the change-password prompt broken by round 4. Authenticated Playwright in CI per role is still open. |
+| 10 A11y | axe clean on scanned screens | #1104 baseline + this PR: axe-core WCAG 2 A/AA on landing, sign-in and 7 staff sections at 390 / 834 / 1440 px, light and dark: 0 violations (was 55+ contrast nodes on desktop, SLA captions, 2 unfocusable scrollers). `scripts/a11y-scan.mjs`. Manual screen-reader pass and per-page tracker sign-off still open. |
 
 ## 1. Ground rules
 

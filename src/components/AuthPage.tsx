@@ -1101,7 +1101,7 @@ export function AuthPage({
             trailing={authTopbarActions}
           />
           <div className="sft-auth-split">
-            <aside className="sft-auth-editorial">
+            <aside className="sft-auth-editorial" tabIndex={0} aria-label="About Guardr">
               <p className="sft-auth-kicker">{hero.trustLine}</p>
               <h1 className="sft-auth-headline">{hero.headline}</h1>
               <p className="sft-auth-sub">{hero.sub}</p>

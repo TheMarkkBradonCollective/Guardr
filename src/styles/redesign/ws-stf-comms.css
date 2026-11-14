@@ -55,5 +55,5 @@ body[data-surface='desktop'] .staff-sla-metric-grid {
 }
 .staff-sla-metric-card-sub {
   font-size: var(--gr-type-caption);
-  color: var(--gr-ink-faint);
+  color: var(--gr-ink-muted);
 }
