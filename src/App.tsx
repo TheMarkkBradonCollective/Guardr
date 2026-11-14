@@ -2806,8 +2806,8 @@ export default function App() {
           name: g.name,
         });
         return {
-        id: g.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: g.email, badgeNumber: normalizeGuardIndependentContractorNumber(g.badge_number),
-        avatar: g.avatar, phone: g.phone, bio: g.bio,
+        id: g.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: g.email ?? '', badgeNumber: normalizeGuardIndependentContractorNumber(g.badge_number),
+        avatar: g.avatar ?? '', phone: g.phone ?? '', bio: g.bio ?? '',
         headline: g.headline || undefined,
         summary: g.summary || undefined,
         about: g.about || undefined,
@@ -2815,7 +2815,7 @@ export default function App() {
         languages: parseJsonStringArray(g.languages),
         serviceAreas: normalizeGuardServiceAreas(parseJsonStringArray(g.service_areas)),
         specialties: parseJsonStringArray(g.specialties),
-        yearsExperience: g.years_experience ?? undefined,
+        yearsExperience: g.years_experience != null ? Number(g.years_experience) : undefined,
         availabilityNotes: g.availability_notes || undefined,
         armedPreference:
           g.armed_preference === 'armed' || g.armed_preference === 'unarmed' || g.armed_preference === 'both'
@@ -2848,7 +2848,7 @@ export default function App() {
         ),
         backgroundChecked: g.background_checked, verified: g.verified,
         rating: Number(g.rating), jobsCompleted: g.jobs_completed,
-        hourlyRateRequirement: g.hourly_rate_requirement,
+        hourlyRateRequirement: g.hourly_rate_requirement != null ? Number(g.hourly_rate_requirement) : g.hourly_rate_requirement,
         isStaff: false,
         userStatus: getGuardUserStatus({ userStatus: g.user_status, isStaff: false }),
         failedAudits: g.failed_audits ?? 0,
@@ -2971,8 +2971,8 @@ export default function App() {
           name: c.name,
         });
         return {
-        id: c.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: c.email,
-        companyName: c.company_name, phone: c.phone, avatar: c.avatar,
+        id: c.id, name: nameParts.name, firstName: nameParts.firstName, middleName: nameParts.middleName, lastName: nameParts.lastName, email: c.email ?? '',
+        companyName: c.company_name ?? '', phone: c.phone ?? '', avatar: c.avatar ?? '',
         clientType: normalizeClientType(c.client_type),
         totalRequests: c.total_requests || 0,
         approved: c.account_status === 'active' || (c.approved ?? false),
@@ -3108,8 +3108,8 @@ export default function App() {
           shiftAuditViolations: Array.isArray(r.shift_audit_violations)
             ? r.shift_audit_violations
             : [],
-          durationHours: r.duration_hours,
-          hourlyRate: r.hourly_rate,
+          durationHours: Number(r.duration_hours ?? 0),
+          hourlyRate: Number(r.hourly_rate ?? 0),
           scheduledDurationHours: r.scheduled_duration_hours != null ? Number(r.scheduled_duration_hours) : undefined,
           scheduledEstimatedPayout: r.scheduled_estimated_payout != null ? Number(r.scheduled_estimated_payout) : undefined,
           overtimeHours: r.overtime_hours != null ? Number(r.overtime_hours) : undefined,
@@ -3134,13 +3134,13 @@ export default function App() {
           earlyClockOutActualHours: r.early_clock_out_actual_hours != null ? Number(r.early_clock_out_actual_hours) : undefined,
           earlyClockOutRefundAmount: r.early_clock_out_refund_amount != null ? Number(r.early_clock_out_refund_amount) : undefined,
           earlyClockOutRefundStatus: r.early_clock_out_refund_status ?? undefined,
-          guardPay: r.guard_pay ?? computeGuardPay(r.hourly_rate, r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR),
-          platformFeePerHour: r.platform_fee_per_hour ?? LEGACY_PLATFORM_FEE_PER_HOUR,
+          guardPay: r.guard_pay != null ? Number(r.guard_pay) : computeGuardPay(Number(r.hourly_rate ?? 0), r.platform_fee_per_hour != null ? Number(r.platform_fee_per_hour) : LEGACY_PLATFORM_FEE_PER_HOUR),
+          platformFeePerHour: r.platform_fee_per_hour != null ? Number(r.platform_fee_per_hour) : LEGACY_PLATFORM_FEE_PER_HOUR,
           pricingMode: r.pricing_mode === 'open_contract' ? 'open_contract' : 'standard',
           agreementFeeConfig: r.agreement_fee_config ?? undefined,
           openingPriceOffer: r.opening_price_offer ?? undefined,
           priceNegotiations: Array.isArray(r.price_negotiations) ? r.price_negotiations : [],
-          estimatedPayout: r.estimated_payout,
+          estimatedPayout: Number(r.estimated_payout ?? 0),
           status: normalizeJobStatus(r.status),
           assignedGuardId: r.assigned_guard_id,
           openedAt: r.opened_at ?? undefined,
