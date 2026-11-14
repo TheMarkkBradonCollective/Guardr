@@ -6,17 +6,12 @@ import { verifyAccountPassword } from '../../src/lib/accountPasswords.ts';
 import { createNeonDatabase } from '../../lib/db/neonServerless.ts';
 import { resolvePlatformRole } from '../../lib/accountSessionAuth.ts';
 import { currentRequestIdentity } from '../../lib/auth/requestIdentity.ts';
-import { checkRateLimit, AUTH_RATE_LIMIT } from '../../lib/rateLimit.ts';
+import { loginThrottledShared, memoryLoginThrottled } from '../../lib/auth/loginRateLimit.ts';
+import { passwordVersion } from '../../lib/auth/passwordVersion.ts';
 import { buildSignupProfileRow, EMAIL_RE, type SignupBody } from '../security/signupProfile.ts';
 
-/** Wrong-password throttle: 10 tries a minute per email and 30 per IP (per Worker isolate). */
-export const LOGIN_IP_RATE_LIMIT = { windowMs: 60_000, maxRequests: 30 };
-
-export function loginThrottled(email: string, ip: string): boolean {
-  const byEmail = checkRateLimit(`login:email:${email}`, AUTH_RATE_LIMIT);
-  const byIp = checkRateLimit(`login:ip:${ip}`, LOGIN_IP_RATE_LIMIT);
-  return !byEmail.allowed || !byIp.allowed;
-}
+/** Per-instance fallback throttle (the shared Neon counter is used first). */
+export const loginThrottled = memoryLoginThrottled;
 
 function readBearer(header: string | undefined): string | null {
   if (!header?.startsWith('Bearer ')) return null;
@@ -41,12 +36,12 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
     const password = body.password ?? '';
     if (!email || !password) return c.json({ error: 'Email and password required' }, 400);
 
+    const db = createNeonDatabase(c.env.DATABASE_URL);
     const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || 'unknown';
-    if (loginThrottled(email, ip)) {
+    if (await loginThrottledShared(db, email, ip)) {
       return c.json({ error: 'Too many sign-in attempts. Wait a minute and try again.' }, 429);
     }
 
-    const db = createNeonDatabase(c.env.DATABASE_URL);
     const userRow = await db
       .from('users')
       .select('id, email, password_hash, profile_kind, profile_id')
@@ -80,6 +75,7 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
         role: platformRole,
         profileKind: kind,
         profileId,
+        pwv: await passwordVersion(c.env.JWT_SECRET, String(u.password_hash)),
       },
       c.env.JWT_SECRET
     );
@@ -159,7 +155,7 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
 
     const platformRole = profileKind === 'client' ? 'client' : 'guard';
     const token = await signJwtWeb(
-      { sub: profileId, email, role: platformRole, profileKind, profileId },
+      { sub: profileId, email, role: platformRole, profileKind, profileId, pwv: await passwordVersion(c.env.JWT_SECRET, passwordHash) },
       c.env.JWT_SECRET
     );
     return c.json({ token, user: { id: profileId, email, role: platformRole, name: row.name ?? null } }, 201);
@@ -209,7 +205,19 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       .from(table)
       .update({ password_hash: passwordHash, password: null, must_change_password: false })
       .eq('id', identity.profileId);
-    return c.json({ ok: true });
+    // Every older token is now invalid (its pwv no longer matches); hand this device a fresh one.
+    const token = await signJwtWeb(
+      {
+        sub: identity.profileId,
+        email: identity.email,
+        role: identity.platformRole,
+        profileKind: identity.profileKind,
+        profileId: identity.profileId,
+        pwv: await passwordVersion(c.env.JWT_SECRET, passwordHash),
+      },
+      c.env.JWT_SECRET
+    );
+    return c.json({ ok: true, token });
   });
 
   app.get('/api/auth/me', async (c) => {

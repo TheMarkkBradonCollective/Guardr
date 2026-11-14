@@ -8,6 +8,7 @@
  */
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { verifyJwtWeb, type JwtPayload } from './jwt.ts';
+import { passwordVersion, sameVersion } from './passwordVersion.ts';
 import type { SqlDatabase } from '../db/sqlDatabase.ts';
 import {
   resolvePlatformRole,
@@ -50,12 +51,26 @@ const PROFILE_TABLE = { guard: 'guards', client: 'clients', staff: 'staff' } as 
 /** Load the account behind a verified JWT and derive its role from the database. */
 export async function identityFromJwt(
   db: SqlDatabase,
-  payload: JwtPayload
+  payload: JwtPayload,
+  jwtSecret?: string
 ): Promise<RequestIdentity | null> {
   const kind = payload.profileKind;
   if (kind !== 'guard' && kind !== 'client' && kind !== 'staff') return null;
   const profileId = String(payload.profileId ?? payload.sub ?? '');
   if (!profileId) return null;
+
+  // Tokens die when the password changes: pwv must match the login's current hash.
+  if (jwtSecret) {
+    const login = await db
+      .from('users')
+      .select('password_hash')
+      .eq('profile_id', profileId)
+      .eq('profile_kind', kind)
+      .maybeSingle();
+    const hash = (login.data as Record<string, unknown> | null)?.password_hash;
+    if (login.error || typeof hash !== 'string' || !hash) return null;
+    if (!sameVersion(payload.pwv, await passwordVersion(jwtSecret, hash))) return null;
+  }
 
   const { data, error } = await db
     .from(PROFILE_TABLE[kind])
@@ -101,7 +116,7 @@ export async function resolveRequestIdentity(
   if (!token || !jwtSecret) return null;
   const payload = await verifyJwtWeb(token, jwtSecret);
   if (!payload) return null;
-  return identityFromJwt(db, payload);
+  return identityFromJwt(db, payload, jwtSecret);
 }
 
 export function isFounderIdentity(identity: RequestIdentity | null): boolean {

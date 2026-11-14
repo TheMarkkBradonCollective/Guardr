@@ -20,6 +20,7 @@ import {
   invoicedJobIds,
   MARKETPLACE_JOB_COLUMNS,
   needsSelfOnlyFilter,
+  privateFilterOwnerOr,
   scopeJobRows,
   scopeProfileRows,
   scopeSharedRows,
@@ -39,7 +40,7 @@ type QueryBody = {
 export { ALLOWED_TABLES };
 
 /** Non-staff reads of these tables are scoped on whole rows, then projected to the asked columns. */
-const SCOPED_PROJECT_TABLES = new Set(['job_chat_messages', 'support_messages', 'job_locations', 'certifications']);
+const SCOPED_PROJECT_TABLES = new Set(['job_chat_messages', 'support_messages', 'job_locations', 'certifications', 'guard_vehicle_profiles']);
 /** Tables whose staff-created rows get a login (users row) when the app sends a provisioned password. */
 const PROVISION_LOGIN_TABLES: Record<string, 'guard' | 'client' | 'staff'> = { guards: 'guard', clients: 'client', staff: 'staff' };
 
@@ -129,6 +130,11 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
 
     if (operation === 'select' && needsSelfOnlyFilter(table, identity, filters.map((f) => f.col))) {
       plan.ownerOr = `id.eq.${identity.profileId}`;
+    }
+    // Shared tables: filtering on a private column (plate, gate code, scan) only matches your own rows.
+    if (operation === 'select') {
+      const own = privateFilterOwnerOr(table, identity, filters.map((f) => f.col));
+      if (own) plan.ownerOr = own;
     }
     // Jobs: filtering on a private column only matches your own jobs.
     const jobRead = !staff && table === 'security_requests' && operation === 'select';
@@ -333,6 +339,7 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       const ctx = {
         threadIds: table === 'job_chat_messages' ? (await myThreadIds(db, identity.profileId)) ?? new Set<string>() : undefined,
         ticketIds: table === 'support_messages' ? (await myTicketIds(db, identity.profileId)) ?? new Set<string>() : undefined,
+        vehicleGuardIds: table === 'guard_vehicle_profiles' ? await myJobPartnerGuardIds(db, identity) : undefined,
       };
       data = projectRows(scopeSharedRows(table, identity, data, ctx), projectCols);
     } else if (!staff && operation === 'select') {
@@ -360,6 +367,47 @@ async function myThreadIds(db: Db, profileId: string): Promise<Set<string> | nul
   const res = await db.from('job_chat_threads').select('id').or(`client_id.eq.${profileId},guard_id.eq.${profileId}`);
   if (res.error) return null;
   return new Set(((res.data ?? []) as Record<string, unknown>[]).map((r) => String(r.id)));
+}
+
+/** Job statuses where the client and crew need to recognise the guard's vehicle. */
+const ACTIVE_JOB_STATUSES = ['accepted', 'in-progress', 'in_progress'];
+const INACTIVE_SLOT_STATUSES = new Set(['declined', 'removed', 'expired', 'cancelled']);
+
+/** Guards whose vehicle the caller may see: guards on the caller's active jobs (as client or crew mate). */
+async function myJobPartnerGuardIds(db: Db, identity: { profileId: string; profileKind: string }): Promise<Set<string>> {
+  const out = new Set<string>();
+  const self = identity.profileId;
+  let jobIds: string[] = [];
+  const jobs =
+    identity.profileKind === 'client'
+      ? await db.from('security_requests').select('id, assigned_guard_id, status').eq('client_id', self).in('status', ACTIVE_JOB_STATUSES)
+      : await db.from('security_requests').select('id, assigned_guard_id, status').eq('assigned_guard_id', self).in('status', ACTIVE_JOB_STATUSES);
+  for (const r of ((jobs.data ?? []) as Record<string, unknown>[])) {
+    jobIds.push(String(r.id));
+    if (r.assigned_guard_id) out.add(String(r.assigned_guard_id));
+  }
+  if (identity.profileKind === 'guard') {
+    const mine = await db.from('job_guard_slots').select('job_id, status').eq('guard_id', self);
+    const slotJobs = ((mine.data ?? []) as Record<string, unknown>[])
+      .filter((r) => !INACTIVE_SLOT_STATUSES.has(String(r.status ?? '')))
+      .map((r) => String(r.job_id));
+    if (slotJobs.length) {
+      const active = await db.from('security_requests').select('id, assigned_guard_id').in('id', slotJobs).in('status', ACTIVE_JOB_STATUSES);
+      for (const r of ((active.data ?? []) as Record<string, unknown>[])) {
+        jobIds.push(String(r.id));
+        if (r.assigned_guard_id) out.add(String(r.assigned_guard_id));
+      }
+    }
+  }
+  jobIds = [...new Set(jobIds)];
+  if (jobIds.length) {
+    const crew = await db.from('job_guard_slots').select('guard_id, status').in('job_id', jobIds);
+    for (const r of ((crew.data ?? []) as Record<string, unknown>[])) {
+      if (!INACTIVE_SLOT_STATUSES.has(String(r.status ?? '')) && r.guard_id) out.add(String(r.guard_id));
+    }
+  }
+  out.delete(self);
+  return out;
 }
 
 async function myTicketIds(db: Db, profileId: string): Promise<Set<string> | null> {
