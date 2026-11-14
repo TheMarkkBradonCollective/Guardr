@@ -2776,6 +2776,12 @@ export default function App() {
         console.warn('Platform cities load (run migration if missing):', platformCitiesErr);
       }
       if (guardsErr && clientsErr) {
+        const hasSession =
+          typeof localStorage !== 'undefined' && Boolean(localStorage.getItem('guardr_api_jwt'));
+        if (!hasSession) {
+          // Signed-out visitors cannot read rosters; that is not an expired session.
+          return;
+        }
         console.error('Supabase load errors:', { guardsErr, clientsErr });
         setIsDbConnected(false);
         setDataLoadIssue(userFacingError(guardsErr, 'Could not load Guardr. Check your connection and try again.'));
