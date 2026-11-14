@@ -1,6 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { createWorkerApp, type WorkerEnv } from './app.ts';
+import { ensureVapidPublicKey } from '../lib/push/vapidDerive.ts';
 
 const app = createWorkerApp();
 
@@ -26,6 +27,7 @@ function applyEnv(env: WorkerEnv): void {
 
 async function runCron(path: string, env: WorkerEnv): Promise<void> {
   applyEnv(env);
+  await ensureVapidPublicKey();
   const secret = env.CRON_SECRET ?? '';
   const request = new Request(`https://guardr.internal${path}`, {
     headers: secret ? { authorization: `Bearer ${secret}` } : {},
@@ -36,6 +38,7 @@ async function runCron(path: string, env: WorkerEnv): Promise<void> {
 export default {
   async fetch(request: Request, env: WorkerEnv, _ctx: ExecutionContext): Promise<Response> {
     applyEnv(env);
+    await ensureVapidPublicKey();
     const url = new URL(request.url);
 
     if (url.pathname === '/download/guardr.apk' || url.pathname === '/guardr.apk') {

@@ -1,9 +1,11 @@
 import type { Hono } from 'hono';
 import type { WorkerEnv } from '../app.ts';
 import { SYNC_TABLES } from '../../src/lib/useSupabaseRealtime.ts';
+import { currentRequestIdentity } from '../../lib/auth/requestIdentity.ts';
 
 export function registerWorkerSyncRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
   app.get('/api/sync/poll', async (c) => {
+    if (!currentRequestIdentity()) return c.json({ error: 'Sign in required' }, 401);
     const since = c.req.query('since');
     const sinceTs = since ? Date.parse(since) : 0;
     if (!Number.isFinite(sinceTs)) return c.json({ error: 'Invalid since' }, 400);

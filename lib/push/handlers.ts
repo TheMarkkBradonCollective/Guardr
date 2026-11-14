@@ -1,4 +1,5 @@
 import type { AppDb } from '../db/adminClient.ts';
+import { vapidDeriveProblem } from './vapidDerive.ts';
 import { isValidPushSubscriptionPayload } from './fcm';
 import { isPushConfigured } from './config';
 import { checkInEscalationDedupKey, claimNotificationDedup, missedCheckinDedupKey } from './dedup';
@@ -14,7 +15,10 @@ import type { PushSendPayload, PushSubscriptionPayload, SessionCredentials } fro
 export function handlePushVapidPublicKey() {
   const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
   if (!publicKey) {
-    return { status: 503, body: { error: 'VAPID public key is not configured' } };
+    return {
+      status: 503,
+      body: { error: 'VAPID public key is not configured', ...(vapidDeriveProblem ? { reason: vapidDeriveProblem } : {}) },
+    };
   }
   return { status: 200, body: { publicKey } };
 }

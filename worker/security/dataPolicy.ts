@@ -38,7 +38,7 @@ const ACCOUNT_CONTROL = [
   'is_staff', 'staff_role', 'side_role', 'user_status', 'verified', 'background_checked',
   'id_verification_status', 'guard_card_status', 'stripe_connect_account_id',
   'migrated_to_staff_at', 'approved', 'account_status', 'email', 'personal_email',
-  'rating', 'jobs_completed',
+  'rating', 'jobs_completed', 'trusted', 'failed_audits', 'credential_expiry_restricted',
 ];
 
 const JOB_MONEY = [
@@ -74,7 +74,7 @@ export const TABLE_POLICIES: Record<string, TablePolicy> = {
   payments: { read: 'none', write: 'none' },
   guard_payout_invoices: {
     read: 'own', write: 'own', owner: G('guard_id'), protectedCols: ['status', 'resolved_at'],
-    initialValues: { status: ['pending'] },
+    initialValues: { status: ['open'] },
   },
   support_tickets: { read: 'own', write: 'own', owner: { guard: ['user_id'], client: ['user_id'] } },
   support_messages: { read: 'all', write: 'own', owner: { guard: ['sender_id'], client: ['sender_id'] } },
