@@ -2,6 +2,24 @@
 
 Companion to [`COMPLETE-PAGE-INVENTORY.md`](./COMPLETE-PAGE-INVENTORY.md), which is the source of truth for **what exists**. This document says **how the redesign is organised, in what order, who owns which files, and how each page is tracked to done**. It is derived from code at `main` `1355600b` (PR #1084 merged as `70366f6a`; PR #1085, the black website icon, merged after it). No UI was changed by this audit.
 
+## 0. Progress log
+
+**2026-11-14 (box executor, after security rounds 2-4):**
+
+| Phase | State | Evidence |
+|---|---|---|
+| 1 Audit | Done | #1086 |
+| 2 Foundation | Done | #1088, #1090, #1092, #1093, #1095 |
+| Hotfix | Done | #1102: signed-in white screen (numeric strings + hidden private fields), no "session expired" for signed-out visitors |
+| 3 Phone | Shell-level pass done | #1104: every staff section measured at 390 px; gutters, overflow, metric cards, avatars, profile fields. Page-by-page tracker rows below are still `In progress`. |
+| 4 Tablet | Shell-level pass done | #1104: every staff section measured at 834 px |
+| 5 Desktop | Audited | #1104: staff sections at 1440 px, no overflow |
+| 6 Android app | Web-side done | this PR: splash is hidden after first paint (was only hidden by LoadingScreen); APK not rebuilt (signing key off box). Orientation (D2) and iOS (D3) still open. |
+| 7 Desktop app | Decision D1 = (c) for now | The website manifest is installable as a desktop PWA (Chrome/Edge). A native wrapper needs an owner decision. |
+| 8 Branding | Done for web | this PR: 1200x630 social card, manifest shortcuts, SW precache no longer lists the four missing role manifests (they were served as HTML). Native icons untouched. |
+| 9 Functional | Partial | Security probes (sectest 1-3) on a Neon test branch; signed-in smoke for founder, guard, client with page-error capture; unit tests. Authenticated Playwright per role is still open. |
+| 10 A11y | Baseline | #1104: focus ring, reduced motion, touch targets, crash boundary. Full contrast/screen-reader pass still open. |
+
 ## 1. Ground rules
 
 1. **A page is Complete only when all of these hold:** implemented on every surface where it is reachable (inventory M/T/D/App columns), functionality verified against the real Worker and a seeded Neon branch, layout verified at the surface's breakpoints, accessibility checklist passed (Phase 10), and its row in section 9 has a link to the evidence (PR, screenshots, test). **Changing a shell, a token or a CSS file does not move any page past "In progress".**

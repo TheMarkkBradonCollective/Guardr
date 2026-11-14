@@ -89,7 +89,7 @@ const versionCode = parts[0] * 100 + (parts[1] || 0) * 10 + (parts[2] || 0);
 const cacheSlug = version.replace(/\./g, '-');
 // Bump when precached brand assets change without an app version bump (the SW cache is
 // cache-first for icons, so a new cache name is what evicts the old files from installed clients).
-const CACHE_ASSET_REV = 'brand-black-icon-1';
+const CACHE_ASSET_REV = 'redesign-2';
 const cacheName = `guardr-cache-v${cacheSlug}-${CACHE_ASSET_REV}`;
 
 const downloadManifest = {
