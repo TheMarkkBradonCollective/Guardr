@@ -88,9 +88,10 @@ if (!versionNameMatch) {
   fail(`build.gradle versionName ${versionNameMatch[1]} !== package.json ${webVersion}`);
 }
 
+// Same formula as scripts/generate-download-version.mjs: major*1000 + minor*100 + patch (1.1.1 → 1101).
 const expectedCode =
-  webVersion.split('.').map((p) => Number.parseInt(p, 10) || 0)[0] * 100 +
-  (Number.parseInt(webVersion.split('.')[1], 10) || 0) * 10 +
+  webVersion.split('.').map((p) => Number.parseInt(p, 10) || 0)[0] * 1000 +
+  (Number.parseInt(webVersion.split('.')[1], 10) || 0) * 100 +
   (Number.parseInt(webVersion.split('.')[2], 10) || 0);
 
 if (versionCodeMatch && Number.parseInt(versionCodeMatch[1], 10) !== expectedCode) {
