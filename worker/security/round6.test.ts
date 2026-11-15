@@ -156,3 +156,20 @@ describe('server-side recipient inbox', () => {
     assert.equal(rows[0].id, `evt-guard_en_route-j1-client-1-${Math.floor(now.getTime() / 60000)}`);
   });
 });
+
+describe('staff self-approval', () => {
+  const mod = staff('Moderator', 'staff-mod');
+  const director = staff('Director', 'staff-dir');
+  const founderId = staff('Founder', 'staff-f');
+  const own = [{ id: 'staff-mod', id_verification_status: 'not_submitted', user_status: 'active' }];
+  it('lets staff submit their own ID but not verify it', async () => {
+    const { staffWriteDenial } = await import('./staffRules.ts');
+    assert.equal(staffWriteDenial(mod, 'staff', 'update', [{ id_verification_status: 'pending', id_front_url: '/f' }], own), null);
+    assert.ok(staffWriteDenial(mod, 'staff', 'update', [{ id_verification_status: 'verified' }], own));
+    const dirOwn = [{ id: 'staff-dir', id_verification_status: 'pending' }];
+    assert.ok(staffWriteDenial(director, 'staff', 'update', [{ id_verification_status: 'verified' }], dirOwn));
+    assert.equal(staffWriteDenial(director, 'staff', 'update', [{ id_verification_status: 'verified' }], own), null);
+    assert.equal(staffWriteDenial(founderId, 'staff', 'update', [{ id_verification_status: 'verified' }], [{ id: 'staff-f' }]), null);
+    assert.ok(staffWriteDenial(staff('Administrator', 'staff-adm'), 'staff', 'update', [{ user_status: 'suspended' }], own));
+  });
+});

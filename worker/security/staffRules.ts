@@ -144,6 +144,18 @@ export function staffWriteDenial(
         return 'Approving accounts requires Moderator or above';
       }
     }
+    if (table === 'staff' && operation !== 'insert') {
+      // Submitting your own ID for review is fine; approving or verifying a staff account
+      // (including your own) is a Director decision, and nobody but the Founder self-approves.
+      const approval = changed.filter(
+        (k) => ACCOUNT_APPROVAL_COLS.has(k) && !(k === 'id_verification_status' && row[k] === 'pending')
+      );
+      if (approval.length) {
+        const own = (existing ?? []).some((r) => r.id === identity.profileId);
+        if (own && identity.staffRole !== 'Founder') return 'Staff cannot approve or verify their own account';
+        if (rank < DIRECTOR) return 'Approving or verifying staff accounts requires Director or above';
+      }
+    }
   }
   return null;
 }
