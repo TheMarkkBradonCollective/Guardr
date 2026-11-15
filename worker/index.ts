@@ -32,7 +32,13 @@ async function runCron(path: string, env: WorkerEnv): Promise<void> {
   const request = new Request(`https://guardr.internal${path}`, {
     headers: secret ? { authorization: `Bearer ${secret}` } : {},
   });
-  await app.fetch(request, env);
+  try {
+    const res = await app.fetch(request, env);
+    // Surface failures in Worker logs; a scheduled run otherwise always looks "ok".
+    if (!res.ok) console.error('cron failed', path, res.status, (await res.text().catch(() => '')).slice(0, 300));
+  } catch (err) {
+    console.error('cron threw', path, err instanceof Error ? err.message : err);
+  }
 }
 
 export default {

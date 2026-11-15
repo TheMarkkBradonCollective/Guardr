@@ -40,6 +40,48 @@ const CLIENT_OVERTIME_MOVES: Record<string, string[]> = {
 const CLIENT_CANCEL_FROM = new Set(['draft', 'pending-review', 'open', 'accepted', 'in-progress']);
 const MAX_OVERTIME_HOURS = 12;
 
+const PAID_STATES = new Set(['paid', 'held', 'released']);
+
+/**
+ * True when a guard's patch on a job that is not yet theirs takes on work: applying,
+ * holding it as pending, or accepting a direct/replacement offer. Withdrawing never counts.
+ */
+export function guardPatchTakesWork(old: Row, patch: Row, self: string): boolean {
+  if (old.assigned_guard_id === self) return false;
+  if (patch.assigned_guard_id === self || patch.pending_guard_id === self) return true;
+  if ('applicants' in patch) {
+    const before = new Set(asList(old.applicants));
+    return asList(patch.applicants).some((id) => id === self && !before.has(id));
+  }
+  return false;
+}
+
+/** Only an active guard account (or a staff member working as a guard) may take on jobs. */
+export function guardMayTakeWork(guard: { user_status?: unknown; is_staff?: unknown } | null | undefined): boolean {
+  if (!guard) return false;
+  if (guard.is_staff === true) return true;
+  return guard.user_status === 'active';
+}
+
+/**
+ * A client may move or shorten a paid shift, but a longer shift costs more and needs staff
+ * approval (the app files it as a pending schedule change). Returns an error or null.
+ */
+export function paidShiftLengthened(old: Row, patch: Row): string | null {
+  if (!PAID_STATES.has(String(old.payment_status ?? ''))) return null;
+  if (!('duration_hours' in patch) && !('start_date' in patch) && !('end_date' in patch)) return null;
+  const paidHours = Number(old.scheduled_duration_hours ?? old.duration_hours) || 0;
+  if (paidHours <= 0) return null;
+  const tooLong = 'Longer shifts on a paid job need staff approval. Request a schedule change instead.';
+  if ('duration_hours' in patch && Number(patch.duration_hours) > paidHours + 0.01) return tooLong;
+  if ('start_date' in patch || 'end_date' in patch) {
+    const start = Date.parse(String(patch.start_date ?? old.start_date ?? ''));
+    const end = Date.parse(String(patch.end_date ?? old.end_date ?? ''));
+    if (Number.isFinite(start) && Number.isFinite(end) && (end - start) / 3_600_000 > paidHours + 0.01) return tooLong;
+  }
+  return null;
+}
+
 function roundMoney(v: number): number {
   return Math.round(v * 100) / 100;
 }
@@ -169,6 +211,8 @@ export function authorizeJobUpdate(identity: RequestIdentity, old: Row, input: R
       }
       patch[k] = v;
     }
+    const longer = paidShiftLengthened(old, patch);
+    if (longer) return { ok: false, error: longer };
     if ('status' in input && input.status !== oldStatus) {
       const next = String(input.status);
       const assigning = typeof patch.assigned_guard_id === 'string' && candidates.has(patch.assigned_guard_id);

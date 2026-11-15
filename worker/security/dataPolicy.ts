@@ -27,6 +27,11 @@ export interface TablePolicy {
   protectedCols?: string[];
   /** Values a non-staff caller may give a protected column when creating a row. */
   initialValues?: Record<string, unknown[]>;
+  /**
+   * Values a non-staff owner may set on a protected column of an existing row: sending a
+   * credential back for review ("pending"). These only ever lower trust, never grant it.
+   */
+  resubmitValues?: Record<string, unknown[]>;
   /** Non-staff guards may also update rows matching these column=value pairs (e.g. open jobs). */
   guardSharedUpdate?: Array<[string, string]>;
 }
@@ -55,12 +60,17 @@ const G = (...cols: string[]) => ({ guard: cols });
 const C = (...cols: string[]) => ({ client: cols });
 
 export const TABLE_POLICIES: Record<string, TablePolicy> = {
-  guards: { read: 'all', write: 'own', owner: G('id'), protectedCols: ACCOUNT_CONTROL },
+  guards: {
+    read: 'all', write: 'own', owner: G('id'), protectedCols: ACCOUNT_CONTROL,
+    // Submitting / re-submitting a government ID for staff review.
+    resubmitValues: { id_verification_status: ['pending'] },
+  },
   staff: { read: 'all', write: 'none' },
   clients: { read: 'all', write: 'own', owner: C('id'), protectedCols: ACCOUNT_CONTROL },
   certifications: {
     read: 'all', write: 'own', deleteOwn: true, owner: G('guard_id'), protectedCols: REVIEW_STATUS,
     initialValues: { status: ['pending', 'submitted', 'pending_review'] },
+    resubmitValues: { status: ['pending'] },
   },
   experience: { read: 'all', write: 'own', deleteOwn: true, owner: G('guard_id') },
   education: { read: 'all', write: 'own', deleteOwn: true, owner: G('guard_id') },
@@ -86,7 +96,9 @@ export const TABLE_POLICIES: Record<string, TablePolicy> = {
   client_messages: { read: 'all', write: 'own', deleteOwn: true, owner: C('sender_id') },
   message_reactions: { read: 'all', write: 'own', deleteOwn: true, owner: { guard: ['user_id'], client: ['user_id'] } },
   chat_read_receipts: { read: 'own', write: 'own', owner: { guard: ['user_id'], client: ['user_id'] } },
-  user_notifications: { read: 'own', write: 'own', owner: { guard: ['user_id', 'guard_id'], client: ['user_id'] } },
+  // Only the inbox owner writes their rows (mark read, self-notes). Notifications for other
+  // people are stored by the push events route on the server.
+  user_notifications: { read: 'own', write: 'own', owner: { guard: ['user_id'], client: ['user_id'] } },
   audit_log: { read: 'none', write: 'own', owner: { guard: ['actor_id'], client: ['actor_id'] } },
   guard_availability: { read: 'all', write: 'own', deleteOwn: true, owner: G('guard_id') },
   guard_availability_date_overrides: { read: 'all', write: 'own', deleteOwn: true, owner: G('guard_id') },
@@ -105,6 +117,8 @@ export const TABLE_POLICIES: Record<string, TablePolicy> = {
   guard_insurance_policies: {
     read: 'own', write: 'own', owner: G('guard_id'), protectedCols: REVIEW_STATUS,
     initialValues: { status: ['pending', 'submitted', 'pending_review'] },
+
+    resubmitValues: { status: ['pending'] },
   },
   notification_preferences: { read: 'own', write: 'own', owner: { guard: ['user_id'], client: ['user_id'] } },
   staff_time_entries: { read: 'none', write: 'none' },
@@ -118,10 +132,13 @@ export const TABLE_POLICIES: Record<string, TablePolicy> = {
   guard_vehicle_insurance_policies: {
     read: 'own', write: 'own', owner: G('guard_id'), protectedCols: REVIEW_STATUS,
     initialValues: { status: ['pending', 'submitted', 'pending_review'] },
+
+    resubmitValues: { status: ['pending'] },
   },
   guard_vehicle_profiles: {
     read: 'all', write: 'own', owner: G('guard_id'), protectedCols: REVIEW_STATUS,
-    initialValues: { status: ['pending', 'submitted', 'pending_review'] },
+    initialValues: { status: ['draft', 'pending', 'submitted', 'pending_review'] },
+    resubmitValues: { status: ['draft', 'pending'] },
   },
   staff_compensation_payouts: { read: 'none', write: 'none' },
 };
@@ -211,6 +228,8 @@ function sanitizeRows(
       const creating = operation === 'insert' || operation === 'upsert';
       const initial = policy.initialValues?.[key];
       if (creating && initial && initial.includes(row[key])) continue;
+      const resubmit = policy.resubmitValues?.[key];
+      if (resubmit && resubmit.includes(row[key])) continue;
       // Re-sending your own id in an owner column is fine (e.g. client_id on your own job).
       if (row[key] === identity.profileId && ownerColumns(policy, identity).includes(key)) continue;
       // Server/staff-only column: silently ignore the client's value.

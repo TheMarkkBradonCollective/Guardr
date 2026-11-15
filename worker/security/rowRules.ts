@@ -146,6 +146,8 @@ export const MARKETPLACE_JOB_COLUMNS = new Set([
   'opened_at', 'pricing_mode', 'opening_price_offer', 'agreement_fee_config', 'job_location_id',
   'assigned_guard_id', 'applicants', 'price_negotiations', 'latitude', 'longitude', 'location',
   'address', 'platform_fee_per_hour', 'replacement_request',
+  // Guards only see marketplace jobs once the client has paid, so the app needs this flag.
+  'payment_status',
 ]);
 
 /** "123 Main St, Sacramento, CA 95814" -> "Sacramento, CA". */

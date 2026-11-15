@@ -21,6 +21,7 @@ import { guardCanStaffActivateAccount } from '../../lib/guardAccountActivation';
 import { AppButton } from '../ui/AppButton';
 import { StaffAccountAccessSection } from './StaffAccountAccessSection';
 import { userFacingError } from '../../lib/userFacingError';
+import { StaffResetPasswordButton } from './StaffResetPasswordButton';
 
 interface StaffGuardAccountControlsProps {
   guard: SecurityGuard;
@@ -186,6 +187,7 @@ export function StaffGuardAccountControls({
   const showsPermissionNote = !canSuspend;
   const hasSecondaryActions =
     Boolean(accessActions) ||
+    canSuspend ||
     React.Children.toArray(children).some(Boolean) ||
     showsPermissionNote;
 
@@ -199,6 +201,7 @@ export function StaffGuardAccountControls({
         </p>
       )}
       {accessActions}
+      {canSuspend && <StaffResetPasswordButton profileKind="guard" profileId={guard.id} name={guard.name} />}
       {children}
     </StaffAccountAccessSection>
   );

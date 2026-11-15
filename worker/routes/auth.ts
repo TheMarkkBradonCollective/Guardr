@@ -9,6 +9,12 @@ import { currentRequestIdentity } from '../../lib/auth/requestIdentity.ts';
 import { loginThrottledShared, memoryLoginThrottled } from '../../lib/auth/loginRateLimit.ts';
 import { passwordVersion } from '../../lib/auth/passwordVersion.ts';
 import { buildSignupProfileRow, EMAIL_RE, type SignupBody } from '../security/signupProfile.ts';
+import {
+  generateTemporaryPassword,
+  passwordResetDenied,
+  resetTargetTable,
+  type ResetTargetKind,
+} from '../security/passwordReset.ts';
 
 /** Per-instance fallback throttle (the shared Neon counter is used first). */
 export const loginThrottled = memoryLoginThrottled;
@@ -136,7 +142,7 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
     const inserted = await db.from(table).insert(row);
     if (inserted.error) {
       console.error('signup profile insert failed', inserted.error.message);
-      if (/not-null|violates check|invalid input/i.test(inserted.error.message)) {
+      if (/not-null|violates check|invalid input|does not exist/i.test(inserted.error.message)) {
         return c.json({ error: 'Some required sign-up details are missing. Please complete the form.' }, 400);
       }
       return c.json({ error: 'Could not create account. This email may already be registered.' }, 409);
@@ -218,6 +224,70 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       c.env.JWT_SECRET
     );
     return c.json({ ok: true, token });
+  });
+
+  /**
+   * Staff (Administrator+) give an account a one-time temporary password. The new password is
+   * returned once to the staff member to pass on; the account must change it at sign-in, and
+   * all of its existing sessions stop working.
+   */
+  app.post('/api/auth/staff-reset-password', async (c) => {
+    const identity = currentRequestIdentity();
+    if (!identity) return c.json({ error: 'Sign in required' }, 401);
+    const body = (await c.req.json<{ profileKind?: string; profileId?: string }>().catch(() => ({}))) as {
+      profileKind?: string;
+      profileId?: string;
+    };
+    const kind = body.profileKind as ResetTargetKind;
+    const id = typeof body.profileId === 'string' ? body.profileId.trim() : '';
+    if (!['guard', 'client', 'staff'].includes(kind) || !id) {
+      return c.json({ error: 'profileKind and profileId are required' }, 400);
+    }
+    const db = createNeonDatabase(c.env.DATABASE_URL);
+    const table = resetTargetTable(kind);
+    const target = await db
+      .from(table)
+      .select(kind === 'staff' ? 'id, email, staff_role' : 'id, email')
+      .eq('id', id)
+      .maybeSingle();
+    const row = target.data as Record<string, unknown> | null;
+    if (target.error || !row) return c.json({ error: 'Account not found' }, 404);
+    const denied = passwordResetDenied(identity, {
+      kind,
+      id,
+      staffRole: kind === 'staff' ? (row.staff_role as string | null) : null,
+    });
+    if (denied) return c.json({ error: denied }, 403);
+
+    const temporaryPassword = generateTemporaryPassword();
+    const passwordHash = await hashPassword(temporaryPassword);
+    const updated = await db
+      .from('users')
+      .update({ password_hash: passwordHash })
+      .eq('profile_id', id)
+      .eq('profile_kind', kind);
+    if (updated.error) return c.json({ error: 'Could not reset password' }, 500);
+    if (!(updated.data ?? []).length) {
+      return c.json({ error: 'This account has no sign-in yet' }, 409);
+    }
+    await db.from(table).update({ password_hash: passwordHash, password: null, must_change_password: true }).eq('id', id);
+    await db
+      .from('audit_log')
+      .insert({
+        id: `audit-pwreset-${crypto.randomUUID()}`,
+        action: 'password_reset',
+        entity_type: kind,
+        entity_id: id,
+        actor_id: identity.profileId,
+        actor_email: identity.email,
+        actor_role: identity.staffRole ?? identity.platformRole,
+        details: { target_kind: kind, target_id: id },
+      })
+      .then(
+        () => undefined,
+        () => undefined
+      );
+    return c.json({ ok: true, temporaryPassword, email: row.email ?? null });
   });
 
   app.get('/api/auth/me', async (c) => {
