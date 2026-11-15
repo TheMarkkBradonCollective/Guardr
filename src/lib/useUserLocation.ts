@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { saveLastKnownLocation } from './mapInitialCenter';
 
 export interface GeoPosition {
   lat: number;
@@ -12,8 +13,11 @@ export function useUserLocation(watch = false): GeoPosition | null {
   useEffect(() => {
     if (!navigator.geolocation) return;
     const opts: PositionOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 30_000 };
-    const onOk = (pos: GeolocationPosition) =>
-      setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    const onOk = (pos: GeolocationPosition) => {
+      const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      saveLastKnownLocation(next);
+      setPosition(next);
+    };
     const onErr = () => setPosition(null);
 
     if (watch) {

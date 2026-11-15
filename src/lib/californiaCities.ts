@@ -8,7 +8,7 @@ export const CALIFORNIA_CITIES = CALIFORNIA_INCORPORATED_CITIES;
 
 export type CaliforniaCity = (typeof CALIFORNIA_CITIES)[number];
 
-export const DEFAULT_CALIFORNIA_CITY: CaliforniaCity = 'Los Angeles';
+export const DEFAULT_CALIFORNIA_CITY: CaliforniaCity = 'Sacramento';
 
 const CALIFORNIA_CITY_LOOKUP = new Map(
   CALIFORNIA_CITIES.map((city) => [city.toLowerCase(), city] as const)
@@ -29,7 +29,7 @@ export function formatCityLabel(city: string | undefined): string {
 }
 
 /**
- * Job `state` stores the work city (e.g. Los Angeles).
+ * Job `state` stores the work city (e.g. Sacramento).
  * BSIS guard cards and government IDs are state-issued — map job location to CA.
  */
 export function resolveGuardCardLicenseState(jobCityOrState?: string): string {

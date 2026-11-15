@@ -1,6 +1,23 @@
 /** Map coordinates — geocoded pins preferred, hash fallback for legacy rows */
 
-export const METRO_CENTER = { lat: 34.0522, lng: -118.2437 };
+import { SACRAMENTO_CENTER } from './mapInitialCenter';
+
+/**
+ * Sacramento — Guardr's launch market. Only used to place legacy jobs that have no
+ * coordinates; never used as the origin of a distance shown to a user.
+ */
+export const METRO_CENTER: GeoCoords = { lat: SACRAMENTO_CENTER.lat, lng: SACRAMENTO_CENTER.lng };
+
+function usableOrigin(from: GeoCoords | null | undefined): from is GeoCoords {
+  return (
+    !!from &&
+    Number.isFinite(from.lat) &&
+    Number.isFinite(from.lng) &&
+    Math.abs(from.lat) <= 90 &&
+    Math.abs(from.lng) <= 180 &&
+    !(from.lat === 0 && from.lng === 0)
+  );
+}
 
 export interface GeoCoords {
   lat: number;
@@ -77,12 +94,14 @@ export function distanceMiles(
   return Math.round(earthRadiusMiles * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)) * 10) / 10;
 }
 
+/** Distance from the device's location; null when the device location is unknown. */
 export function estimateJobDistanceMiles(
   location: string,
-  id?: string,
-  from: GeoCoords = METRO_CENTER,
+  id: string | undefined,
+  from: GeoCoords | null | undefined,
   coords?: GeoCoords
-): number {
+): number | null {
+  if (!usableOrigin(from)) return null;
   const jobPoint = coords ?? locationToCoords(location, id);
   return distanceMiles(from, jobPoint);
 }
@@ -110,9 +129,11 @@ export function parseGeoCoords(latValue: string, lngValue: string): GeoCoords | 
   return { lat, lng };
 }
 
+/** Distance from the device's location; null when the device location is unknown. */
 export function jobDistanceMiles(
   job: JobCoordsSource,
-  from: GeoCoords = METRO_CENTER
-): number {
+  from: GeoCoords | null | undefined
+): number | null {
+  if (!usableOrigin(from)) return null;
   return distanceMiles(from, jobCoords(job));
 }

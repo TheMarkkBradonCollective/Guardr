@@ -82,7 +82,7 @@ export const JobLocationCoordsFields = forwardRef<
           <input
             type="text"
             inputMode="decimal"
-            placeholder="e.g. 34.05223"
+            placeholder="e.g. 38.58157"
             value={latInput}
             onChange={(e) => {
               setLatInput(e.target.value);
@@ -105,7 +105,7 @@ export const JobLocationCoordsFields = forwardRef<
           <input
             type="text"
             inputMode="decimal"
-            placeholder="e.g. -118.24368"
+            placeholder="e.g. -121.49440"
             value={lngInput}
             onChange={(e) => {
               setLngInput(e.target.value);

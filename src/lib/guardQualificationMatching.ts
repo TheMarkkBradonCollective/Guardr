@@ -81,7 +81,8 @@ export function scoreGuardForJob(
 ): GuardMatchScore {
   const jobView = toGuardJobView(job, guard.id);
   const meetsRequirements = guardCanApplyToJob(guard, jobView, allRequests);
-  const distanceMiles = getJobDistance(jobView);
+  // Guards have no stored coordinates, and the staff device's location is not the guard's.
+  const distanceMiles = getJobDistance(jobView, null);
   const performance = computeGuardPerformance(guard.id, allRequests ?? []);
   const premiumJob = isPremiumJob(job);
   const tierId: PerformanceTierId = allRequests?.length
