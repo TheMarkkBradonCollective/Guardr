@@ -6,7 +6,8 @@ import {
   guardAvailabilityBlockReason,
   guardIsAvailableForJob,
 } from './guardAvailability';
-import { estimateJobDistanceMiles } from './geo';
+import { estimateJobDistanceMiles, type GeoCoords } from './geo';
+import { loadLastKnownLocation } from './mapInitialCenter';
 import { hasJobCoordinates } from './jobLocation';
 import { formatDuration } from './dates';
 import { stateLicenseRequirementLabel } from './guardLicenses';
@@ -116,11 +117,17 @@ export function jobMatchesCategory(job: GuardJobLike, categoryId: JobCategoryId)
   }
 }
 
+/**
+ * Miles from this device's last known GPS fix to the job. Null (no distance shown) when the
+ * job has no coordinates or the device has never shared its location — never measured from a
+ * default city.
+ */
 export function getJobDistance(
-  job: Pick<GuardJobLike, 'location' | 'id'> & { latitude?: number; longitude?: number }
+  job: Pick<GuardJobLike, 'location' | 'id'> & { latitude?: number; longitude?: number },
+  from: GeoCoords | null = loadLastKnownLocation()
 ): number | null {
   if (!hasJobCoordinates(job)) return null;
-  return estimateJobDistanceMiles(job.location, job.id, undefined, {
+  return estimateJobDistanceMiles(job.location, job.id, from, {
     lat: job.latitude!,
     lng: job.longitude!,
   });
