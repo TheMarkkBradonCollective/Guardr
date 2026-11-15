@@ -5,6 +5,7 @@ import { isPushConfigured } from './config';
 import { checkInEscalationDedupKey, claimNotificationDedup, missedCheckinDedupKey } from './dedup';
 import { dispatchPushNotification } from './delivery';
 import { buildEventDispatchPayloads } from './eventDispatch';
+import { persistTargetedInbox } from './inbox';
 import { authorizePushEvent } from './eventAuth';
 import { buildNotificationData, platformRoleToPushRole } from './routing';
 import { isInternalPushAuthorized, verifySession } from './sessionAuth';
@@ -162,6 +163,9 @@ export interface PushEventBody extends SessionCredentials {
   checkinDueBucket?: number;
 }
 
+/** The caller is signed in but not allowed to send this notification (maps to HTTP 403). */
+export class PushEventAuthError extends Error {}
+
 export async function dispatchPushEvent(
   db: AppDb,
   event: PushEventBody,
@@ -189,7 +193,7 @@ export async function dispatchPushEvent(
       ticketId: event.ticketId,
     });
     if (authError) {
-      throw new Error(authError);
+      throw new PushEventAuthError(authError);
     }
   }
 
@@ -217,6 +221,9 @@ export async function dispatchPushEvent(
     clientId: event.clientId,
     priority: event.priority,
   });
+
+  // Keep a copy in each recipient's in-app inbox (works even when the device has no push).
+  await persistTargetedInbox(db, payloads, session?.userId);
 
   let sent = 0;
   let failed = 0;
@@ -248,7 +255,11 @@ export async function handlePushEvent(db: AppDb, body: PushEventBody) {
     return { status: 200, body: { ok: true, ...result } };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Push event failed';
-    const status = message.startsWith('Unauthorized') || message.includes('Not authorized') ? 403 : 500;
-    return { status, body: { error: message } };
+    const status =
+      err instanceof PushEventAuthError || message.startsWith('Unauthorized') || message.includes('Not authorized')
+        ? 403
+        : 500;
+    if (status === 500) console.error('Push event failed:', message);
+    return { status, body: { error: status === 500 ? 'Push event failed' : message } };
   }
 }

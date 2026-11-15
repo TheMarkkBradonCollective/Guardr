@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const db = await getSupabaseAdmin();
     if (!db) {
       return res.status(503).json({
-        error: 'Database is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on the server.',
+        error: 'Database is not configured. Set DATABASE_URL on the server.',
       });
     }
     const result = await handlePushSubscribe(db, readBody(req));

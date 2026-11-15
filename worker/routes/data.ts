@@ -11,7 +11,13 @@ import {
   type Filter,
   type Operation,
 } from '../security/dataPolicy.ts';
-import { authorizeJobUpdate, clientInitialJobStatus, clientJobEstimatedPayout } from '../security/jobPolicy.ts';
+import {
+  authorizeJobUpdate,
+  clientInitialJobStatus,
+  clientJobEstimatedPayout,
+  guardMayTakeWork,
+  guardPatchTakesWork,
+} from '../security/jobPolicy.ts';
 import { staffWriteDenial, staffRank } from '../security/staffRules.ts';
 import { hashPassword } from '../../src/lib/auth/passwordHash.ts';
 import { EMAIL_RE } from '../security/signupProfile.ts';
@@ -257,6 +263,13 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       if (!old) return c.json({ data: [], error: null });
       const decision = authorizeJobUpdate(identity, old, (plan.payload ?? {}) as Record<string, unknown>);
       if (decision.ok === false) return deny(decision.error);
+      if (identity.platformRole === 'guard' && guardPatchTakesWork(old, decision.patch, identity.profileId)) {
+        const me = await db.from('guards').select('user_status, is_staff').eq('id', identity.profileId);
+        if (me.error) return failed(me.error);
+        if (!guardMayTakeWork(((me.data ?? [])[0] ?? null) as Record<string, unknown> | null)) {
+          return deny('Your guard account must be approved and active before you can take jobs.');
+        }
+      }
       plan.payload = decision.patch;
       if (['hourly_rate', 'duration_hours', 'guards_needed', 'estimated_payout'].some((k) => k in decision.patch)) {
         const price = clientJobEstimatedPayout({ ...old, ...decision.patch });

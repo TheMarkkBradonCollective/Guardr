@@ -22,6 +22,7 @@ import { StaffDetailProfileHeader } from './StaffDetailProfileHeader';
 import { StaffAccountAccessSection } from './StaffAccountAccessSection';
 import { clientTypeLabel, clientDisplayName } from '../../lib/clientType';
 import { userFacingError } from '../../lib/userFacingError';
+import { StaffResetPasswordButton } from './StaffResetPasswordButton';
 
 interface StaffClientDetailPanelProps {
   client: Client;
@@ -181,6 +182,7 @@ export function StaffClientDetailPanel({
                 Suspend customer
               </AppButton>
             )}
+            <StaffResetPasswordButton profileKind="client" profileId={client.id} name={displayName} />
             {onSetClientTrusted && (
               <AppButton
                 variant={client.trusted ? 'outline' : 'primary'}
