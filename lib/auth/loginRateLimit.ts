@@ -54,3 +54,30 @@ export async function loginThrottledShared(db: SqlDatabase, email: string, ip: s
     return memoryLoginThrottled(email, ip);
   }
 }
+
+export const FORGOT_EMAIL_LIMIT = 3;
+export const FORGOT_IP_LIMIT = 10;
+
+/** Forgot-password throttle: 3 requests per email and 10 per IP each minute (shared across instances). */
+export async function forgotPasswordThrottledShared(
+  db: SqlDatabase,
+  email: string,
+  ip: string,
+  now = Date.now()
+): Promise<boolean> {
+  const emailKey = `forgot:email:${await sha256(email)}`;
+  const ipKey = `forgot:ip:${await sha256(ip)}`;
+  try {
+    const res = await db.query(LOGIN_RATE_SQL, [emailKey, ipKey, loginWindowStart(now)]);
+    if (res.error || !Array.isArray(res.data)) throw new Error(res.error?.message ?? 'no rows');
+    return res.data.some(
+      (row) =>
+        (row.key === emailKey && Number(row.count) > FORGOT_EMAIL_LIMIT) ||
+        (row.key === ipKey && Number(row.count) > FORGOT_IP_LIMIT)
+    );
+  } catch {
+    const byEmail = checkRateLimit(`forgot:email:${email}`, { windowMs: LOGIN_WINDOW_MS, maxRequests: FORGOT_EMAIL_LIMIT });
+    const byIp = checkRateLimit(`forgot:ip:${ip}`, { windowMs: LOGIN_WINDOW_MS, maxRequests: FORGOT_IP_LIMIT });
+    return !byEmail.allowed || !byIp.allowed;
+  }
+}

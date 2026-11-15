@@ -112,15 +112,42 @@ export function filterGuardsForMarketplace(
   return result;
 }
 
+export const ALL_DAY_START = '00:00';
+export const ALL_DAY_END = '23:59';
+
+/** New guards are available all hours, every day, until they narrow it down. */
 export function defaultAvailabilitySlots(guardId: string): GuardAvailabilitySlot[] {
-  return [1, 2, 3, 4, 5].map((day) => ({
+  return [0, 1, 2, 3, 4, 5, 6].map((day) => ({
     id: `avail-${guardId}-${day}`,
     guardId,
     dayOfWeek: day,
-    startTime: '08:00',
-    endTime: '18:00',
+    startTime: ALL_DAY_START,
+    endTime: ALL_DAY_END,
     isAvailable: true,
   }));
+}
+
+/**
+ * The old built-in default (Mon–Fri 8am–6pm). A stored schedule that is exactly this was never
+ * chosen by the guard, so it is treated as "no schedule yet" and replaced by the all-hours default.
+ */
+export function isLegacyDefaultAvailability(slots: GuardAvailabilitySlot[] | null | undefined): boolean {
+  if (!Array.isArray(slots) || slots.length === 0) return false;
+  const active = slots.filter((slot) => slot.isAvailable !== false);
+  if (active.length !== 5 || slots.length !== 5) return false;
+  const days = active.map((slot) => Number(slot.dayOfWeek)).sort((a, b) => a - b);
+  if (days.join(',') !== '1,2,3,4,5') return false;
+  return active.every(
+    (slot) => String(slot.startTime).slice(0, 5) === '08:00' && String(slot.endTime).slice(0, 5) === '18:00' && !slot.notes
+  );
+}
+
+type AvailabilityPersister = (guardId: string, schedule: GuardAvailabilitySchedule) => void;
+let availabilityPersister: AvailabilityPersister | null = null;
+
+/** The app registers a server writer so saved schedules are not device-only. */
+export function setGuardAvailabilityPersister(persister: AvailabilityPersister | null): void {
+  availabilityPersister = persister;
 }
 
 export function defaultAvailabilitySchedule(guardId: string): GuardAvailabilitySchedule {
@@ -163,7 +190,19 @@ function writeJson(key: string, value: unknown): void {
 
 export function loadAvailabilitySlots(guardId: string): GuardAvailabilitySlot[] | null {
   const parsed = readJson<GuardAvailabilitySlot[]>(`${WEEKLY_STORAGE_PREFIX}${guardId}`);
-  return Array.isArray(parsed) ? parsed : null;
+  if (!Array.isArray(parsed)) return null;
+  // Migrate the old untouched Mon–Fri 8–6 default to the all-hours default.
+  if (isLegacyDefaultAvailability(parsed)) {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem(`${WEEKLY_STORAGE_PREFIX}${guardId}`);
+      } catch {
+        /* ignore */
+      }
+    }
+    return null;
+  }
+  return parsed;
 }
 
 export function saveAvailabilitySlots(guardId: string, slots: GuardAvailabilitySlot[]): void {
@@ -197,7 +236,9 @@ export function saveGuardAvailabilitySchedule(
 ): GuardAvailabilitySchedule {
   const dateOverrides = saveAvailabilityDateOverrides(guardId, schedule.dateOverrides);
   saveAvailabilitySlots(guardId, schedule.weeklySlots);
-  return { weeklySlots: schedule.weeklySlots, dateOverrides };
+  const saved = { weeklySlots: schedule.weeklySlots, dateOverrides };
+  availabilityPersister?.(guardId, saved);
+  return saved;
 }
 
 export function formatLocalDateKey(date: Date): string {

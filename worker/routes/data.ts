@@ -17,8 +17,10 @@ import {
   clientJobEstimatedPayout,
   guardMayTakeWork,
   guardPatchTakesWork,
+  slotWriteGuardIds,
 } from '../security/jobPolicy.ts';
 import { staffWriteDenial, staffRank } from '../security/staffRules.ts';
+import { CREDENTIAL_REVIEW_RULES, withRereview } from '../security/credentialRereview.ts';
 import { hashPassword } from '../../src/lib/auth/passwordHash.ts';
 import { EMAIL_RE } from '../security/signupProfile.ts';
 import {
@@ -133,6 +135,29 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
       if (err) console.error('data query failed', table, operation, err.code, err.message);
       return c.json({ data: null, error: { message: 'Query failed' } }, 500);
     };
+
+    // Guards editing a verified credential's document fields send it back to staff review.
+    const reviewRule = CREDENTIAL_REVIEW_RULES[table];
+    if (!staff && identity.profileKind === 'guard' && reviewRule && (operation === 'update' || operation === 'upsert') && plan.payload) {
+      const patches = (Array.isArray(plan.payload) ? plan.payload : [plan.payload]) as Record<string, unknown>[];
+      let probe = db.from(table).select('*').eq(reviewRule.ownerCol, identity.profileId);
+      if (operation === 'update') {
+        for (const f of filters) {
+          if (f.op === 'eq') probe = probe.eq(f.col, f.val);
+          else if (f.op === 'neq') probe = probe.neq(f.col, f.val);
+          else if (f.op === 'in') probe = probe.in(f.col, Array.isArray(f.vals) ? f.vals : []);
+        }
+      } else {
+        probe = probe.in('id', patches.map((p) => p.id).filter((v) => v != null));
+      }
+      const found = await probe;
+      if (found.error) return failed(found.error);
+      const existingRows = (found.data ?? []) as Record<string, unknown>[];
+      const next = patches.map((p) =>
+        withRereview(table, p, operation === 'update' ? existingRows : existingRows.filter((r) => r.id === p.id))
+      );
+      plan.payload = Array.isArray(plan.payload) ? next : next[0];
+    }
 
     if (operation === 'select' && needsSelfOnlyFilter(table, identity, filters.map((f) => f.col))) {
       plan.ownerOr = `id.eq.${identity.profileId}`;
@@ -254,6 +279,24 @@ export function registerWorkerDataRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
         if (price !== null) row.estimated_payout = price;
       }
       plan.payload = Array.isArray(plan.payload) ? rows : rows[0];
+    }
+    // Team jobs: only approved, active guards can join or be placed in a slot.
+    if (!staff && table === 'job_guard_slots' && operation !== 'select') {
+      const rows = (operation === 'delete' ? [] : Array.isArray(plan.payload) ? plan.payload : [plan.payload ?? {}]) as Record<string, unknown>[];
+      const ids = slotWriteGuardIds(operation as 'insert' | 'update' | 'upsert' | 'delete', rows, identity.profileKind === 'guard' ? identity.profileId : null);
+      if (ids.length) {
+        const found = await db.from('guards').select('id, user_status, is_staff').in('id', ids);
+        if (found.error) return failed(found.error);
+        const byId = new Map(((found.data ?? []) as Record<string, unknown>[]).map((g) => [String(g.id), g]));
+        const blocked = ids.find((id) => !guardMayTakeWork((byId.get(id) ?? null) as Record<string, unknown> | null));
+        if (blocked) {
+          return deny(
+            blocked === identity.profileId
+              ? 'Your guard account must be approved and active before you can take jobs.'
+              : 'That guard is not approved and active yet.'
+          );
+        }
+      }
     }
     if (!staff && table === 'security_requests' && operation === 'update') {
       const id = filters.find((f) => f.col === 'id' && f.op === 'eq') as { val?: unknown };

@@ -9,6 +9,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { verifyJwtWeb, type JwtPayload } from './jwt.ts';
 import { passwordVersion, sameVersion } from './passwordVersion.ts';
+import { isTokenRevoked } from './tokenRevocation.ts';
 import type { SqlDatabase } from '../db/sqlDatabase.ts';
 import {
   resolvePlatformRole,
@@ -116,7 +117,9 @@ export async function resolveRequestIdentity(
   if (!token || !jwtSecret) return null;
   const payload = await verifyJwtWeb(token, jwtSecret);
   if (!payload) return null;
-  return identityFromJwt(db, payload, jwtSecret);
+  // Signed-out tokens are refused even before they expire.
+  const [revoked, identity] = await Promise.all([isTokenRevoked(db, token), identityFromJwt(db, payload, jwtSecret)]);
+  return revoked ? null : identity;
 }
 
 export function isFounderIdentity(identity: RequestIdentity | null): boolean {

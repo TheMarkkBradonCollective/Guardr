@@ -38,6 +38,7 @@ import { AppButton } from './ui/AppButton';
 import { GuardrSheet } from './baseui/overlays/GuardrSheet';
 import { AuthFormHeader, AuthMobileTopBar, AuthTabletTopBar } from './auth/AuthFormChrome';
 import { StaffSignupNotice } from './auth/StaffSignupNotice';
+import { ForgotPasswordInline } from './auth/ForgotPasswordInline';
 import { ClientSignupIntake } from './auth/clientSignup/ClientSignupIntake';
 import type { ReferralPerson } from './auth/clientSignup/types';
 import type { StaffRole } from '../types';
@@ -980,6 +981,7 @@ export function AuthPage({
                 <ArrowRight className="w-4 h-4" />
               </AppButton>
             </form>
+            {!isSignUp && <ForgotPasswordInline initialEmail={email} />}
         </div>
 
         {onOpenLegal && !isSignUp && (

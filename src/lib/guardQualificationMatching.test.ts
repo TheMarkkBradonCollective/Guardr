@@ -60,7 +60,7 @@ describe('rankGuardsForJob', () => {
     assert.equal(ranked[0]?.guard.id, 'g-high');
   });
 
-  it('silently excludes applicants when the shift is outside availability', () => {
+  it('keeps weekend applicants who have not narrowed the all-hours default', () => {
     const job = mondayJob(['g-low', 'g-high']);
     job.startDate = '2026-07-19T10:00:00';
     job.endDate = '2026-07-19T14:00:00';
@@ -69,7 +69,7 @@ describe('rankGuardsForJob', () => {
       applicantsOnly: true,
     });
 
-    assert.equal(ranked.length, 0);
+    assert.equal(ranked.length, 2);
   });
 
   it('adds a larger tier boost for elite guards on premium jobs', () => {
