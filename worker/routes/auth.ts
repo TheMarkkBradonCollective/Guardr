@@ -1,6 +1,9 @@
 import type { Hono } from 'hono';
 import type { WorkerEnv } from '../app.ts';
-import { signJwtWeb } from '../../lib/auth/jwt.ts';
+import { signJwtWeb, verifyJwtWeb } from '../../lib/auth/jwt.ts';
+import { revokeToken } from '../../lib/auth/tokenRevocation.ts';
+import { forgotPasswordThrottledShared } from '../../lib/auth/loginRateLimit.ts';
+import { FORGOT_PASSWORD_RESPONSE, buildPasswordResetTicket } from '../security/forgotPassword.ts';
 import { hashPassword, verifyPasswordHash, isPasswordHash } from '../../src/lib/auth/passwordHash.ts';
 import { verifyAccountPassword } from '../../src/lib/accountPasswords.ts';
 import { createNeonDatabase } from '../../lib/db/neonServerless.ts';
@@ -298,7 +301,65 @@ export function registerWorkerAuthRoutes(app: Hono<{ Bindings: WorkerEnv }>) {
     });
   });
 
-  app.post('/api/auth/logout', (c) => c.json({ ok: true }));
+  /** Sign out: the presented token stops working on the server immediately. */
+  app.post('/api/auth/logout', async (c) => {
+    const token = readBearer(c.req.header('authorization'));
+    if (!token || !c.env.JWT_SECRET || !c.env.DATABASE_URL) return c.json({ ok: true, revoked: false });
+    const payload = await verifyJwtWeb(token, c.env.JWT_SECRET);
+    if (!payload) return c.json({ ok: true, revoked: false });
+    const revoked = await revokeToken(createNeonDatabase(c.env.DATABASE_URL), token, payload);
+    return c.json({ ok: true, revoked });
+  });
+
+  /**
+   * Self-serve "forgot password". Guardr has no outbound email sender yet, so a request opens a
+   * high-priority Account ticket in the staff Support queue; staff verify the person and use
+   * "Reset password" to issue a one-time temporary password. The response is identical whether
+   * or not the email has an account (no enumeration), and requests are rate limited.
+   */
+  app.post('/api/auth/forgot-password', async (c) => {
+    const body = (await c.req.json<{ email?: string }>().catch(() => ({}))) as { email?: string };
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    if (!email || !EMAIL_RE.test(email)) return c.json({ error: 'Enter a valid email address' }, 400);
+    const db = createNeonDatabase(c.env.DATABASE_URL);
+    const ip = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || 'unknown';
+    if (await forgotPasswordThrottledShared(db, email, ip)) {
+      return c.json({ error: 'Too many requests. Wait a minute and try again.' }, 429);
+    }
+    try {
+      const login = await db.from('users').select('profile_kind, profile_id').eq('email', email).maybeSingle();
+      const u = login.data as Record<string, unknown> | null;
+      const kind = u?.profile_kind as ResetTargetKind | undefined;
+      if (u && kind && ['guard', 'client', 'staff'].includes(kind)) {
+        const profileId = String(u.profile_id);
+        const open = await db
+          .from('support_tickets')
+          .select('id')
+          .eq('user_id', profileId)
+          .eq('subject', 'Password reset request')
+          .neq('status', 'resolved');
+        if (!open.error && !(open.data ?? []).length) {
+          const profile = await db.from(resetTargetTable(kind)).select('id, name, email').eq('id', profileId).maybeSingle();
+          const p = (profile.data ?? {}) as Record<string, unknown>;
+          const { ticket, message } = buildPasswordResetTicket({
+            profileId,
+            kind,
+            name: typeof p.name === 'string' ? p.name : '',
+            email,
+            ticketId: `support-pwreset-${crypto.randomUUID()}`,
+            messageId: `smsg-pwreset-${crypto.randomUUID()}`,
+            now: new Date().toISOString(),
+          });
+          const created = await db.from('support_tickets').insert(ticket);
+          if (!created.error) await db.from('support_messages').insert(message);
+          else console.error('forgot-password ticket failed', created.error.message);
+        }
+      }
+    } catch (err) {
+      console.error('forgot-password failed', err instanceof Error ? err.message : err);
+    }
+    return c.json({ ok: true, message: FORGOT_PASSWORD_RESPONSE });
+  });
 
   app.get('/api/auth/session', async (c) => {
     const identity = currentRequestIdentity();

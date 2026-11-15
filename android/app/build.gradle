@@ -20,8 +20,8 @@ android {
     defaultConfig {
         def productApp = (findProperty('guardrProductApp') ?: '').toString().trim()
         // Synced via npm run generate:download-version (messenger track is independent of package.json).
-        def guardrVersionCode = 235
-        def guardrVersionName = "1.0.135"
+        def guardrVersionCode = 1101
+        def guardrVersionName = "1.1.1"
         def messengerVersionCode = 233
         def messengerVersionName = "1.1.2"
         def roleApplicationIds = [

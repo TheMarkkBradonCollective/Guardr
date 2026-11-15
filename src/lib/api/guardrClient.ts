@@ -56,6 +56,53 @@ type Filter =
   | { col: string; op: 'neq'; val: unknown }
   | { col: string; op: 'in'; vals: unknown[] };
 
+export const WRITE_FAILED_EVENT = 'guardr:write-failed';
+
+export interface WriteFailedDetail {
+  table: string;
+  operation: string;
+  message: string;
+}
+
+/**
+ * Many app saves update the screen first and never look at the server's answer. When a write
+ * fails and the caller never reads `error`, announce it so the app can tell the user and
+ * reload server truth. Callers that read `error` (destructuring counts) handle it themselves.
+ */
+export function trackUnhandledWriteError<T extends { data: unknown; error: { message: string; code?: string } | null }>(
+  table: string,
+  operation: string,
+  result: T,
+  dispatch: (detail: WriteFailedDetail) => void = dispatchWriteFailed,
+  schedule: (fn: () => void) => void = (fn) => setTimeout(fn, 0),
+): T {
+  if (!result.error) return result;
+  let observed = false;
+  const error = result.error;
+  const tracked = { ...result } as T;
+  Object.defineProperty(tracked, 'error', {
+    enumerable: true,
+    configurable: true,
+    get() {
+      observed = true;
+      return error;
+    },
+  });
+  schedule(() => {
+    if (!observed) dispatch({ table, operation, message: error.message || 'Request failed' });
+  });
+  return tracked;
+}
+
+function dispatchWriteFailed(detail: WriteFailedDetail): void {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return;
+  try {
+    window.dispatchEvent(new CustomEvent(WRITE_FAILED_EVENT, { detail }));
+  } catch {
+    /* non-DOM runtime */
+  }
+}
+
 class ApiQueryBuilder {
   private filters: Filter[] = [];
   private operation: 'select' | 'insert' | 'update' | 'delete' | 'upsert' = 'select';
@@ -140,11 +187,15 @@ class ApiQueryBuilder {
     onfulfilled?: ((value: { data: unknown; error: unknown }) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
   ): Promise<TResult1 | TResult2> {
-    return this.run().then(onfulfilled, onrejected);
+    return this.run()
+      .then((result) => (this.operation === 'select' ? result : trackUnhandledWriteError(this.table, this.operation, result)))
+      .then(onfulfilled, onrejected);
   }
 
   private async run(): Promise<{ data: unknown; error: { message: string; code?: string } | null }> {
     const token = localStorage.getItem(TOKEN_KEY);
+    // Every /api/data/query call needs a signed-in token; answer locally instead of a 401 round trip.
+    if (!token) return { data: null, error: { message: 'Unauthorized', code: '401' } };
     const sessionRaw = localStorage.getItem('guardr_current_user');
     let sessionHeader: string | undefined;
     if (sessionRaw) {
@@ -332,9 +383,30 @@ export function createGuardrClient() {
       return { data: { session: json.session ?? null }, error: null };
     },
     async signOut() {
+      // Send the token so the server revokes it, then forget it locally either way.
+      const token = localStorage.getItem(TOKEN_KEY);
       localStorage.removeItem(TOKEN_KEY);
-      await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
+      try {
+        await fetch(apiUrl('/api/auth/logout'), {
+          method: 'POST',
+          headers: token ? { authorization: `Bearer ${token}` } : {},
+          credentials: 'include',
+        });
+      } catch {
+        /* offline: the token is already gone from this device */
+      }
       return { error: null };
+    },
+    /** Self-serve forgot password: always answers the same way (no account enumeration). */
+    async requestPasswordReset(email: string) {
+      const res = await fetch(apiUrl('/api/auth/forgot-password'), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: string; error?: string };
+      if (!res.ok || !json.ok) return { message: null, error: { message: json.error ?? 'Could not send the request' } };
+      return { message: json.message ?? '', error: null };
     },
   };
 

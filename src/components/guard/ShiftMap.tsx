@@ -3,7 +3,8 @@ import { MapContainer, TileLayer, Marker, Circle, useMap, useMapEvents } from 'r
 import L from 'leaflet';
 import { SecurityRequest } from '../../types';
 import { GuardJobView } from '../../lib/guardJobView';
-import { jobCoords, METRO_CENTER } from '../../lib/geo';
+import { jobCoords } from '../../lib/geo';
+import { loadLastKnownLocation, resolveInitialMapView, saveLastKnownLocation } from '../../lib/mapInitialCenter';
 import type { GeoCoords } from '../../lib/geo';
 import { hasJobCoordinates } from '../../lib/jobLocation';
 import { useUserLocation } from '../../lib/useUserLocation';
@@ -282,17 +283,20 @@ export function ShiftMap({
 
   // Computed once at mount — MapContainer only uses center/zoom props for initial placement
   const savedViewport = useMemo(() => loadSavedViewport(), []);
-  const hadSavedViewport = useMemo(() => !!savedViewport, [savedViewport]);
-
-  const initialCenter: [number, number] = useMemo(
-    () =>
-      savedViewport
-        ? [savedViewport.lat, savedViewport.lng]
-        : [METRO_CENTER.lat, METRO_CENTER.lng],
+  // Guards open where they are: the first GPS fix always recenters the guard map.
+  // Before that fix: last known GPS (guard) → saved map view → Sacramento.
+  const hadSavedViewport = useMemo(() => pinMode !== 'guard' && !!savedViewport, [savedViewport, pinMode]);
+  const initialView = useMemo(
+    () => resolveInitialMapView({ lastKnown: loadLastKnownLocation(), savedViewport, preferLastKnown: pinMode === 'guard' }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [] // intentionally once — MapContainer ignores center prop changes after mount
   );
-  const initialZoom = savedViewport?.zoom ?? 13;
+  const initialCenter: [number, number] = [initialView.lat, initialView.lng];
+  const initialZoom = initialView.zoom;
+
+  useEffect(() => {
+    if (userLocation) saveLastKnownLocation(userLocation);
+  }, [userLocation]);
 
   const guardIcon = L.divIcon({
     className: 'guardr-guard-pin',

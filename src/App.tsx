@@ -114,6 +114,9 @@ import { ClientDashboard } from './components/ClientDashboard';
 import { EMPTY_MESSAGES_CHROME, type MessagesChrome } from './lib/messagesChrome';
 import { InstallPrompt } from './components/InstallPrompt';
 import { supabase, isSupabaseConnected } from './lib/supabase';
+import { WRITE_FAILED_EVENT, type WriteFailedDetail } from './lib/api/guardrClient';
+import { setGuardAvailabilityPersister } from './lib/guardAvailability';
+import { hydrateGuardAvailability, persistGuardAvailability } from './lib/guardAvailabilitySync';
 import { useSupabaseRealtimeSync } from './lib/useSupabaseRealtime';
 import { useMessageRealtimeSync } from './lib/messageRealtime';
 import { useUserNotificationsRealtime } from './lib/useUserNotificationsRealtime';
@@ -2631,6 +2634,38 @@ export default function App() {
     })();
   }, []);
 
+  // Saves that update the screen first and ignore the server's answer: tell the user and reload
+  // server truth so the screen does not keep showing a change that was never saved.
+  useEffect(() => {
+    setGuardAvailabilityPersister((guardId, schedule) => {
+      if (!localStorage.getItem('guardr_api_jwt')) return;
+      persistGuardAvailability(supabase, guardId, schedule).catch((err: unknown) => {
+        appToast(
+          `Availability saved on this device but not to your account: ${err instanceof Error ? err.message : 'request failed'}. Try again when online.`,
+          'error'
+        );
+      });
+    });
+    return () => setGuardAvailabilityPersister(null);
+  }, []);
+
+  const writeFailureReloadRef = useRef<number | null>(null);
+  useEffect(() => {
+    const onWriteFailed = (event: Event) => {
+      const detail = (event as CustomEvent<WriteFailedDetail>).detail;
+      if (!detail || !localStorage.getItem('guardr_api_jwt')) return;
+      if (writeFailureReloadRef.current != null) return;
+      appToast(`Couldn't save that change: ${detail.message}. Showing the latest saved data.`, 'error');
+      writeFailureReloadRef.current = window.setTimeout(() => {
+        writeFailureReloadRef.current = null;
+        void loadFromSupabase();
+      }, 1500);
+    };
+    window.addEventListener(WRITE_FAILED_EVENT, onWriteFailed);
+    return () => window.removeEventListener(WRITE_FAILED_EVENT, onWriteFailed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const parseJsonStringArray = (val: unknown): string[] => {
     if (Array.isArray(val)) return val.map(String);
     if (typeof val === 'string') {
@@ -2695,6 +2730,25 @@ export default function App() {
       const { data: dbCompanyPublicDocuments, error: companyPublicDocumentsErr } = await supabase
         .from('company_public_documents')
         .select('*');
+      // Guard availability lives on the server too (it used to be device-only).
+      try {
+        const [{ data: availRows, error: availErr }, { data: availDateRows, error: availDateErr }] = await Promise.all([
+          supabase.from('guard_availability').select('*'),
+          supabase.from('guard_availability_date_overrides').select('*'),
+        ]);
+        if (!availErr && !availDateErr) {
+          let selfGuardId: string | null = null;
+          try {
+            const session = JSON.parse(localStorage.getItem('guardr_current_user') ?? 'null') as { id?: string; role?: string } | null;
+            if (session?.id && session.role === 'guard') selfGuardId = session.id;
+          } catch {
+            selfGuardId = null;
+          }
+          await hydrateGuardAvailability(supabase, availRows ?? [], availDateRows ?? [], selfGuardId);
+        }
+      } catch (availabilityErr) {
+        console.warn('Guard availability sync:', availabilityErr);
+      }
 
       if (insuranceErr && insuranceErr.code !== '42P01') {
         console.warn('Guard insurance load (run migration if missing):', insuranceErr);

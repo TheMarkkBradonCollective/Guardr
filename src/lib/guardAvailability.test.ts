@@ -17,7 +17,20 @@ import {
   slotForWeekDay,
   toggleWeekDay,
   windowsForDate,
+  isLegacyDefaultAvailability,
 } from './guardAvailability.ts';
+
+/** The old built-in Mon–Fri 8am–6pm schedule, used as a fixed fixture. */
+function weekdaySlots(guardId: string) {
+  return [1, 2, 3, 4, 5].map((day) => ({
+    id: `avail-${guardId}-${day}`,
+    guardId,
+    dayOfWeek: day,
+    startTime: '08:00',
+    endTime: '18:00',
+    isAvailable: true,
+  }));
+}
 
 describe('isInvalidAvailabilityWindow', () => {
   it('flags end time equal to start time', () => {
@@ -34,25 +47,48 @@ describe('isInvalidAvailabilityWindow', () => {
 });
 
 describe('defaultAvailabilitySlots', () => {
-  it('returns weekday slots that are all valid windows', () => {
+  it('defaults to all hours, every day, as valid windows', () => {
     const slots = defaultAvailabilitySlots('guard-1');
-    assert.equal(slots.length, 5);
+    assert.equal(slots.length, 7);
+    assert.deepEqual(slots.map((slot) => slot.dayOfWeek), [0, 1, 2, 3, 4, 5, 6]);
     for (const slot of slots) {
+      assert.equal(slot.startTime, '00:00');
+      assert.equal(slot.endTime, '23:59');
       assert.equal(isInvalidAvailabilityWindow(slot), false);
     }
+  });
+
+  it('makes evening and weekend shifts visible by default', () => {
+    const schedule = { weeklySlots: defaultAvailabilitySlots('guard-1'), dateOverrides: [] };
+    assert.equal(guardIsAvailableForJob('guard-1', { startDate: '2026-11-15T19:00:00', endDate: '2026-11-15T23:00:00' }, schedule), true);
+    assert.equal(guardIsAvailableForJob('guard-1', { startDate: '2026-11-17T02:00:00', endDate: '2026-11-17T06:00:00' }, schedule), true);
+  });
+});
+
+describe('isLegacyDefaultAvailability', () => {
+  it('recognises the untouched old Mon–Fri 8–6 default', () => {
+    assert.equal(isLegacyDefaultAvailability(weekdaySlots('guard-1')), true);
+  });
+  it('keeps schedules the guard actually changed', () => {
+    const changed = weekdaySlots('guard-1').map((slot) => (slot.dayOfWeek === 3 ? { ...slot, endTime: '17:00' } : slot));
+    assert.equal(isLegacyDefaultAvailability(changed), false);
+    assert.equal(isLegacyDefaultAvailability(weekdaySlots('guard-1').slice(0, 4)), false);
+    assert.equal(isLegacyDefaultAvailability([...weekdaySlots('guard-1'), { id: 'sat', guardId: 'guard-1', dayOfWeek: 6, startTime: '08:00', endTime: '18:00', isAvailable: true }]), false);
+    assert.equal(isLegacyDefaultAvailability([]), false);
+    assert.equal(isLegacyDefaultAvailability(defaultAvailabilitySlots('guard-1')), false);
   });
 });
 
 describe('toggleWeekDay', () => {
   it('enables a disabled day with a default window', () => {
-    const slots = defaultAvailabilitySlots('guard-1');
+    const slots = weekdaySlots('guard-1');
     const next = toggleWeekDay(slots, 'guard-1', 6, true);
     assert.equal(isWeekDayEnabled(next, 6), true);
     assert.ok(next.some((slot) => slot.dayOfWeek === 6));
   });
 
   it('disables a day by removing its slots', () => {
-    const slots = defaultAvailabilitySlots('guard-1');
+    const slots = weekdaySlots('guard-1');
     const next = toggleWeekDay(slots, 'guard-1', 1, false);
     assert.equal(isWeekDayEnabled(next, 1), false);
   });
@@ -60,7 +96,7 @@ describe('toggleWeekDay', () => {
 
 describe('guardIsAvailableForJob', () => {
   const schedule = {
-    weeklySlots: defaultAvailabilitySlots('guard-1'),
+    weeklySlots: weekdaySlots('guard-1'),
     dateOverrides: [],
   };
 
@@ -122,7 +158,7 @@ describe('prunePastDateOverrides', () => {
 
 describe('getEnabledWeekDays', () => {
   it('returns only days with available slots', () => {
-    const days = getEnabledWeekDays(defaultAvailabilitySlots('guard-1'));
+    const days = getEnabledWeekDays(weekdaySlots('guard-1'));
     assert.deepEqual(days, [1, 2, 3, 4, 5]);
   });
 });
@@ -133,18 +169,18 @@ describe('load/saveAvailabilitySlots (no localStorage in this test environment)'
   });
 
   it('saveAvailabilitySlots does not throw', () => {
-    assert.doesNotThrow(() => saveAvailabilitySlots('guard-1', defaultAvailabilitySlots('guard-1')));
+    assert.doesNotThrow(() => saveAvailabilitySlots('guard-1', weekdaySlots('guard-1')));
   });
 });
 
 describe('filterGuardsAvailableForJob', () => {
-  it('excludes guards when the shift falls outside default weekday availability', () => {
+  it('keeps guards with no saved schedule for any shift (all-hours default)', () => {
     const guards = [{ id: 'guard-1' }, { id: 'guard-2' }];
     const sundayJob = {
       startDate: '2026-07-19T10:00:00',
       endDate: '2026-07-19T14:00:00',
     };
-    assert.equal(filterGuardsAvailableForJob(guards, sundayJob).length, 0);
+    assert.equal(filterGuardsAvailableForJob(guards, sundayJob).length, 2);
 
     const mondayJob = {
       startDate: '2026-07-20T10:00:00',
@@ -157,7 +193,7 @@ describe('filterGuardsAvailableForJob', () => {
 describe('normalizeWeeklySlotsToOnePerDay', () => {
   it('keeps only one slot per weekday', () => {
     const slots = [
-      ...defaultAvailabilitySlots('guard-1'),
+      ...weekdaySlots('guard-1'),
       {
         id: 'dup-mon',
         guardId: 'guard-1',
@@ -176,7 +212,7 @@ describe('normalizeWeeklySlotsToOnePerDay', () => {
 
 describe('slotForWeekDay', () => {
   it('returns the available slot for a weekday', () => {
-    const slots = defaultAvailabilitySlots('guard-1');
+    const slots = weekdaySlots('guard-1');
     const monday = slotForWeekDay(slots, 1);
     assert.ok(monday);
     assert.equal(monday?.dayOfWeek, 1);
@@ -187,7 +223,7 @@ describe('windowsForDate', () => {
   it('returns weekly windows when no override exists', () => {
     const monday = new Date('2026-07-20T12:00:00');
     const windows = windowsForDate(
-      { weeklySlots: defaultAvailabilitySlots('guard-1'), dateOverrides: [] },
+      { weeklySlots: weekdaySlots('guard-1'), dateOverrides: [] },
       monday
     );
     assert.equal(windows.length, 1);
@@ -198,7 +234,7 @@ describe('windowsForDate', () => {
     const monday = new Date('2026-07-20T12:00:00');
     const windows = windowsForDate(
       {
-        weeklySlots: defaultAvailabilitySlots('guard-1'),
+        weeklySlots: weekdaySlots('guard-1'),
         dateOverrides: [createOffDayOverride({ guardId: 'guard-1', date: '2026-07-20' })],
       },
       monday

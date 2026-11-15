@@ -57,6 +57,29 @@ export function guardPatchTakesWork(old: Row, patch: Row, self: string): boolean
 }
 
 /** Only an active guard account (or a staff member working as a guard) may take on jobs. */
+/** Slot statuses that put a guard on (or toward) a team job. Declines and withdrawals are always allowed. */
+export const SLOT_TAKING_STATUSES = new Set(['invited', 'pending_staff', 'crew_confirmed', 'pending_client', 'approved']);
+
+/**
+ * Guard ids whose status must be active for this job_guard_slots write (the caller and anyone
+ * they place in a slot). Empty when the write only declines, withdraws, or edits other fields.
+ */
+export function slotWriteGuardIds(
+  operation: 'insert' | 'update' | 'upsert' | 'delete',
+  rows: Array<Record<string, unknown>>,
+  selfId: string | null
+): string[] {
+  if (operation === 'delete') return [];
+  const ids = new Set<string>();
+  for (const row of rows) {
+    const status = typeof row.status === 'string' ? row.status : null;
+    const takes = status ? SLOT_TAKING_STATUSES.has(status) : operation !== 'update';
+    if (typeof row.guard_id === 'string' && row.guard_id && (takes || operation === 'update')) ids.add(row.guard_id);
+    if (takes && selfId) ids.add(selfId);
+  }
+  return [...ids];
+}
+
 export function guardMayTakeWork(guard: { user_status?: unknown; is_staff?: unknown } | null | undefined): boolean {
   if (!guard) return false;
   if (guard.is_staff === true) return true;

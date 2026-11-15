@@ -1,7 +1,7 @@
 {
-  "webVersion": "1.0.135",
-  "apkVersion": "1.0.135",
-  "apkVersionCode": 235,
+  "webVersion": "1.1.1",
+  "apkVersion": "1.1.1",
+  "apkVersionCode": 1101,
   "apkUrl": "https://pub-07d688bf950545ddba9025a723c0798e.r2.dev/guardr/latest.apk",
   "apkDirectUrl": "https://pub-07d688bf950545ddba9025a723c0798e.r2.dev/guardr/latest.apk",
   "appsZipUrl": "https://pub-07d688bf950545ddba9025a723c0798e.r2.dev/guardr/latest.apk",
@@ -11,5 +11,5 @@
     "guard": "https://pub-07d688bf950545ddba9025a723c0798e.r2.dev/guardr/latest.apk",
     "staff": "https://pub-07d688bf950545ddba9025a723c0798e.r2.dev/guardr/latest.apk"
   },
-  "updatedAt": "2026-11-14T22:26:04.658Z"
+  "updatedAt": "2026-11-15T03:45:41.296Z"
 }
